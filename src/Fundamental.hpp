@@ -4,10 +4,6 @@
 using namespace rack;
 
 
-extern float sawTable[2048];
-extern float triTable[2048];
-
-
 ////////////////////
 // module widgets
 ////////////////////
@@ -46,4 +42,6 @@ struct ScopeWidget : ModuleWidget {
 
 struct SEQ3Widget : ModuleWidget {
 	SEQ3Widget();
+	json_t *toJsonData();
+	void fromJsonData(json_t *root);
 };

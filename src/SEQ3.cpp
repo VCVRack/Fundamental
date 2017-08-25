@@ -48,6 +48,39 @@ struct SEQ3 : Module {
 
 	SEQ3();
 	void step();
+
+	json_t *toJson() {
+		json_t *rootJ = json_object();
+
+		json_t *gatesJ = json_array();
+		for (int i = 0; i < 8; i++) {
+			json_t *gateJ = json_integer((int) gateState[i]);
+			json_array_append_new(gatesJ, gateJ);
+		}
+		json_object_set_new(rootJ, "gates", gatesJ);
+
+		return rootJ;
+	}
+
+	void fromJson(json_t *rootJ) {
+		json_t *gatesJ = json_object_get(rootJ, "gates");
+		for (int i = 0; i < 8; i++) {
+			json_t *gateJ = json_array_get(gatesJ, i);
+			gateState[i] = !!json_integer_value(gateJ);
+		}
+	}
+
+	void initialize() {
+		for (int i = 0; i < 8; i++) {
+			gateState[i] = false;
+		}
+	}
+
+	void randomize() {
+		for (int i = 0; i < 8; i++) {
+			gateState[i] = (randomf() > 0.5);
+		}
+	}
 };
 
 
