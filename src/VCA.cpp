@@ -34,7 +34,7 @@ VCA::VCA() {
 }
 
 static void stepChannel(const float *in, float level, const float *lin, const float *exp, float *out) {
-	float v = getf(in);
+	float v = getf(in) * level;
 	if (lin)
 		v *= clampf(*lin / 10.0, 0.0, 1.0);
 	const float expBase = 50.0;
