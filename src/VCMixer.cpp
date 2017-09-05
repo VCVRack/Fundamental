@@ -70,9 +70,9 @@ VCMixerWidget::VCMixerWidget() {
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
 	addParam(createParam<Davies1900hLargeBlackKnob>(Vec(48, 55), module, VCMixer::MIX_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(57, 139), module, VCMixer::CH1_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(57, 219), module, VCMixer::CH2_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(57, 300), module, VCMixer::CH3_PARAM, 0.0, 1.0, 0.5));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(57, 139), module, VCMixer::CH1_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(57, 219), module, VCMixer::CH2_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<Davies1900hBlackKnob>(Vec(57, 300), module, VCMixer::CH3_PARAM, 0.0, 1.0, 0.0));
 
 	addInput(createInput<PJ301MPort>(Vec(16, 69), module, VCMixer::MIX_CV_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(22, 129), module, VCMixer::CH1_INPUT));

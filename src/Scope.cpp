@@ -40,6 +40,28 @@ struct Scope : Module {
 
 	Scope();
 	void step();
+
+	json_t *toJson() {
+		json_t *rootJ = json_object();
+		json_object_set_new(rootJ, "sum", json_integer((int) sum));
+		json_object_set_new(rootJ, "ext", json_integer((int) ext));
+		return rootJ;
+	}
+
+	void fromJson(json_t *rootJ) {
+		json_t *sumJ = json_object_get(rootJ, "sum");
+		if (sumJ)
+			sum = json_integer_value(sumJ);
+
+		json_t *extJ = json_object_get(rootJ, "ext");
+		if (extJ)
+			ext = json_integer_value(extJ);
+	}
+
+	void initialize() {
+		sum = false;
+		ext = false;
+	}
 };
 
 
