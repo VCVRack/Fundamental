@@ -72,7 +72,7 @@ void ADSR::step() {
 				env = 1.0;
 			}
 			else {
-				env += powf(base, 1 - attack) / maxTime * (1.001 - env) / gSampleRate;
+				env += powf(base, 1 - attack) / maxTime * (1.01 - env) / gSampleRate;
 			}
 			if (env >= 1.0) {
 				env = 1.0;
