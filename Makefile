@@ -1,5 +1,5 @@
 
-SOURCES = $(wildcard src/*.cpp) kissfft/kiss_fft.c
+SOURCES = $(wildcard src/*.cpp)
 
 include ../../plugin.mk
 
