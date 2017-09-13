@@ -110,7 +110,7 @@ void SEQ3::step() {
 		}
 		else {
 			// Internal clock
-			float clockTime = powf(1/2.0, params[CLOCK_PARAM] + getf(inputs[CLOCK_INPUT]));
+			float clockTime = powf(2.0, params[CLOCK_PARAM] + getf(inputs[CLOCK_INPUT]));
 			phase += clockTime / gSampleRate;
 			if (phase >= 1.0) {
 				phase -= 1.0;
@@ -154,7 +154,7 @@ void SEQ3::step() {
 	float row1 = params[ROW1_PARAM + index];
 	float row2 = params[ROW2_PARAM + index];
 	float row3 = params[ROW3_PARAM + index];
-	float gates = (gateState[index] >= 1.0) ? 10.0 : 0.0;
+	float gates = (gateState[index] >= 1.0) ^ nextStep ? 10.0 : 0.0;
 	setf(outputs[ROW1_OUTPUT], row1);
 	setf(outputs[ROW2_OUTPUT], row2);
 	setf(outputs[ROW3_OUTPUT], row3);
@@ -183,7 +183,7 @@ SEQ3Widget::SEQ3Widget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(17, 56), module, SEQ3::CLOCK_PARAM, -6.0, 2.0, -2.0));
+	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(17, 56), module, SEQ3::CLOCK_PARAM, -2.0, 6.0, 2.0));
 	addParam(createParam<LEDButton>(Vec(60, 61-1), module, SEQ3::RUN_PARAM, 0.0, 1.0, 0.0));
 	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(60+5, 61+4), &module->runningLight));
 	addParam(createParam<LEDButton>(Vec(98, 61-1), module, SEQ3::RESET_PARAM, 0.0, 1.0, 0.0));
