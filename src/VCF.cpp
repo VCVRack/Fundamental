@@ -128,7 +128,9 @@ void VCF::step() {
 	// Set cutoff frequency
 	float cutoffExp = params[FREQ_PARAM] + params[FREQ_CV_PARAM] * getf(inputs[FREQ_INPUT]) / 5.0;
 	cutoffExp = clampf(cutoffExp, 0.0, 1.0);
-	filter.cutoff = 200.0 * powf(8400.0/200.0, cutoffExp);
+	const float minCutoff = 15.0;
+	const float maxCutoff = 8400.0;
+	filter.cutoff = minCutoff * powf(maxCutoff / minCutoff, cutoffExp);
 
 	// Push a sample to the state filter
 	filter.process(input, 1.0/gSampleRate);
