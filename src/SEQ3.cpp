@@ -154,7 +154,7 @@ void SEQ3::step() {
 	float row1 = params[ROW1_PARAM + index];
 	float row2 = params[ROW2_PARAM + index];
 	float row3 = params[ROW3_PARAM + index];
-	float gates = (gateState[index] >= 1.0) ^ nextStep ? 10.0 : 0.0;
+	float gates = (gateState[index] >= 1.0) && !nextStep ? 10.0 : 0.0;
 	setf(outputs[ROW1_OUTPUT], row1);
 	setf(outputs[ROW2_OUTPUT], row2);
 	setf(outputs[ROW3_OUTPUT], row3);
