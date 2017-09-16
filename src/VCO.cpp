@@ -192,7 +192,7 @@ VCOWidget::VCOWidget() {
 	{
 		SVGPanel *panel = new SVGPanel();
 		panel->box.size = box.size;
-		panel->addBackground(SVG::load("plugins/Fundamental/res/VCO.svg"));
+		panel->setBackground(SVG::load("plugins/Fundamental/res/VCO.svg"));
 		addChild(panel);
 	}
 

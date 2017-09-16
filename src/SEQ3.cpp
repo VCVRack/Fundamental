@@ -172,9 +172,9 @@ SEQ3Widget::SEQ3Widget() {
 	box.size = Vec(15*22, 380);
 
 	{
-		Panel *panel = new LightPanel();
+		SVGPanel *panel = new SVGPanel();
 		panel->box.size = box.size;
-		panel->backgroundImage = Image::load("plugins/Fundamental/res/SEQ3.png");
+		panel->setBackground(SVG::load("plugins/Fundamental/res/SEQ3.svg"));
 		addChild(panel);
 	}
 

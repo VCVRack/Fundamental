@@ -117,9 +117,9 @@ DelayWidget::DelayWidget() {
 	box.size = Vec(15*8, 380);
 
 	{
-		Panel *panel = new LightPanel();
+		SVGPanel *panel = new SVGPanel();
 		panel->box.size = box.size;
-		panel->backgroundImage = Image::load("plugins/Fundamental/res/Delay.png");
+		panel->setBackground(SVG::load("plugins/Fundamental/res/Delay.svg"));
 		addChild(panel);
 	}
 

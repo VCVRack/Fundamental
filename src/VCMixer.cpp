@@ -58,9 +58,9 @@ VCMixerWidget::VCMixerWidget() {
 	box.size = Vec(15*10, 380);
 
 	{
-		Panel *panel = new LightPanel();
+		SVGPanel *panel = new SVGPanel();
 		panel->box.size = box.size;
-		panel->backgroundImage = Image::load("plugins/Fundamental/res/VCMixer.png");
+		panel->setBackground(SVG::load("plugins/Fundamental/res/VCMixer.svg"));
 		addChild(panel);
 	}
 
