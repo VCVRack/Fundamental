@@ -115,8 +115,9 @@ VCF::VCF() {
 
 void VCF::step() {
 	float input = getf(inputs[IN_INPUT]) / 5.0;
-	float drive = powf(100.0, params[DRIVE_PARAM]);
-	input *= drive;
+	float drive = params[DRIVE_PARAM] + getf(inputs[DRIVE_INPUT]) / 10.0;
+	float gain = powf(100.0, drive);
+	input *= gain;
 	// Add -60dB noise to bootstrap self-oscillation
 	input += 1.0e-6 * (2.0*randomf() - 1.0);
 
