@@ -23,6 +23,7 @@ struct Scope : Module {
 		NUM_INPUTS
 	};
 	enum OutputIds {
+		SUM_OUTPUT,
 		NUM_OUTPUTS
 	};
 
@@ -127,6 +128,11 @@ void Scope::step() {
 			bufferIndex = 0; frameIndex = 0; return;
 		}
 	}
+
+	// Set the output
+
+	setf(outputs[SUM_OUTPUT], getf(inputs[X_INPUT]) + getf(inputs[Y_INPUT]));
+
 }
 
 
@@ -311,6 +317,8 @@ ScopeWidget::ScopeWidget() {
 	addInput(createInput<PJ301MPort>(Vec(17, 319), module, Scope::X_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(63, 319), module, Scope::Y_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(154, 319), module, Scope::TRIG_INPUT));
+
+	addOutput(createOutput<PJ301MPort>(Vec(107, 319), module, Scope::SUM_OUTPUT));
 
 	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(104, 251), &module->lights[0]));
 	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(104, 296), &module->lights[1]));
