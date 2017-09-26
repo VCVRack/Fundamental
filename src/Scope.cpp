@@ -154,7 +154,7 @@ struct ScopeDisplay : TransparentWidget {
 	Stats statsX, statsY;
 
 	ScopeDisplay() {
-		font = Font::load("plugins/Fundamental/res/DejaVuSansMono.ttf");
+		font = Font::load(assetPlugin(plugin, "res/DejaVuSansMono.ttf"));
 	}
 
 	void drawWaveform(NVGcontext *vg, float *values, float gain, float offset) {
@@ -282,7 +282,7 @@ ScopeWidget::ScopeWidget() {
 	{
 		SVGPanel *panel = new SVGPanel();
 		panel->box.size = box.size;
-		panel->setBackground(SVG::load("plugins/Fundamental/res/Scope.svg"));
+		panel->setBackground(SVG::load(assetPlugin(plugin, "res/Scope.svg")));
 		addChild(panel);
 	}
 

@@ -150,7 +150,7 @@ VCFWidget::VCFWidget() {
 	{
 		SVGPanel *panel = new SVGPanel();
 		panel->box.size = box.size;
-		panel->setBackground(SVG::load("plugins/Fundamental/res/VCF.svg"));
+		panel->setBackground(SVG::load(assetPlugin(plugin, "res/VCF.svg")));
 		addChild(panel);
 	}
 

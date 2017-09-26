@@ -1,25 +1,18 @@
 #include "Fundamental.hpp"
-#include <math.h>
-#include "dsp.hpp"
 
 
-struct FundamentalPlugin : Plugin {
-	FundamentalPlugin() {
-		slug = "Fundamental";
-		name = "Fundamental";
-		createModel<VCOWidget>(this, "VCO", "VCO");
-		createModel<VCFWidget>(this, "VCF", "VCF");
-		createModel<VCAWidget>(this, "VCA", "VCA");
-		createModel<DelayWidget>(this, "Delay", "Delay");
-		createModel<ADSRWidget>(this, "ADSR", "ADSR");
-		createModel<VCMixerWidget>(this, "VCMixer", "VC Mixer");
-		// createModel<MultWidget>(this, "Mult", "Mult");
-		createModel<ScopeWidget>(this, "Scope", "Scope");
-		createModel<SEQ3Widget>(this, "SEQ3", "SEQ-3");
-	}
-};
+Plugin *plugin;
 
-
-Plugin *init() {
-	return new FundamentalPlugin();
+void init(rack::Plugin *p) {
+	plugin = p;
+	plugin->slug = "Fundamental";
+	plugin->name = "Fundamental";
+	createModel<VCOWidget>(plugin, "VCO", "VCO");
+	createModel<VCFWidget>(plugin, "VCF", "VCF");
+	createModel<VCAWidget>(plugin, "VCA", "VCA");
+	createModel<DelayWidget>(plugin, "Delay", "Delay");
+	createModel<ADSRWidget>(plugin, "ADSR", "ADSR");
+	createModel<VCMixerWidget>(plugin, "VCMixer", "VC Mixer");
+	createModel<ScopeWidget>(plugin, "Scope", "Scope");
+	createModel<SEQ3Widget>(plugin, "SEQ3", "SEQ-3");
 }

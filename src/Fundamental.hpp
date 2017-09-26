@@ -4,6 +4,8 @@
 using namespace rack;
 
 
+extern Plugin *plugin;
+
 ////////////////////
 // module widgets
 ////////////////////
@@ -31,10 +33,6 @@ struct ADSRWidget : ModuleWidget {
 struct VCMixerWidget : ModuleWidget {
 	VCMixerWidget();
 };
-
-// struct MultWidget : ModuleWidget {
-// 	MultWidget();
-// };
 
 struct ScopeWidget : ModuleWidget {
 	ScopeWidget();

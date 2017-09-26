@@ -174,7 +174,7 @@ SEQ3Widget::SEQ3Widget() {
 	{
 		SVGPanel *panel = new SVGPanel();
 		panel->box.size = box.size;
-		panel->setBackground(SVG::load("plugins/Fundamental/res/SEQ3.svg"));
+		panel->setBackground(SVG::load(assetPlugin(plugin, "res/SEQ3.svg")));
 		addChild(panel);
 	}
 

@@ -98,7 +98,7 @@ ADSRWidget::ADSRWidget() {
 	{
 		SVGPanel *panel = new SVGPanel();
 		panel->box.size = box.size;
-		panel->setBackground(SVG::load("plugins/Fundamental/res/ADSR.svg"));
+		panel->setBackground(SVG::load(assetPlugin(plugin, "res/ADSR.svg")));
 		addChild(panel);
 	}
 
