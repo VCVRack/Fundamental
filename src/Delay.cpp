@@ -31,26 +31,20 @@ struct Delay : Module {
 	RCFilter lowpassFilter;
 	RCFilter highpassFilter;
 
-	Delay();
+	Delay() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
 
 	void step();
 };
 
 
-Delay::Delay() {
-	params.resize(NUM_PARAMS);
-	inputs.resize(NUM_INPUTS);
-	outputs.resize(NUM_OUTPUTS);
-}
-
 void Delay::step() {
 	// Get input to delay block
-	float in = getf(inputs[IN_INPUT]);
-	float feedback = clampf(params[FEEDBACK_PARAM] + getf(inputs[FEEDBACK_INPUT]) / 10.0, 0.0, 0.99);
+	float in = inputs[IN_INPUT].value;
+	float feedback = clampf(params[FEEDBACK_PARAM].value + inputs[FEEDBACK_INPUT].value / 10.0, 0.0, 0.99);
 	float dry = in + lastWet * feedback;
 
 	// Compute delay time in seconds
-	float delay = 1e-3 * powf(10.0 / 1e-3, clampf(params[TIME_PARAM] + getf(inputs[TIME_INPUT]) / 10.0, 0.0, 1.0));
+	float delay = 1e-3 * powf(10.0 / 1e-3, clampf(params[TIME_PARAM].value + inputs[TIME_INPUT].value / 10.0, 0.0, 1.0));
 	// Number of delay samples
 	float index = delay * gSampleRate;
 
@@ -93,7 +87,7 @@ void Delay::step() {
 
 	// Apply color to delay wet output
 	// TODO Make it sound better
-	float color = clampf(params[COLOR_PARAM] + getf(inputs[COLOR_INPUT]) / 10.0, 0.0, 1.0);
+	float color = clampf(params[COLOR_PARAM].value + inputs[COLOR_INPUT].value / 10.0, 0.0, 1.0);
 	float lowpassFreq = 10000.0 * powf(10.0, clampf(2.0*color, 0.0, 1.0));
 	lowpassFilter.setCutoff(lowpassFreq / gSampleRate);
 	lowpassFilter.process(wet);
@@ -105,9 +99,9 @@ void Delay::step() {
 
 	lastWet = wet;
 
-	float mix = clampf(params[MIX_PARAM] + getf(inputs[MIX_INPUT]) / 10.0, 0.0, 1.0);
+	float mix = clampf(params[MIX_PARAM].value + inputs[MIX_INPUT].value / 10.0, 0.0, 1.0);
 	float out = crossf(in, wet, mix);
-	setf(outputs[OUT_OUTPUT], out);
+	outputs[OUT_OUTPUT].value = out;
 }
 
 

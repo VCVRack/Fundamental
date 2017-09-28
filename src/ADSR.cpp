@@ -28,24 +28,18 @@ struct ADSR : Module {
 	SchmittTrigger trigger;
 	float lights[4] = {};
 
-	ADSR();
+	ADSR() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {
+		trigger.setThresholds(0.0, 1.0);
+	}
 	void step();
 };
 
 
-ADSR::ADSR() {
-	params.resize(NUM_PARAMS);
-	inputs.resize(NUM_INPUTS);
-	outputs.resize(NUM_OUTPUTS);
-
-	trigger.setThresholds(0.0, 1.0);
-}
-
 void ADSR::step() {
-	float attack = clampf(params[ATTACK_INPUT] + getf(inputs[ATTACK_INPUT]) / 10.0, 0.0, 1.0);
-	float decay = clampf(params[DECAY_PARAM] + getf(inputs[DECAY_INPUT]) / 10.0, 0.0, 1.0);
-	float sustain = clampf(params[SUSTAIN_PARAM] + getf(inputs[SUSTAIN_INPUT]) / 10.0, 0.0, 1.0);
-	float release = clampf(params[RELEASE_PARAM] + getf(inputs[RELEASE_PARAM]) / 10.0, 0.0, 1.0);
+	float attack = clampf(params[ATTACK_INPUT].value + inputs[ATTACK_INPUT].value / 10.0, 0.0, 1.0);
+	float decay = clampf(params[DECAY_PARAM].value + inputs[DECAY_INPUT].value / 10.0, 0.0, 1.0);
+	float sustain = clampf(params[SUSTAIN_PARAM].value + inputs[SUSTAIN_INPUT].value / 10.0, 0.0, 1.0);
+	float release = clampf(params[RELEASE_PARAM].value + inputs[RELEASE_PARAM].value / 10.0, 0.0, 1.0);
 
 	// Lights
 	lights[0] = 2.0*attack - 1.0;
@@ -54,8 +48,8 @@ void ADSR::step() {
 	lights[3] = 2.0*release - 1.0;
 
 	// Gate and trigger
-	bool gated = getf(inputs[GATE_INPUT]) >= 1.0;
-	if (trigger.process(getf(inputs[TRIG_INPUT])))
+	bool gated = inputs[GATE_INPUT].value >= 1.0;
+	if (trigger.process(inputs[TRIG_INPUT].value))
 		decaying = false;
 
 	const float base = 20000.0;
@@ -63,7 +57,12 @@ void ADSR::step() {
 	if (gated) {
 		if (decaying) {
 			// Decay
-			env += powf(base, 1 - decay) / maxTime * (sustain - env) / gSampleRate;
+			if (decay < 1e-4) {
+				env = sustain;
+			}
+			else {
+				env += powf(base, 1 - decay) / maxTime * (sustain - env) / gSampleRate;
+			}
 		}
 		else {
 			// Attack
@@ -82,11 +81,16 @@ void ADSR::step() {
 	}
 	else {
 		// Release
-		env += powf(base, 1 - release) / maxTime * (0.0 - env) / gSampleRate;
+		if (release < 1e-4) {
+			env = 0.0;
+		}
+		else {
+			env += powf(base, 1 - release) / maxTime * (0.0 - env) / gSampleRate;
+		}
 		decaying = false;
 	}
 
-	setf(outputs[ENVELOPE_OUTPUT], 10.0 * env);
+	outputs[ENVELOPE_OUTPUT].value = 10.0 * env;
 }
 
 

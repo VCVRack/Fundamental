@@ -40,6 +40,5 @@ struct ScopeWidget : ModuleWidget {
 
 struct SEQ3Widget : ModuleWidget {
 	SEQ3Widget();
-	json_t *toJsonData();
-	void fromJsonData(json_t *root);
+	Menu *createContextMenu();
 };

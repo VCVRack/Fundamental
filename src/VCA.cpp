@@ -22,25 +22,19 @@ struct VCA : Module {
 		NUM_OUTPUTS
 	};
 
-	VCA();
+	VCA() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
 	void step();
 };
 
 
-VCA::VCA() {
-	params.resize(NUM_PARAMS);
-	inputs.resize(NUM_INPUTS);
-	outputs.resize(NUM_OUTPUTS);
-}
-
-static void stepChannel(const float *in, float level, const float *lin, const float *exp, float *out) {
-	float v = getf(in) * level;
-	if (lin)
-		v *= clampf(*lin / 10.0, 0.0, 1.0);
+static void stepChannel(Input &in, Param &level, Input &lin, Input &exp, Output &out) {
+	float v = in.value * level.value;
+	if (lin.active)
+		v *= clampf(lin.value / 10.0, 0.0, 1.0);
 	const float expBase = 50.0;
-	if (exp)
-		v *= rescalef(powf(expBase, clampf(*exp / 10.0, 0.0, 1.0)), 1.0, expBase, 0.0, 1.0);
-	setf(out, v);
+	if (exp.active)
+		v *= rescalef(powf(expBase, clampf(exp.value / 10.0, 0.0, 1.0)), 1.0, expBase, 0.0, 1.0);
+	out.value = v;
 }
 
 void VCA::step() {

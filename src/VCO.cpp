@@ -51,20 +51,15 @@ struct VCO : Module {
 	float pitchSlew = 0.0;
 	int pitchSlewIndex = 0;
 
-	VCO();
+	VCO() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
 	void step();
 };
 
-VCO::VCO() {
-	params.resize(NUM_PARAMS);
-	inputs.resize(NUM_INPUTS);
-	outputs.resize(NUM_OUTPUTS);
-}
 
 void VCO::step() {
-	bool analog = params[MODE_PARAM] < 1.0;
+	bool analog = params[MODE_PARAM].value < 1.0;
 	// TODO Soft sync features
-	bool soft = params[SYNC_PARAM] < 1.0;
+	bool soft = params[SYNC_PARAM].value < 1.0;
 
 	if (analog) {
 		// Adjust pitch slew
@@ -76,7 +71,7 @@ void VCO::step() {
 	}
 
 	// Compute frequency
-	float pitch = params[FREQ_PARAM];
+	float pitch = params[FREQ_PARAM].value;
 	if (analog) {
 		// Apply pitch slew
 		const float pitchSlewAmount = 3.0;
@@ -86,16 +81,16 @@ void VCO::step() {
 		// Quantize coarse knob if digital mode
 		pitch = roundf(pitch);
 	}
-	pitch += 12.0 * getf(inputs[PITCH_INPUT]);
-	pitch += 3.0 * quadraticBipolar(params[FINE_PARAM]);
-	if (inputs[FM_INPUT]) {
-		pitch += quadraticBipolar(params[FM_PARAM]) * 12.0 * *inputs[FM_INPUT];
+	pitch += 12.0 * inputs[PITCH_INPUT].value;
+	pitch += 3.0 * quadraticBipolar(params[FINE_PARAM].value);
+	if (inputs[FM_INPUT].active) {
+		pitch += quadraticBipolar(params[FM_PARAM].value) * 12.0 * inputs[FM_INPUT].value;
 	}
 	float freq = 261.626 * powf(2.0, pitch / 12.0);
 
 	// Pulse width
 	const float pwMin = 0.01;
-	float pw = clampf(params[PW_PARAM] + params[PW_CV_PARAM] * getf(inputs[PW_INPUT]) / 10.0, pwMin, 1.0 - pwMin);
+	float pw = clampf(params[PW_PARAM].value + params[PW_CV_PARAM].value * inputs[PW_INPUT].value / 10.0, pwMin, 1.0 - pwMin);
 
 	// Advance phase
 	float deltaPhase = clampf(freq / gSampleRate, 1e-6, 0.5);
@@ -103,8 +98,8 @@ void VCO::step() {
 	// Detect sync
 	int syncIndex = -1; // Index in the oversample loop where sync occurs [0, OVERSAMPLE)
 	float syncCrossing = 0.0; // Offset that sync occurs [0.0, 1.0)
-	if (inputs[SYNC_INPUT]) {
-		float sync = *inputs[SYNC_INPUT] - 0.01;
+	if (inputs[SYNC_INPUT].active) {
+		float sync = inputs[SYNC_INPUT].value - 0.01;
 		if (sync > 0.0 && lastSync <= 0.0) {
 			float deltaSync = sync - lastSync;
 			syncCrossing = 1.0 - sync / deltaSync;
@@ -137,26 +132,26 @@ void VCO::step() {
 			}
 		}
 
-		if (outputs[SIN_OUTPUT]) {
+		if (outputs[SIN_OUTPUT].active) {
 			if (analog)
 				// Quadratic approximation of sine, slightly richer harmonics
 				sin[i] = 1.08 * ((phase < 0.25) ? (-1.0 + (4*phase)*(4*phase)) : (phase < 0.75) ? (1.0 - (4*phase-2)*(4*phase-2)) : (-1.0 + (4*phase-4)*(4*phase-4)));
 			else
 				sin[i] = -cosf(2*M_PI * phase);
 		}
-		if (outputs[TRI_OUTPUT]) {
+		if (outputs[TRI_OUTPUT].active) {
 			if (analog)
 				tri[i] = 1.35 * interpf(triTable, phase * 2047.0);
 			else
 				tri[i] = (phase < 0.5) ? (-1.0 + 4.0*phase) : (1.0 - 4.0*(phase - 0.5));
 		}
-		if (outputs[SAW_OUTPUT]) {
+		if (outputs[SAW_OUTPUT].active) {
 			if (analog)
 				saw[i] = 1.5 * interpf(sawTable, phase * 2047.0);
 			else
 				saw[i] = -1.0 + 2.0*phase;
 		}
-		if (outputs[SQR_OUTPUT]) {
+		if (outputs[SQR_OUTPUT].active) {
 			sqr[i] = (phase < 1.0 - pw) ? -1.0 : 1.0;
 			if (analog) {
 				// Simply filter here
@@ -171,14 +166,14 @@ void VCO::step() {
 	}
 
 	// Set output
-	if (outputs[SIN_OUTPUT])
-		*outputs[SIN_OUTPUT] = 5.0 * sinDecimator.process(sin);
-	if (outputs[TRI_OUTPUT])
-		*outputs[TRI_OUTPUT] = 5.0 * triDecimator.process(tri);
-	if (outputs[SAW_OUTPUT])
-		*outputs[SAW_OUTPUT] = 5.0 * sawDecimator.process(saw);
-	if (outputs[SQR_OUTPUT])
-		*outputs[SQR_OUTPUT] = 5.0 * sqrDecimator.process(sqr);
+	if (outputs[SIN_OUTPUT].active)
+		outputs[SIN_OUTPUT].value = 5.0 * sinDecimator.process(sin);
+	if (outputs[TRI_OUTPUT].active)
+		outputs[TRI_OUTPUT].value = 5.0 * triDecimator.process(tri);
+	if (outputs[SAW_OUTPUT].active)
+		outputs[SAW_OUTPUT].value = 5.0 * sawDecimator.process(saw);
+	if (outputs[SQR_OUTPUT].active)
+		outputs[SQR_OUTPUT].value = 5.0 * sqrDecimator.process(sqr);
 
 	lights[0] = rescalef(pitch, -48.0, 48.0, -1.0, 1.0);
 }

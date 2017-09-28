@@ -27,28 +27,22 @@ struct VCMixer : Module {
 		NUM_OUTPUTS
 	};
 
-	VCMixer();
+	VCMixer() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
 	void step();
 };
 
 
-VCMixer::VCMixer() {
-	params.resize(NUM_PARAMS);
-	inputs.resize(NUM_INPUTS);
-	outputs.resize(NUM_OUTPUTS);
-}
-
-
 void VCMixer::step() {
-	float ch1 = getf(inputs[CH1_INPUT]) * params[CH1_PARAM] * clampf(getf(inputs[CH1_CV_INPUT], 10.0) / 10.0, 0.0, 1.0);
-	float ch2 = getf(inputs[CH2_INPUT]) * params[CH2_PARAM] * clampf(getf(inputs[CH2_CV_INPUT], 10.0) / 10.0, 0.0, 1.0);
-	float ch3 = getf(inputs[CH3_INPUT]) * params[CH3_PARAM] * clampf(getf(inputs[CH3_CV_INPUT], 10.0) / 10.0, 0.0, 1.0);
-	float mix = (ch1 + ch2 + ch3) * params[MIX_PARAM] * getf(inputs[MIX_CV_INPUT], 10.0) / 10.0;
+	float ch1 = inputs[CH1_INPUT].value * params[CH1_PARAM].value * clampf(inputs[CH1_CV_INPUT].normalize(10.0) / 10.0, 0.0, 1.0);
+	float ch2 = inputs[CH2_INPUT].value * params[CH2_PARAM].value * clampf(inputs[CH2_CV_INPUT].normalize(10.0) / 10.0, 0.0, 1.0);
+	float ch3 = inputs[CH3_INPUT].value * params[CH3_PARAM].value * clampf(inputs[CH3_CV_INPUT].normalize(10.0) / 10.0, 0.0, 1.0);
+	float cv = inputs[MIX_CV_INPUT].normalize(10.0);
+	float mix = (ch1 + ch2 + ch3) * params[MIX_PARAM].value * cv / 10.0;
 
-	setf(outputs[CH1_OUTPUT], ch1);
-	setf(outputs[CH2_OUTPUT], ch2);
-	setf(outputs[CH3_OUTPUT], ch3);
-	setf(outputs[MIX_OUTPUT], mix);
+	outputs[CH1_OUTPUT].value = ch1;
+	outputs[CH2_OUTPUT].value = ch2;
+	outputs[CH3_OUTPUT].value = ch3;
+	outputs[MIX_OUTPUT].value = mix;
 }
 
 

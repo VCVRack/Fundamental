@@ -39,6 +39,13 @@ struct SEQ3 : Module {
 	bool gateState[8] = {};
 	float stepLights[8] = {};
 
+	enum GateMode {
+		TRIGGER,
+		RETRIGGER,
+		CONTINUOUS,
+	};
+	GateMode gateMode = TRIGGER;
+
 	// Lights
 	float runningLight = 0.0;
 	float resetLight = 0.0;
@@ -46,12 +53,13 @@ struct SEQ3 : Module {
 	float rowLights[3] = {};
 	float gateLights[8] = {};
 
-	SEQ3();
+	SEQ3() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
 	void step();
 
 	json_t *toJson() {
 		json_t *rootJ = json_object();
 
+		// gates
 		json_t *gatesJ = json_array();
 		for (int i = 0; i < 8; i++) {
 			json_t *gateJ = json_integer((int) gateState[i]);
@@ -59,15 +67,28 @@ struct SEQ3 : Module {
 		}
 		json_object_set_new(rootJ, "gates", gatesJ);
 
+		// gateMode
+		json_t *gateModeJ = json_integer((int) gateMode);
+		json_object_set_new(rootJ, "gateMode", gateModeJ);
+
 		return rootJ;
 	}
 
 	void fromJson(json_t *rootJ) {
+		// gates
 		json_t *gatesJ = json_object_get(rootJ, "gates");
-		for (int i = 0; i < 8; i++) {
-			json_t *gateJ = json_array_get(gatesJ, i);
-			gateState[i] = !!json_integer_value(gateJ);
+		if (gatesJ) {
+			for (int i = 0; i < 8; i++) {
+				json_t *gateJ = json_array_get(gatesJ, i);
+				if (gateJ)
+					gateState[i] = !!json_integer_value(gateJ);
+			}
 		}
+
+		// gateMode
+		json_t *gateModeJ = json_object_get(rootJ, "gateMode");
+		if (gateModeJ)
+			gateMode = (GateMode)json_integer_value(gateModeJ);
 	}
 
 	void initialize() {
@@ -84,16 +105,10 @@ struct SEQ3 : Module {
 };
 
 
-SEQ3::SEQ3() {
-	params.resize(NUM_PARAMS);
-	inputs.resize(NUM_INPUTS);
-	outputs.resize(NUM_OUTPUTS);
-}
-
 void SEQ3::step() {
 	const float lightLambda = 0.075;
 	// Run
-	if (runningTrigger.process(params[RUN_PARAM])) {
+	if (runningTrigger.process(params[RUN_PARAM].value)) {
 		running = !running;
 	}
 	runningLight = running ? 1.0 : 0.0;
@@ -101,16 +116,16 @@ void SEQ3::step() {
 	bool nextStep = false;
 
 	if (running) {
-		if (inputs[EXT_CLOCK_INPUT]) {
+		if (inputs[EXT_CLOCK_INPUT].active) {
 			// External clock
-			if (clockTrigger.process(*inputs[EXT_CLOCK_INPUT])) {
+			if (clockTrigger.process(inputs[EXT_CLOCK_INPUT].value)) {
 				phase = 0.0;
 				nextStep = true;
 			}
 		}
 		else {
 			// Internal clock
-			float clockTime = powf(2.0, params[CLOCK_PARAM] + getf(inputs[CLOCK_INPUT]));
+			float clockTime = powf(2.0, params[CLOCK_PARAM].value + inputs[CLOCK_INPUT].value);
 			phase += clockTime / gSampleRate;
 			if (phase >= 1.0) {
 				phase -= 1.0;
@@ -120,7 +135,7 @@ void SEQ3::step() {
 	}
 
 	// Reset
-	if (resetTrigger.process(params[RESET_PARAM] + getf(inputs[RESET_INPUT]))) {
+	if (resetTrigger.process(params[RESET_PARAM].value + inputs[RESET_INPUT].value)) {
 		phase = 0.0;
 		index = 999;
 		nextStep = true;
@@ -129,7 +144,7 @@ void SEQ3::step() {
 
 	if (nextStep) {
 		// Advance step
-		int numSteps = clampi(roundf(params[STEPS_PARAM] + getf(inputs[STEPS_INPUT])), 1, 8);
+		int numSteps = clampi(roundf(params[STEPS_PARAM].value + inputs[STEPS_INPUT].value), 1, 8);
 		index += 1;
 		if (index >= numSteps) {
 			index = 0;
@@ -141,24 +156,31 @@ void SEQ3::step() {
 
 	// Gate buttons
 	for (int i = 0; i < 8; i++) {
-		if (gateTriggers[i].process(params[GATE_PARAM + i])) {
+		if (gateTriggers[i].process(params[GATE_PARAM + i].value)) {
 			gateState[i] = !gateState[i];
 		}
 		float gate = (i == index && gateState[i] >= 1.0) ? 10.0 : 0.0;
-		setf(outputs[GATE_OUTPUT + i], gate);
+		outputs[GATE_OUTPUT + i].value = gate;
 		stepLights[i] -= stepLights[i] / lightLambda / gSampleRate;
 		gateLights[i] = (gateState[i] >= 1.0) ? 1.0 - stepLights[i] : stepLights[i];
 	}
 
 	// Rows
-	float row1 = params[ROW1_PARAM + index];
-	float row2 = params[ROW2_PARAM + index];
-	float row3 = params[ROW3_PARAM + index];
-	float gates = (gateState[index] >= 1.0) ? 10.0 : 0.0;
-	setf(outputs[ROW1_OUTPUT], row1);
-	setf(outputs[ROW2_OUTPUT], row2);
-	setf(outputs[ROW3_OUTPUT], row3);
-	setf(outputs[GATES_OUTPUT], gates);
+	float row1 = params[ROW1_PARAM + index].value;
+	float row2 = params[ROW2_PARAM + index].value;
+	float row3 = params[ROW3_PARAM + index].value;
+	bool gatesOn = gateState[index];
+	if (gateMode == TRIGGER)
+		gatesOn = gatesOn && nextStep;
+	else if (gateMode == RETRIGGER)
+		gatesOn = gatesOn && !nextStep;
+	float gates = gatesOn ? 10.0 : 0.0;
+
+	// Outputs
+	outputs[ROW1_OUTPUT].value = row1;
+	outputs[ROW2_OUTPUT].value = row2;
+	outputs[ROW3_OUTPUT].value = row3;
+	outputs[GATES_OUTPUT].value = gates;
 	gatesLight = (gateState[index] >= 1.0) ? 1.0 : 0.0;
 	rowLights[0] = row1;
 	rowLights[1] = row2;
@@ -212,4 +234,49 @@ SEQ3Widget::SEQ3Widget() {
 		addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(portX[i]+7, 278+4), &module->gateLights[i]));
 		addOutput(createOutput<PJ301MPort>(Vec(portX[i]-1, 308-1), module, SEQ3::GATE_OUTPUT + i));
 	}
+}
+
+struct SEQ3GateModeItem : MenuItem {
+	SEQ3 *seq3;
+	SEQ3::GateMode gateMode;
+	void onAction() {
+		seq3->gateMode = gateMode;
+	}
+	void step() {
+		rightText = (seq3->gateMode == gateMode) ? "✔" : "";
+	}
+};
+
+Menu *SEQ3Widget::createContextMenu() {
+	Menu *menu = ModuleWidget::createContextMenu();
+
+	MenuLabel *spacerLabel = new MenuLabel();
+	menu->pushChild(spacerLabel);
+
+	SEQ3 *seq3 = dynamic_cast<SEQ3*>(module);
+	assert(seq3);
+
+	MenuLabel *modeLabel = new MenuLabel();
+	modeLabel->text = "Gate Mode";
+	menu->pushChild(modeLabel);
+
+	SEQ3GateModeItem *triggerItem = new SEQ3GateModeItem();
+	triggerItem->text = "Trigger";
+	triggerItem->seq3 = seq3;
+	triggerItem->gateMode = SEQ3::TRIGGER;
+	menu->pushChild(triggerItem);
+
+	SEQ3GateModeItem *retriggerItem = new SEQ3GateModeItem();
+	retriggerItem->text = "Retrigger";
+	retriggerItem->seq3 = seq3;
+	retriggerItem->gateMode = SEQ3::RETRIGGER;
+	menu->pushChild(retriggerItem);
+
+	SEQ3GateModeItem *continuousItem = new SEQ3GateModeItem();
+	continuousItem->text = "Continuous";
+	continuousItem->seq3 = seq3;
+	continuousItem->gateMode = SEQ3::CONTINUOUS;
+	menu->pushChild(continuousItem);
+
+	return menu;
 }

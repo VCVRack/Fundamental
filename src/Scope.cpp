@@ -38,7 +38,7 @@ struct Scope : Module {
 	float lights[4] = {};
 	SchmittTrigger resetTrigger;
 
-	Scope();
+	Scope() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
 	void step();
 
 	json_t *toJson() {
@@ -65,36 +65,30 @@ struct Scope : Module {
 };
 
 
-Scope::Scope() {
-	params.resize(NUM_PARAMS);
-	inputs.resize(NUM_INPUTS);
-	outputs.resize(NUM_OUTPUTS);
-}
-
 void Scope::step() {
 	// Modes
-	if (sumTrigger.process(params[MODE_PARAM])) {
+	if (sumTrigger.process(params[MODE_PARAM].value)) {
 		sum = !sum;
 	}
 	lights[0] = sum ? 0.0 : 1.0;
 	lights[1] = sum ? 1.0 : 0.0;
 
-	if (extTrigger.process(params[EXT_PARAM])) {
+	if (extTrigger.process(params[EXT_PARAM].value)) {
 		ext = !ext;
 	}
 	lights[2] = ext ? 0.0 : 1.0;
 	lights[3] = ext ? 1.0 : 0.0;
 
 	// Compute time
-	float deltaTime = powf(2.0, params[TIME_PARAM]);
+	float deltaTime = powf(2.0, params[TIME_PARAM].value);
 	int frameCount = (int)ceilf(deltaTime * gSampleRate);
 
 	// Add frame to buffer
 	if (bufferIndex < BUFFER_SIZE) {
 		if (++frameIndex > frameCount) {
 			frameIndex = 0;
-			bufferX[bufferIndex] = getf(inputs[X_INPUT]);
-			bufferY[bufferIndex] = getf(inputs[Y_INPUT]);
+			bufferX[bufferIndex] = inputs[X_INPUT].value;
+			bufferY[bufferIndex] = inputs[Y_INPUT].value;
 			bufferIndex++;
 		}
 	}
@@ -102,7 +96,7 @@ void Scope::step() {
 	// Are we waiting on the next trigger?
 	if (bufferIndex >= BUFFER_SIZE) {
 		// Trigger immediately if external but nothing plugged in
-		if (ext && !inputs[TRIG_INPUT]) {
+		if (ext && !inputs[TRIG_INPUT].active) {
 			bufferIndex = 0; frameIndex = 0; return;
 		}
 
@@ -113,8 +107,8 @@ void Scope::step() {
 		frameIndex++;
 
 		// Must go below 0.1V to trigger
-		resetTrigger.setThresholds(params[TRIG_PARAM] - 0.1, params[TRIG_PARAM]);
-		float gate = ext ? getf(inputs[TRIG_INPUT]) : getf(inputs[X_INPUT]);
+		resetTrigger.setThresholds(params[TRIG_PARAM].value - 0.1, params[TRIG_PARAM].value);
+		float gate = ext ? inputs[TRIG_INPUT].value : inputs[X_INPUT].value;
 
 		// Reset if triggered
 		float holdTime = 0.1;
@@ -232,10 +226,10 @@ struct ScopeDisplay : TransparentWidget {
 	}
 
 	void draw(NVGcontext *vg) {
-		float gainX = powf(2.0, roundf(module->params[Scope::X_SCALE_PARAM])) / 12.0;
-		float gainY = powf(2.0, roundf(module->params[Scope::Y_SCALE_PARAM])) / 12.0;
-		float posX = module->params[Scope::X_POS_PARAM];
-		float posY = module->params[Scope::Y_POS_PARAM];
+		float gainX = powf(2.0, roundf(module->params[Scope::X_SCALE_PARAM].value)) / 12.0;
+		float gainY = powf(2.0, roundf(module->params[Scope::Y_SCALE_PARAM].value)) / 12.0;
+		float posX = module->params[Scope::X_POS_PARAM].value;
+		float posY = module->params[Scope::Y_POS_PARAM].value;
 
 		// Draw waveforms
 		if (module->sum) {
@@ -249,18 +243,18 @@ struct ScopeDisplay : TransparentWidget {
 		}
 		else {
 			// Y
-			if (module->inputs[Scope::Y_INPUT]) {
+			if (module->inputs[Scope::Y_INPUT].active) {
 				nvgStrokeColor(vg, nvgRGBA(0xe1, 0x02, 0x78, 0xc0));
 				drawWaveform(vg, module->bufferY, gainY, posY);
 			}
 
 			// X
-			if (module->inputs[Scope::X_INPUT]) {
+			if (module->inputs[Scope::X_INPUT].active) {
 				nvgStrokeColor(vg, nvgRGBA(0x28, 0xb0, 0xf3, 0xc0));
 				drawWaveform(vg, module->bufferX, gainX, posX);
 			}
 		}
-		drawTrig(vg, module->params[Scope::TRIG_PARAM], gainX, posX);
+		drawTrig(vg, module->params[Scope::TRIG_PARAM].value, gainX, posX);
 
 		// Calculate and draw stats
 		if (++frame >= 4) {

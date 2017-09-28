@@ -102,32 +102,26 @@ struct VCF : Module {
 
 	LadderFilter filter;
 
-	VCF();
+	VCF() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
 	void step();
 };
 
 
-VCF::VCF() {
-	params.resize(NUM_PARAMS);
-	inputs.resize(NUM_INPUTS);
-	outputs.resize(NUM_OUTPUTS);
-}
-
 void VCF::step() {
-	float input = getf(inputs[IN_INPUT]) / 5.0;
-	float drive = params[DRIVE_PARAM] + getf(inputs[DRIVE_INPUT]) / 10.0;
+	float input = inputs[IN_INPUT].value / 5.0;
+	float drive = params[DRIVE_PARAM].value + inputs[DRIVE_INPUT].value / 10.0;
 	float gain = powf(100.0, drive);
 	input *= gain;
 	// Add -60dB noise to bootstrap self-oscillation
 	input += 1.0e-6 * (2.0*randomf() - 1.0);
 
 	// Set resonance
-	float res = params[RES_PARAM] + getf(inputs[RES_INPUT]) / 5.0;
+	float res = params[RES_PARAM].value + inputs[RES_INPUT].value / 5.0;
 	res = 5.5 * clampf(res, 0.0, 1.0);
 	filter.resonance = res;
 
 	// Set cutoff frequency
-	float cutoffExp = params[FREQ_PARAM] + params[FREQ_CV_PARAM] * getf(inputs[FREQ_INPUT]) / 5.0;
+	float cutoffExp = params[FREQ_PARAM].value + params[FREQ_CV_PARAM].value * inputs[FREQ_INPUT].value / 5.0;
 	cutoffExp = clampf(cutoffExp, 0.0, 1.0);
 	const float minCutoff = 15.0;
 	const float maxCutoff = 8400.0;
@@ -136,9 +130,9 @@ void VCF::step() {
 	// Push a sample to the state filter
 	filter.process(input, 1.0/gSampleRate);
 
-	// Extract outputs
-	setf(outputs[LPF_OUTPUT], 5.0 * filter.state[3]);
-	setf(outputs[HPF_OUTPUT], 5.0 * (input - filter.state[3]));
+	// Set outputs
+	outputs[LPF_OUTPUT].value = 5.0 * filter.state[3];
+	outputs[HPF_OUTPUT].value = 5.0 * (input - filter.state[3]);
 }
 
 
