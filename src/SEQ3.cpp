@@ -31,11 +31,12 @@ struct SEQ3 : Module {
 
 	bool running = true;
 	SchmittTrigger clockTrigger; // for external clock
+	// For buttons
 	SchmittTrigger runningTrigger;
 	SchmittTrigger resetTrigger;
+	SchmittTrigger gateTriggers[8];
 	float phase = 0.0;
 	int index = 0;
-	SchmittTrigger gateTriggers[8];
 	bool gateState[8] = {};
 	float stepLights[8] = {};
 
@@ -45,6 +46,7 @@ struct SEQ3 : Module {
 		CONTINUOUS,
 	};
 	GateMode gateMode = TRIGGER;
+	PulseGenerator gatePulse;
 
 	// Lights
 	float runningLight = 0.0;
@@ -137,7 +139,7 @@ void SEQ3::step() {
 	// Reset
 	if (resetTrigger.process(params[RESET_PARAM].value + inputs[RESET_INPUT].value)) {
 		phase = 0.0;
-		index = 999;
+		index = 8;
 		nextStep = true;
 		resetLight = 1.0;
 	}
@@ -150,16 +152,25 @@ void SEQ3::step() {
 			index = 0;
 		}
 		stepLights[index] = 1.0;
+		gatePulse.trigger(1e-3);
 	}
 
 	resetLight -= resetLight / lightLambda / gSampleRate;
+
+	bool pulse = gatePulse.process(1.0 / gSampleRate);
 
 	// Gate buttons
 	for (int i = 0; i < 8; i++) {
 		if (gateTriggers[i].process(params[GATE_PARAM + i].value)) {
 			gateState[i] = !gateState[i];
 		}
-		float gate = (i == index && gateState[i] >= 1.0) ? 10.0 : 0.0;
+		float gateOn = (i == index && gateState[i] >= 1.0);
+		if (gateMode == TRIGGER)
+			gateOn = gateOn && pulse;
+		else if (gateMode == RETRIGGER)
+			gateOn = gateOn && !pulse;
+		float gate = gateOn ? 10.0 : 0.0;
+
 		outputs[GATE_OUTPUT + i].value = gate;
 		stepLights[i] -= stepLights[i] / lightLambda / gSampleRate;
 		gateLights[i] = (gateState[i] >= 1.0) ? 1.0 - stepLights[i] : stepLights[i];
@@ -171,9 +182,9 @@ void SEQ3::step() {
 	float row3 = params[ROW3_PARAM + index].value;
 	bool gatesOn = gateState[index];
 	if (gateMode == TRIGGER)
-		gatesOn = gatesOn && nextStep;
+		gatesOn = gatesOn && pulse;
 	else if (gateMode == RETRIGGER)
-		gatesOn = gatesOn && !nextStep;
+		gatesOn = gatesOn && !pulse;
 	float gates = gatesOn ? 10.0 : 0.0;
 
 	// Outputs
