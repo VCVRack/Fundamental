@@ -61,6 +61,9 @@ struct SEQ3 : Module {
 	json_t *toJson() {
 		json_t *rootJ = json_object();
 
+		// running
+		json_object_set_new(rootJ, "running", json_boolean(running));
+
 		// gates
 		json_t *gatesJ = json_array();
 		for (int i = 0; i < 8; i++) {
@@ -77,6 +80,11 @@ struct SEQ3 : Module {
 	}
 
 	void fromJson(json_t *rootJ) {
+		// running
+		json_t *runningJ = json_object_get(rootJ, "running");
+		if (runningJ)
+			running = json_is_true(runningJ);
+
 		// gates
 		json_t *gatesJ = json_object_get(rootJ, "gates");
 		if (gatesJ) {
