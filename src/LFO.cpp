@@ -1,6 +1,61 @@
 #include "Fundamental.hpp"
 
 
+struct LFOGenerator {
+	float phase = 0.0;
+	float pw = 0.5;
+	float freq = 1.0;
+	float offset = 0.0;
+	float factor = 1.0;
+	void setPitch(float pitch) {
+		pitch = fminf(pitch, 8.0);
+		freq = powf(2.0, pitch);
+	}
+	void setPulseWidth(float pw_) {
+		const float pwMin = 0.01;
+		pw = clampf(pw_, pwMin, 1.0 - pwMin);
+	}
+	void setOffset(bool offset_) {
+		offset = offset_ ? 1.0 : 0.0;
+	}
+	void setInvert(bool invert) {
+		factor = invert ? -1.0 : 1.0;
+	}
+	void step(float dt) {
+		float deltaPhase = fminf(freq * dt, 0.5);
+		phase += deltaPhase;
+		if (phase >= 1.0)
+			phase -= 1.0;
+	}
+	float sin() {
+		float sin = sinf(2*M_PI * phase);
+		return factor * sin + offset;
+	}
+	float tri() {
+		float tri;
+		if (phase < 0.25)
+			tri = 4.0*phase;
+		else if (phase < 0.75)
+			tri = 2.0 - 4.0*phase;
+		else
+			tri = -4.0 + 4.0*phase;
+		return factor * tri + offset;
+	}
+	float saw() {
+		float saw;
+		if (phase < 0.5)
+			saw = 2.0*phase;
+		else
+			saw = -2.0 + 2.0*phase;
+		return factor * saw + offset;
+	}
+	float sqr() {
+		float sqr = phase < pw ? 1.0 : -1.0;
+		return factor * sqr + offset;
+	}
+};
+
+
 struct LFO : Module {
 	enum ParamIds {
 		OFFSET_PARAM,
@@ -27,8 +82,7 @@ struct LFO : Module {
 		NUM_OUTPUTS
 	};
 
-	float phase = 0.0;
-
+	LFOGenerator generator;
 	float lights[1] = {};
 
 	LFO() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
@@ -37,52 +91,18 @@ struct LFO : Module {
 
 
 void LFO::step() {
-	// Compute frequency
-	float pitch = params[FREQ_PARAM].value;
-	pitch += params[FM1_PARAM].value * inputs[FM1_INPUT].value;
-	pitch += params[FM2_PARAM].value * inputs[FM2_INPUT].value;
-	pitch = fminf(pitch, 8.0);
-	float freq = powf(2.0, pitch);
+	generator.setPitch(params[FREQ_PARAM].value + params[FM1_PARAM].value * inputs[FM1_INPUT].value + params[FM2_PARAM].value * inputs[FM2_INPUT].value);
+	generator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0);
+	generator.setOffset(params[OFFSET_PARAM].value > 0.0);
+	generator.setInvert(params[INVERT_PARAM].value <= 0.0);
+	generator.step(1.0 / gSampleRate);
 
-	// Pulse width
-	const float pwMin = 0.01;
-	float pw = clampf(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0, pwMin, 1.0 - pwMin);
+	outputs[SIN_OUTPUT].value = 5.0 * generator.sin();
+	outputs[TRI_OUTPUT].value = 5.0 * generator.tri();
+	outputs[SAW_OUTPUT].value = 5.0 * generator.saw();
+	outputs[SQR_OUTPUT].value = 5.0 * generator.sqr();
 
-	// Advance phase
-	float deltaPhase = fminf(freq / gSampleRate, 0.5);
-	phase += deltaPhase;
-	if (phase >= 1.0)
-		phase -= 1.0;
-
-	float offset = params[OFFSET_PARAM].value > 0.0 ? 5.0 : 0.0;
-	float factor = params[INVERT_PARAM].value > 0.0 ? 5.0 : -5.0;
-
-	// Outputs
-	float sin = sinf(2*M_PI * phase);
-
-	float tri;
-	if (phase < 0.25)
-		tri = 4.0*phase;
-	else if (phase < 0.75)
-		tri = 2.0 - 4.0*phase;
-	else
-		tri = -4.0 + 4.0*phase;
-
-	float saw;
-	if (phase < 0.5)
-		saw = 2.0*phase;
-	else
-		saw = -2.0 + 2.0*phase;
-
-	float sqr = phase < pw ? 1.0 : -1.0;
-
-	outputs[SIN_OUTPUT].value = factor * sin + offset;
-	outputs[TRI_OUTPUT].value = factor * tri + offset;
-	outputs[SAW_OUTPUT].value = factor * saw + offset;
-	outputs[SQR_OUTPUT].value = factor * sqr + offset;
-
-	// Lights
-	lights[0] = -1.0 + 2.0*phase;
+	lights[0] = -1.0 + 2.0*generator.phase;
 }
 
 
@@ -123,4 +143,88 @@ LFOWidget::LFOWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, LFO::SQR_OUTPUT));
 
 	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(99, 41), &module->lights[0]));
+}
+
+
+
+struct LFO2 : Module {
+	enum ParamIds {
+		OFFSET_PARAM,
+		INVERT_PARAM,
+		FREQ_PARAM,
+		WAVE_PARAM,
+		FM_PARAM,
+		NUM_PARAMS
+	};
+	enum InputIds {
+		FM_INPUT,
+		RESET_INPUT,
+		WAVE_INPUT,
+		NUM_INPUTS
+	};
+	enum OutputIds {
+		INTERP_OUTPUT,
+		NUM_OUTPUTS
+	};
+
+	LFOGenerator generator;
+	float lights[1] = {};
+
+	LFO2() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
+	void step();
+};
+
+
+void LFO2::step() {
+	generator.setPitch(params[FREQ_PARAM].value + params[FM_PARAM].value * inputs[FM_INPUT].value);
+	generator.setOffset(params[OFFSET_PARAM].value > 0.0);
+	generator.setInvert(params[INVERT_PARAM].value <= 0.0);
+	generator.step(1.0 / gSampleRate);
+
+	float wave = params[WAVE_PARAM].value + inputs[WAVE_INPUT].value;
+	wave = clampf(wave, 0.0, 3.0);
+	float interp;
+	if (wave < 1.0)
+		interp = crossf(generator.sin(), generator.tri(), wave);
+	else if (wave < 2.0)
+		interp = crossf(generator.tri(), generator.saw(), wave - 1.0);
+	else
+		interp = crossf(generator.saw(), generator.sqr(), wave - 2.0);
+	outputs[INTERP_OUTPUT].value = 5.0 * interp;
+
+	lights[0] = -1.0 + 2.0*generator.phase;
+}
+
+
+LFO2Widget::LFO2Widget() {
+	LFO2 *module = new LFO2();
+	setModule(module);
+	box.size = Vec(15*6, 380);
+
+	{
+		SVGPanel *panel = new SVGPanel();
+		panel->box.size = box.size;
+		panel->setBackground(SVG::load(assetPlugin(plugin, "res/LFO-2.svg")));
+		addChild(panel);
+	}
+
+	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
+	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
+	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
+	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
+
+	addParam(createParam<CKSS>(Vec(62, 150), module, LFO2::OFFSET_PARAM, 0.0, 1.0, 1.0));
+	addParam(createParam<CKSS>(Vec(62, 215), module, LFO2::INVERT_PARAM, 0.0, 1.0, 1.0));
+
+	addParam(createParam<RoundHugeBlackKnob>(Vec(18, 60), module, LFO2::FREQ_PARAM, -8.0, 6.0, -1.0));
+	addParam(createParam<RoundBlackKnob>(Vec(11, 142), module, LFO2::WAVE_PARAM, 0.0, 3.0, 0.0));
+	addParam(createParam<RoundBlackKnob>(Vec(11, 207), module, LFO2::FM_PARAM, 0.0, 1.0, 0.5));
+
+	addInput(createInput<PJ301MPort>(Vec(11, 276), module, LFO2::FM_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(54, 276), module, LFO2::RESET_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(11, 319), module, LFO2::WAVE_INPUT));
+
+	addOutput(createOutput<PJ301MPort>(Vec(54, 319), module, LFO2::INTERP_OUTPUT));
+
+	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(68, 41), &module->lights[0]));
 }

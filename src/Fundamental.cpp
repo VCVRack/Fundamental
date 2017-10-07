@@ -12,6 +12,7 @@ void init(rack::Plugin *p) {
 	createModel<VCFWidget>(plugin, "VCF", "VCF");
 	createModel<VCAWidget>(plugin, "VCA", "VCA");
 	createModel<LFOWidget>(plugin, "LFO", "LFO-1");
+	createModel<LFO2Widget>(plugin, "LFO2", "LFO-2");
 	createModel<DelayWidget>(plugin, "Delay", "Delay");
 	createModel<ADSRWidget>(plugin, "ADSR", "ADSR");
 	createModel<VCMixerWidget>(plugin, "VCMixer", "VC Mixer");

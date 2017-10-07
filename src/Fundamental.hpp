@@ -26,6 +26,10 @@ struct LFOWidget : ModuleWidget {
 	LFOWidget();
 };
 
+struct LFO2Widget : ModuleWidget {
+	LFO2Widget();
+};
+
 struct DelayWidget : ModuleWidget {
 	DelayWidget();
 };
