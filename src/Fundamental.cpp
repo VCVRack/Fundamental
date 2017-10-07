@@ -8,9 +8,10 @@ void init(rack::Plugin *p) {
 	plugin->slug = "Fundamental";
 	plugin->name = "Fundamental";
 	plugin->homepageUrl = "https://github.com/VCVRack/Fundamental";
-	createModel<VCOWidget>(plugin, "VCO", "VCO");
+	createModel<VCOWidget>(plugin, "VCO", "VCO-1");
 	createModel<VCFWidget>(plugin, "VCF", "VCF");
 	createModel<VCAWidget>(plugin, "VCA", "VCA");
+	createModel<LFOWidget>(plugin, "LFO", "LFO-1");
 	createModel<DelayWidget>(plugin, "Delay", "Delay");
 	createModel<ADSRWidget>(plugin, "ADSR", "ADSR");
 	createModel<VCMixerWidget>(plugin, "VCMixer", "VC Mixer");

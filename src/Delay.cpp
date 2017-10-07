@@ -122,10 +122,10 @@ DelayWidget::DelayWidget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<Davies1900hBlackKnob>(Vec(67, 57), module, Delay::TIME_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(67, 123), module, Delay::FEEDBACK_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(67, 190), module, Delay::COLOR_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(67, 257), module, Delay::MIX_PARAM, 0.0, 1.0, 0.5));
+	addParam(createParam<RoundBlackKnob>(Vec(67, 57), module, Delay::TIME_PARAM, 0.0, 1.0, 0.5));
+	addParam(createParam<RoundBlackKnob>(Vec(67, 123), module, Delay::FEEDBACK_PARAM, 0.0, 1.0, 0.5));
+	addParam(createParam<RoundBlackKnob>(Vec(67, 190), module, Delay::COLOR_PARAM, 0.0, 1.0, 0.5));
+	addParam(createParam<RoundBlackKnob>(Vec(67, 257), module, Delay::MIX_PARAM, 0.0, 1.0, 0.5));
 
 	addInput(createInput<PJ301MPort>(Vec(14, 63), module, Delay::TIME_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(14, 129), module, Delay::FEEDBACK_INPUT));

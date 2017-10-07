@@ -153,11 +153,11 @@ VCFWidget::VCFWidget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<Davies1900hLargeBlackKnob>(Vec(33, 61), module, VCF::FREQ_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(12, 143), module, VCF::FINE_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(71, 143), module, VCF::RES_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(12, 208), module, VCF::FREQ_CV_PARAM, -1.0, 1.0, 0.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(71, 208), module, VCF::DRIVE_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<RoundHugeBlackKnob>(Vec(33, 61), module, VCF::FREQ_PARAM, 0.0, 1.0, 0.5));
+	addParam(createParam<RoundBlackKnob>(Vec(12, 143), module, VCF::FINE_PARAM, 0.0, 1.0, 0.5));
+	addParam(createParam<RoundBlackKnob>(Vec(71, 143), module, VCF::RES_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<RoundBlackKnob>(Vec(12, 208), module, VCF::FREQ_CV_PARAM, -1.0, 1.0, 0.0));
+	addParam(createParam<RoundBlackKnob>(Vec(71, 208), module, VCF::DRIVE_PARAM, 0.0, 1.0, 0.0));
 
 	addInput(createInput<PJ301MPort>(Vec(10, 276), module, VCF::FREQ_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(48, 276), module, VCF::RES_INPUT));

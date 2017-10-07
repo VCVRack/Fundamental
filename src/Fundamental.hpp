@@ -22,6 +22,10 @@ struct VCAWidget : ModuleWidget {
 	VCAWidget();
 };
 
+struct LFOWidget : ModuleWidget {
+	LFOWidget();
+};
+
 struct DelayWidget : ModuleWidget {
 	DelayWidget();
 };

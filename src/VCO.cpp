@@ -17,14 +17,14 @@ struct VCO : Module {
 		FINE_PARAM,
 		FM_PARAM,
 		PW_PARAM,
-		PW_CV_PARAM,
+		PWM_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
 		PITCH_INPUT,
 		FM_INPUT,
-		PW_INPUT,
 		SYNC_INPUT,
+		PW_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -90,7 +90,7 @@ void VCO::step() {
 
 	// Pulse width
 	const float pwMin = 0.01;
-	float pw = clampf(params[PW_PARAM].value + params[PW_CV_PARAM].value * inputs[PW_INPUT].value / 10.0, pwMin, 1.0 - pwMin);
+	float pw = clampf(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0, pwMin, 1.0 - pwMin);
 
 	// Advance phase
 	float deltaPhase = clampf(freq / gSampleRate, 1e-6, 0.5);
@@ -205,7 +205,7 @@ VCOWidget::VCOWidget() {
 	{
 		SVGPanel *panel = new SVGPanel();
 		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/VCO.svg")));
+		panel->setBackground(SVG::load(assetPlugin(plugin, "res/VCO-1.svg")));
 		addChild(panel);
 	}
 
@@ -215,13 +215,13 @@ VCOWidget::VCOWidget() {
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
 	addParam(createParam<CKSS>(Vec(15, 77), module, VCO::MODE_PARAM, 0.0, 1.0, 1.0));
-	addParam(createParam<CKSS>(Vec(120, 77), module, VCO::SYNC_PARAM, 0.0, 1.0, 1.0));
+	addParam(createParam<CKSS>(Vec(119, 77), module, VCO::SYNC_PARAM, 0.0, 1.0, 1.0));
 
-	addParam(createParam<Davies1900hLargeBlackKnob>(Vec(48, 61), module, VCO::FREQ_PARAM, -54.0, 54.0, 0.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(23, 143), module, VCO::FINE_PARAM, -1.0, 1.0, 0.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(91, 143), module, VCO::PW_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(23, 208), module, VCO::FM_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<Davies1900hBlackKnob>(Vec(91, 208), module, VCO::PW_CV_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<RoundHugeBlackKnob>(Vec(47, 61), module, VCO::FREQ_PARAM, -54.0, 54.0, 0.0));
+	addParam(createParam<RoundBlackKnob>(Vec(23, 143), module, VCO::FINE_PARAM, -1.0, 1.0, 0.0));
+	addParam(createParam<RoundBlackKnob>(Vec(91, 143), module, VCO::PW_PARAM, 0.0, 1.0, 0.5));
+	addParam(createParam<RoundBlackKnob>(Vec(23, 208), module, VCO::FM_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<RoundBlackKnob>(Vec(91, 208), module, VCO::PWM_PARAM, 0.0, 1.0, 0.0));
 
 	addInput(createInput<PJ301MPort>(Vec(11, 276), module, VCO::PITCH_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(45, 276), module, VCO::FM_INPUT));

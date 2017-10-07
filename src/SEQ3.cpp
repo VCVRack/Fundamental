@@ -224,18 +224,18 @@ SEQ3Widget::SEQ3Widget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(17, 56), module, SEQ3::CLOCK_PARAM, -2.0, 6.0, 2.0));
+	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(18, 56), module, SEQ3::CLOCK_PARAM, -2.0, 6.0, 2.0));
 	addParam(createParam<LEDButton>(Vec(60, 61-1), module, SEQ3::RUN_PARAM, 0.0, 1.0, 0.0));
 	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(60+5, 61+4), &module->runningLight));
-	addParam(createParam<LEDButton>(Vec(98, 61-1), module, SEQ3::RESET_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<LEDButton>(Vec(99, 61-1), module, SEQ3::RESET_PARAM, 0.0, 1.0, 0.0));
 	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(98+5, 61+4), &module->resetLight));
 	addParam(createParam<Davies1900hSmallBlackSnapKnob>(Vec(132, 56), module, SEQ3::STEPS_PARAM, 1.0, 8.0, 8.0));
-	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(180.5, 65), &module->gatesLight));
-	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(218.5, 65), &module->rowLights[0]));
+	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(180, 65), &module->gatesLight));
+	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(219, 65), &module->rowLights[0]));
 	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(257, 65), &module->rowLights[1]));
-	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(295.5, 65), &module->rowLights[2]));
+	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(296, 65), &module->rowLights[2]));
 
-	static const float portX[8] = {19, 57, 96, 134, 173, 211, 250, 288};
+	static const float portX[8] = {20, 58, 96, 135, 173, 212, 250, 289};
 	addInput(createInput<PJ301MPort>(Vec(portX[0]-1, 99-1), module, SEQ3::CLOCK_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(portX[1]-1, 99-1), module, SEQ3::EXT_CLOCK_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(portX[2]-1, 99-1), module, SEQ3::RESET_INPUT));
