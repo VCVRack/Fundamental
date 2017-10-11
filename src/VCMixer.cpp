@@ -36,8 +36,8 @@ void VCMixer::step() {
 	float ch1 = inputs[CH1_INPUT].value * params[CH1_PARAM].value * clampf(inputs[CH1_CV_INPUT].normalize(10.0) / 10.0, 0.0, 1.0);
 	float ch2 = inputs[CH2_INPUT].value * params[CH2_PARAM].value * clampf(inputs[CH2_CV_INPUT].normalize(10.0) / 10.0, 0.0, 1.0);
 	float ch3 = inputs[CH3_INPUT].value * params[CH3_PARAM].value * clampf(inputs[CH3_CV_INPUT].normalize(10.0) / 10.0, 0.0, 1.0);
-	float cv = inputs[MIX_CV_INPUT].normalize(10.0);
-	float mix = (ch1 + ch2 + ch3) * params[MIX_PARAM].value * cv / 10.0;
+	float cv = fmaxf(inputs[MIX_CV_INPUT].normalize(10.0) / 10.0, 0.0);
+	float mix = (ch1 + ch2 + ch3) * params[MIX_PARAM].value * cv;
 
 	outputs[CH1_OUTPUT].value = ch1;
 	outputs[CH2_OUTPUT].value = ch2;

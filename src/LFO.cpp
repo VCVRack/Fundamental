@@ -142,7 +142,7 @@ LFOWidget::LFOWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, LFO::SAW_OUTPUT));
 	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, LFO::SQR_OUTPUT));
 
-	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(99, 41), &module->lights[0]));
+	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(99, 42), &module->lights[0]));
 }
 
 

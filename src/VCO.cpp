@@ -57,9 +57,8 @@ struct VCO : Module {
 
 
 void VCO::step() {
-	bool analog = params[MODE_PARAM].value < 1.0;
-	// TODO Soft sync features
-	bool soft = params[SYNC_PARAM].value < 1.0;
+	bool analog = params[MODE_PARAM].value > 0.0;
+	bool soft = params[SYNC_PARAM].value <= 0.0;
 
 	if (analog) {
 		// Adjust pitch slew
@@ -233,7 +232,7 @@ VCOWidget::VCOWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, VCO::SAW_OUTPUT));
 	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, VCO::SQR_OUTPUT));
 
-	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(99, 41), &module->lights[0]));
+	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(99, 42), &module->lights[0]));
 }
 
 
