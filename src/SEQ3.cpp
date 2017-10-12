@@ -172,35 +172,33 @@ void SEQ3::step() {
 		if (gateTriggers[i].process(params[GATE_PARAM + i].value)) {
 			gateState[i] = !gateState[i];
 		}
-		float gateOn = (i == index && gateState[i] >= 1.0);
+		bool gateOn = (running && i == index && gateState[i]);
 		if (gateMode == TRIGGER)
 			gateOn = gateOn && pulse;
 		else if (gateMode == RETRIGGER)
 			gateOn = gateOn && !pulse;
-		float gate = gateOn ? 10.0 : 0.0;
 
-		outputs[GATE_OUTPUT + i].value = gate;
+		outputs[GATE_OUTPUT + i].value = gateOn ? 10.0 : 0.0;
 		stepLights[i] -= stepLights[i] / lightLambda / gSampleRate;
-		gateLights[i] = (gateState[i] >= 1.0) ? 1.0 - stepLights[i] : stepLights[i];
+		gateLights[i] = gateState[i] ? 1.0 - stepLights[i] : stepLights[i];
 	}
 
 	// Rows
 	float row1 = params[ROW1_PARAM + index].value;
 	float row2 = params[ROW2_PARAM + index].value;
 	float row3 = params[ROW3_PARAM + index].value;
-	bool gatesOn = gateState[index];
+	bool gatesOn = (running && gateState[index]);
 	if (gateMode == TRIGGER)
 		gatesOn = gatesOn && pulse;
 	else if (gateMode == RETRIGGER)
 		gatesOn = gatesOn && !pulse;
-	float gates = gatesOn ? 10.0 : 0.0;
 
 	// Outputs
 	outputs[ROW1_OUTPUT].value = row1;
 	outputs[ROW2_OUTPUT].value = row2;
 	outputs[ROW3_OUTPUT].value = row3;
-	outputs[GATES_OUTPUT].value = gates;
-	gatesLight = (gateState[index] >= 1.0) ? 1.0 : 0.0;
+	outputs[GATES_OUTPUT].value = gatesOn ? 10.0 : 0.0;
+	gatesLight = gatesOn ? 1.0 : 0.0;
 	rowLights[0] = row1;
 	rowLights[1] = row2;
 	rowLights[2] = row3;
