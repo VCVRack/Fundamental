@@ -1,4 +1,7 @@
 #include "Fundamental.hpp"
+#include "dsp/samplerate.hpp"
+#include "dsp/ringbuffer.hpp"
+#include "dsp/filter.hpp"
 
 
 #define HISTORY_SIZE (1<<21)

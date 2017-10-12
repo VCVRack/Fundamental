@@ -1,4 +1,6 @@
 #include "Fundamental.hpp"
+#include "dsp/decimator.hpp"
+#include "dsp/filter.hpp"
 
 
 #define OVERSAMPLE 16

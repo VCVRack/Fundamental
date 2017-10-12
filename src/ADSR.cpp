@@ -1,4 +1,5 @@
 #include "Fundamental.hpp"
+#include "dsp/digital.hpp"
 
 
 struct ADSR : Module {
