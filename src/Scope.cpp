@@ -12,9 +12,9 @@ struct Scope : Module {
 		Y_SCALE_PARAM,
 		Y_POS_PARAM,
 		TIME_PARAM,
-		MODE_PARAM,
+		LISSAJOUS_PARAM,
 		TRIG_PARAM,
-		EXT_PARAM,
+		EXTERNAL_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -34,8 +34,8 @@ struct Scope : Module {
 
 	SchmittTrigger sumTrigger;
 	SchmittTrigger extTrigger;
-	bool sum = false;
-	bool ext = false;
+	bool lissajous = false;
+	bool external = false;
 	float lights[4] = {};
 	SchmittTrigger resetTrigger;
 
@@ -44,41 +44,41 @@ struct Scope : Module {
 
 	json_t *toJson() {
 		json_t *rootJ = json_object();
-		json_object_set_new(rootJ, "sum", json_integer((int) sum));
-		json_object_set_new(rootJ, "ext", json_integer((int) ext));
+		json_object_set_new(rootJ, "lissajous", json_integer((int) lissajous));
+		json_object_set_new(rootJ, "external", json_integer((int) external));
 		return rootJ;
 	}
 
 	void fromJson(json_t *rootJ) {
-		json_t *sumJ = json_object_get(rootJ, "sum");
+		json_t *sumJ = json_object_get(rootJ, "lissajous");
 		if (sumJ)
-			sum = json_integer_value(sumJ);
+			lissajous = json_integer_value(sumJ);
 
-		json_t *extJ = json_object_get(rootJ, "ext");
+		json_t *extJ = json_object_get(rootJ, "external");
 		if (extJ)
-			ext = json_integer_value(extJ);
+			external = json_integer_value(extJ);
 	}
 
 	void initialize() {
-		sum = false;
-		ext = false;
+		lissajous = false;
+		external = false;
 	}
 };
 
 
 void Scope::step() {
 	// Modes
-	if (sumTrigger.process(params[MODE_PARAM].value)) {
-		sum = !sum;
+	if (sumTrigger.process(params[LISSAJOUS_PARAM].value)) {
+		lissajous = !lissajous;
 	}
-	lights[0] = sum ? 0.0 : 1.0;
-	lights[1] = sum ? 1.0 : 0.0;
+	lights[0] = lissajous ? 0.0 : 1.0;
+	lights[1] = lissajous ? 1.0 : 0.0;
 
-	if (extTrigger.process(params[EXT_PARAM].value)) {
-		ext = !ext;
+	if (extTrigger.process(params[EXTERNAL_PARAM].value)) {
+		external = !external;
 	}
-	lights[2] = ext ? 0.0 : 1.0;
-	lights[3] = ext ? 1.0 : 0.0;
+	lights[2] = external ? 0.0 : 1.0;
+	lights[3] = external ? 1.0 : 0.0;
 
 	// Compute time
 	float deltaTime = powf(2.0, params[TIME_PARAM].value);
@@ -96,9 +96,11 @@ void Scope::step() {
 
 	// Are we waiting on the next trigger?
 	if (bufferIndex >= BUFFER_SIZE) {
-		// Trigger immediately if external but nothing plugged in
-		if (ext && !inputs[TRIG_INPUT].active) {
-			bufferIndex = 0; frameIndex = 0; return;
+		// Trigger immediately if external but nothing plugged in, or in Lissajous mode
+		if (lissajous || (external && !inputs[TRIG_INPUT].active)) {
+			bufferIndex = 0;
+			frameIndex = 0;
+			return;
 		}
 
 		// Reset the Schmitt trigger so we don't trigger immediately if the input is high
@@ -109,7 +111,7 @@ void Scope::step() {
 
 		// Must go below 0.1V to trigger
 		resetTrigger.setThresholds(params[TRIG_PARAM].value - 0.1, params[TRIG_PARAM].value);
-		float gate = ext ? inputs[TRIG_INPUT].value : inputs[X_INPUT].value;
+		float gate = external ? inputs[TRIG_INPUT].value : inputs[X_INPUT].value;
 
 		// Reset if triggered
 		float holdTime = 0.1;
@@ -152,15 +154,27 @@ struct ScopeDisplay : TransparentWidget {
 		font = Font::load(assetPlugin(plugin, "res/DejaVuSansMono.ttf"));
 	}
 
-	void drawWaveform(NVGcontext *vg, float *values, float gain, float offset) {
+	void drawWaveform(NVGcontext *vg, float *valuesX, float *valuesY) {
+		if (!valuesX)
+			return;
 		nvgSave(vg);
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
 		nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
 		nvgBeginPath(vg);
 		// Draw maximum display left to right
 		for (int i = 0; i < BUFFER_SIZE; i++) {
-			float value = values[i] * gain + offset;
-			Vec p = Vec(b.pos.x + i * b.size.x / (BUFFER_SIZE-1), b.pos.y + b.size.y * (1 - value) / 2);
+			float x, y;
+			if (valuesY) {
+				x = valuesX[i] / 2.0 + 0.5;
+				y = valuesY[i] / 2.0 + 0.5;
+			}
+			else {
+				x = (float)i / (BUFFER_SIZE - 1);
+				y = valuesX[i] / 2.0 + 0.5;
+			}
+			Vec p;
+			p.x = b.pos.x + b.size.x * x;
+			p.y = b.pos.y + b.size.y * (1.0 - y);
 			if (i == 0)
 				nvgMoveTo(vg, p.x, p.y);
 			else
@@ -168,19 +182,19 @@ struct ScopeDisplay : TransparentWidget {
 		}
 		nvgLineCap(vg, NVG_ROUND);
 		nvgMiterLimit(vg, 2.0);
-		nvgStrokeWidth(vg, 1.75);
+		nvgStrokeWidth(vg, 1.5);
 		nvgGlobalCompositeOperation(vg, NVG_LIGHTER);
 		nvgStroke(vg);
 		nvgResetScissor(vg);
 		nvgRestore(vg);
 	}
 
-	void drawTrig(NVGcontext *vg, float value, float gain, float offset) {
+	void drawTrig(NVGcontext *vg, float value) {
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
 		nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
 
-		value = value * gain + offset;
-		Vec p = Vec(box.size.x, b.pos.y + b.size.y * (1 - value) / 2);
+		value = value / 2.0 + 0.5;
+		Vec p = Vec(box.size.x, b.pos.y + b.size.y * (1.0 - value));
 
 		// Draw line
 		nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
@@ -227,35 +241,46 @@ struct ScopeDisplay : TransparentWidget {
 	}
 
 	void draw(NVGcontext *vg) {
-		float gainX = powf(2.0, roundf(module->params[Scope::X_SCALE_PARAM].value)) / 12.0;
-		float gainY = powf(2.0, roundf(module->params[Scope::Y_SCALE_PARAM].value)) / 12.0;
-		float posX = module->params[Scope::X_POS_PARAM].value;
-		float posY = module->params[Scope::Y_POS_PARAM].value;
+		float gainX = powf(2.0, roundf(module->params[Scope::X_SCALE_PARAM].value));
+		float gainY = powf(2.0, roundf(module->params[Scope::Y_SCALE_PARAM].value));
+		float offsetX = module->params[Scope::X_POS_PARAM].value;
+		float offsetY = module->params[Scope::Y_POS_PARAM].value;
+
+		float valuesX[BUFFER_SIZE];
+		float valuesY[BUFFER_SIZE];
+		for (int i = 0; i < BUFFER_SIZE; i++) {
+			int j = i;
+			// Lock display to buffer if buffer update deltaTime <= 2^-11
+			if (module->lissajous)
+				j = (i + module->bufferIndex) % BUFFER_SIZE;
+			valuesX[i] = (module->bufferX[j] + offsetX) * gainX / 10.0;
+			valuesY[i] = (module->bufferY[j] + offsetY) * gainY / 10.0;
+		}
 
 		// Draw waveforms
-		if (module->sum) {
-			float sumBuffer[BUFFER_SIZE];
-			for (int i = 0; i < BUFFER_SIZE; i++) {
-				sumBuffer[i] = module->bufferX[i] + module->bufferY[i];
+		if (module->lissajous) {
+			// X x Y
+			if (module->inputs[Scope::X_INPUT].active || module->inputs[Scope::Y_INPUT].active) {
+				nvgStrokeColor(vg, nvgRGBA(0x9f, 0xe4, 0x36, 0xc0));
+				drawWaveform(vg, valuesX, valuesY);
 			}
-			// X + Y
-			nvgStrokeColor(vg, nvgRGBA(0x9f, 0xe4, 0x36, 0xc0));
-			drawWaveform(vg, sumBuffer, gainX, posX);
 		}
 		else {
 			// Y
 			if (module->inputs[Scope::Y_INPUT].active) {
 				nvgStrokeColor(vg, nvgRGBA(0xe1, 0x02, 0x78, 0xc0));
-				drawWaveform(vg, module->bufferY, gainY, posY);
+				drawWaveform(vg, valuesY, NULL);
 			}
 
 			// X
 			if (module->inputs[Scope::X_INPUT].active) {
 				nvgStrokeColor(vg, nvgRGBA(0x28, 0xb0, 0xf3, 0xc0));
-				drawWaveform(vg, module->bufferX, gainX, posX);
+				drawWaveform(vg, valuesX, NULL);
 			}
+
+			float valueTrig = (module->params[Scope::TRIG_PARAM].value + offsetX) * gainX / 10.0;
+			drawTrig(vg, valueTrig);
 		}
-		drawTrig(vg, module->params[Scope::TRIG_PARAM].value, gainX, posX);
 
 		// Calculate and draw stats
 		if (++frame >= 4) {
@@ -294,14 +319,14 @@ ScopeWidget::ScopeWidget() {
 		addChild(display);
 	}
 
-	addParam(createParam<Davies1900hSmallBlackSnapKnob>(Vec(15, 209), module, Scope::X_SCALE_PARAM, -1.0, 9.0, 1.0));
-	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(15, 263), module, Scope::X_POS_PARAM, -1.0, 1.0, 0.0));
-	addParam(createParam<Davies1900hSmallBlackSnapKnob>(Vec(61, 209), module, Scope::Y_SCALE_PARAM, -1.0, 9.0, 1.0));
-	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(61, 263), module, Scope::Y_POS_PARAM, -1.0, 1.0, 0.0));
+	addParam(createParam<Davies1900hSmallBlackSnapKnob>(Vec(15, 209), module, Scope::X_SCALE_PARAM, -2.0, 8.0, 0.0));
+	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(15, 263), module, Scope::X_POS_PARAM, -10.0, 10.0, 0.0));
+	addParam(createParam<Davies1900hSmallBlackSnapKnob>(Vec(61, 209), module, Scope::Y_SCALE_PARAM, -2.0, 8.0, 0.0));
+	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(61, 263), module, Scope::Y_POS_PARAM, -10.0, 10.0, 0.0));
 	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(107, 209), module, Scope::TIME_PARAM, -6.0, -16.0, -14.0));
-	addParam(createParam<CKD6>(Vec(106, 262), module, Scope::MODE_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM, -12.0, 12.0, 0.0));
-	addParam(createParam<CKD6>(Vec(152, 262), module, Scope::EXT_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<CKD6>(Vec(106, 262), module, Scope::LISSAJOUS_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM, -10.0, 10.0, 0.0));
+	addParam(createParam<CKD6>(Vec(152, 262), module, Scope::EXTERNAL_PARAM, 0.0, 1.0, 0.0));
 
 	addInput(createInput<PJ301MPort>(Vec(17, 319), module, Scope::X_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(63, 319), module, Scope::Y_INPUT));
