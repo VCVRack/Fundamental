@@ -3,12 +3,160 @@
 #include "dsp/filter.hpp"
 
 
-#define OVERSAMPLE 16
-#define QUALITY 16
-
-
 extern float sawTable[2048];
 extern float triTable[2048];
+
+
+template <int OVERSAMPLE, int QUALITY>
+struct VoltageControlledOscillator {
+	bool analog = false;
+	bool soft = false;
+	float lastSyncValue = 0.0;
+	float phase = 0.0;
+	float freq;
+	float pw = 0.5;
+	float pitch;
+	bool syncEnabled = false;
+	bool syncDirection = false;
+
+	Decimator<OVERSAMPLE, QUALITY> sinDecimator;
+	Decimator<OVERSAMPLE, QUALITY> triDecimator;
+	Decimator<OVERSAMPLE, QUALITY> sawDecimator;
+	Decimator<OVERSAMPLE, QUALITY> sqrDecimator;
+	RCFilter sqrFilter;
+
+	// For analog detuning effect
+	float pitchSlew = 0.0;
+	int pitchSlewIndex = 0;
+
+	float sinBuffer[OVERSAMPLE] = {};
+	float triBuffer[OVERSAMPLE] = {};
+	float sawBuffer[OVERSAMPLE] = {};
+	float sqrBuffer[OVERSAMPLE] = {};
+
+	void setPitch(float pitchKnob, float pitchCv) {
+		// Compute frequency
+		pitch = pitchKnob;
+		if (analog) {
+			// Apply pitch slew
+			const float pitchSlewAmount = 3.0;
+			pitch += pitchSlew * pitchSlewAmount;
+		}
+		else {
+			// Quantize coarse knob if digital mode
+			pitch = roundf(pitch);
+		}
+		pitch += pitchCv;
+		// Note C3
+		freq = 261.626 * powf(2.0, pitch / 12.0);
+	}
+	void setPulseWidth(float pulseWidth) {
+		const float pwMin = 0.01;
+		pw = clampf(pulseWidth, pwMin, 1.0 - pwMin);
+	}
+
+	void process(float deltaTime, float syncValue) {
+		if (analog) {
+			// Adjust pitch slew
+			if (++pitchSlewIndex > 32) {
+				const float pitchSlewTau = 100.0; // Time constant for leaky integrator in seconds
+				pitchSlew += (randomNormal() - pitchSlew / pitchSlewTau) / gSampleRate;
+				pitchSlewIndex = 0;
+			}
+		}
+
+		// Advance phase
+		float deltaPhase = clampf(freq * deltaTime, 1e-6, 0.5);
+
+		// Detect sync
+		int syncIndex = -1; // Index in the oversample loop where sync occurs [0, OVERSAMPLE)
+		float syncCrossing = 0.0; // Offset that sync occurs [0.0, 1.0)
+		if (syncEnabled) {
+			syncValue -= 0.01;
+			if (syncValue > 0.0 && lastSyncValue <= 0.0) {
+				float deltaSync = syncValue - lastSyncValue;
+				syncCrossing = 1.0 - syncValue / deltaSync;
+				syncCrossing *= OVERSAMPLE;
+				syncIndex = (int)syncCrossing;
+				syncCrossing -= syncIndex;
+			}
+			lastSyncValue = syncValue;
+		}
+
+		if (syncDirection)
+			deltaPhase *= -1.0;
+
+		sqrFilter.setCutoff(40.0 * deltaTime);
+
+		for (int i = 0; i < OVERSAMPLE; i++) {
+			if (syncIndex == i) {
+				if (soft) {
+					syncDirection = !syncDirection;
+					deltaPhase *= -1.0;
+				}
+				else {
+					// phase = syncCrossing * deltaPhase / OVERSAMPLE;
+					phase = 0.0;
+				}
+			}
+
+			if (analog) {
+				// Quadratic approximation of sine, slightly richer harmonics
+				if (phase < 0.5f)
+					sinBuffer[i] = 1.f - 16.f * powf(phase - 0.25f, 2);
+				else
+					sinBuffer[i] = -1.f + 16.f * powf(phase - 0.75f, 2);
+				sinBuffer[i] *= 1.08f;
+			}
+			else {
+				sinBuffer[i] = sinf(2.f*M_PI * phase);
+			}
+			if (analog) {
+				triBuffer[i] = 1.25f * interpf(triTable, phase * 2047.f);
+			}
+			else {
+				if (phase < 0.25f)
+					triBuffer[i] = 4.f * phase;
+				else if (phase < 0.75f)
+					triBuffer[i] = 2.f - 4.f * phase;
+				else
+					triBuffer[i] = -4.f + 4.f * phase;
+			}
+			if (analog) {
+				sawBuffer[i] = 1.66f * interpf(sawTable, phase * 2047.f);
+			}
+			else {
+				if (phase < 0.5f)
+					sawBuffer[i] = 2.f * phase;
+				else
+					sawBuffer[i] = -2.f + 2.f * phase;
+			}
+			sqrBuffer[i] = (phase < pw) ? 1.f : -1.f;
+			if (analog) {
+				// Simply filter here
+				sqrFilter.process(sqrBuffer[i]);
+				sqrBuffer[i] = 0.71f * sqrFilter.highpass();
+			}
+
+			// Advance phase
+			phase += deltaPhase / OVERSAMPLE;
+			phase = eucmodf(phase, 1.0);
+		}
+	}
+
+	float sin() {
+		return sinDecimator.process(sinBuffer);
+	}
+	float tri() {
+		return triDecimator.process(triBuffer);
+	}
+	float saw() {
+		return sawDecimator.process(sawBuffer);
+	}
+	float sqr() {
+		return sqrDecimator.process(sqrBuffer);
+	}
+};
 
 
 struct VCO : Module {
@@ -34,24 +182,11 @@ struct VCO : Module {
 		TRI_OUTPUT,
 		SAW_OUTPUT,
 		SQR_OUTPUT,
+		PITCH_LIGHT,
 		NUM_OUTPUTS
 	};
 
-	float lastSync = 0.0;
-	float phase = 0.0;
-	bool syncDirection = false;
-
-	Decimator<OVERSAMPLE, QUALITY> sinDecimator;
-	Decimator<OVERSAMPLE, QUALITY> triDecimator;
-	Decimator<OVERSAMPLE, QUALITY> sawDecimator;
-	Decimator<OVERSAMPLE, QUALITY> sqrDecimator;
-	RCFilter sqrFilter;
-
-	float lights[1] = {};
-
-	// For analog detuning effect
-	float pitchSlew = 0.0;
-	int pitchSlewIndex = 0;
+	VoltageControlledOscillator<16, 16> oscillator;
 
 	VCO() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
 	void step();
@@ -59,142 +194,30 @@ struct VCO : Module {
 
 
 void VCO::step() {
-	bool analog = params[MODE_PARAM].value > 0.0;
-	bool soft = params[SYNC_PARAM].value <= 0.0;
+	oscillator.analog = params[MODE_PARAM].value > 0.0;
+	oscillator.soft = params[SYNC_PARAM].value <= 0.0;
 
-	if (analog) {
-		// Adjust pitch slew
-		if (++pitchSlewIndex > 32) {
-			const float pitchSlewTau = 100.0; // Time constant for leaky integrator in seconds
-			pitchSlew += (randomNormal() - pitchSlew / pitchSlewTau) / gSampleRate;
-			pitchSlewIndex = 0;
-		}
-	}
-
-	// Compute frequency
-	float pitch = params[FREQ_PARAM].value;
-	if (analog) {
-		// Apply pitch slew
-		const float pitchSlewAmount = 3.0;
-		pitch += pitchSlew * pitchSlewAmount;
-	}
-	else {
-		// Quantize coarse knob if digital mode
-		pitch = roundf(pitch);
-	}
-	pitch += 12.0 * inputs[PITCH_INPUT].value;
-	pitch += 3.0 * quadraticBipolar(params[FINE_PARAM].value);
+	float pitchCv = 12.0 * inputs[PITCH_INPUT].value + 3.0 * quadraticBipolar(params[FINE_PARAM].value);
 	if (inputs[FM_INPUT].active) {
-		pitch += quadraticBipolar(params[FM_PARAM].value) * 12.0 * inputs[FM_INPUT].value;
+		pitchCv += quadraticBipolar(params[FM_PARAM].value) * 12.0 * inputs[FM_INPUT].value;
 	}
-	float freq = 261.626 * powf(2.0, pitch / 12.0);
+	oscillator.setPitch(params[FREQ_PARAM].value, pitchCv);
+	oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0);
+	oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
-	// Pulse width
-	const float pwMin = 0.01;
-	float pw = clampf(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0, pwMin, 1.0 - pwMin);
-
-	// Advance phase
-	float deltaPhase = clampf(freq / gSampleRate, 1e-6, 0.5);
-
-	// Detect sync
-	int syncIndex = -1; // Index in the oversample loop where sync occurs [0, OVERSAMPLE)
-	float syncCrossing = 0.0; // Offset that sync occurs [0.0, 1.0)
-	if (inputs[SYNC_INPUT].active) {
-		float sync = inputs[SYNC_INPUT].value - 0.01;
-		if (sync > 0.0 && lastSync <= 0.0) {
-			float deltaSync = sync - lastSync;
-			syncCrossing = 1.0 - sync / deltaSync;
-			syncCrossing *= OVERSAMPLE;
-			syncIndex = (int)syncCrossing;
-			syncCrossing -= syncIndex;
-		}
-		lastSync = sync;
-	}
-
-	if (syncDirection)
-		deltaPhase *= -1.0;
-
-	// Oversample loop
-	float sinBuffer[OVERSAMPLE];
-	float triBuffer[OVERSAMPLE];
-	float sawBuffer[OVERSAMPLE];
-	float sqrBuffer[OVERSAMPLE];
-	sqrFilter.setCutoff(40.0 / gSampleRate);
-
-	for (int i = 0; i < OVERSAMPLE; i++) {
-		if (syncIndex == i) {
-			if (soft) {
-				syncDirection = !syncDirection;
-				deltaPhase *= -1.0;
-			}
-			else {
-				// phase = syncCrossing * deltaPhase / OVERSAMPLE;
-				phase = 0.0;
-			}
-		}
-
-		if (outputs[SIN_OUTPUT].active) {
-			if (analog) {
-				// Quadratic approximation of sine, slightly richer harmonics
-				if (phase < 0.5f)
-					sinBuffer[i] = 1.f - 16.f * powf(phase - 0.25f, 2);
-				else
-					sinBuffer[i] = -1.f + 16.f * powf(phase - 0.75f, 2);
-				sinBuffer[i] *= 1.08f;
-			}
-			else {
-				sinBuffer[i] = sinf(2.f*M_PI * phase);
-			}
-		}
-		if (outputs[TRI_OUTPUT].active) {
-			if (analog) {
-				triBuffer[i] = 1.25f * interpf(triTable, phase * 2047.f);
-			}
-			else {
-				if (phase < 0.25f)
-					triBuffer[i] = 4.f * phase;
-				else if (phase < 0.75f)
-					triBuffer[i] = 2.f - 4.f * phase;
-				else
-					triBuffer[i] = -4.f + 4.f * phase;
-			}
-		}
-		if (outputs[SAW_OUTPUT].active) {
-			if (analog) {
-				sawBuffer[i] = 1.66f * interpf(sawTable, phase * 2047.f);
-			}
-			else {
-				if (phase < 0.5f)
-					sawBuffer[i] = 2.f * phase;
-				else
-					sawBuffer[i] = -2.f + 2.f * phase;
-			}
-		}
-		if (outputs[SQR_OUTPUT].active) {
-			sqrBuffer[i] = (phase < pw) ? 1.f : -1.f;
-			if (analog) {
-				// Simply filter here
-				sqrFilter.process(sqrBuffer[i]);
-				sqrBuffer[i] = 0.71f * sqrFilter.highpass();
-			}
-		}
-
-		// Advance phase
-		phase += deltaPhase / OVERSAMPLE;
-		phase = eucmodf(phase, 1.0);
-	}
+	oscillator.process(1.0 / gSampleRate, inputs[SYNC_INPUT].value);
 
 	// Set output
 	if (outputs[SIN_OUTPUT].active)
-		outputs[SIN_OUTPUT].value = 5.0 * sinDecimator.process(sinBuffer);
+		outputs[SIN_OUTPUT].value = 5.0 * oscillator.sin();
 	if (outputs[TRI_OUTPUT].active)
-		outputs[TRI_OUTPUT].value = 5.0 * triDecimator.process(triBuffer);
+		outputs[TRI_OUTPUT].value = 5.0 * oscillator.tri();
 	if (outputs[SAW_OUTPUT].active)
-		outputs[SAW_OUTPUT].value = 5.0 * sawDecimator.process(sawBuffer);
+		outputs[SAW_OUTPUT].value = 5.0 * oscillator.saw();
 	if (outputs[SQR_OUTPUT].active)
-		outputs[SQR_OUTPUT].value = 5.0 * sqrDecimator.process(sqrBuffer);
+		outputs[SQR_OUTPUT].value = 5.0 * oscillator.sqr();
 
-	lights[0] = rescalef(pitch, -48.0, 48.0, -1.0, 1.0);
+	outputs[PITCH_LIGHT].value = rescalef(oscillator.pitch, -48.0, 48.0, -1.0, 1.0);
 }
 
 
@@ -234,7 +257,94 @@ VCOWidget::VCOWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, VCO::SAW_OUTPUT));
 	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, VCO::SQR_OUTPUT));
 
-	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(99, 42), &module->lights[0]));
+	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(99, 42), &module->outputs[VCO::PITCH_LIGHT].value));
+}
+
+
+struct VCO2 : Module {
+	enum ParamIds {
+		MODE_PARAM,
+		SYNC_PARAM,
+		FREQ_PARAM,
+		WAVE_PARAM,
+		FM_PARAM,
+		NUM_PARAMS
+	};
+	enum InputIds {
+		FM_INPUT,
+		SYNC_INPUT,
+		WAVE_INPUT,
+		NUM_INPUTS
+	};
+	enum OutputIds {
+		OUT_OUTPUT,
+		PITCH_LIGHT,
+		NUM_OUTPUTS
+	};
+
+	VoltageControlledOscillator<8, 8> oscillator;
+
+	VCO2() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
+	void step();
+};
+
+
+void VCO2::step() {
+	oscillator.analog = params[MODE_PARAM].value > 0.0;
+	oscillator.soft = params[SYNC_PARAM].value <= 0.0;
+
+	float pitchCv = params[FREQ_PARAM].value + quadraticBipolar(params[FM_PARAM].value) * 12.0 * inputs[FM_INPUT].value;
+	oscillator.setPitch(0.0, pitchCv);
+	oscillator.syncEnabled = inputs[SYNC_INPUT].active;
+
+	oscillator.process(1.0 / gSampleRate, inputs[SYNC_INPUT].value);
+
+	// Set output
+	float wave = clampf(params[WAVE_PARAM].value + inputs[WAVE_INPUT].value, 0.0, 3.0);
+	float out;
+	if (wave < 1.0)
+		out = crossf(oscillator.sin(), oscillator.tri(), wave);
+	else if (wave < 2.0)
+		out = crossf(oscillator.tri(), oscillator.saw(), wave - 1.0);
+	else
+		out = crossf(oscillator.saw(), oscillator.sqr(), wave - 2.0);
+	outputs[OUT_OUTPUT].value = 5.0 * out;
+
+	outputs[PITCH_LIGHT].value = rescalef(oscillator.pitch, -48.0, 48.0, -1.0, 1.0);
+}
+
+
+VCO2Widget::VCO2Widget() {
+	VCO2 *module = new VCO2();
+	setModule(module);
+	box.size = Vec(15*6, 380);
+
+	{
+		SVGPanel *panel = new SVGPanel();
+		panel->box.size = box.size;
+		panel->setBackground(SVG::load(assetPlugin(plugin, "res/VCO-2.svg")));
+		addChild(panel);
+	}
+
+	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
+	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
+	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
+	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
+
+	addParam(createParam<CKSS>(Vec(62, 150), module, VCO2::MODE_PARAM, 0.0, 1.0, 1.0));
+	addParam(createParam<CKSS>(Vec(62, 215), module, VCO2::SYNC_PARAM, 0.0, 1.0, 1.0));
+
+	addParam(createParam<RoundHugeBlackKnob>(Vec(17, 60), module, VCO2::FREQ_PARAM, -54.0, 54.0, 0.0));
+	addParam(createParam<RoundBlackKnob>(Vec(12, 143), module, VCO2::WAVE_PARAM, 0.0, 3.0, 1.5));
+	addParam(createParam<RoundBlackKnob>(Vec(12, 208), module, VCO2::FM_PARAM, 0.0, 1.0, 0.0));
+
+	addInput(createInput<PJ301MPort>(Vec(11, 276), module, VCO2::FM_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(54, 276), module, VCO2::SYNC_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(11, 320), module, VCO2::WAVE_INPUT));
+
+	addOutput(createOutput<PJ301MPort>(Vec(54, 320), module, VCO2::OUT_OUTPUT));
+
+	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(68, 41), &module->outputs[VCO2::PITCH_LIGHT].value));
 }
 
 

@@ -14,6 +14,10 @@ struct VCOWidget : ModuleWidget {
 	VCOWidget();
 };
 
+struct VCO2Widget : ModuleWidget {
+	VCO2Widget();
+};
+
 struct VCFWidget : ModuleWidget {
 	VCFWidget();
 };

@@ -9,6 +9,7 @@ void init(rack::Plugin *p) {
 	plugin->name = "Fundamental";
 	plugin->homepageUrl = "https://github.com/VCVRack/Fundamental";
 	createModel<VCOWidget>(plugin, "VCO", "VCO-1");
+	createModel<VCO2Widget>(plugin, "VCO2", "VCO-2");
 	createModel<VCFWidget>(plugin, "VCF", "VCF");
 	createModel<VCAWidget>(plugin, "VCA", "VCA");
 	createModel<LFOWidget>(plugin, "LFO", "LFO-1");
