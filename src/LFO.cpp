@@ -1,12 +1,17 @@
 #include "Fundamental.hpp"
+#include "dsp/digital.hpp"
 
 
 struct LFOGenerator {
 	float phase = 0.0;
 	float pw = 0.5;
 	float freq = 1.0;
-	float offset = 0.0;
-	float factor = 1.0;
+	bool offset = false;
+	bool invert = false;
+	SchmittTrigger resetTrigger;
+	LFOGenerator() {
+		resetTrigger.setThresholds(0.0, 0.01);
+	}
 	void setPitch(float pitch) {
 		pitch = fminf(pitch, 8.0);
 		freq = powf(2.0, pitch);
@@ -15,11 +20,10 @@ struct LFOGenerator {
 		const float pwMin = 0.01;
 		pw = clampf(pw_, pwMin, 1.0 - pwMin);
 	}
-	void setOffset(bool offset_) {
-		offset = offset_ ? 1.0 : 0.0;
-	}
-	void setInvert(bool invert) {
-		factor = invert ? -1.0 : 1.0;
+	void setReset(float reset) {
+		if (resetTrigger.process(reset)) {
+			phase = 0.0;
+		}
 	}
 	void step(float dt) {
 		float deltaPhase = fminf(freq * dt, 0.5);
@@ -28,30 +32,32 @@ struct LFOGenerator {
 			phase -= 1.0;
 	}
 	float sin() {
-		float sin = sinf(2*M_PI * phase);
-		return factor * sin + offset;
+		if (offset)
+			return 1.0 - cosf(2*M_PI * phase) * (invert ? -1.0 : 1.0);
+		else
+			return sinf(2*M_PI * phase) * (invert ? -1.0 : 1.0);
+	}
+	float tri(float x) {
+		return 4.0 * fabsf(x - roundf(x));
 	}
 	float tri() {
-		float tri;
-		if (phase < 0.25)
-			tri = 4.0*phase;
-		else if (phase < 0.75)
-			tri = 2.0 - 4.0*phase;
+		if (offset)
+			return tri(invert ? phase - 0.5 : phase);
 		else
-			tri = -4.0 + 4.0*phase;
-		return factor * tri + offset;
+			return -1.0 + tri(invert ? phase - 0.25 : phase - 0.75);
+	}
+	float saw(float x) {
+		return 2.0 * (x - roundf(x));
 	}
 	float saw() {
-		float saw;
-		if (phase < 0.5)
-			saw = 2.0*phase;
+		if (offset)
+			return invert ? 2.0 * (1.0 - phase) : 2.0 * phase;
 		else
-			saw = -2.0 + 2.0*phase;
-		return factor * saw + offset;
+			return saw(phase) * (invert ? -1.0 : 1.0);
 	}
 	float sqr() {
-		float sqr = phase < pw ? 1.0 : -1.0;
-		return factor * sqr + offset;
+		float sqr = (phase < pw) ^ invert ? 1.0 : -1.0;
+		return offset ? sqr + 1.0 : sqr;
 	}
 };
 
@@ -93,9 +99,10 @@ struct LFO : Module {
 void LFO::step() {
 	generator.setPitch(params[FREQ_PARAM].value + params[FM1_PARAM].value * inputs[FM1_INPUT].value + params[FM2_PARAM].value * inputs[FM2_INPUT].value);
 	generator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0);
-	generator.setOffset(params[OFFSET_PARAM].value > 0.0);
-	generator.setInvert(params[INVERT_PARAM].value <= 0.0);
+	generator.offset = (params[OFFSET_PARAM].value > 0.0);
+	generator.invert = (params[INVERT_PARAM].value <= 0.0);
 	generator.step(1.0 / gSampleRate);
+	generator.setReset(inputs[RESET_INPUT].value);
 
 	outputs[SIN_OUTPUT].value = 5.0 * generator.sin();
 	outputs[TRI_OUTPUT].value = 5.0 * generator.tri();
@@ -177,9 +184,10 @@ struct LFO2 : Module {
 
 void LFO2::step() {
 	generator.setPitch(params[FREQ_PARAM].value + params[FM_PARAM].value * inputs[FM_INPUT].value);
-	generator.setOffset(params[OFFSET_PARAM].value > 0.0);
-	generator.setInvert(params[INVERT_PARAM].value <= 0.0);
+	generator.offset = (params[OFFSET_PARAM].value > 0.0);
+	generator.invert = (params[INVERT_PARAM].value <= 0.0);
 	generator.step(1.0 / gSampleRate);
+	generator.setReset(inputs[RESET_INPUT].value);
 
 	float wave = params[WAVE_PARAM].value + inputs[WAVE_INPUT].value;
 	wave = clampf(wave, 0.0, 3.0);
