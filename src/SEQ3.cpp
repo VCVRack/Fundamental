@@ -225,9 +225,9 @@ SEQ3Widget::SEQ3Widget() {
 
 	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(18, 56), module, SEQ3::CLOCK_PARAM, -2.0, 6.0, 2.0));
 	addParam(createParam<LEDButton>(Vec(60, 61-1), module, SEQ3::RUN_PARAM, 0.0, 1.0, 0.0));
-	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(60+5, 61+4), &module->runningLight));
+	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(65, 65), &module->runningLight));
 	addParam(createParam<LEDButton>(Vec(99, 61-1), module, SEQ3::RESET_PARAM, 0.0, 1.0, 0.0));
-	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(98+5, 61+4), &module->resetLight));
+	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(104, 65), &module->resetLight));
 	addParam(createParam<Davies1900hSmallBlackSnapKnob>(Vec(132, 56), module, SEQ3::STEPS_PARAM, 1.0, 8.0, 8.0));
 	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(180, 65), &module->gatesLight));
 	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(219, 65), &module->rowLights[0]));
@@ -235,22 +235,22 @@ SEQ3Widget::SEQ3Widget() {
 	addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(296, 65), &module->rowLights[2]));
 
 	static const float portX[8] = {20, 58, 96, 135, 173, 212, 250, 289};
-	addInput(createInput<PJ301MPort>(Vec(portX[0]-1, 99-1), module, SEQ3::CLOCK_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(portX[1]-1, 99-1), module, SEQ3::EXT_CLOCK_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(portX[2]-1, 99-1), module, SEQ3::RESET_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(portX[3]-1, 99-1), module, SEQ3::STEPS_INPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(portX[4]-1, 99-1), module, SEQ3::GATES_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(portX[5]-1, 99-1), module, SEQ3::ROW1_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(portX[6]-1, 99-1), module, SEQ3::ROW2_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(portX[7]-1, 99-1), module, SEQ3::ROW3_OUTPUT));
+	addInput(createInput<PJ301MPort>(Vec(portX[0]-1, 98), module, SEQ3::CLOCK_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(portX[1]-1, 98), module, SEQ3::EXT_CLOCK_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(portX[2]-1, 98), module, SEQ3::RESET_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(portX[3]-1, 98), module, SEQ3::STEPS_INPUT));
+	addOutput(createOutput<PJ301MPort>(Vec(portX[4]-1, 98), module, SEQ3::GATES_OUTPUT));
+	addOutput(createOutput<PJ301MPort>(Vec(portX[5]-1, 98), module, SEQ3::ROW1_OUTPUT));
+	addOutput(createOutput<PJ301MPort>(Vec(portX[6]-1, 98), module, SEQ3::ROW2_OUTPUT));
+	addOutput(createOutput<PJ301MPort>(Vec(portX[7]-1, 98), module, SEQ3::ROW3_OUTPUT));
 
 	for (int i = 0; i < 8; i++) {
 		addParam(createParam<Davies1900hSmallBlackKnob>(Vec(portX[i]-2, 157), module, SEQ3::ROW1_PARAM + i, 0.0, 6.0, 0.0));
 		addParam(createParam<Davies1900hSmallBlackKnob>(Vec(portX[i]-2, 198), module, SEQ3::ROW2_PARAM + i, 0.0, 6.0, 0.0));
 		addParam(createParam<Davies1900hSmallBlackKnob>(Vec(portX[i]-2, 240), module, SEQ3::ROW3_PARAM + i, 0.0, 6.0, 0.0));
 		addParam(createParam<LEDButton>(Vec(portX[i]+2, 278-1), module, SEQ3::GATE_PARAM + i, 0.0, 1.0, 0.0));
-		addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(portX[i]+7, 278+4), &module->gateLights[i]));
-		addOutput(createOutput<PJ301MPort>(Vec(portX[i]-1, 308-1), module, SEQ3::GATE_OUTPUT + i));
+		addChild(createValueLight<SmallLight<GreenValueLight>>(Vec(portX[i]+7, 282), &module->gateLights[i]));
+		addOutput(createOutput<PJ301MPort>(Vec(portX[i]-1, 307), module, SEQ3::GATE_OUTPUT + i));
 	}
 }
 
