@@ -156,6 +156,9 @@ struct VoltageControlledOscillator {
 	float sqr() {
 		return sqrDecimator.process(sqrBuffer);
 	}
+	float light() {
+		return sinf(2*M_PI * phase);
+	}
 };
 
 
@@ -218,7 +221,7 @@ void VCO::step() {
 	if (outputs[SQR_OUTPUT].active)
 		outputs[SQR_OUTPUT].value = 5.0 * oscillator.sqr();
 
-	outputs[PITCH_LIGHT].value = pitchCv / 12.0;
+	outputs[PITCH_LIGHT].value = oscillator.light();
 }
 
 
@@ -311,7 +314,7 @@ void VCO2::step() {
 		out = crossf(oscillator.saw(), oscillator.sqr(), wave - 2.0);
 	outputs[OUT_OUTPUT].value = 5.0 * out;
 
-	outputs[PITCH_LIGHT].value = pitchCv / 12.0;
+	outputs[PITCH_LIGHT].value = oscillator.light();
 }
 
 

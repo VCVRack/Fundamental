@@ -151,7 +151,7 @@ struct ScopeDisplay : TransparentWidget {
 	Stats statsX, statsY;
 
 	ScopeDisplay() {
-		font = Font::load(assetPlugin(plugin, "res/DejaVuSansMono.ttf"));
+		font = Font::load(assetPlugin(plugin, "res/fonts/Sudo.ttf"));
 	}
 
 	void drawWaveform(NVGcontext *vg, float *valuesX, float *valuesY) {
@@ -219,7 +219,7 @@ struct ScopeDisplay : TransparentWidget {
 		}
 		nvgFill(vg);
 
-		nvgFontSize(vg, 8);
+		nvgFontSize(vg, 9);
 		nvgFontFaceId(vg, font->handle);
 		nvgFillColor(vg, nvgRGBA(0x1e, 0x28, 0x2b, 0xff));
 		nvgText(vg, p.x - 8, p.y + 3, "T", NULL);
@@ -227,17 +227,17 @@ struct ScopeDisplay : TransparentWidget {
 	}
 
 	void drawStats(NVGcontext *vg, Vec pos, const char *title, Stats *stats) {
-		nvgFontSize(vg, 10);
+		nvgFontSize(vg, 13);
 		nvgFontFaceId(vg, font->handle);
 		nvgTextLetterSpacing(vg, -2);
 
-		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0xff));
-		nvgText(vg, pos.x + 5, pos.y + 10, title, NULL);
+		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x40));
+		nvgText(vg, pos.x + 6, pos.y + 11, title, NULL);
 
 		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x80));
 		char text[128];
-		snprintf(text, sizeof(text), "rms %5.2f  pp %5.2f  max % 6.2f  min % 6.2f", stats->vrms, stats->vpp, stats->vmax, stats->vmin);
-		nvgText(vg, pos.x + 17, pos.y + 10, text, NULL);
+		snprintf(text, sizeof(text), "pp % 06.2f  max % 06.2f  min % 06.2f", stats->vpp, stats->vmax, stats->vmin);
+		nvgText(vg, pos.x + 22, pos.y + 11, text, NULL);
 	}
 
 	void draw(NVGcontext *vg) {
