@@ -59,6 +59,9 @@ struct LFOGenerator {
 		float sqr = (phase < pw) ^ invert ? 1.0 : -1.0;
 		return offset ? sqr + 1.0 : sqr;
 	}
+	float light() {
+		return sinf(2*M_PI * phase);
+	}
 };
 
 
@@ -109,7 +112,7 @@ void LFO::step() {
 	outputs[SAW_OUTPUT].value = 5.0 * generator.saw();
 	outputs[SQR_OUTPUT].value = 5.0 * generator.sqr();
 
-	lights[0] = -1.0 + 2.0*generator.phase;
+	lights[0] = generator.light();
 }
 
 
@@ -200,7 +203,7 @@ void LFO2::step() {
 		interp = crossf(generator.saw(), generator.sqr(), wave - 2.0);
 	outputs[INTERP_OUTPUT].value = 5.0 * interp;
 
-	lights[0] = -1.0 + 2.0*generator.phase;
+	lights[0] = generator.light();
 }
 
 

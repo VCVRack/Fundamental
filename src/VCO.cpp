@@ -197,11 +197,12 @@ void VCO::step() {
 	oscillator.analog = params[MODE_PARAM].value > 0.0;
 	oscillator.soft = params[SYNC_PARAM].value <= 0.0;
 
-	float pitchCv = 12.0 * inputs[PITCH_INPUT].value + 3.0 * quadraticBipolar(params[FINE_PARAM].value);
+	float pitchFine = 3.0 * quadraticBipolar(params[FINE_PARAM].value);
+	float pitchCv = 12.0 * inputs[PITCH_INPUT].value;
 	if (inputs[FM_INPUT].active) {
 		pitchCv += quadraticBipolar(params[FM_PARAM].value) * 12.0 * inputs[FM_INPUT].value;
 	}
-	oscillator.setPitch(params[FREQ_PARAM].value, pitchCv);
+	oscillator.setPitch(params[FREQ_PARAM].value, pitchFine + pitchCv);
 	oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0);
 	oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
@@ -217,7 +218,7 @@ void VCO::step() {
 	if (outputs[SQR_OUTPUT].active)
 		outputs[SQR_OUTPUT].value = 5.0 * oscillator.sqr();
 
-	outputs[PITCH_LIGHT].value = rescalef(oscillator.pitch, -48.0, 48.0, -1.0, 1.0);
+	outputs[PITCH_LIGHT].value = pitchCv / 12.0;
 }
 
 
@@ -310,7 +311,7 @@ void VCO2::step() {
 		out = crossf(oscillator.saw(), oscillator.sqr(), wave - 2.0);
 	outputs[OUT_OUTPUT].value = 5.0 * out;
 
-	outputs[PITCH_LIGHT].value = rescalef(oscillator.pitch, -48.0, 48.0, -1.0, 1.0);
+	outputs[PITCH_LIGHT].value = pitchCv / 12.0;
 }
 
 
