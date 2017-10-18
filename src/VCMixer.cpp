@@ -28,7 +28,7 @@ struct VCMixer : Module {
 	};
 
 	VCMixer() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
-	void step();
+	void step() override;
 };
 
 

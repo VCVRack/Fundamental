@@ -128,7 +128,7 @@ void VCF::step() {
 	filter.cutoff = minCutoff * powf(maxCutoff / minCutoff, cutoffExp);
 
 	// Push a sample to the state filter
-	filter.process(input, 1.0/gSampleRate);
+	filter.process(input, 1.0/engineGetSampleRate());
 
 	// Set outputs
 	outputs[LPF_OUTPUT].value = 5.0 * filter.state[3];

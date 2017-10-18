@@ -32,7 +32,7 @@ struct ADSR : Module {
 	ADSR() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {
 		trigger.setThresholds(0.0, 1.0);
 	}
-	void step();
+	void step() override;
 };
 
 
@@ -62,7 +62,7 @@ void ADSR::step() {
 				env = sustain;
 			}
 			else {
-				env += powf(base, 1 - decay) / maxTime * (sustain - env) / gSampleRate;
+				env += powf(base, 1 - decay) / maxTime * (sustain - env) / engineGetSampleRate();
 			}
 		}
 		else {
@@ -72,7 +72,7 @@ void ADSR::step() {
 				env = 1.0;
 			}
 			else {
-				env += powf(base, 1 - attack) / maxTime * (1.01 - env) / gSampleRate;
+				env += powf(base, 1 - attack) / maxTime * (1.01 - env) / engineGetSampleRate();
 			}
 			if (env >= 1.0) {
 				env = 1.0;
@@ -86,7 +86,7 @@ void ADSR::step() {
 			env = 0.0;
 		}
 		else {
-			env += powf(base, 1 - release) / maxTime * (0.0 - env) / gSampleRate;
+			env += powf(base, 1 - release) / maxTime * (0.0 - env) / engineGetSampleRate();
 		}
 		decaying = false;
 	}

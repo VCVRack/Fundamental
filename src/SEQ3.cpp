@@ -57,9 +57,9 @@ struct SEQ3 : Module {
 	float gateLights[8] = {};
 
 	SEQ3() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
-	void step();
+	void step() override;
 
-	json_t *toJson() {
+	json_t *toJson() override {
 		json_t *rootJ = json_object();
 
 		// running
@@ -80,7 +80,7 @@ struct SEQ3 : Module {
 		return rootJ;
 	}
 
-	void fromJson(json_t *rootJ) {
+	void fromJson(json_t *rootJ) override {
 		// running
 		json_t *runningJ = json_object_get(rootJ, "running");
 		if (runningJ)
@@ -102,13 +102,13 @@ struct SEQ3 : Module {
 			gateMode = (GateMode)json_integer_value(gateModeJ);
 	}
 
-	void initialize() {
+	void initialize() override {
 		for (int i = 0; i < 8; i++) {
 			gateState[i] = false;
 		}
 	}
 
-	void randomize() {
+	void randomize() override {
 		for (int i = 0; i < 8; i++) {
 			gateState[i] = (randomf() > 0.5);
 		}
@@ -137,7 +137,7 @@ void SEQ3::step() {
 		else {
 			// Internal clock
 			float clockTime = powf(2.0, params[CLOCK_PARAM].value + inputs[CLOCK_INPUT].value);
-			phase += clockTime / gSampleRate;
+			phase += clockTime / engineGetSampleRate();
 			if (phase >= 1.0) {
 				phase -= 1.0;
 				nextStep = true;
@@ -164,9 +164,9 @@ void SEQ3::step() {
 		gatePulse.trigger(1e-3);
 	}
 
-	resetLight -= resetLight / lightLambda / gSampleRate;
+	resetLight -= resetLight / lightLambda / engineGetSampleRate();
 
-	bool pulse = gatePulse.process(1.0 / gSampleRate);
+	bool pulse = gatePulse.process(1.0 / engineGetSampleRate());
 
 	// Gate buttons
 	for (int i = 0; i < 8; i++) {
@@ -180,7 +180,7 @@ void SEQ3::step() {
 			gateOn = gateOn && !pulse;
 
 		outputs[GATE_OUTPUT + i].value = gateOn ? 10.0 : 0.0;
-		stepLights[i] -= stepLights[i] / lightLambda / gSampleRate;
+		stepLights[i] -= stepLights[i] / lightLambda / engineGetSampleRate();
 		gateLights[i] = gateState[i] ? 1.0 - stepLights[i] : stepLights[i];
 	}
 
@@ -257,10 +257,10 @@ SEQ3Widget::SEQ3Widget() {
 struct SEQ3GateModeItem : MenuItem {
 	SEQ3 *seq3;
 	SEQ3::GateMode gateMode;
-	void onAction() {
+	void onAction() override {
 		seq3->gateMode = gateMode;
 	}
-	void step() {
+	void step() override {
 		rightText = (seq3->gateMode == gateMode) ? "✔" : "";
 	}
 };

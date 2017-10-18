@@ -95,7 +95,7 @@ struct LFO : Module {
 	float lights[1] = {};
 
 	LFO() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
-	void step();
+	void step() override;
 };
 
 
@@ -104,7 +104,7 @@ void LFO::step() {
 	generator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0);
 	generator.offset = (params[OFFSET_PARAM].value > 0.0);
 	generator.invert = (params[INVERT_PARAM].value <= 0.0);
-	generator.step(1.0 / gSampleRate);
+	generator.step(1.0 / engineGetSampleRate());
 	generator.setReset(inputs[RESET_INPUT].value);
 
 	outputs[SIN_OUTPUT].value = 5.0 * generator.sin();
@@ -189,7 +189,7 @@ void LFO2::step() {
 	generator.setPitch(params[FREQ_PARAM].value + params[FM_PARAM].value * inputs[FM_INPUT].value);
 	generator.offset = (params[OFFSET_PARAM].value > 0.0);
 	generator.invert = (params[INVERT_PARAM].value <= 0.0);
-	generator.step(1.0 / gSampleRate);
+	generator.step(1.0 / engineGetSampleRate());
 	generator.setReset(inputs[RESET_INPUT].value);
 
 	float wave = params[WAVE_PARAM].value + inputs[WAVE_INPUT].value;

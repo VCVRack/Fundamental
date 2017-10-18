@@ -36,7 +36,7 @@ struct Delay : Module {
 
 	Delay() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
 
-	void step();
+	void step() override;
 };
 
 
@@ -49,7 +49,7 @@ void Delay::step() {
 	// Compute delay time in seconds
 	float delay = 1e-3 * powf(10.0 / 1e-3, clampf(params[TIME_PARAM].value + inputs[TIME_INPUT].value / 10.0, 0.0, 1.0));
 	// Number of delay samples
-	float index = delay * gSampleRate;
+	float index = delay * engineGetSampleRate();
 
 	// TODO This is a horrible digital delay algorithm. Rewrite later.
 
@@ -92,11 +92,11 @@ void Delay::step() {
 	// TODO Make it sound better
 	float color = clampf(params[COLOR_PARAM].value + inputs[COLOR_INPUT].value / 10.0, 0.0, 1.0);
 	float lowpassFreq = 10000.0 * powf(10.0, clampf(2.0*color, 0.0, 1.0));
-	lowpassFilter.setCutoff(lowpassFreq / gSampleRate);
+	lowpassFilter.setCutoff(lowpassFreq / engineGetSampleRate());
 	lowpassFilter.process(wet);
 	wet = lowpassFilter.lowpass();
 	float highpassFreq = 10.0 * powf(100.0, clampf(2.0*color - 1.0, 0.0, 1.0));
-	highpassFilter.setCutoff(highpassFreq / gSampleRate);
+	highpassFilter.setCutoff(highpassFreq / engineGetSampleRate());
 	highpassFilter.process(wet);
 	wet = highpassFilter.highpass();
 

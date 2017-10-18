@@ -60,7 +60,7 @@ struct VoltageControlledOscillator {
 			// Adjust pitch slew
 			if (++pitchSlewIndex > 32) {
 				const float pitchSlewTau = 100.0; // Time constant for leaky integrator in seconds
-				pitchSlew += (randomNormal() - pitchSlew / pitchSlewTau) / gSampleRate;
+				pitchSlew += (randomNormal() - pitchSlew / pitchSlewTau) / engineGetSampleRate();
 				pitchSlewIndex = 0;
 			}
 		}
@@ -192,7 +192,7 @@ struct VCO : Module {
 	VoltageControlledOscillator<16, 16> oscillator;
 
 	VCO() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
-	void step();
+	void step() override;
 };
 
 
@@ -209,7 +209,7 @@ void VCO::step() {
 	oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0);
 	oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
-	oscillator.process(1.0 / gSampleRate, inputs[SYNC_INPUT].value);
+	oscillator.process(1.0 / engineGetSampleRate(), inputs[SYNC_INPUT].value);
 
 	// Set output
 	if (outputs[SIN_OUTPUT].active)
@@ -289,7 +289,7 @@ struct VCO2 : Module {
 	VoltageControlledOscillator<8, 8> oscillator;
 
 	VCO2() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
-	void step();
+	void step() override;
 };
 
 
@@ -301,7 +301,7 @@ void VCO2::step() {
 	oscillator.setPitch(0.0, pitchCv);
 	oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
-	oscillator.process(1.0 / gSampleRate, inputs[SYNC_INPUT].value);
+	oscillator.process(1.0 / engineGetSampleRate(), inputs[SYNC_INPUT].value);
 
 	// Set output
 	float wave = clampf(params[WAVE_PARAM].value + inputs[WAVE_INPUT].value, 0.0, 3.0);

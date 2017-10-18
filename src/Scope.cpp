@@ -40,16 +40,16 @@ struct Scope : Module {
 	SchmittTrigger resetTrigger;
 
 	Scope() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
-	void step();
+	void step() override;
 
-	json_t *toJson() {
+	json_t *toJson() override {
 		json_t *rootJ = json_object();
 		json_object_set_new(rootJ, "lissajous", json_integer((int) lissajous));
 		json_object_set_new(rootJ, "external", json_integer((int) external));
 		return rootJ;
 	}
 
-	void fromJson(json_t *rootJ) {
+	void fromJson(json_t *rootJ) override {
 		json_t *sumJ = json_object_get(rootJ, "lissajous");
 		if (sumJ)
 			lissajous = json_integer_value(sumJ);
@@ -59,7 +59,7 @@ struct Scope : Module {
 			external = json_integer_value(extJ);
 	}
 
-	void initialize() {
+	void initialize() override {
 		lissajous = false;
 		external = false;
 	}
@@ -82,7 +82,7 @@ void Scope::step() {
 
 	// Compute time
 	float deltaTime = powf(2.0, params[TIME_PARAM].value);
-	int frameCount = (int)ceilf(deltaTime * gSampleRate);
+	int frameCount = (int)ceilf(deltaTime * engineGetSampleRate());
 
 	// Add frame to buffer
 	if (bufferIndex < BUFFER_SIZE) {
@@ -115,12 +115,12 @@ void Scope::step() {
 
 		// Reset if triggered
 		float holdTime = 0.1;
-		if (resetTrigger.process(gate) || (frameIndex >= gSampleRate * holdTime)) {
+		if (resetTrigger.process(gate) || (frameIndex >= engineGetSampleRate() * holdTime)) {
 			bufferIndex = 0; frameIndex = 0; return;
 		}
 
 		// Reset if we've waited too long
-		if (frameIndex >= gSampleRate * holdTime) {
+		if (frameIndex >= engineGetSampleRate() * holdTime) {
 			bufferIndex = 0; frameIndex = 0; return;
 		}
 	}
@@ -240,7 +240,7 @@ struct ScopeDisplay : TransparentWidget {
 		nvgText(vg, pos.x + 22, pos.y + 11, text, NULL);
 	}
 
-	void draw(NVGcontext *vg) {
+	void draw(NVGcontext *vg) override {
 		float gainX = powf(2.0, roundf(module->params[Scope::X_SCALE_PARAM].value));
 		float gainY = powf(2.0, roundf(module->params[Scope::Y_SCALE_PARAM].value));
 		float offsetX = module->params[Scope::X_POS_PARAM].value;

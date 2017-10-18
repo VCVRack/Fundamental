@@ -52,5 +52,5 @@ struct ScopeWidget : ModuleWidget {
 
 struct SEQ3Widget : ModuleWidget {
 	SEQ3Widget();
-	Menu *createContextMenu();
+	Menu *createContextMenu() override;
 };
