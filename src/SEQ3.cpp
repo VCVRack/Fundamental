@@ -102,7 +102,7 @@ struct SEQ3 : Module {
 			gateMode = (GateMode)json_integer_value(gateModeJ);
 	}
 
-	void initialize() override {
+	void reset() override {
 		for (int i = 0; i < 8; i++) {
 			gateState[i] = false;
 		}

@@ -75,6 +75,11 @@ struct LadderFilter {
 		for (int i = 0; i < 4; i++)
 			state[i] += (1.0 / 6.0) * dt * (deriv1[i] + 2.0 * deriv2[i] + 2.0 * deriv3[i] + deriv4[i]);
 	}
+	void reset() {
+		for (int i = 0; i < 4; i++) {
+			state[i] = 0.0;
+		}
+	}
 };
 
 
@@ -103,7 +108,10 @@ struct VCF : Module {
 	LadderFilter filter;
 
 	VCF() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
-	void step();
+	void step() override;
+	void reset() override {
+		filter.reset();
+	}
 };
 
 
