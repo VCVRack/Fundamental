@@ -181,7 +181,7 @@ struct LFO2 : Module {
 	float lights[1] = {};
 
 	LFO2() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
-	void step();
+	void step() override;
 };
 
 
