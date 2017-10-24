@@ -46,6 +46,10 @@ struct VCMixerWidget : ModuleWidget {
 	VCMixerWidget();
 };
 
+struct _8VERTWidget : ModuleWidget {
+	_8VERTWidget();
+};
+
 struct ScopeWidget : ModuleWidget {
 	ScopeWidget();
 };
