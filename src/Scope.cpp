@@ -319,13 +319,13 @@ ScopeWidget::ScopeWidget() {
 		addChild(display);
 	}
 
-	addParam(createParam<Davies1900hSmallBlackSnapKnob>(Vec(15, 209), module, Scope::X_SCALE_PARAM, -2.0, 8.0, 0.0));
-	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(15, 263), module, Scope::X_POS_PARAM, -10.0, 10.0, 0.0));
-	addParam(createParam<Davies1900hSmallBlackSnapKnob>(Vec(61, 209), module, Scope::Y_SCALE_PARAM, -2.0, 8.0, 0.0));
-	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(61, 263), module, Scope::Y_POS_PARAM, -10.0, 10.0, 0.0));
-	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(107, 209), module, Scope::TIME_PARAM, -6.0, -16.0, -14.0));
+	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(15, 209), module, Scope::X_SCALE_PARAM, -2.0, 8.0, 0.0));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(15, 263), module, Scope::X_POS_PARAM, -10.0, 10.0, 0.0));
+	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(61, 209), module, Scope::Y_SCALE_PARAM, -2.0, 8.0, 0.0));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(61, 263), module, Scope::Y_POS_PARAM, -10.0, 10.0, 0.0));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(107, 209), module, Scope::TIME_PARAM, -6.0, -16.0, -14.0));
 	addParam(createParam<CKD6>(Vec(106, 262), module, Scope::LISSAJOUS_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<Davies1900hSmallBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM, -10.0, 10.0, 0.0));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM, -10.0, 10.0, 0.0));
 	addParam(createParam<CKD6>(Vec(152, 262), module, Scope::EXTERNAL_PARAM, 0.0, 1.0, 0.0));
 
 	addInput(createInput<PJ301MPort>(Vec(17, 319), module, Scope::X_INPUT));
