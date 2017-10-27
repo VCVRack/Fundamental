@@ -12,7 +12,7 @@ struct _8VERT : Module {
 		NUM_OUTPUTS = 8
 	};
 	enum LightIds {
-		NUM_LIGHTS = 8
+		NUM_LIGHTS = 16
 	};
 
 	_8VERT() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
@@ -25,7 +25,8 @@ void _8VERT::step() {
 		lastIn = inputs[i].normalize(lastIn);
 		float out = lastIn * params[i].value;
 		outputs[i].value = out;
-		lights[i].value = out / 10.0;
+		lights[2*i + 0].setBrightnessSmooth(fmaxf(0.0, out / 5.0));
+		lights[2*i + 1].setBrightnessSmooth(fmaxf(0.0, -out / 5.0));
 	}
 }
 
@@ -73,11 +74,11 @@ _8VERTWidget::_8VERTWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(86.393, 319.504), module, 7));
 
 	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 50.414), module, 0));
-	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 88.859), module, 1));
-	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 127.304), module, 2));
-	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 165.745), module, 3));
-	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 204.19), module, 4));
-	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 242.635), module, 5));
-	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 281.076), module, 6));
-	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 319.521), module, 7));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 88.859), module, 2));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 127.304), module, 4));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 165.745), module, 6));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 204.19), module, 8));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 242.635), module, 10));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 281.076), module, 12));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 319.521), module, 14));
 }

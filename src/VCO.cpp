@@ -188,7 +188,8 @@ struct VCO : Module {
 		NUM_OUTPUTS
 	};
 	enum LightIds {
-		PITCH_LIGHT,
+		PHASE_POS_LIGHT,
+		PHASE_NEG_LIGHT,
 		NUM_LIGHTS
 	};
 
@@ -224,7 +225,8 @@ void VCO::step() {
 	if (outputs[SQR_OUTPUT].active)
 		outputs[SQR_OUTPUT].value = 5.0 * oscillator.sqr();
 
-	lights[PITCH_LIGHT].value = oscillator.light();
+	lights[PHASE_POS_LIGHT].setBrightnessSmooth(fmaxf(0.0, oscillator.light()));
+	lights[PHASE_NEG_LIGHT].setBrightnessSmooth(fmaxf(0.0, -oscillator.light()));
 }
 
 
@@ -264,7 +266,7 @@ VCOWidget::VCOWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, VCO::SAW_OUTPUT));
 	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, VCO::SQR_OUTPUT));
 
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42), module, VCO::PITCH_LIGHT));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42), module, VCO::PHASE_POS_LIGHT));
 }
 
 
@@ -288,7 +290,8 @@ struct VCO2 : Module {
 		NUM_OUTPUTS
 	};
 	enum LightIds {
-		PITCH_LIGHT,
+		PHASE_POS_LIGHT,
+		PHASE_NEG_LIGHT,
 		NUM_LIGHTS
 	};
 
@@ -320,7 +323,8 @@ void VCO2::step() {
 		out = crossf(oscillator.saw(), oscillator.sqr(), wave - 2.0);
 	outputs[OUT_OUTPUT].value = 5.0 * out;
 
-	lights[PITCH_LIGHT].value = oscillator.light();
+	lights[PHASE_POS_LIGHT].setBrightnessSmooth(fmaxf(0.0, oscillator.light()));
+	lights[PHASE_NEG_LIGHT].setBrightnessSmooth(fmaxf(0.0, -oscillator.light()));
 }
 
 
@@ -354,7 +358,7 @@ VCO2Widget::VCO2Widget() {
 
 	addOutput(createOutput<PJ301MPort>(Vec(54, 320), module, VCO2::OUT_OUTPUT));
 
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 41), module, VCO2::PITCH_LIGHT));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 41), module, VCO2::PHASE_POS_LIGHT));
 }
 
 

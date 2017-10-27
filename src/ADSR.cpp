@@ -49,10 +49,10 @@ void ADSR::step() {
 	float release = clampf(params[RELEASE_PARAM].value + inputs[RELEASE_PARAM].value / 10.0, 0.0, 1.0);
 
 	// Lights
-	lights[ATTACK_LIGHT].value = 2.0*attack - 1.0;
-	lights[DECAY_LIGHT].value = 2.0*decay - 1.0;
-	lights[SUSTAIN_LIGHT].value = 2.0*sustain - 1.0;
-	lights[RELEASE_LIGHT].value = 2.0*release - 1.0;
+	lights[ATTACK_LIGHT].value = attack;
+	lights[DECAY_LIGHT].value = decay;
+	lights[SUSTAIN_LIGHT].value = sustain;
+	lights[RELEASE_LIGHT].value = release;
 
 	// Gate and trigger
 	bool gated = inputs[GATE_INPUT].value >= 1.0;
@@ -132,8 +132,8 @@ ADSRWidget::ADSRWidget() {
 	addInput(createInput<PJ301MPort>(Vec(48, 320), module, ADSR::TRIG_INPUT));
 	addOutput(createOutput<PJ301MPort>(Vec(87, 320), module, ADSR::ENVELOPE_OUTPUT));
 
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(94, 41), module, ADSR::ATTACK_LIGHT));
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(94, 108), module, ADSR::DECAY_LIGHT));
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(94, 175), module, ADSR::SUSTAIN_LIGHT));
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(94, 241), module, ADSR::RELEASE_LIGHT));
+	addChild(createLight<SmallLight<RedLight>>(Vec(94, 41), module, ADSR::ATTACK_LIGHT));
+	addChild(createLight<SmallLight<RedLight>>(Vec(94, 108), module, ADSR::DECAY_LIGHT));
+	addChild(createLight<SmallLight<RedLight>>(Vec(94, 175), module, ADSR::SUSTAIN_LIGHT));
+	addChild(createLight<SmallLight<RedLight>>(Vec(94, 241), module, ADSR::RELEASE_LIGHT));
 }
