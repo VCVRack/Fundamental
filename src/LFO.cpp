@@ -90,11 +90,14 @@ struct LFO : Module {
 		SQR_OUTPUT,
 		NUM_OUTPUTS
 	};
+	enum LightIds {
+		PHASE_LIGHT,
+		NUM_LIGHTS
+	};
 
 	LFOGenerator generator;
-	float lights[1] = {};
 
-	LFO() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
+	LFO() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
 	void step() override;
 };
 
@@ -112,7 +115,7 @@ void LFO::step() {
 	outputs[SAW_OUTPUT].value = 5.0 * generator.saw();
 	outputs[SQR_OUTPUT].value = 5.0 * generator.sqr();
 
-	lights[0] = generator.light();
+	lights[PHASE_LIGHT].value = generator.light();
 }
 
 
@@ -152,7 +155,7 @@ LFOWidget::LFOWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, LFO::SAW_OUTPUT));
 	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, LFO::SQR_OUTPUT));
 
-	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(99, 42), &module->lights[0]));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42), module, LFO::PHASE_LIGHT));
 }
 
 
@@ -176,11 +179,14 @@ struct LFO2 : Module {
 		INTERP_OUTPUT,
 		NUM_OUTPUTS
 	};
+	enum LightIds {
+		PHASE_LIGHT,
+		NUM_LIGHTS
+	};
 
 	LFOGenerator generator;
-	float lights[1] = {};
 
-	LFO2() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
+	LFO2() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
 	void step() override;
 };
 
@@ -203,7 +209,7 @@ void LFO2::step() {
 		interp = crossf(generator.saw(), generator.sqr(), wave - 2.0);
 	outputs[INTERP_OUTPUT].value = 5.0 * interp;
 
-	lights[0] = generator.light();
+	lights[PHASE_LIGHT].value = generator.light();
 }
 
 
@@ -237,5 +243,5 @@ LFO2Widget::LFO2Widget() {
 
 	addOutput(createOutput<PJ301MPort>(Vec(54, 319), module, LFO2::INTERP_OUTPUT));
 
-	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(68, 41), &module->lights[0]));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 41), module, LFO2::PHASE_LIGHT));
 }

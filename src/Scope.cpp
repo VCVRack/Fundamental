@@ -26,6 +26,13 @@ struct Scope : Module {
 	enum OutputIds {
 		NUM_OUTPUTS
 	};
+	enum LightIds {
+		LISSAJOUS_LIGHT,
+		NOT_LISSAJOUS_LIGHT, // FIXME: what should this be called?
+		EXTERNAL_LIGHT,
+		INTERNAL_LIGHT,
+		NUM_LIGHTS
+	};
 
 	float bufferX[BUFFER_SIZE] = {};
 	float bufferY[BUFFER_SIZE] = {};
@@ -36,10 +43,9 @@ struct Scope : Module {
 	SchmittTrigger extTrigger;
 	bool lissajous = false;
 	bool external = false;
-	float lights[4] = {};
 	SchmittTrigger resetTrigger;
 
-	Scope() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
+	Scope() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
 	void step() override;
 
 	json_t *toJson() override {
@@ -71,14 +77,14 @@ void Scope::step() {
 	if (sumTrigger.process(params[LISSAJOUS_PARAM].value)) {
 		lissajous = !lissajous;
 	}
-	lights[0] = lissajous ? 0.0 : 1.0;
-	lights[1] = lissajous ? 1.0 : 0.0;
+	lights[LISSAJOUS_LIGHT].value = lissajous ? 0.0 : 1.0;
+	lights[NOT_LISSAJOUS_LIGHT].value = lissajous ? 1.0 : 0.0;
 
 	if (extTrigger.process(params[EXTERNAL_PARAM].value)) {
 		external = !external;
 	}
-	lights[2] = external ? 0.0 : 1.0;
-	lights[3] = external ? 1.0 : 0.0;
+	lights[EXTERNAL_LIGHT].value = external ? 0.0 : 1.0;
+	lights[INTERNAL_LIGHT].value = external ? 1.0 : 0.0;
 
 	// Compute time
 	float deltaTime = powf(2.0, params[TIME_PARAM].value);
@@ -332,8 +338,8 @@ ScopeWidget::ScopeWidget() {
 	addInput(createInput<PJ301MPort>(Vec(63, 319), module, Scope::Y_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(154, 319), module, Scope::TRIG_INPUT));
 
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(104, 251), &module->lights[0]));
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(104, 296), &module->lights[1]));
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(150, 251), &module->lights[2]));
-	addChild(createValueLight<TinyLight<GreenValueLight>>(Vec(150, 296), &module->lights[3]));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(104, 251), module, Scope::LISSAJOUS_LIGHT));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(104, 296), module, Scope::NOT_LISSAJOUS_LIGHT));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(150, 251), module, Scope::EXTERNAL_LIGHT));
+	addChild(createLight<TinyLight<GreenLight>>(Vec(150, 296), module, Scope::INTERNAL_LIGHT));
 }
