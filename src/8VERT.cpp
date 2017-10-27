@@ -72,12 +72,12 @@ _8VERTWidget::_8VERTWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(86.393, 281.059), module, 6));
 	addOutput(createOutput<PJ301MPort>(Vec(86.393, 319.504), module, 7));
 
-	addChild(createValueLight<TinyLight<GreenRedPolarityLight>>(Vec(107.702, 50.414), &module->lights[0].value));
-	addChild(createValueLight<TinyLight<GreenRedPolarityLight>>(Vec(107.702, 88.859), &module->lights[1].value));
-	addChild(createValueLight<TinyLight<GreenRedPolarityLight>>(Vec(107.702, 127.304), &module->lights[2].value));
-	addChild(createValueLight<TinyLight<GreenRedPolarityLight>>(Vec(107.702, 165.745), &module->lights[3].value));
-	addChild(createValueLight<TinyLight<GreenRedPolarityLight>>(Vec(107.702, 204.19), &module->lights[4].value));
-	addChild(createValueLight<TinyLight<GreenRedPolarityLight>>(Vec(107.702, 242.635), &module->lights[5].value));
-	addChild(createValueLight<TinyLight<GreenRedPolarityLight>>(Vec(107.702, 281.076), &module->lights[6].value));
-	addChild(createValueLight<TinyLight<GreenRedPolarityLight>>(Vec(107.702, 319.521), &module->lights[7].value));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 50.414), module, 0));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 88.859), module, 1));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 127.304), module, 2));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 165.745), module, 3));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 204.19), module, 4));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 242.635), module, 5));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 281.076), module, 6));
+	addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 319.521), module, 7));
 }

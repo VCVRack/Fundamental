@@ -23,13 +23,19 @@ struct ADSR : Module {
 		ENVELOPE_OUTPUT,
 		NUM_OUTPUTS
 	};
+	enum LightIds {
+		ATTACK_LIGHT,
+		DECAY_LIGHT,
+		SUSTAIN_LIGHT,
+		RELEASE_LIGHT,
+		NUM_LIGHTS
+	};
 
 	bool decaying = false;
 	float env = 0.0;
 	SchmittTrigger trigger;
-	float lights[4] = {};
 
-	ADSR() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {
+	ADSR() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
 		trigger.setThresholds(0.0, 1.0);
 	}
 	void step() override;
@@ -43,10 +49,10 @@ void ADSR::step() {
 	float release = clampf(params[RELEASE_PARAM].value + inputs[RELEASE_PARAM].value / 10.0, 0.0, 1.0);
 
 	// Lights
-	lights[0] = 2.0*attack - 1.0;
-	lights[1] = 2.0*decay - 1.0;
-	lights[2] = 2.0*sustain - 1.0;
-	lights[3] = 2.0*release - 1.0;
+	lights[ATTACK_LIGHT].value = 2.0*attack - 1.0;
+	lights[DECAY_LIGHT].value = 2.0*decay - 1.0;
+	lights[SUSTAIN_LIGHT].value = 2.0*sustain - 1.0;
+	lights[RELEASE_LIGHT].value = 2.0*release - 1.0;
 
 	// Gate and trigger
 	bool gated = inputs[GATE_INPUT].value >= 1.0;
@@ -126,8 +132,8 @@ ADSRWidget::ADSRWidget() {
 	addInput(createInput<PJ301MPort>(Vec(48, 320), module, ADSR::TRIG_INPUT));
 	addOutput(createOutput<PJ301MPort>(Vec(87, 320), module, ADSR::ENVELOPE_OUTPUT));
 
-	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(94, 41), &module->lights[0]));
-	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(94, 108), &module->lights[1]));
-	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(94, 175), &module->lights[2]));
-	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(94, 241), &module->lights[3]));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(94, 41), module, ADSR::ATTACK_LIGHT));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(94, 108), module, ADSR::DECAY_LIGHT));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(94, 175), module, ADSR::SUSTAIN_LIGHT));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(94, 241), module, ADSR::RELEASE_LIGHT));
 }

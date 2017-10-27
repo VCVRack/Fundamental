@@ -185,13 +185,16 @@ struct VCO : Module {
 		TRI_OUTPUT,
 		SAW_OUTPUT,
 		SQR_OUTPUT,
-		PITCH_LIGHT,
 		NUM_OUTPUTS
+	};
+	enum LightIds {
+		PITCH_LIGHT,
+		NUM_LIGHTS
 	};
 
 	VoltageControlledOscillator<16, 16> oscillator;
 
-	VCO() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
+	VCO() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
 	void step() override;
 };
 
@@ -221,7 +224,7 @@ void VCO::step() {
 	if (outputs[SQR_OUTPUT].active)
 		outputs[SQR_OUTPUT].value = 5.0 * oscillator.sqr();
 
-	outputs[PITCH_LIGHT].value = oscillator.light();
+	lights[PITCH_LIGHT].value = oscillator.light();
 }
 
 
@@ -261,7 +264,7 @@ VCOWidget::VCOWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, VCO::SAW_OUTPUT));
 	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, VCO::SQR_OUTPUT));
 
-	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(99, 42), &module->outputs[VCO::PITCH_LIGHT].value));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42), module, VCO::PITCH_LIGHT));
 }
 
 
@@ -282,13 +285,16 @@ struct VCO2 : Module {
 	};
 	enum OutputIds {
 		OUT_OUTPUT,
-		PITCH_LIGHT,
 		NUM_OUTPUTS
+	};
+	enum LightIds {
+		PITCH_LIGHT,
+		NUM_LIGHTS
 	};
 
 	VoltageControlledOscillator<8, 8> oscillator;
 
-	VCO2() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
+	VCO2() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
 	void step() override;
 };
 
@@ -314,7 +320,7 @@ void VCO2::step() {
 		out = crossf(oscillator.saw(), oscillator.sqr(), wave - 2.0);
 	outputs[OUT_OUTPUT].value = 5.0 * out;
 
-	outputs[PITCH_LIGHT].value = oscillator.light();
+	lights[PITCH_LIGHT].value = oscillator.light();
 }
 
 
@@ -348,7 +354,7 @@ VCO2Widget::VCO2Widget() {
 
 	addOutput(createOutput<PJ301MPort>(Vec(54, 320), module, VCO2::OUT_OUTPUT));
 
-	addChild(createValueLight<SmallLight<GreenRedPolarityLight>>(Vec(68, 41), &module->outputs[VCO2::PITCH_LIGHT].value));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 41), module, VCO2::PITCH_LIGHT));
 }
 
 
