@@ -203,9 +203,9 @@ void SEQ3::step() {
 	outputs[GATES_OUTPUT].value = gatesOn ? 10.0 : 0.0;
 	lights[RESET_LIGHT].value = resetLight;
 	lights[GATES_LIGHT].value = gatesOn ? 1.0 : 0.0;
-	lights[ROW_LIGHTS].value = row1;
-	lights[ROW_LIGHTS + 1].value = row2;
-	lights[ROW_LIGHTS + 2].value = row3;
+	lights[ROW_LIGHTS].value = row1 / 10.0;
+	lights[ROW_LIGHTS + 1].value = row2 / 10.0;
+	lights[ROW_LIGHTS + 2].value = row3 / 10.0;
 }
 
 
