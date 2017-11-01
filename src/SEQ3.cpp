@@ -260,7 +260,7 @@ SEQ3Widget::SEQ3Widget() {
 struct SEQ3GateModeItem : MenuItem {
 	SEQ3 *seq3;
 	SEQ3::GateMode gateMode;
-	void onAction() override {
+	void onAction(EventAction &e) override {
 		seq3->gateMode = gateMode;
 	}
 	void step() override {

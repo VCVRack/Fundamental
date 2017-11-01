@@ -116,8 +116,8 @@ void LFO::step() {
 	outputs[SAW_OUTPUT].value = 5.0 * oscillator.saw();
 	outputs[SQR_OUTPUT].value = 5.0 * oscillator.sqr();
 
-	lights[PHASE_POS_LIGHT].setBrightness(fmaxf(0.0, oscillator.light()));
-	lights[PHASE_NEG_LIGHT].setBrightness(fmaxf(0.0, -oscillator.light()));
+	lights[PHASE_POS_LIGHT].setBrightnessSmooth(fmaxf(0.0, oscillator.light()));
+	lights[PHASE_NEG_LIGHT].setBrightnessSmooth(fmaxf(0.0, -oscillator.light()));
 }
 
 
@@ -212,8 +212,8 @@ void LFO2::step() {
 		interp = crossf(oscillator.saw(), oscillator.sqr(), wave - 2.0);
 	outputs[INTERP_OUTPUT].value = 5.0 * interp;
 
-	lights[PHASE_POS_LIGHT].setBrightness(fmaxf(0.0, oscillator.light()));
-	lights[PHASE_NEG_LIGHT].setBrightness(fmaxf(0.0, -oscillator.light()));
+	lights[PHASE_POS_LIGHT].setBrightnessSmooth(fmaxf(0.0, oscillator.light()));
+	lights[PHASE_NEG_LIGHT].setBrightnessSmooth(fmaxf(0.0, -oscillator.light()));
 }
 
 
