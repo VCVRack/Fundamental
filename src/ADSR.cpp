@@ -48,12 +48,6 @@ void ADSR::step() {
 	float sustain = clampf(params[SUSTAIN_PARAM].value + inputs[SUSTAIN_INPUT].value / 10.0, 0.0, 1.0);
 	float release = clampf(params[RELEASE_PARAM].value + inputs[RELEASE_PARAM].value / 10.0, 0.0, 1.0);
 
-	// Lights
-	lights[ATTACK_LIGHT].value = attack;
-	lights[DECAY_LIGHT].value = decay;
-	lights[SUSTAIN_LIGHT].value = sustain;
-	lights[RELEASE_LIGHT].value = release;
-
 	// Gate and trigger
 	bool gated = inputs[GATE_INPUT].value >= 1.0;
 	if (trigger.process(inputs[TRIG_INPUT].value))
@@ -98,6 +92,12 @@ void ADSR::step() {
 	}
 
 	outputs[ENVELOPE_OUTPUT].value = 10.0 * env;
+
+	// Lights
+	lights[ATTACK_LIGHT].value = (gated && !decaying) ? 1.0 : 0.0;
+	lights[DECAY_LIGHT].value = (gated && decaying) ? 1.0 : 0.0;
+	lights[SUSTAIN_LIGHT].setBrightness(env);
+	lights[RELEASE_LIGHT].value = (!gated) ? 1.0 : 0.0;
 }
 
 
