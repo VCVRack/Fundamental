@@ -228,14 +228,14 @@ SEQ3Widget::SEQ3Widget() {
 
 	addParam(createParam<RoundSmallBlackKnob>(Vec(18, 56), module, SEQ3::CLOCK_PARAM, -2.0, 6.0, 2.0));
 	addParam(createParam<LEDButton>(Vec(60, 61-1), module, SEQ3::RUN_PARAM, 0.0, 1.0, 0.0));
-	addChild(createLight<SmallLight<GreenLight>>(Vec(65, 65), module, SEQ3::RUNNING_LIGHT));
+	addChild(createLight<MediumLight<GreenLight>>(Vec(64.4, 64.4), module, SEQ3::RUNNING_LIGHT));
 	addParam(createParam<LEDButton>(Vec(99, 61-1), module, SEQ3::RESET_PARAM, 0.0, 1.0, 0.0));
-	addChild(createLight<SmallLight<GreenLight>>(Vec(104, 65), module, SEQ3::RESET_LIGHT));
+	addChild(createLight<MediumLight<GreenLight>>(Vec(103.4, 64.4), module, SEQ3::RESET_LIGHT));
 	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(132, 56), module, SEQ3::STEPS_PARAM, 1.0, 8.0, 8.0));
-	addChild(createLight<SmallLight<GreenLight>>(Vec(180, 65), module, SEQ3::GATES_LIGHT));
-	addChild(createLight<SmallLight<GreenLight>>(Vec(219, 65), module, SEQ3::ROW_LIGHTS));
-	addChild(createLight<SmallLight<GreenLight>>(Vec(257, 65), module, SEQ3::ROW_LIGHTS + 1));
-	addChild(createLight<SmallLight<GreenLight>>(Vec(296, 65), module, SEQ3::ROW_LIGHTS + 2));
+	addChild(createLight<MediumLight<GreenLight>>(Vec(179.4, 64.4), module, SEQ3::GATES_LIGHT));
+	addChild(createLight<MediumLight<GreenLight>>(Vec(218.4, 64.4), module, SEQ3::ROW_LIGHTS));
+	addChild(createLight<MediumLight<GreenLight>>(Vec(256.4, 64.4), module, SEQ3::ROW_LIGHTS + 1));
+	addChild(createLight<MediumLight<GreenLight>>(Vec(295.4, 64.4), module, SEQ3::ROW_LIGHTS + 2));
 
 	static const float portX[8] = {20, 58, 96, 135, 173, 212, 250, 289};
 	addInput(createInput<PJ301MPort>(Vec(portX[0]-1, 98), module, SEQ3::CLOCK_INPUT));
@@ -252,7 +252,7 @@ SEQ3Widget::SEQ3Widget() {
 		addParam(createParam<RoundSmallBlackKnob>(Vec(portX[i]-2, 198), module, SEQ3::ROW2_PARAM + i, 0.0, 10.0, 0.0));
 		addParam(createParam<RoundSmallBlackKnob>(Vec(portX[i]-2, 240), module, SEQ3::ROW3_PARAM + i, 0.0, 10.0, 0.0));
 		addParam(createParam<LEDButton>(Vec(portX[i]+2, 278-1), module, SEQ3::GATE_PARAM + i, 0.0, 1.0, 0.0));
-		addChild(createLight<SmallLight<GreenLight>>(Vec(portX[i]+7, 282), module, SEQ3::GATE_LIGHTS + i));
+		addChild(createLight<MediumLight<GreenLight>>(Vec(portX[i]+6.4, 281.4), module, SEQ3::GATE_LIGHTS + i));
 		addOutput(createOutput<PJ301MPort>(Vec(portX[i]-1, 307), module, SEQ3::GATE_OUTPUT + i));
 	}
 }

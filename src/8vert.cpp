@@ -1,7 +1,7 @@
 #include "Fundamental.hpp"
 
 
-struct _8VERT : Module {
+struct _8vert : Module {
 	enum ParamIds {
 		NUM_PARAMS = 8
 	};
@@ -15,11 +15,11 @@ struct _8VERT : Module {
 		NUM_LIGHTS = 16
 	};
 
-	_8VERT() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
+	_8vert() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
 	void step() override;
 };
 
-void _8VERT::step() {
+void _8vert::step() {
 	float lastIn = 10.0;
 	for (int i = 0; i < 8; i++) {
 		lastIn = inputs[i].normalize(lastIn);
@@ -31,14 +31,14 @@ void _8VERT::step() {
 }
 
 
-_8VERTWidget::_8VERTWidget() {
-	_8VERT *module = new _8VERT();
+_8vertWidget::_8vertWidget() {
+	_8vert *module = new _8vert();
 	setModule(module);
 	box.size = Vec(8 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT);
 
 	SVGPanel *panel = new SVGPanel();
 	panel->box.size = box.size;
-	panel->setBackground(SVG::load(assetPlugin(plugin, "res/8VERT.svg")));
+	panel->setBackground(SVG::load(assetPlugin(plugin, "res/8vert.svg")));
 	addChild(panel);
 
 	addChild(createScrew<ScrewSilver>(Vec(15, 0)));

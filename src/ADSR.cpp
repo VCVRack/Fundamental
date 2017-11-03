@@ -133,7 +133,7 @@ ADSRWidget::ADSRWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(87, 320), module, ADSR::ENVELOPE_OUTPUT));
 
 	addChild(createLight<SmallLight<RedLight>>(Vec(94, 41), module, ADSR::ATTACK_LIGHT));
-	addChild(createLight<SmallLight<RedLight>>(Vec(94, 108), module, ADSR::DECAY_LIGHT));
+	addChild(createLight<SmallLight<RedLight>>(Vec(94, 109), module, ADSR::DECAY_LIGHT));
 	addChild(createLight<SmallLight<RedLight>>(Vec(94, 175), module, ADSR::SUSTAIN_LIGHT));
-	addChild(createLight<SmallLight<RedLight>>(Vec(94, 241), module, ADSR::RELEASE_LIGHT));
+	addChild(createLight<SmallLight<RedLight>>(Vec(94, 242), module, ADSR::RELEASE_LIGHT));
 }

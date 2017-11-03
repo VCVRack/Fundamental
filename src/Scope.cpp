@@ -338,8 +338,8 @@ ScopeWidget::ScopeWidget() {
 	addInput(createInput<PJ301MPort>(Vec(63, 319), module, Scope::Y_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(154, 319), module, Scope::TRIG_INPUT));
 
-	addChild(createLight<TinyLight<GreenLight>>(Vec(104, 251), module, Scope::PLOT_LIGHT));
-	addChild(createLight<TinyLight<GreenLight>>(Vec(104, 296), module, Scope::LISSAJOUS_LIGHT));
-	addChild(createLight<TinyLight<GreenLight>>(Vec(150, 251), module, Scope::INTERNAL_LIGHT));
-	addChild(createLight<TinyLight<GreenLight>>(Vec(150, 296), module, Scope::EXTERNAL_LIGHT));
+	addChild(createLight<SmallLight<GreenLight>>(Vec(104, 251), module, Scope::PLOT_LIGHT));
+	addChild(createLight<SmallLight<GreenLight>>(Vec(104, 296), module, Scope::LISSAJOUS_LIGHT));
+	addChild(createLight<SmallLight<GreenLight>>(Vec(150, 251), module, Scope::INTERNAL_LIGHT));
+	addChild(createLight<SmallLight<GreenLight>>(Vec(150, 296), module, Scope::EXTERNAL_LIGHT));
 }

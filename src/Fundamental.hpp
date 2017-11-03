@@ -46,8 +46,17 @@ struct VCMixerWidget : ModuleWidget {
 	VCMixerWidget();
 };
 
-struct _8VERTWidget : ModuleWidget {
-	_8VERTWidget();
+struct _8vertWidget : ModuleWidget {
+	_8vertWidget();
+};
+
+struct UnityWidget : ModuleWidget {
+	UnityWidget();
+	Menu *createContextMenu() override;
+};
+
+struct MutesWidget : ModuleWidget {
+	MutesWidget();
 };
 
 struct ScopeWidget : ModuleWidget {

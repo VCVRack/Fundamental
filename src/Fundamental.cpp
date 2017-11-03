@@ -18,7 +18,9 @@ void init(rack::Plugin *p) {
 	p->addModel(createModel<DelayWidget>("Fundamental", "Fundamental", "Delay", "Delay"));
 	p->addModel(createModel<ADSRWidget>("Fundamental", "Fundamental", "ADSR", "ADSR"));
 	p->addModel(createModel<VCMixerWidget>("Fundamental", "Fundamental", "VCMixer", "VC Mixer"));
-	p->addModel(createModel<_8VERTWidget>("Fundamental", "Fundamental", "8VERT", "8VERT"));
+	p->addModel(createModel<_8vertWidget>("Fundamental", "Fundamental", "8vert", "8vert"));
+	p->addModel(createModel<UnityWidget>("Fundamental", "Fundamental", "Unity", "Unity"));
+	p->addModel(createModel<MutesWidget>("Fundamental", "Fundamental", "Mutes", "Mutes"));
 	p->addModel(createModel<ScopeWidget>("Fundamental", "Fundamental", "Scope", "Scope"));
 	p->addModel(createModel<SEQ3Widget>("Fundamental", "Fundamental", "SEQ3", "SEQ-3"));
 }
