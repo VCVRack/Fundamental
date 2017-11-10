@@ -266,7 +266,7 @@ VCOWidget::VCOWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, VCO::SAW_OUTPUT));
 	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, VCO::SQR_OUTPUT));
 
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42), module, VCO::PHASE_POS_LIGHT));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42.5), module, VCO::PHASE_POS_LIGHT));
 }
 
 
@@ -358,7 +358,7 @@ VCO2Widget::VCO2Widget() {
 
 	addOutput(createOutput<PJ301MPort>(Vec(54, 320), module, VCO2::OUT_OUTPUT));
 
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 41), module, VCO2::PHASE_POS_LIGHT));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 42.5), module, VCO2::PHASE_POS_LIGHT));
 }
 
 

@@ -157,7 +157,7 @@ LFOWidget::LFOWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, LFO::SAW_OUTPUT));
 	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, LFO::SQR_OUTPUT));
 
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42), module, LFO::PHASE_POS_LIGHT));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42.5), module, LFO::PHASE_POS_LIGHT));
 }
 
 
@@ -247,5 +247,5 @@ LFO2Widget::LFO2Widget() {
 
 	addOutput(createOutput<PJ301MPort>(Vec(54, 319), module, LFO2::INTERP_OUTPUT));
 
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 41), module, LFO2::PHASE_POS_LIGHT));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 42.5), module, LFO2::PHASE_POS_LIGHT));
 }

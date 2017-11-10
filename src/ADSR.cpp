@@ -91,13 +91,16 @@ void ADSR::step() {
 		decaying = false;
 	}
 
+	bool sustaining = nearf(env, sustain, 1e-3);
+	bool resting = nearf(env, 0.0, 1e-3);
+
 	outputs[ENVELOPE_OUTPUT].value = 10.0 * env;
 
 	// Lights
 	lights[ATTACK_LIGHT].value = (gated && !decaying) ? 1.0 : 0.0;
-	lights[DECAY_LIGHT].value = (gated && decaying) ? 1.0 : 0.0;
-	lights[SUSTAIN_LIGHT].setBrightness(env);
-	lights[RELEASE_LIGHT].value = (!gated) ? 1.0 : 0.0;
+	lights[DECAY_LIGHT].value = (gated && decaying && !sustaining) ? 1.0 : 0.0;
+	lights[SUSTAIN_LIGHT].value = (gated && decaying && sustaining) ? 1.0 : 0.0;
+	lights[RELEASE_LIGHT].value = (!gated && !resting) ? 1.0 : 0.0;
 }
 
 
