@@ -10,18 +10,18 @@ void init(rack::Plugin *p) {
 	p->version = TOSTRING(VERSION);
 #endif
 
-	p->addModel(createModel<VCOWidget>("Fundamental", "VCO", "VCO-1"));
-	p->addModel(createModel<VCO2Widget>("Fundamental", "VCO2", "VCO-2"));
-	p->addModel(createModel<VCFWidget>("Fundamental", "VCF", "VCF"));
-	p->addModel(createModel<VCAWidget>("Fundamental", "VCA", "VCA"));
-	p->addModel(createModel<LFOWidget>("Fundamental", "LFO", "LFO-1"));
-	p->addModel(createModel<LFO2Widget>("Fundamental", "LFO2", "LFO-2"));
-	p->addModel(createModel<DelayWidget>("Fundamental", "Delay", "Delay"));
-	p->addModel(createModel<ADSRWidget>("Fundamental", "ADSR", "ADSR"));
-	p->addModel(createModel<VCMixerWidget>("Fundamental", "VCMixer", "VC Mixer"));
-	p->addModel(createModel<_8vertWidget>("Fundamental", "8vert", "8vert"));
-	p->addModel(createModel<UnityWidget>("Fundamental", "Unity", "Unity"));
-	p->addModel(createModel<MutesWidget>("Fundamental", "Mutes", "Mutes"));
-	p->addModel(createModel<ScopeWidget>("Fundamental", "Scope", "Scope"));
-	p->addModel(createModel<SEQ3Widget>("Fundamental", "SEQ3", "SEQ-3"));
+	p->addModel(createModel<VCOWidget>("Fundamental", "VCO", "VCO-1", OSCILLATOR_TAG));
+	p->addModel(createModel<VCO2Widget>("Fundamental", "VCO2", "VCO-2", OSCILLATOR_TAG));
+	p->addModel(createModel<VCFWidget>("Fundamental", "VCF", "VCF", FILTER_TAG));
+	p->addModel(createModel<VCAWidget>("Fundamental", "VCA", "VCA", AMPLIFIER_TAG));
+	p->addModel(createModel<LFOWidget>("Fundamental", "LFO", "LFO-1", LFO_TAG));
+	p->addModel(createModel<LFO2Widget>("Fundamental", "LFO2", "LFO-2", LFO_TAG));
+	p->addModel(createModel<DelayWidget>("Fundamental", "Delay", "Delay", DELAY_TAG));
+	p->addModel(createModel<ADSRWidget>("Fundamental", "ADSR", "ADSR", ENVELOPE_GENERATOR_TAG));
+	p->addModel(createModel<VCMixerWidget>("Fundamental", "VCMixer", "VC Mixer", MIXER_TAG, AMPLIFIER_TAG));
+	p->addModel(createModel<_8vertWidget>("Fundamental", "8vert", "8vert", ATTENUATOR_TAG));
+	p->addModel(createModel<UnityWidget>("Fundamental", "Unity", "Unity", UTILITY_TAG));
+	p->addModel(createModel<MutesWidget>("Fundamental", "Mutes", "Mutes", SWITCH_TAG));
+	p->addModel(createModel<ScopeWidget>("Fundamental", "Scope", "Scope", VISUAL_TAG));
+	p->addModel(createModel<SEQ3Widget>("Fundamental", "SEQ3", "SEQ-3", SEQUENCER_TAG));
 }
