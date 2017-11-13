@@ -9,6 +9,7 @@ void init(rack::Plugin *p) {
 #ifdef VERSION
 	p->version = TOSTRING(VERSION);
 #endif
+	p->website = "https://github.com/VCVRack/Fundamental";
 
 	p->addModel(createModel<VCOWidget>("Fundamental", "VCO", "VCO-1", OSCILLATOR_TAG));
 	p->addModel(createModel<VCO2Widget>("Fundamental", "VCO2", "VCO-2", OSCILLATOR_TAG));
