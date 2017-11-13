@@ -58,7 +58,9 @@ struct SEQ3 : Module {
 	GateMode gateMode = TRIGGER;
 	PulseGenerator gatePulse;
 
-	SEQ3() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
+	SEQ3() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
+		reset();
+	}
 	void step() override;
 
 	json_t *toJson() override {
@@ -106,7 +108,7 @@ struct SEQ3 : Module {
 
 	void reset() override {
 		for (int i = 0; i < 8; i++) {
-			gateState[i] = false;
+			gateState[i] = true;
 		}
 	}
 
