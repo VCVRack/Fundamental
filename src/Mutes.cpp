@@ -2,26 +2,29 @@
 #include "dsp/digital.hpp"
 
 
+#define NUM_CHANNELS 10
+
+
 struct Mutes : Module {
 	enum ParamIds {
 		MUTE_PARAM,
-		NUM_PARAMS = MUTE_PARAM + 10
+		NUM_PARAMS = MUTE_PARAM + NUM_CHANNELS
 	};
 	enum InputIds {
 		IN_INPUT,
-		NUM_INPUTS = IN_INPUT + 10
+		NUM_INPUTS = IN_INPUT + NUM_CHANNELS
 	};
 	enum OutputIds {
 		OUT_OUTPUT,
-		NUM_OUTPUTS = OUT_OUTPUT + 10
+		NUM_OUTPUTS = OUT_OUTPUT + NUM_CHANNELS
 	};
 	enum LightIds {
 		MUTE_LIGHT,
-		NUM_LIGHTS = MUTE_LIGHT + 10
+		NUM_LIGHTS = MUTE_LIGHT + NUM_CHANNELS
 	};
 
-	bool state[10];
-	SchmittTrigger muteTrigger[10];
+	bool state[NUM_CHANNELS];
+	SchmittTrigger muteTrigger[NUM_CHANNELS];
 
 	Mutes() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
 		reset();
@@ -29,12 +32,12 @@ struct Mutes : Module {
 	void step() override;
 
 	void reset() override {
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < NUM_CHANNELS; i++) {
 			state[i] = true;
 		}
 	}
 	void randomize() override {
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < NUM_CHANNELS; i++) {
 			state[i] = (randomf() < 0.5);
 		}
 	}
@@ -43,7 +46,7 @@ struct Mutes : Module {
 		json_t *rootJ = json_object();
 		// states
 		json_t *statesJ = json_array();
-		for (int i = 0; i < 8; i++) {
+		for (int i = 0; i < NUM_CHANNELS; i++) {
 			json_t *stateJ = json_boolean(state[i]);
 			json_array_append_new(statesJ, stateJ);
 		}
@@ -54,7 +57,7 @@ struct Mutes : Module {
 		// states
 		json_t *statesJ = json_object_get(rootJ, "states");
 		if (statesJ) {
-			for (int i = 0; i < 8; i++) {
+			for (int i = 0; i < NUM_CHANNELS; i++) {
 				json_t *stateJ = json_array_get(statesJ, i);
 				if (stateJ)
 					state[i] = json_boolean_value(stateJ);
@@ -64,7 +67,7 @@ struct Mutes : Module {
 };
 
 void Mutes::step() {
-	for (int i = 0; i < 10; i++) {
+	for (int i = 0; i < NUM_CHANNELS; i++) {
 		if (muteTrigger[i].process(params[MUTE_PARAM + i].value))
 			state[i] ^= true;
 		float in = inputs[IN_INPUT + i].value;
