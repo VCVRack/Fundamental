@@ -1,4 +1,5 @@
 #include "Fundamental.hpp"
+#include "dsp/vumeter.hpp"
 
 
 struct Unity : Module {
@@ -79,10 +80,11 @@ void Unity::step() {
 		outputs[MIX1_OUTPUT + 2*i].value = mix[i];
 		outputs[INV1_OUTPUT + 2*i].value = -mix[i];
 		// Lights
-		float dB = logf(fabsf(mix[i] / 10.0)) / logf(20.0) * 10.0;
+		VUMeter vuMeter;
+		vuMeter.dBInterval = 6.0;
+		vuMeter.setValue(mix[i] / 10.0);
 		for (int j = 0; j < 5; j++) {
-			float b = clampf(dB / 3.0 + 1 + j, 0.0, 1.0);
-			lights[VU1_LIGHT + 5*i + j].setBrightnessSmooth(b);
+			lights[VU1_LIGHT + 5*i + j].setBrightnessSmooth(vuMeter.getBrightness(j));
 		}
 	}
 }

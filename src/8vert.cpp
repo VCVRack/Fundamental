@@ -35,11 +35,7 @@ _8vertWidget::_8vertWidget() {
 	_8vert *module = new _8vert();
 	setModule(module);
 	box.size = Vec(8 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT);
-
-	SVGPanel *panel = new SVGPanel();
-	panel->box.size = box.size;
-	panel->setBackground(SVG::load(assetPlugin(plugin, "res/8vert.svg")));
-	addChild(panel);
+	setPanel(SVG::load(assetPlugin(plugin, "res/8vert.svg")));
 
 	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x - 30, 0)));
