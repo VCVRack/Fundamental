@@ -21,7 +21,7 @@ void init(rack::Plugin *p) {
 	p->addModel(createModel<ADSRWidget>("Fundamental", "ADSR", "ADSR", ENVELOPE_GENERATOR_TAG));
 	p->addModel(createModel<VCMixerWidget>("Fundamental", "VCMixer", "VC Mixer", MIXER_TAG, AMPLIFIER_TAG));
 	p->addModel(createModel<_8vertWidget>("Fundamental", "8vert", "8vert", ATTENUATOR_TAG));
-	p->addModel(createModel<UnityWidget>("Fundamental", "Unity", "Unity", UTILITY_TAG));
+	p->addModel(createModel<UnityWidget>("Fundamental", "Unity", "Unity", MIXER_TAG, UTILITY_TAG));
 	p->addModel(createModel<MutesWidget>("Fundamental", "Mutes", "Mutes", SWITCH_TAG));
 	p->addModel(createModel<ScopeWidget>("Fundamental", "Scope", "Scope", VISUAL_TAG));
 	p->addModel(createModel<SEQ3Widget>("Fundamental", "SEQ3", "SEQ-3", SEQUENCER_TAG));

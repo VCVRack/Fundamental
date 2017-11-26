@@ -11,4 +11,4 @@ VCV logo is © 2017
 
 Panel graphics in `res/` are © 2017
 
-Derivations may not use the VCV logo or panel graphics.
+Derivative works may not use the VCV logo or panel graphics.
