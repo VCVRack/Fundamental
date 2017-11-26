@@ -238,7 +238,7 @@ LFO2Widget::LFO2Widget() {
 	addParam(createParam<CKSS>(Vec(62, 215), module, LFO2::INVERT_PARAM, 0.0, 1.0, 1.0));
 
 	addParam(createParam<RoundHugeBlackKnob>(Vec(18, 60), module, LFO2::FREQ_PARAM, -8.0, 6.0, -1.0));
-	addParam(createParam<RoundBlackKnob>(Vec(11, 142), module, LFO2::WAVE_PARAM, 0.0, 3.0, 0.0));
+	addParam(createParam<RoundBlackKnob>(Vec(11, 142), module, LFO2::WAVE_PARAM, 0.0, 3.0, 1.5));
 	addParam(createParam<RoundBlackKnob>(Vec(11, 207), module, LFO2::FM_PARAM, 0.0, 1.0, 0.5));
 
 	addInput(createInput<PJ301MPort>(Vec(11, 276), module, LFO2::FM_INPUT));
