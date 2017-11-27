@@ -67,11 +67,13 @@ struct Mutes : Module {
 };
 
 void Mutes::step() {
+	float out = 0.0;
 	for (int i = 0; i < NUM_CHANNELS; i++) {
 		if (muteTrigger[i].process(params[MUTE_PARAM + i].value))
 			state[i] ^= true;
-		float in = inputs[IN_INPUT + i].value;
-		outputs[OUT_OUTPUT + i].value = state[i] ? in : 0.0;
+		if (inputs[IN_INPUT + i].active)
+			out = inputs[IN_INPUT + i].value;
+		outputs[OUT_OUTPUT + i].value = state[i] ? out : 0.0;
 		lights[MUTE_LIGHT + i].setBrightness(state[i] ? 0.9 : 0.0);
 	}
 }
