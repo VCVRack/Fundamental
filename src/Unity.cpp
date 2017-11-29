@@ -148,7 +148,7 @@ Menu *UnityWidget::createContextMenu() {
 	Menu *menu = ModuleWidget::createContextMenu();
 
 	MenuLabel *spacerLabel = new MenuLabel();
-	menu->pushChild(spacerLabel);
+	menu->addChild(spacerLabel);
 
 	Unity *unity = dynamic_cast<Unity*>(module);
 	assert(unity);
@@ -156,7 +156,7 @@ Menu *UnityWidget::createContextMenu() {
 	UnityMergeItem *mergeItem = new UnityMergeItem();
 	mergeItem->text = "Merge channels 1 & 2";
 	mergeItem->unity = unity;
-	menu->pushChild(mergeItem);
+	menu->addChild(mergeItem);
 
 	return menu;
 }
