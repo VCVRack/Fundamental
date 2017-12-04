@@ -274,32 +274,32 @@ Menu *SEQ3Widget::createContextMenu() {
 	Menu *menu = ModuleWidget::createContextMenu();
 
 	MenuLabel *spacerLabel = new MenuLabel();
-	menu->pushChild(spacerLabel);
+	menu->addChild(spacerLabel);
 
 	SEQ3 *seq3 = dynamic_cast<SEQ3*>(module);
 	assert(seq3);
 
 	MenuLabel *modeLabel = new MenuLabel();
 	modeLabel->text = "Gate Mode";
-	menu->pushChild(modeLabel);
+	menu->addChild(modeLabel);
 
 	SEQ3GateModeItem *triggerItem = new SEQ3GateModeItem();
 	triggerItem->text = "Trigger";
 	triggerItem->seq3 = seq3;
 	triggerItem->gateMode = SEQ3::TRIGGER;
-	menu->pushChild(triggerItem);
+	menu->addChild(triggerItem);
 
 	SEQ3GateModeItem *retriggerItem = new SEQ3GateModeItem();
 	retriggerItem->text = "Retrigger";
 	retriggerItem->seq3 = seq3;
 	retriggerItem->gateMode = SEQ3::RETRIGGER;
-	menu->pushChild(retriggerItem);
+	menu->addChild(retriggerItem);
 
 	SEQ3GateModeItem *continuousItem = new SEQ3GateModeItem();
 	continuousItem->text = "Continuous";
 	continuousItem->seq3 = seq3;
 	continuousItem->gateMode = SEQ3::CONTINUOUS;
-	menu->pushChild(continuousItem);
+	menu->addChild(continuousItem);
 
 	return menu;
 }
