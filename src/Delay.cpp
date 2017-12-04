@@ -43,7 +43,7 @@ struct Delay : Module {
 void Delay::step() {
 	// Get input to delay block
 	float in = inputs[IN_INPUT].value;
-	float feedback = clampf(params[FEEDBACK_PARAM].value + inputs[FEEDBACK_INPUT].value / 10.0, 0.0, 0.99);
+	float feedback = clampf(params[FEEDBACK_PARAM].value + inputs[FEEDBACK_INPUT].value / 10.0, 0.0, 1.0);
 	float dry = in + lastWet * feedback;
 
 	// Compute delay time in seconds
