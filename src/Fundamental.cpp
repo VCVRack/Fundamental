@@ -25,4 +25,6 @@ void init(rack::Plugin *p) {
 	p->addModel(createModel<MutesWidget>("Fundamental", "Mutes", "Mutes", SWITCH_TAG));
 	p->addModel(createModel<ScopeWidget>("Fundamental", "Scope", "Scope", VISUAL_TAG));
 	p->addModel(createModel<SEQ3Widget>("Fundamental", "SEQ3", "SEQ-3", SEQUENCER_TAG));
+	p->addModel(createModel<SequentialSwitch1Widget>("Fundamental", "SequentialSwitch1", "Sequential Switch 1", UTILITY_TAG));
+	p->addModel(createModel<SequentialSwitch2Widget>("Fundamental", "SequentialSwitch2", "Sequential Switch 2", UTILITY_TAG));
 }

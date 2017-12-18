@@ -67,3 +67,11 @@ struct SEQ3Widget : ModuleWidget {
 	SEQ3Widget();
 	Menu *createContextMenu() override;
 };
+
+struct SequentialSwitch1Widget : ModuleWidget {
+	SequentialSwitch1Widget();
+};
+
+struct SequentialSwitch2Widget : ModuleWidget {
+	SequentialSwitch2Widget();
+};
