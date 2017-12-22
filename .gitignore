@@ -1,0 +1,3 @@
+#output of make command
+/build
+*.dylib
