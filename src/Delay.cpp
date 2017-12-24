@@ -75,7 +75,7 @@ void Delay::step() {
 		int inFrames = mini(historyBuffer.size(), 16);
 		int outFrames = outBuffer.capacity();
 		// printf(">\t%d\t%d\n", inFrames, outFrames);
-		src.setRatioSmooth(ratio);
+		src.setRates(ratio * engineGetSampleRate(), engineGetSampleRate());
 		src.process((const Frame<1>*)historyBuffer.startData(), &inFrames, (Frame<1>*)outBuffer.endData(), &outFrames);
 		historyBuffer.startIncr(inFrames);
 		outBuffer.endIncr(outFrames);

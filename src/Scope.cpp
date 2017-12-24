@@ -65,7 +65,7 @@ struct Scope : Module {
 			external = json_integer_value(extJ);
 	}
 
-	void reset() override {
+	void onReset() override {
 		lissajous = false;
 		external = false;
 	}

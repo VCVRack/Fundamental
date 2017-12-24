@@ -27,16 +27,16 @@ struct Mutes : Module {
 	SchmittTrigger muteTrigger[NUM_CHANNELS];
 
 	Mutes() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
-		reset();
+		onReset();
 	}
 	void step() override;
 
-	void reset() override {
+	void onReset() override {
 		for (int i = 0; i < NUM_CHANNELS; i++) {
 			state[i] = true;
 		}
 	}
-	void randomize() override {
+	void onRandomize() override {
 		for (int i = 0; i < NUM_CHANNELS; i++) {
 			state[i] = (randomf() < 0.5);
 		}

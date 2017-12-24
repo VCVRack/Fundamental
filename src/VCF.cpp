@@ -109,7 +109,7 @@ struct VCF : Module {
 
 	VCF() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
 	void step() override;
-	void reset() override {
+	void onReset() override {
 		filter.reset();
 	}
 };

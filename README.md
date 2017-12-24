@@ -9,6 +9,6 @@ Source code licensed under [BSD-3-Clause](LICENSE.txt) by [Andrew Belt](https://
 
 VCV logo is © 2017
 
-Panel graphics in `res/` are © 2017
+Panel graphics in `res/` are © 2017 by [Grayscale](http://grayscale.info/)
 
 Derivative works may not use the VCV logo or panel graphics.

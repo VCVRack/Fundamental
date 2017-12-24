@@ -31,7 +31,7 @@ struct Unity : Module {
 	Unity() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
 	void step() override;
 
-	void reset() override {
+	void onReset() override {
 		merge = false;
 	}
 

@@ -59,7 +59,7 @@ struct SEQ3 : Module {
 	PulseGenerator gatePulse;
 
 	SEQ3() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
-		reset();
+		onReset();
 	}
 	void step() override;
 
@@ -106,13 +106,13 @@ struct SEQ3 : Module {
 			gateMode = (GateMode)json_integer_value(gateModeJ);
 	}
 
-	void reset() override {
+	void onReset() override {
 		for (int i = 0; i < 8; i++) {
 			gateState[i] = true;
 		}
 	}
 
-	void randomize() override {
+	void onRandomize() override {
 		for (int i = 0; i < 8; i++) {
 			gateState[i] = (randomf() > 0.5);
 		}
