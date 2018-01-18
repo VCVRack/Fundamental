@@ -47,7 +47,7 @@ struct VoltageControlledOscillator {
 			pitch = roundf(pitch);
 		}
 		pitch += pitchCv;
-		// Note C3
+		// Note C4
 		freq = 261.626 * powf(2.0, pitch / 12.0);
 	}
 	void setPulseWidth(float pulseWidth) {
