@@ -77,17 +77,17 @@ void Scope::step() {
 	if (sumTrigger.process(params[LISSAJOUS_PARAM].value)) {
 		lissajous = !lissajous;
 	}
-	lights[PLOT_LIGHT].value = lissajous ? 0.0 : 1.0;
-	lights[LISSAJOUS_LIGHT].value = lissajous ? 1.0 : 0.0;
+	lights[PLOT_LIGHT].value = lissajous ? 0.0f : 1.0f;
+	lights[LISSAJOUS_LIGHT].value = lissajous ? 1.0f : 0.0f;
 
 	if (extTrigger.process(params[EXTERNAL_PARAM].value)) {
 		external = !external;
 	}
-	lights[INTERNAL_LIGHT].value = external ? 0.0 : 1.0;
-	lights[EXTERNAL_LIGHT].value = external ? 1.0 : 0.0;
+	lights[INTERNAL_LIGHT].value = external ? 0.0f : 1.0f;
+	lights[EXTERNAL_LIGHT].value = external ? 1.0f : 0.0f;
 
 	// Compute time
-	float deltaTime = powf(2.0, params[TIME_PARAM].value);
+	float deltaTime = powf(2.0f, params[TIME_PARAM].value);
 	int frameCount = (int)ceilf(deltaTime * engineGetSampleRate());
 
 	// Add frame to buffer
@@ -115,12 +115,12 @@ void Scope::step() {
 		}
 		frameIndex++;
 
-		// Must go below 0.1V to trigger
-		resetTrigger.setThresholds(params[TRIG_PARAM].value - 0.1, params[TRIG_PARAM].value);
+		// Must go below 0.1fV to trigger
+		resetTrigger.setThresholds(params[TRIG_PARAM].value - 0.1f, params[TRIG_PARAM].value);
 		float gate = external ? inputs[TRIG_INPUT].value : inputs[X_INPUT].value;
 
 		// Reset if triggered
-		float holdTime = 0.1;
+		float holdTime = 0.1f;
 		if (resetTrigger.process(gate) || (frameIndex >= engineGetSampleRate() * holdTime)) {
 			bufferIndex = 0; frameIndex = 0; return;
 		}
@@ -141,7 +141,7 @@ struct ScopeDisplay : TransparentWidget {
 	struct Stats {
 		float vrms, vpp, vmin, vmax;
 		void calculate(float *values) {
-			vrms = 0.0;
+			vrms = 0.0f;
 			vmax = -INFINITY;
 			vmin = INFINITY;
 			for (int i = 0; i < BUFFER_SIZE; i++) {
@@ -171,24 +171,24 @@ struct ScopeDisplay : TransparentWidget {
 		for (int i = 0; i < BUFFER_SIZE; i++) {
 			float x, y;
 			if (valuesY) {
-				x = valuesX[i] / 2.0 + 0.5;
-				y = valuesY[i] / 2.0 + 0.5;
+				x = valuesX[i] / 2.0f + 0.5f;
+				y = valuesY[i] / 2.0f + 0.5f;
 			}
 			else {
 				x = (float)i / (BUFFER_SIZE - 1);
-				y = valuesX[i] / 2.0 + 0.5;
+				y = valuesX[i] / 2.0f + 0.5f;
 			}
 			Vec p;
 			p.x = b.pos.x + b.size.x * x;
-			p.y = b.pos.y + b.size.y * (1.0 - y);
+			p.y = b.pos.y + b.size.y * (1.0f - y);
 			if (i == 0)
 				nvgMoveTo(vg, p.x, p.y);
 			else
 				nvgLineTo(vg, p.x, p.y);
 		}
 		nvgLineCap(vg, NVG_ROUND);
-		nvgMiterLimit(vg, 2.0);
-		nvgStrokeWidth(vg, 1.5);
+		nvgMiterLimit(vg, 2.0f);
+		nvgStrokeWidth(vg, 1.5f);
 		nvgGlobalCompositeOperation(vg, NVG_LIGHTER);
 		nvgStroke(vg);
 		nvgResetScissor(vg);
@@ -199,8 +199,8 @@ struct ScopeDisplay : TransparentWidget {
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
 		nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
 
-		value = value / 2.0 + 0.5;
-		Vec p = Vec(box.size.x, b.pos.y + b.size.y * (1.0 - value));
+		value = value / 2.0f + 0.5f;
+		Vec p = Vec(box.size.x, b.pos.y + b.size.y * (1.0f - value));
 
 		// Draw line
 		nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
@@ -247,8 +247,8 @@ struct ScopeDisplay : TransparentWidget {
 	}
 
 	void draw(NVGcontext *vg) override {
-		float gainX = powf(2.0, roundf(module->params[Scope::X_SCALE_PARAM].value));
-		float gainY = powf(2.0, roundf(module->params[Scope::Y_SCALE_PARAM].value));
+		float gainX = powf(2.0f, roundf(module->params[Scope::X_SCALE_PARAM].value));
+		float gainY = powf(2.0f, roundf(module->params[Scope::Y_SCALE_PARAM].value));
 		float offsetX = module->params[Scope::X_POS_PARAM].value;
 		float offsetY = module->params[Scope::Y_POS_PARAM].value;
 
@@ -259,8 +259,8 @@ struct ScopeDisplay : TransparentWidget {
 			// Lock display to buffer if buffer update deltaTime <= 2^-11
 			if (module->lissajous)
 				j = (i + module->bufferIndex) % BUFFER_SIZE;
-			valuesX[i] = (module->bufferX[j] + offsetX) * gainX / 10.0;
-			valuesY[i] = (module->bufferY[j] + offsetY) * gainY / 10.0;
+			valuesX[i] = (module->bufferX[j] + offsetX) * gainX / 10.0f;
+			valuesY[i] = (module->bufferY[j] + offsetY) * gainY / 10.0f;
 		}
 
 		// Draw waveforms
@@ -284,7 +284,7 @@ struct ScopeDisplay : TransparentWidget {
 				drawWaveform(vg, valuesX, NULL);
 			}
 
-			float valueTrig = (module->params[Scope::TRIG_PARAM].value + offsetX) * gainX / 10.0;
+			float valueTrig = (module->params[Scope::TRIG_PARAM].value + offsetX) * gainX / 10.0f;
 			drawTrig(vg, valueTrig);
 		}
 
@@ -325,14 +325,14 @@ ScopeWidget::ScopeWidget() {
 		addChild(display);
 	}
 
-	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(15, 209), module, Scope::X_SCALE_PARAM, -2.0, 8.0, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(15, 263), module, Scope::X_POS_PARAM, -10.0, 10.0, 0.0));
-	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(61, 209), module, Scope::Y_SCALE_PARAM, -2.0, 8.0, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(61, 263), module, Scope::Y_POS_PARAM, -10.0, 10.0, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(107, 209), module, Scope::TIME_PARAM, -6.0, -16.0, -14.0));
-	addParam(createParam<CKD6>(Vec(106, 262), module, Scope::LISSAJOUS_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM, -10.0, 10.0, 0.0));
-	addParam(createParam<CKD6>(Vec(152, 262), module, Scope::EXTERNAL_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(15, 209), module, Scope::X_SCALE_PARAM, -2.0f, 8.0f, 0.0f));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(15, 263), module, Scope::X_POS_PARAM, -10.0f, 10.0f, 0.0f));
+	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(61, 209), module, Scope::Y_SCALE_PARAM, -2.0f, 8.0f, 0.0f));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(61, 263), module, Scope::Y_POS_PARAM, -10.0f, 10.0f, 0.0f));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(107, 209), module, Scope::TIME_PARAM, -6.0f, -16.0f, -14.0f));
+	addParam(createParam<CKD6>(Vec(106, 262), module, Scope::LISSAJOUS_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM, -10.0f, 10.0f, 0.0f));
+	addParam(createParam<CKD6>(Vec(152, 262), module, Scope::EXTERNAL_PARAM, 0.0f, 1.0f, 0.0f));
 
 	addInput(createInput<PJ301MPort>(Vec(17, 319), module, Scope::X_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(63, 319), module, Scope::Y_INPUT));

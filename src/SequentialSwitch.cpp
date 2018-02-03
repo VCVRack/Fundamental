@@ -30,11 +30,11 @@ struct SequentialSwitch : Module {
 	SlewLimiter channelFilter[4];
 
 	SequentialSwitch() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
-		clockTrigger.setThresholds(0.0, 2.0);
-		resetTrigger.setThresholds(0.0, 2.0);
+		clockTrigger.setThresholds(0.0f, 2.0f);
+		resetTrigger.setThresholds(0.0f, 2.0f);
 		for (int i = 0; i < 4; i++) {
-			channelFilter[i].rise = 0.01;
-			channelFilter[i].fall = 0.01;
+			channelFilter[i].rise = 0.01f;
+			channelFilter[i].fall = 0.01f;
 		}
 	}
 
@@ -51,7 +51,7 @@ struct SequentialSwitch : Module {
 
 		// Filter channels
 		for (int i = 0; i < 4; i++) {
-			channelFilter[i].process(channel == i ? 1.0 : 0.0);
+			channelFilter[i].process(channel == i ? 1.0f : 0.0f);
 		}
 
 		// Set outputs
@@ -62,7 +62,7 @@ struct SequentialSwitch : Module {
 			}
 		}
 		else {
-			float out = 0.0;
+			float out = 0.0f;
 			for (int i = 0; i < 4; i++) {
 				out += channelFilter[i].out * inputs[IN_INPUT + i].value;
 			}
@@ -86,7 +86,7 @@ SequentialSwitch1Widget::SequentialSwitch1Widget() {
 	addChild(createScrew<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 	addChild(createScrew<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-	addParam(createParam<CKSSThree>(mm2px(Vec(5.24619, 46.9153)), module, TSequentialSwitch::CHANNELS_PARAM, 0.0, 2.0, 0.0));
+	addParam(createParam<CKSSThree>(mm2px(Vec(5.24619, 46.9153)), module, TSequentialSwitch::CHANNELS_PARAM, 0.0f, 2.0f, 0.0f));
 
 	addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 17.694)), module, TSequentialSwitch::CLOCK_INPUT));
 	addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 32.1896)), module, TSequentialSwitch::RESET_INPUT));
@@ -113,7 +113,7 @@ SequentialSwitch2Widget::SequentialSwitch2Widget() {
 	addChild(createScrew<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 	addChild(createScrew<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-	addParam(createParam<CKSSThree>(mm2px(Vec(5.24619, 46.9153)), module, TSequentialSwitch::CHANNELS_PARAM, 0.0, 2.0, 0.0));
+	addParam(createParam<CKSSThree>(mm2px(Vec(5.24619, 46.9153)), module, TSequentialSwitch::CHANNELS_PARAM, 0.0f, 2.0f, 0.0f));
 
 	addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 17.694)), module, TSequentialSwitch::CLOCK_INPUT));
 	addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 32.191)), module, TSequentialSwitch::RESET_INPUT));

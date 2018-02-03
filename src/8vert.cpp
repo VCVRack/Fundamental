@@ -20,13 +20,13 @@ struct _8vert : Module {
 };
 
 void _8vert::step() {
-	float lastIn = 10.0;
+	float lastIn = 10.0f;
 	for (int i = 0; i < 8; i++) {
 		lastIn = inputs[i].normalize(lastIn);
 		float out = lastIn * params[i].value;
 		outputs[i].value = out;
-		lights[2*i + 0].setBrightnessSmooth(fmaxf(0.0, out / 5.0));
-		lights[2*i + 1].setBrightnessSmooth(fmaxf(0.0, -out / 5.0));
+		lights[2*i + 0].setBrightnessSmooth(fmaxf(0.0f, out / 5.0f));
+		lights[2*i + 1].setBrightnessSmooth(fmaxf(0.0f, -out / 5.0f));
 	}
 }
 
@@ -42,14 +42,14 @@ _8vertWidget::_8vertWidget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x - 30, 365)));
 
-	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 47.753), module, 0, -1.0, 1.0, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 86.198), module, 1, -1.0, 1.0, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 124.639), module, 2, -1.0, 1.0, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 163.084), module, 3, -1.0, 1.0, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 201.529), module, 4, -1.0, 1.0, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 239.974), module, 5, -1.0, 1.0, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 278.415), module, 6, -1.0, 1.0, 0.0));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 316.86), module, 7, -1.0, 1.0, 0.0));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 47.753), module, 0, -1.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 86.198), module, 1, -1.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 124.639), module, 2, -1.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 163.084), module, 3, -1.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 201.529), module, 4, -1.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 239.974), module, 5, -1.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 278.415), module, 6, -1.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(45.308, 316.86), module, 7, -1.0f, 1.0f, 0.0f));
 
 	addInput(createInput<PJ301MPort>(Vec(9.507, 50.397), module, 0));
 	addInput(createInput<PJ301MPort>(Vec(9.507, 88.842), module, 1));

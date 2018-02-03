@@ -30,10 +30,10 @@ struct VCA : Module {
 static void stepChannel(Input &in, Param &level, Input &lin, Input &exp, Output &out) {
 	float v = in.value * level.value;
 	if (lin.active)
-		v *= clampf(lin.value / 10.0, 0.0, 1.0);
-	const float expBase = 50.0;
+		v *= clamp(lin.value / 10.0f, 0.0f, 1.0f);
+	const float expBase = 50.0f;
 	if (exp.active)
-		v *= rescalef(powf(expBase, clampf(exp.value / 10.0, 0.0, 1.0)), 1.0, expBase, 0.0, 1.0);
+		v *= rescale(powf(expBase, clamp(exp.value / 10.0f, 0.0f, 1.0f)), 1.0f, expBase, 0.0f, 1.0f);
 	out.value = v;
 }
 
@@ -60,8 +60,8 @@ VCAWidget::VCAWidget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<RoundBlackKnob>(Vec(27, 57), module, VCA::LEVEL1_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<RoundBlackKnob>(Vec(27, 222), module, VCA::LEVEL2_PARAM, 0.0, 1.0, 0.5));
+	addParam(createParam<RoundBlackKnob>(Vec(27, 57), module, VCA::LEVEL1_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundBlackKnob>(Vec(27, 222), module, VCA::LEVEL2_PARAM, 0.0f, 1.0f, 0.5f));
 
 	addInput(createInput<PJ301MPort>(Vec(11, 113), module, VCA::EXP1_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(54, 113), module, VCA::LIN1_INPUT));

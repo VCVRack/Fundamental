@@ -44,10 +44,10 @@ struct SEQ3 : Module {
 	SchmittTrigger runningTrigger;
 	SchmittTrigger resetTrigger;
 	SchmittTrigger gateTriggers[8];
-	float phase = 0.0;
+	float phase = 0.0f;
 	int index = 0;
 	bool gateState[8] = {};
-	float resetLight = 0.0;
+	float resetLight = 0.0f;
 	float stepLights[8] = {};
 
 	enum GateMode {
@@ -114,19 +114,19 @@ struct SEQ3 : Module {
 
 	void onRandomize() override {
 		for (int i = 0; i < 8; i++) {
-			gateState[i] = (randomf() > 0.5);
+			gateState[i] = (randomf() > 0.5f);
 		}
 	}
 };
 
 
 void SEQ3::step() {
-	const float lightLambda = 0.075;
+	const float lightLambda = 0.075f;
 	// Run
 	if (runningTrigger.process(params[RUN_PARAM].value)) {
 		running = !running;
 	}
-	lights[RUNNING_LIGHT].value = running ? 1.0 : 0.0;
+	lights[RUNNING_LIGHT].value = running ? 1.0f : 0.0f;
 
 	bool nextStep = false;
 
@@ -134,16 +134,16 @@ void SEQ3::step() {
 		if (inputs[EXT_CLOCK_INPUT].active) {
 			// External clock
 			if (clockTrigger.process(inputs[EXT_CLOCK_INPUT].value)) {
-				phase = 0.0;
+				phase = 0.0f;
 				nextStep = true;
 			}
 		}
 		else {
 			// Internal clock
-			float clockTime = powf(2.0, params[CLOCK_PARAM].value + inputs[CLOCK_INPUT].value);
-			phase += clockTime / engineGetSampleRate();
-			if (phase >= 1.0) {
-				phase -= 1.0;
+			float clockTime = powf(2.0f, params[CLOCK_PARAM].value + inputs[CLOCK_INPUT].value);
+			phase += clockTime * engineGetSampleTime();
+			if (phase >= 1.0f) {
+				phase -= 1.0f;
 				nextStep = true;
 			}
 		}
@@ -151,26 +151,26 @@ void SEQ3::step() {
 
 	// Reset
 	if (resetTrigger.process(params[RESET_PARAM].value + inputs[RESET_INPUT].value)) {
-		phase = 0.0;
+		phase = 0.0f;
 		index = 8;
 		nextStep = true;
-		resetLight = 1.0;
+		resetLight = 1.0f;
 	}
 
 	if (nextStep) {
 		// Advance step
-		int numSteps = clampi(roundf(params[STEPS_PARAM].value + inputs[STEPS_INPUT].value), 1, 8);
+		int numSteps = clamp(roundf(params[STEPS_PARAM].value + inputs[STEPS_INPUT].value), 1.0f, 8.0f);
 		index += 1;
 		if (index >= numSteps) {
 			index = 0;
 		}
-		stepLights[index] = 1.0;
+		stepLights[index] = 1.0f;
 		gatePulse.trigger(1e-3);
 	}
 
-	resetLight -= resetLight / lightLambda / engineGetSampleRate();
+	resetLight -= resetLight / lightLambda * engineGetSampleTime();
 
-	bool pulse = gatePulse.process(1.0 / engineGetSampleRate());
+	bool pulse = gatePulse.process(engineGetSampleTime());
 
 	// Gate buttons
 	for (int i = 0; i < 8; i++) {
@@ -183,9 +183,9 @@ void SEQ3::step() {
 		else if (gateMode == RETRIGGER)
 			gateOn = gateOn && !pulse;
 
-		outputs[GATE_OUTPUT + i].value = gateOn ? 10.0 : 0.0;
-		stepLights[i] -= stepLights[i] / lightLambda / engineGetSampleRate();
-		lights[GATE_LIGHTS + i].value = gateState[i] ? 1.0 - stepLights[i] : stepLights[i];
+		outputs[GATE_OUTPUT + i].value = gateOn ? 10.0f : 0.0f;
+		stepLights[i] -= stepLights[i] / lightLambda * engineGetSampleTime();
+		lights[GATE_LIGHTS + i].value = gateState[i] ? 1.0f - stepLights[i] : stepLights[i];
 	}
 
 	// Rows
@@ -202,12 +202,12 @@ void SEQ3::step() {
 	outputs[ROW1_OUTPUT].value = row1;
 	outputs[ROW2_OUTPUT].value = row2;
 	outputs[ROW3_OUTPUT].value = row3;
-	outputs[GATES_OUTPUT].value = gatesOn ? 10.0 : 0.0;
+	outputs[GATES_OUTPUT].value = gatesOn ? 10.0f : 0.0f;
 	lights[RESET_LIGHT].value = resetLight;
-	lights[GATES_LIGHT].value = gatesOn ? 1.0 : 0.0;
-	lights[ROW_LIGHTS].value = row1 / 10.0;
-	lights[ROW_LIGHTS + 1].value = row2 / 10.0;
-	lights[ROW_LIGHTS + 2].value = row3 / 10.0;
+	lights[GATES_LIGHT].value = gatesOn ? 1.0f : 0.0f;
+	lights[ROW_LIGHTS].value = row1 / 10.0f;
+	lights[ROW_LIGHTS + 1].value = row2 / 10.0f;
+	lights[ROW_LIGHTS + 2].value = row3 / 10.0f;
 }
 
 
@@ -228,16 +228,16 @@ SEQ3Widget::SEQ3Widget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<RoundSmallBlackKnob>(Vec(18, 56), module, SEQ3::CLOCK_PARAM, -2.0, 6.0, 2.0));
-	addParam(createParam<LEDButton>(Vec(60, 61-1), module, SEQ3::RUN_PARAM, 0.0, 1.0, 0.0));
-	addChild(createLight<MediumLight<GreenLight>>(Vec(64.4, 64.4), module, SEQ3::RUNNING_LIGHT));
-	addParam(createParam<LEDButton>(Vec(99, 61-1), module, SEQ3::RESET_PARAM, 0.0, 1.0, 0.0));
-	addChild(createLight<MediumLight<GreenLight>>(Vec(103.4, 64.4), module, SEQ3::RESET_LIGHT));
-	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(132, 56), module, SEQ3::STEPS_PARAM, 1.0, 8.0, 8.0));
-	addChild(createLight<MediumLight<GreenLight>>(Vec(179.4, 64.4), module, SEQ3::GATES_LIGHT));
-	addChild(createLight<MediumLight<GreenLight>>(Vec(218.4, 64.4), module, SEQ3::ROW_LIGHTS));
-	addChild(createLight<MediumLight<GreenLight>>(Vec(256.4, 64.4), module, SEQ3::ROW_LIGHTS + 1));
-	addChild(createLight<MediumLight<GreenLight>>(Vec(295.4, 64.4), module, SEQ3::ROW_LIGHTS + 2));
+	addParam(createParam<RoundSmallBlackKnob>(Vec(18, 56), module, SEQ3::CLOCK_PARAM, -2.0f, 6.0f, 2.0f));
+	addParam(createParam<LEDButton>(Vec(60, 61-1), module, SEQ3::RUN_PARAM, 0.0f, 1.0f, 0.0f));
+	addChild(createLight<MediumLight<GreenLight>>(Vec(64.4f, 64.4f), module, SEQ3::RUNNING_LIGHT));
+	addParam(createParam<LEDButton>(Vec(99, 61-1), module, SEQ3::RESET_PARAM, 0.0f, 1.0f, 0.0f));
+	addChild(createLight<MediumLight<GreenLight>>(Vec(103.4f, 64.4f), module, SEQ3::RESET_LIGHT));
+	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(132, 56), module, SEQ3::STEPS_PARAM, 1.0f, 8.0f, 8.0f));
+	addChild(createLight<MediumLight<GreenLight>>(Vec(179.4f, 64.4f), module, SEQ3::GATES_LIGHT));
+	addChild(createLight<MediumLight<GreenLight>>(Vec(218.4f, 64.4f), module, SEQ3::ROW_LIGHTS));
+	addChild(createLight<MediumLight<GreenLight>>(Vec(256.4f, 64.4f), module, SEQ3::ROW_LIGHTS + 1));
+	addChild(createLight<MediumLight<GreenLight>>(Vec(295.4f, 64.4f), module, SEQ3::ROW_LIGHTS + 2));
 
 	static const float portX[8] = {20, 58, 96, 135, 173, 212, 250, 289};
 	addInput(createInput<PJ301MPort>(Vec(portX[0]-1, 98), module, SEQ3::CLOCK_INPUT));
@@ -250,11 +250,11 @@ SEQ3Widget::SEQ3Widget() {
 	addOutput(createOutput<PJ301MPort>(Vec(portX[7]-1, 98), module, SEQ3::ROW3_OUTPUT));
 
 	for (int i = 0; i < 8; i++) {
-		addParam(createParam<RoundSmallBlackKnob>(Vec(portX[i]-2, 157), module, SEQ3::ROW1_PARAM + i, 0.0, 10.0, 0.0));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(portX[i]-2, 198), module, SEQ3::ROW2_PARAM + i, 0.0, 10.0, 0.0));
-		addParam(createParam<RoundSmallBlackKnob>(Vec(portX[i]-2, 240), module, SEQ3::ROW3_PARAM + i, 0.0, 10.0, 0.0));
-		addParam(createParam<LEDButton>(Vec(portX[i]+2, 278-1), module, SEQ3::GATE_PARAM + i, 0.0, 1.0, 0.0));
-		addChild(createLight<MediumLight<GreenLight>>(Vec(portX[i]+6.4, 281.4), module, SEQ3::GATE_LIGHTS + i));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(portX[i]-2, 157), module, SEQ3::ROW1_PARAM + i, 0.0f, 10.0f, 0.0f));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(portX[i]-2, 198), module, SEQ3::ROW2_PARAM + i, 0.0f, 10.0f, 0.0f));
+		addParam(createParam<RoundSmallBlackKnob>(Vec(portX[i]-2, 240), module, SEQ3::ROW3_PARAM + i, 0.0f, 10.0f, 0.0f));
+		addParam(createParam<LEDButton>(Vec(portX[i]+2, 278-1), module, SEQ3::GATE_PARAM + i, 0.0f, 1.0f, 0.0f));
+		addChild(createLight<MediumLight<GreenLight>>(Vec(portX[i]+6.4f, 281.4f), module, SEQ3::GATE_LIGHTS + i));
 		addOutput(createOutput<PJ301MPort>(Vec(portX[i]-1, 307), module, SEQ3::GATE_OUTPUT + i));
 	}
 }
@@ -266,7 +266,7 @@ struct SEQ3GateModeItem : MenuItem {
 		seq3->gateMode = gateMode;
 	}
 	void step() override {
-		rightText = (seq3->gateMode == gateMode) ? "✔" : "";
+		rightText = CHECKMARK(seq3->gateMode == gateMode);
 	}
 };
 

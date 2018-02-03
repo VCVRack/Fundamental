@@ -38,7 +38,7 @@ struct Mutes : Module {
 	}
 	void onRandomize() override {
 		for (int i = 0; i < NUM_CHANNELS; i++) {
-			state[i] = (randomf() < 0.5);
+			state[i] = (randomf() < 0.5f);
 		}
 	}
 
@@ -67,14 +67,14 @@ struct Mutes : Module {
 };
 
 void Mutes::step() {
-	float out = 0.0;
+	float out = 0.0f;
 	for (int i = 0; i < NUM_CHANNELS; i++) {
 		if (muteTrigger[i].process(params[MUTE_PARAM + i].value))
 			state[i] ^= true;
 		if (inputs[IN_INPUT + i].active)
 			out = inputs[IN_INPUT + i].value;
-		outputs[OUT_OUTPUT + i].value = state[i] ? out : 0.0;
-		lights[MUTE_LIGHT + i].setBrightness(state[i] ? 0.9 : 0.0);
+		outputs[OUT_OUTPUT + i].value = state[i] ? out : 0.0f;
+		lights[MUTE_LIGHT + i].setBrightness(state[i] ? 0.9f : 0.0f);
 	}
 }
 
@@ -82,7 +82,7 @@ void Mutes::step() {
 template <typename BASE>
 struct MuteLight : BASE {
 	MuteLight() {
-		this->box.size = mm2px(Vec(6.0, 6.0));
+		this->box.size = mm2px(Vec(6.0f, 6.0f));
 	}
 };
 
@@ -96,16 +96,16 @@ MutesWidget::MutesWidget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x - 30, 365)));
 
-	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 18.165)), module, Mutes::MUTE_PARAM + 0, 0.0, 1.0, 0.0));
-	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 28.164)), module, Mutes::MUTE_PARAM + 1, 0.0, 1.0, 0.0));
-	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 38.164)), module, Mutes::MUTE_PARAM + 2, 0.0, 1.0, 0.0));
-	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 48.165)), module, Mutes::MUTE_PARAM + 3, 0.0, 1.0, 0.0));
-	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 58.164)), module, Mutes::MUTE_PARAM + 4, 0.0, 1.0, 0.0));
-	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 68.165)), module, Mutes::MUTE_PARAM + 5, 0.0, 1.0, 0.0));
-	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 78.164)), module, Mutes::MUTE_PARAM + 6, 0.0, 1.0, 0.0));
-	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 88.164)), module, Mutes::MUTE_PARAM + 7, 0.0, 1.0, 0.0));
-	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 98.165)), module, Mutes::MUTE_PARAM + 8, 0.0, 1.0, 0.0));
-	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 108.166)), module, Mutes::MUTE_PARAM + 9, 0.0, 1.0, 0.0));
+	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 18.165)), module, Mutes::MUTE_PARAM + 0, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 28.164)), module, Mutes::MUTE_PARAM + 1, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 38.164)), module, Mutes::MUTE_PARAM + 2, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 48.165)), module, Mutes::MUTE_PARAM + 3, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 58.164)), module, Mutes::MUTE_PARAM + 4, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 68.165)), module, Mutes::MUTE_PARAM + 5, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 78.164)), module, Mutes::MUTE_PARAM + 6, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 88.164)), module, Mutes::MUTE_PARAM + 7, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 98.165)), module, Mutes::MUTE_PARAM + 8, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 108.166)), module, Mutes::MUTE_PARAM + 9, 0.0f, 1.0f, 0.0f));
 
 	addInput(createInput<PJ301MPort>(mm2px(Vec(4.214, 17.81)), module, Mutes::IN_INPUT + 0));
 	addInput(createInput<PJ301MPort>(mm2px(Vec(4.214, 27.809)), module, Mutes::IN_INPUT + 1));

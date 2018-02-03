@@ -39,8 +39,8 @@ inline float clip(float x) {
 }
 
 struct LadderFilter {
-	float cutoff = 1000.0;
-	float resonance = 1.0;
+	float cutoff = 1000.0f;
+	float resonance = 1.0f;
 	float state[4] = {};
 
 	void calculateDerivatives(float input, float *dstate, const float *state) {
@@ -61,11 +61,11 @@ struct LadderFilter {
 
 		calculateDerivatives(input, deriv1, state);
 		for (int i = 0; i < 4; i++)
-			tempState[i] = state[i] + 0.5 * dt * deriv1[i];
+			tempState[i] = state[i] + 0.5f * dt * deriv1[i];
 
 		calculateDerivatives(input, deriv2, tempState);
 		for (int i = 0; i < 4; i++)
-			tempState[i] = state[i] + 0.5 * dt * deriv2[i];
+			tempState[i] = state[i] + 0.5f * dt * deriv2[i];
 
 		calculateDerivatives(input, deriv3, tempState);
 		for (int i = 0; i < 4; i++)
@@ -73,11 +73,11 @@ struct LadderFilter {
 
 		calculateDerivatives(input, deriv4, tempState);
 		for (int i = 0; i < 4; i++)
-			state[i] += (1.0 / 6.0) * dt * (deriv1[i] + 2.0 * deriv2[i] + 2.0 * deriv3[i] + deriv4[i]);
+			state[i] += (1.0f / 6.0f) * dt * (deriv1[i] + 2.0f * deriv2[i] + 2.0f * deriv3[i] + deriv4[i]);
 	}
 	void reset() {
 		for (int i = 0; i < 4; i++) {
-			state[i] = 0.0;
+			state[i] = 0.0f;
 		}
 	}
 };
@@ -116,31 +116,31 @@ struct VCF : Module {
 
 
 void VCF::step() {
-	float input = inputs[IN_INPUT].value / 5.0;
-	float drive = params[DRIVE_PARAM].value + inputs[DRIVE_INPUT].value / 10.0;
-	float gain = powf(100.0, drive);
+	float input = inputs[IN_INPUT].value / 5.0f;
+	float drive = params[DRIVE_PARAM].value + inputs[DRIVE_INPUT].value / 10.0f;
+	float gain = powf(100.0f, drive);
 	input *= gain;
 	// Add -60dB noise to bootstrap self-oscillation
-	input += 1.0e-6 * (2.0*randomf() - 1.0);
+	input += 1e-6f * (2.0f*randomf() - 1.0f);
 
 	// Set resonance
-	float res = params[RES_PARAM].value + inputs[RES_INPUT].value / 5.0;
-	res = 5.5 * clampf(res, 0.0, 1.0);
+	float res = params[RES_PARAM].value + inputs[RES_INPUT].value / 5.0f;
+	res = 5.5f * clamp(res, 0.0f, 1.0f);
 	filter.resonance = res;
 
 	// Set cutoff frequency
-	float cutoffExp = params[FREQ_PARAM].value + params[FREQ_CV_PARAM].value * inputs[FREQ_INPUT].value / 5.0;
-	cutoffExp = clampf(cutoffExp, 0.0, 1.0);
-	const float minCutoff = 15.0;
-	const float maxCutoff = 8400.0;
+	float cutoffExp = params[FREQ_PARAM].value + params[FREQ_CV_PARAM].value * inputs[FREQ_INPUT].value / 5.0f;
+	cutoffExp = clamp(cutoffExp, 0.0f, 1.0f);
+	const float minCutoff = 15.0f;
+	const float maxCutoff = 8400.0f;
 	filter.cutoff = minCutoff * powf(maxCutoff / minCutoff, cutoffExp);
 
 	// Push a sample to the state filter
-	filter.process(input, 1.0/engineGetSampleRate());
+	filter.process(input, 1.0f/engineGetSampleRate());
 
 	// Set outputs
-	outputs[LPF_OUTPUT].value = 5.0 * filter.state[3];
-	outputs[HPF_OUTPUT].value = 5.0 * (input - filter.state[3]);
+	outputs[LPF_OUTPUT].value = 5.0f * filter.state[3];
+	outputs[HPF_OUTPUT].value = 5.0f * (input - filter.state[3]);
 }
 
 
@@ -161,11 +161,11 @@ VCFWidget::VCFWidget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<RoundHugeBlackKnob>(Vec(33, 61), module, VCF::FREQ_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<RoundBlackKnob>(Vec(12, 143), module, VCF::FINE_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<RoundBlackKnob>(Vec(71, 143), module, VCF::RES_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(12, 208), module, VCF::FREQ_CV_PARAM, -1.0, 1.0, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(71, 208), module, VCF::DRIVE_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<RoundHugeBlackKnob>(Vec(33, 61), module, VCF::FREQ_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundBlackKnob>(Vec(12, 143), module, VCF::FINE_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundBlackKnob>(Vec(71, 143), module, VCF::RES_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundBlackKnob>(Vec(12, 208), module, VCF::FREQ_CV_PARAM, -1.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundBlackKnob>(Vec(71, 208), module, VCF::DRIVE_PARAM, 0.0f, 1.0f, 0.0f));
 
 	addInput(createInput<PJ301MPort>(Vec(10, 276), module, VCF::FREQ_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(48, 276), module, VCF::RES_INPUT));

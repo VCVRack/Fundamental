@@ -32,29 +32,29 @@ struct ADSR : Module {
 	};
 
 	bool decaying = false;
-	float env = 0.0;
+	float env = 0.0f;
 	SchmittTrigger trigger;
 
 	ADSR() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
-		trigger.setThresholds(0.0, 1.0);
+		trigger.setThresholds(0.0f, 1.0f);
 	}
 	void step() override;
 };
 
 
 void ADSR::step() {
-	float attack = clampf(params[ATTACK_INPUT].value + inputs[ATTACK_INPUT].value / 10.0, 0.0, 1.0);
-	float decay = clampf(params[DECAY_PARAM].value + inputs[DECAY_INPUT].value / 10.0, 0.0, 1.0);
-	float sustain = clampf(params[SUSTAIN_PARAM].value + inputs[SUSTAIN_INPUT].value / 10.0, 0.0, 1.0);
-	float release = clampf(params[RELEASE_PARAM].value + inputs[RELEASE_PARAM].value / 10.0, 0.0, 1.0);
+	float attack = clamp(params[ATTACK_INPUT].value + inputs[ATTACK_INPUT].value / 10.0f, 0.0f, 1.0f);
+	float decay = clamp(params[DECAY_PARAM].value + inputs[DECAY_INPUT].value / 10.0f, 0.0f, 1.0f);
+	float sustain = clamp(params[SUSTAIN_PARAM].value + inputs[SUSTAIN_INPUT].value / 10.0f, 0.0f, 1.0f);
+	float release = clamp(params[RELEASE_PARAM].value + inputs[RELEASE_PARAM].value / 10.0f, 0.0f, 1.0f);
 
 	// Gate and trigger
-	bool gated = inputs[GATE_INPUT].value >= 1.0;
+	bool gated = inputs[GATE_INPUT].value >= 1.0f;
 	if (trigger.process(inputs[TRIG_INPUT].value))
 		decaying = false;
 
-	const float base = 20000.0;
-	const float maxTime = 10.0;
+	const float base = 20000.0f;
+	const float maxTime = 10.0f;
 	if (gated) {
 		if (decaying) {
 			// Decay
@@ -62,20 +62,20 @@ void ADSR::step() {
 				env = sustain;
 			}
 			else {
-				env += powf(base, 1 - decay) / maxTime * (sustain - env) / engineGetSampleRate();
+				env += powf(base, 1 - decay) / maxTime * (sustain - env) * engineGetSampleTime();
 			}
 		}
 		else {
 			// Attack
 			// Skip ahead if attack is all the way down (infinitely fast)
 			if (attack < 1e-4) {
-				env = 1.0;
+				env = 1.0f;
 			}
 			else {
-				env += powf(base, 1 - attack) / maxTime * (1.01 - env) / engineGetSampleRate();
+				env += powf(base, 1 - attack) / maxTime * (1.01f - env) * engineGetSampleTime();
 			}
-			if (env >= 1.0) {
-				env = 1.0;
+			if (env >= 1.0f) {
+				env = 1.0f;
 				decaying = true;
 			}
 		}
@@ -83,24 +83,24 @@ void ADSR::step() {
 	else {
 		// Release
 		if (release < 1e-4) {
-			env = 0.0;
+			env = 0.0f;
 		}
 		else {
-			env += powf(base, 1 - release) / maxTime * (0.0 - env) / engineGetSampleRate();
+			env += powf(base, 1 - release) / maxTime * (0.0f - env) * engineGetSampleTime();
 		}
 		decaying = false;
 	}
 
-	bool sustaining = nearf(env, sustain, 1e-3);
-	bool resting = nearf(env, 0.0, 1e-3);
+	bool sustaining = near(env, sustain, 1e-3);
+	bool resting = near(env, 0.0f, 1e-3);
 
-	outputs[ENVELOPE_OUTPUT].value = 10.0 * env;
+	outputs[ENVELOPE_OUTPUT].value = 10.0f * env;
 
 	// Lights
-	lights[ATTACK_LIGHT].value = (gated && !decaying) ? 1.0 : 0.0;
-	lights[DECAY_LIGHT].value = (gated && decaying && !sustaining) ? 1.0 : 0.0;
-	lights[SUSTAIN_LIGHT].value = (gated && decaying && sustaining) ? 1.0 : 0.0;
-	lights[RELEASE_LIGHT].value = (!gated && !resting) ? 1.0 : 0.0;
+	lights[ATTACK_LIGHT].value = (gated && !decaying) ? 1.0f : 0.0f;
+	lights[DECAY_LIGHT].value = (gated && decaying && !sustaining) ? 1.0f : 0.0f;
+	lights[SUSTAIN_LIGHT].value = (gated && decaying && sustaining) ? 1.0f : 0.0f;
+	lights[RELEASE_LIGHT].value = (!gated && !resting) ? 1.0f : 0.0f;
 }
 
 
@@ -121,10 +121,10 @@ ADSRWidget::ADSRWidget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<RoundBlackKnob>(Vec(62, 57), module, ADSR::ATTACK_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<RoundBlackKnob>(Vec(62, 124), module, ADSR::DECAY_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<RoundBlackKnob>(Vec(62, 191), module, ADSR::SUSTAIN_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<RoundBlackKnob>(Vec(62, 257), module, ADSR::RELEASE_PARAM, 0.0, 1.0, 0.5));
+	addParam(createParam<RoundBlackKnob>(Vec(62, 57), module, ADSR::ATTACK_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundBlackKnob>(Vec(62, 124), module, ADSR::DECAY_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundBlackKnob>(Vec(62, 191), module, ADSR::SUSTAIN_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundBlackKnob>(Vec(62, 257), module, ADSR::RELEASE_PARAM, 0.0f, 1.0f, 0.5f));
 
 	addInput(createInput<PJ301MPort>(Vec(9, 63), module, ADSR::ATTACK_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(9, 129), module, ADSR::DECAY_INPUT));

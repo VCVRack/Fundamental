@@ -81,8 +81,8 @@ void Unity::step() {
 		outputs[INV1_OUTPUT + 2*i].value = -mix[i];
 		// Lights
 		VUMeter vuMeter;
-		vuMeter.dBInterval = 6.0;
-		vuMeter.setValue(mix[i] / 10.0);
+		vuMeter.dBInterval = 6.0f;
+		vuMeter.setValue(mix[i] / 10.0f);
 		for (int j = 0; j < 5; j++) {
 			lights[VU1_LIGHT + 5*i + j].setBrightnessSmooth(vuMeter.getBrightness(j));
 		}
@@ -100,8 +100,8 @@ UnityWidget::UnityWidget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x - 30, 365)));
 
-	addParam(createParam<CKSS>(mm2px(Vec(12.867, 52.961)), module, Unity::AVG1_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<CKSS>(mm2px(Vec(12.867, 107.006)), module, Unity::AVG2_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<CKSS>(mm2px(Vec(12.867, 52.961)), module, Unity::AVG1_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<CKSS>(mm2px(Vec(12.867, 107.006)), module, Unity::AVG2_PARAM, 0.0f, 1.0f, 0.0f));
 
 	addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 17.144)), module, Unity::IN1_INPUT + 0));
 	addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 17.144)), module, Unity::IN1_INPUT + 1));
@@ -140,7 +140,7 @@ struct UnityMergeItem : MenuItem {
 		unity->merge ^= true;
 	}
 	void step() override {
-		rightText = (unity->merge) ? "✔" : "";
+		rightText = CHECKMARK(unity->merge);
 	}
 };
 

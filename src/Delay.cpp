@@ -30,7 +30,7 @@ struct Delay : Module {
 	DoubleRingBuffer<float, HISTORY_SIZE> historyBuffer;
 	DoubleRingBuffer<float, 16> outBuffer;
 	SampleRateConverter<1> src;
-	float lastWet = 0.0;
+	float lastWet = 0.0f;
 	RCFilter lowpassFilter;
 	RCFilter highpassFilter;
 
@@ -43,15 +43,15 @@ struct Delay : Module {
 void Delay::step() {
 	// Get input to delay block
 	float in = inputs[IN_INPUT].value;
-	float feedback = clampf(params[FEEDBACK_PARAM].value + inputs[FEEDBACK_INPUT].value / 10.0, 0.0, 1.0);
+	float feedback = clamp(params[FEEDBACK_PARAM].value + inputs[FEEDBACK_INPUT].value / 10.0f, 0.0f, 1.0f);
 	float dry = in + lastWet * feedback;
 
 	// Compute delay time in seconds
-	float delay = 1e-3 * powf(10.0 / 1e-3, clampf(params[TIME_PARAM].value + inputs[TIME_INPUT].value / 10.0, 0.0, 1.0));
+	float delay = 1e-3 * powf(10.0f / 1e-3, clamp(params[TIME_PARAM].value + inputs[TIME_INPUT].value / 10.0f, 0.0f, 1.0f));
 	// Number of delay samples
 	float index = delay * engineGetSampleRate();
 
-	// TODO This is a horrible digital delay algorithm. Rewrite later.
+	// TODO Rewrite this digital delay algorithm.
 
 	// Push dry sample into history buffer
 	if (!historyBuffer.full()) {
@@ -64,15 +64,14 @@ void Delay::step() {
 
 	// printf("wanted: %f\tactual: %d\tdiff: %d\tratio: %f\n", index, historyBuffer.size(), consume, index / historyBuffer.size());
 	if (outBuffer.empty()) {
-		// Idk wtf I'm doing
-		double ratio = 1.0;
+		double ratio = 1.0f;
 		if (consume <= -16)
-			ratio = 0.5;
+			ratio = 0.5f;
 		else if (consume >= 16)
-			ratio = 2.0;
+			ratio = 2.0f;
 
 		// printf("%f\t%lf\n", consume, ratio);
-		int inFrames = mini(historyBuffer.size(), 16);
+		int inFrames = min(historyBuffer.size(), 16);
 		int outFrames = outBuffer.capacity();
 		// printf(">\t%d\t%d\n", inFrames, outFrames);
 		src.setRates(ratio * engineGetSampleRate(), engineGetSampleRate());
@@ -83,27 +82,27 @@ void Delay::step() {
 		// printf("====================================\n");
 	}
 
-	float wet = 0.0;
+	float wet = 0.0f;
 	if (!outBuffer.empty()) {
 		wet = outBuffer.shift();
 	}
 
 	// Apply color to delay wet output
 	// TODO Make it sound better
-	float color = clampf(params[COLOR_PARAM].value + inputs[COLOR_INPUT].value / 10.0, 0.0, 1.0);
-	float lowpassFreq = 10000.0 * powf(10.0, clampf(2.0*color, 0.0, 1.0));
+	float color = clamp(params[COLOR_PARAM].value + inputs[COLOR_INPUT].value / 10.0f, 0.0f, 1.0f);
+	float lowpassFreq = 10000.0f * powf(10.0f, clamp(2.0f*color, 0.0f, 1.0f));
 	lowpassFilter.setCutoff(lowpassFreq / engineGetSampleRate());
 	lowpassFilter.process(wet);
 	wet = lowpassFilter.lowpass();
-	float highpassFreq = 10.0 * powf(100.0, clampf(2.0*color - 1.0, 0.0, 1.0));
+	float highpassFreq = 10.0f * powf(100.0f, clamp(2.0f*color - 1.0f, 0.0f, 1.0f));
 	highpassFilter.setCutoff(highpassFreq / engineGetSampleRate());
 	highpassFilter.process(wet);
 	wet = highpassFilter.highpass();
 
 	lastWet = wet;
 
-	float mix = clampf(params[MIX_PARAM].value + inputs[MIX_INPUT].value / 10.0, 0.0, 1.0);
-	float out = crossf(in, wet, mix);
+	float mix = clamp(params[MIX_PARAM].value + inputs[MIX_INPUT].value / 10.0f, 0.0f, 1.0f);
+	float out = crossfade(in, wet, mix);
 	outputs[OUT_OUTPUT].value = out;
 }
 
@@ -125,10 +124,10 @@ DelayWidget::DelayWidget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<RoundBlackKnob>(Vec(67, 57), module, Delay::TIME_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<RoundBlackKnob>(Vec(67, 123), module, Delay::FEEDBACK_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<RoundBlackKnob>(Vec(67, 190), module, Delay::COLOR_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<RoundBlackKnob>(Vec(67, 257), module, Delay::MIX_PARAM, 0.0, 1.0, 0.5));
+	addParam(createParam<RoundBlackKnob>(Vec(67, 57), module, Delay::TIME_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundBlackKnob>(Vec(67, 123), module, Delay::FEEDBACK_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundBlackKnob>(Vec(67, 190), module, Delay::COLOR_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundBlackKnob>(Vec(67, 257), module, Delay::MIX_PARAM, 0.0f, 1.0f, 0.5f));
 
 	addInput(createInput<PJ301MPort>(Vec(14, 63), module, Delay::TIME_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(14, 129), module, Delay::FEEDBACK_INPUT));

@@ -11,10 +11,10 @@ template <int OVERSAMPLE, int QUALITY>
 struct VoltageControlledOscillator {
 	bool analog = false;
 	bool soft = false;
-	float lastSyncValue = 0.0;
-	float phase = 0.0;
+	float lastSyncValue = 0.0f;
+	float phase = 0.0f;
 	float freq;
-	float pw = 0.5;
+	float pw = 0.5f;
 	float pitch;
 	bool syncEnabled = false;
 	bool syncDirection = false;
@@ -26,7 +26,7 @@ struct VoltageControlledOscillator {
 	RCFilter sqrFilter;
 
 	// For analog detuning effect
-	float pitchSlew = 0.0;
+	float pitchSlew = 0.0f;
 	int pitchSlewIndex = 0;
 
 	float sinBuffer[OVERSAMPLE] = {};
@@ -39,7 +39,7 @@ struct VoltageControlledOscillator {
 		pitch = pitchKnob;
 		if (analog) {
 			// Apply pitch slew
-			const float pitchSlewAmount = 3.0;
+			const float pitchSlewAmount = 3.0f;
 			pitch += pitchSlew * pitchSlewAmount;
 		}
 		else {
@@ -48,34 +48,34 @@ struct VoltageControlledOscillator {
 		}
 		pitch += pitchCv;
 		// Note C4
-		freq = 261.626 * powf(2.0, pitch / 12.0);
+		freq = 261.626f * powf(2.0f, pitch / 12.0f);
 	}
 	void setPulseWidth(float pulseWidth) {
-		const float pwMin = 0.01;
-		pw = clampf(pulseWidth, pwMin, 1.0 - pwMin);
+		const float pwMin = 0.01f;
+		pw = clamp(pulseWidth, pwMin, 1.0f - pwMin);
 	}
 
 	void process(float deltaTime, float syncValue) {
 		if (analog) {
 			// Adjust pitch slew
 			if (++pitchSlewIndex > 32) {
-				const float pitchSlewTau = 100.0; // Time constant for leaky integrator in seconds
-				pitchSlew += (randomNormal() - pitchSlew / pitchSlewTau) / engineGetSampleRate();
+				const float pitchSlewTau = 100.0f; // Time constant for leaky integrator in seconds
+				pitchSlew += (randomNormal() - pitchSlew / pitchSlewTau) * engineGetSampleTime();
 				pitchSlewIndex = 0;
 			}
 		}
 
 		// Advance phase
-		float deltaPhase = clampf(freq * deltaTime, 1e-6, 0.5);
+		float deltaPhase = clamp(freq * deltaTime, 1e-6, 0.5f);
 
 		// Detect sync
 		int syncIndex = -1; // Index in the oversample loop where sync occurs [0, OVERSAMPLE)
-		float syncCrossing = 0.0; // Offset that sync occurs [0.0, 1.0)
+		float syncCrossing = 0.0f; // Offset that sync occurs [0.0f, 1.0f)
 		if (syncEnabled) {
-			syncValue -= 0.01;
-			if (syncValue > 0.0 && lastSyncValue <= 0.0) {
+			syncValue -= 0.01f;
+			if (syncValue > 0.0f && lastSyncValue <= 0.0f) {
 				float deltaSync = syncValue - lastSyncValue;
-				syncCrossing = 1.0 - syncValue / deltaSync;
+				syncCrossing = 1.0f - syncValue / deltaSync;
 				syncCrossing *= OVERSAMPLE;
 				syncIndex = (int)syncCrossing;
 				syncCrossing -= syncIndex;
@@ -84,19 +84,19 @@ struct VoltageControlledOscillator {
 		}
 
 		if (syncDirection)
-			deltaPhase *= -1.0;
+			deltaPhase *= -1.0f;
 
-		sqrFilter.setCutoff(40.0 * deltaTime);
+		sqrFilter.setCutoff(40.0f * deltaTime);
 
 		for (int i = 0; i < OVERSAMPLE; i++) {
 			if (syncIndex == i) {
 				if (soft) {
 					syncDirection = !syncDirection;
-					deltaPhase *= -1.0;
+					deltaPhase *= -1.0f;
 				}
 				else {
 					// phase = syncCrossing * deltaPhase / OVERSAMPLE;
-					phase = 0.0;
+					phase = 0.0f;
 				}
 			}
 
@@ -112,7 +112,7 @@ struct VoltageControlledOscillator {
 				sinBuffer[i] = sinf(2.f*M_PI * phase);
 			}
 			if (analog) {
-				triBuffer[i] = 1.25f * interpf(triTable, phase * 2047.f);
+				triBuffer[i] = 1.25f * interp(triTable, phase * 2047.f);
 			}
 			else {
 				if (phase < 0.25f)
@@ -123,7 +123,7 @@ struct VoltageControlledOscillator {
 					triBuffer[i] = -4.f + 4.f * phase;
 			}
 			if (analog) {
-				sawBuffer[i] = 1.66f * interpf(sawTable, phase * 2047.f);
+				sawBuffer[i] = 1.66f * interp(sawTable, phase * 2047.f);
 			}
 			else {
 				if (phase < 0.5f)
@@ -140,7 +140,7 @@ struct VoltageControlledOscillator {
 
 			// Advance phase
 			phase += deltaPhase / OVERSAMPLE;
-			phase = eucmodf(phase, 1.0);
+			phase = eucmod(phase, 1.0f);
 		}
 	}
 
@@ -201,32 +201,32 @@ struct VCO : Module {
 
 
 void VCO::step() {
-	oscillator.analog = params[MODE_PARAM].value > 0.0;
-	oscillator.soft = params[SYNC_PARAM].value <= 0.0;
+	oscillator.analog = params[MODE_PARAM].value > 0.0f;
+	oscillator.soft = params[SYNC_PARAM].value <= 0.0f;
 
-	float pitchFine = 3.0 * quadraticBipolar(params[FINE_PARAM].value);
-	float pitchCv = 12.0 * inputs[PITCH_INPUT].value;
+	float pitchFine = 3.0f * quadraticBipolar(params[FINE_PARAM].value);
+	float pitchCv = 12.0f * inputs[PITCH_INPUT].value;
 	if (inputs[FM_INPUT].active) {
-		pitchCv += quadraticBipolar(params[FM_PARAM].value) * 12.0 * inputs[FM_INPUT].value;
+		pitchCv += quadraticBipolar(params[FM_PARAM].value) * 12.0f * inputs[FM_INPUT].value;
 	}
 	oscillator.setPitch(params[FREQ_PARAM].value, pitchFine + pitchCv);
-	oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0);
+	oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0f);
 	oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
-	oscillator.process(1.0 / engineGetSampleRate(), inputs[SYNC_INPUT].value);
+	oscillator.process(engineGetSampleTime(), inputs[SYNC_INPUT].value);
 
 	// Set output
 	if (outputs[SIN_OUTPUT].active)
-		outputs[SIN_OUTPUT].value = 5.0 * oscillator.sin();
+		outputs[SIN_OUTPUT].value = 5.0f * oscillator.sin();
 	if (outputs[TRI_OUTPUT].active)
-		outputs[TRI_OUTPUT].value = 5.0 * oscillator.tri();
+		outputs[TRI_OUTPUT].value = 5.0f * oscillator.tri();
 	if (outputs[SAW_OUTPUT].active)
-		outputs[SAW_OUTPUT].value = 5.0 * oscillator.saw();
+		outputs[SAW_OUTPUT].value = 5.0f * oscillator.saw();
 	if (outputs[SQR_OUTPUT].active)
-		outputs[SQR_OUTPUT].value = 5.0 * oscillator.sqr();
+		outputs[SQR_OUTPUT].value = 5.0f * oscillator.sqr();
 
-	lights[PHASE_POS_LIGHT].setBrightnessSmooth(fmaxf(0.0, oscillator.light()));
-	lights[PHASE_NEG_LIGHT].setBrightnessSmooth(fmaxf(0.0, -oscillator.light()));
+	lights[PHASE_POS_LIGHT].setBrightnessSmooth(fmaxf(0.0f, oscillator.light()));
+	lights[PHASE_NEG_LIGHT].setBrightnessSmooth(fmaxf(0.0f, -oscillator.light()));
 }
 
 
@@ -247,14 +247,14 @@ VCOWidget::VCOWidget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<CKSS>(Vec(15, 77), module, VCO::MODE_PARAM, 0.0, 1.0, 1.0));
-	addParam(createParam<CKSS>(Vec(119, 77), module, VCO::SYNC_PARAM, 0.0, 1.0, 1.0));
+	addParam(createParam<CKSS>(Vec(15, 77), module, VCO::MODE_PARAM, 0.0f, 1.0f, 1.0f));
+	addParam(createParam<CKSS>(Vec(119, 77), module, VCO::SYNC_PARAM, 0.0f, 1.0f, 1.0f));
 
-	addParam(createParam<RoundHugeBlackKnob>(Vec(47, 61), module, VCO::FREQ_PARAM, -54.0, 54.0, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(23, 143), module, VCO::FINE_PARAM, -1.0, 1.0, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(91, 143), module, VCO::PW_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<RoundBlackKnob>(Vec(23, 208), module, VCO::FM_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(91, 208), module, VCO::PWM_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<RoundHugeBlackKnob>(Vec(47, 61), module, VCO::FREQ_PARAM, -54.0f, 54.0f, 0.0f));
+	addParam(createParam<RoundBlackKnob>(Vec(23, 143), module, VCO::FINE_PARAM, -1.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundBlackKnob>(Vec(91, 143), module, VCO::PW_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundBlackKnob>(Vec(23, 208), module, VCO::FM_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundBlackKnob>(Vec(91, 208), module, VCO::PWM_PARAM, 0.0f, 1.0f, 0.0f));
 
 	addInput(createInput<PJ301MPort>(Vec(11, 276), module, VCO::PITCH_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(45, 276), module, VCO::FM_INPUT));
@@ -266,7 +266,7 @@ VCOWidget::VCOWidget() {
 	addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, VCO::SAW_OUTPUT));
 	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, VCO::SQR_OUTPUT));
 
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42.5), module, VCO::PHASE_POS_LIGHT));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42.5f), module, VCO::PHASE_POS_LIGHT));
 }
 
 
@@ -303,28 +303,28 @@ struct VCO2 : Module {
 
 
 void VCO2::step() {
-	oscillator.analog = params[MODE_PARAM].value > 0.0;
-	oscillator.soft = params[SYNC_PARAM].value <= 0.0;
+	oscillator.analog = params[MODE_PARAM].value > 0.0f;
+	oscillator.soft = params[SYNC_PARAM].value <= 0.0f;
 
-	float pitchCv = params[FREQ_PARAM].value + quadraticBipolar(params[FM_PARAM].value) * 12.0 * inputs[FM_INPUT].value;
-	oscillator.setPitch(0.0, pitchCv);
+	float pitchCv = params[FREQ_PARAM].value + quadraticBipolar(params[FM_PARAM].value) * 12.0f * inputs[FM_INPUT].value;
+	oscillator.setPitch(0.0f, pitchCv);
 	oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
-	oscillator.process(1.0 / engineGetSampleRate(), inputs[SYNC_INPUT].value);
+	oscillator.process(engineGetSampleTime(), inputs[SYNC_INPUT].value);
 
 	// Set output
-	float wave = clampf(params[WAVE_PARAM].value + inputs[WAVE_INPUT].value, 0.0, 3.0);
+	float wave = clamp(params[WAVE_PARAM].value + inputs[WAVE_INPUT].value, 0.0f, 3.0f);
 	float out;
-	if (wave < 1.0)
-		out = crossf(oscillator.sin(), oscillator.tri(), wave);
-	else if (wave < 2.0)
-		out = crossf(oscillator.tri(), oscillator.saw(), wave - 1.0);
+	if (wave < 1.0f)
+		out = crossfade(oscillator.sin(), oscillator.tri(), wave);
+	else if (wave < 2.0f)
+		out = crossfade(oscillator.tri(), oscillator.saw(), wave - 1.0f);
 	else
-		out = crossf(oscillator.saw(), oscillator.sqr(), wave - 2.0);
-	outputs[OUT_OUTPUT].value = 5.0 * out;
+		out = crossfade(oscillator.saw(), oscillator.sqr(), wave - 2.0f);
+	outputs[OUT_OUTPUT].value = 5.0f * out;
 
-	lights[PHASE_POS_LIGHT].setBrightnessSmooth(fmaxf(0.0, oscillator.light()));
-	lights[PHASE_NEG_LIGHT].setBrightnessSmooth(fmaxf(0.0, -oscillator.light()));
+	lights[PHASE_POS_LIGHT].setBrightnessSmooth(fmaxf(0.0f, oscillator.light()));
+	lights[PHASE_NEG_LIGHT].setBrightnessSmooth(fmaxf(0.0f, -oscillator.light()));
 }
 
 
@@ -345,12 +345,12 @@ VCO2Widget::VCO2Widget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<CKSS>(Vec(62, 150), module, VCO2::MODE_PARAM, 0.0, 1.0, 1.0));
-	addParam(createParam<CKSS>(Vec(62, 215), module, VCO2::SYNC_PARAM, 0.0, 1.0, 1.0));
+	addParam(createParam<CKSS>(Vec(62, 150), module, VCO2::MODE_PARAM, 0.0f, 1.0f, 1.0f));
+	addParam(createParam<CKSS>(Vec(62, 215), module, VCO2::SYNC_PARAM, 0.0f, 1.0f, 1.0f));
 
-	addParam(createParam<RoundHugeBlackKnob>(Vec(17, 60), module, VCO2::FREQ_PARAM, -54.0, 54.0, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(12, 143), module, VCO2::WAVE_PARAM, 0.0, 3.0, 1.5));
-	addParam(createParam<RoundBlackKnob>(Vec(12, 208), module, VCO2::FM_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<RoundHugeBlackKnob>(Vec(17, 60), module, VCO2::FREQ_PARAM, -54.0f, 54.0f, 0.0f));
+	addParam(createParam<RoundBlackKnob>(Vec(12, 143), module, VCO2::WAVE_PARAM, 0.0f, 3.0f, 1.5f));
+	addParam(createParam<RoundBlackKnob>(Vec(12, 208), module, VCO2::FM_PARAM, 0.0f, 1.0f, 0.0f));
 
 	addInput(createInput<PJ301MPort>(Vec(11, 276), module, VCO2::FM_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(54, 276), module, VCO2::SYNC_INPUT));
@@ -358,7 +358,7 @@ VCO2Widget::VCO2Widget() {
 
 	addOutput(createOutput<PJ301MPort>(Vec(54, 320), module, VCO2::OUT_OUTPUT));
 
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 42.5), module, VCO2::PHASE_POS_LIGHT));
+	addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 42.5f), module, VCO2::PHASE_POS_LIGHT));
 }
 
 

@@ -33,10 +33,10 @@ struct VCMixer : Module {
 
 
 void VCMixer::step() {
-	float ch1 = inputs[CH1_INPUT].value * params[CH1_PARAM].value * clampf(inputs[CH1_CV_INPUT].normalize(10.0) / 10.0, 0.0, 1.0);
-	float ch2 = inputs[CH2_INPUT].value * params[CH2_PARAM].value * clampf(inputs[CH2_CV_INPUT].normalize(10.0) / 10.0, 0.0, 1.0);
-	float ch3 = inputs[CH3_INPUT].value * params[CH3_PARAM].value * clampf(inputs[CH3_CV_INPUT].normalize(10.0) / 10.0, 0.0, 1.0);
-	float cv = fmaxf(inputs[MIX_CV_INPUT].normalize(10.0) / 10.0, 0.0);
+	float ch1 = inputs[CH1_INPUT].value * params[CH1_PARAM].value * clamp(inputs[CH1_CV_INPUT].normalize(10.0f) / 10.0f, 0.0f, 1.0f);
+	float ch2 = inputs[CH2_INPUT].value * params[CH2_PARAM].value * clamp(inputs[CH2_CV_INPUT].normalize(10.0f) / 10.0f, 0.0f, 1.0f);
+	float ch3 = inputs[CH3_INPUT].value * params[CH3_PARAM].value * clamp(inputs[CH3_CV_INPUT].normalize(10.0f) / 10.0f, 0.0f, 1.0f);
+	float cv = fmaxf(inputs[MIX_CV_INPUT].normalize(10.0f) / 10.0f, 0.0f);
 	float mix = (ch1 + ch2 + ch3) * params[MIX_PARAM].value * cv;
 
 	outputs[CH1_OUTPUT].value = ch1;
@@ -63,10 +63,10 @@ VCMixerWidget::VCMixerWidget() {
 	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
 	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<RoundLargeBlackKnob>(Vec(52, 58), module, VCMixer::MIX_PARAM, 0.0, 1.0, 0.5));
-	addParam(createParam<RoundBlackKnob>(Vec(57, 139), module, VCMixer::CH1_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(57, 219), module, VCMixer::CH2_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<RoundBlackKnob>(Vec(57, 300), module, VCMixer::CH3_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<RoundLargeBlackKnob>(Vec(52, 58), module, VCMixer::MIX_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundBlackKnob>(Vec(57, 139), module, VCMixer::CH1_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundBlackKnob>(Vec(57, 219), module, VCMixer::CH2_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundBlackKnob>(Vec(57, 300), module, VCMixer::CH3_PARAM, 0.0f, 1.0f, 0.0f));
 
 	addInput(createInput<PJ301MPort>(Vec(16, 69), module, VCMixer::MIX_CV_INPUT));
 	addInput(createInput<PJ301MPort>(Vec(22, 129), module, VCMixer::CH1_INPUT));
