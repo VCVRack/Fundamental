@@ -91,8 +91,8 @@ void ADSR::step() {
 		decaying = false;
 	}
 
-	bool sustaining = near(env, sustain, 1e-3);
-	bool resting = near(env, 0.0f, 1e-3);
+	bool sustaining = isNear(env, sustain, 1e-3);
+	bool resting = isNear(env, 0.0f, 1e-3);
 
 	outputs[ENVELOPE_OUTPUT].value = 10.0f * env;
 
