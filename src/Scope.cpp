@@ -44,6 +44,7 @@ struct Scope : Module {
 	bool lissajous = false;
 	bool external = false;
 	SchmittTrigger resetTrigger;
+	Port *xPort, *yPort;
 
 	Scope() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
 	void step() override;
@@ -267,20 +268,36 @@ struct ScopeDisplay : TransparentWidget {
 		if (module->lissajous) {
 			// X x Y
 			if (module->inputs[Scope::X_INPUT].active || module->inputs[Scope::Y_INPUT].active) {
-				nvgStrokeColor(vg, nvgRGBA(0x9f, 0xe4, 0x36, 0xc0));
+				nvgStrokeColor(vg, getPortColor(nullptr));
 				drawWaveform(vg, valuesX, valuesY);
 			}
 		}
 		else {
 			// Y
+			NVGcolor xColor, yColor;
+			xColor = getPortColor(module->xPort);
+			yColor = getPortColor(module->yPort);
+			if (memcmp(&xColor, &yColor, sizeof(xColor)) == 0 ) {
+				// if the colors are the same pick novel colors
+				NVGcolor tmp = xColor;
+				tmp.r = xColor.g;
+				tmp.g = xColor.b;
+				tmp.b = xColor.r;
+				xColor = tmp;
+				tmp.r = yColor.b;
+				tmp.g = yColor.r;
+				tmp.b = yColor.g;
+				yColor = tmp;
+			}
+
 			if (module->inputs[Scope::Y_INPUT].active) {
-				nvgStrokeColor(vg, nvgRGBA(0xe1, 0x02, 0x78, 0xc0));
+				nvgStrokeColor(vg, yColor);
 				drawWaveform(vg, valuesY, NULL);
 			}
 
 			// X
 			if (module->inputs[Scope::X_INPUT].active) {
-				nvgStrokeColor(vg, nvgRGBA(0x28, 0xb0, 0xf3, 0xc0));
+				nvgStrokeColor(vg, xColor);
 				drawWaveform(vg, valuesX, NULL);
 			}
 
@@ -297,6 +314,14 @@ struct ScopeDisplay : TransparentWidget {
 		drawStats(vg, Vec(0, 0), "X", &statsX);
 		drawStats(vg, Vec(0, box.size.y - 15), "Y", &statsY);
 	}
+
+	NVGcolor getPortColor(Port* port) {
+		WireWidget *wire = gRackWidget->wireContainer->getTopWire(port);
+		NVGcolor color = wire ? wire->color : nvgRGBA(0x9f, 0xe4, 0x36, 0xc0);
+		//color.a = 0xc0;
+		return color;
+	}
+
 };
 
 
@@ -334,8 +359,10 @@ ScopeWidget::ScopeWidget() {
 	addParam(createParam<RoundSmallBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM, -10.0, 10.0, 0.0));
 	addParam(createParam<CKD6>(Vec(152, 262), module, Scope::EXTERNAL_PARAM, 0.0, 1.0, 0.0));
 
-	addInput(createInput<PJ301MPort>(Vec(17, 319), module, Scope::X_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(63, 319), module, Scope::Y_INPUT));
+	module->xPort = dynamic_cast<Port*>(createInput<PJ301MPort>(Vec(17, 319), module, Scope::X_INPUT));
+	addInput(module->xPort);
+	module->yPort = dynamic_cast<Port*>(createInput<PJ301MPort>(Vec(63, 319), module, Scope::Y_INPUT));
+	addInput(module->yPort);
 	addInput(createInput<PJ301MPort>(Vec(154, 319), module, Scope::TRIG_INPUT));
 
 	addChild(createLight<SmallLight<GreenLight>>(Vec(104, 251), module, Scope::PLOT_LIGHT));
