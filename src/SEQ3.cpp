@@ -114,7 +114,7 @@ struct SEQ3 : Module {
 
 	void onRandomize() override {
 		for (int i = 0; i < 8; i++) {
-			gateState[i] = (randomf() > 0.5f);
+			gateState[i] = (randomUniform() > 0.5f);
 		}
 	}
 };

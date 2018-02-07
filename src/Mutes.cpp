@@ -38,7 +38,7 @@ struct Mutes : Module {
 	}
 	void onRandomize() override {
 		for (int i = 0; i < NUM_CHANNELS; i++) {
-			state[i] = (randomf() < 0.5f);
+			state[i] = (randomUniform() < 0.5f);
 		}
 	}
 
