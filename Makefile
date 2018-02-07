@@ -5,5 +5,5 @@ SOURCES += $(wildcard src/*.cpp)
 
 DISTRIBUTABLES += $(wildcard LICENSE*) res
 
-
-include ../../plugin.mk
+RACK_DIR ?= ../..
+include $(RACK_DIR)/plugin.mk

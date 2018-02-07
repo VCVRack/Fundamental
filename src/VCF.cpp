@@ -121,7 +121,7 @@ void VCF::step() {
 	float gain = powf(100.0f, drive);
 	input *= gain;
 	// Add -60dB noise to bootstrap self-oscillation
-	input += 1e-6f * (2.0f*randomf() - 1.0f);
+	input += 1e-6f * (2.0f*randomUniform() - 1.0f);
 
 	// Set resonance
 	float res = params[RES_PARAM].value + inputs[RES_INPUT].value / 5.0f;
