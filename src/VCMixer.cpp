@@ -58,26 +58,26 @@ VCMixerWidget::VCMixerWidget() {
 		addChild(panel);
 	}
 
-	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<RoundLargeBlackKnob>(Vec(52, 58), module, VCMixer::MIX_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(createParam<RoundBlackKnob>(Vec(57, 139), module, VCMixer::CH1_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(createParam<RoundBlackKnob>(Vec(57, 219), module, VCMixer::CH2_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(createParam<RoundBlackKnob>(Vec(57, 300), module, VCMixer::CH3_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(52, 58), module, VCMixer::MIX_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(57, 139), module, VCMixer::CH1_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(57, 219), module, VCMixer::CH2_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(57, 300), module, VCMixer::CH3_PARAM, 0.0f, 1.0f, 0.0f));
 
-	addInput(createInput<PJ301MPort>(Vec(16, 69), module, VCMixer::MIX_CV_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(22, 129), module, VCMixer::CH1_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(22, 160), module, VCMixer::CH1_CV_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(22, 209), module, VCMixer::CH2_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(22, 241), module, VCMixer::CH2_CV_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(22, 290), module, VCMixer::CH3_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(22, 322), module, VCMixer::CH3_CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(16, 69), Port::INPUT, module, VCMixer::MIX_CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(22, 129), Port::INPUT, module, VCMixer::CH1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(22, 160), Port::INPUT, module, VCMixer::CH1_CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(22, 209), Port::INPUT, module, VCMixer::CH2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(22, 241), Port::INPUT, module, VCMixer::CH2_CV_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(22, 290), Port::INPUT, module, VCMixer::CH3_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(22, 322), Port::INPUT, module, VCMixer::CH3_CV_INPUT));
 
-	addOutput(createOutput<PJ301MPort>(Vec(110, 69), module, VCMixer::MIX_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(110, 145), module, VCMixer::CH1_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(110, 225), module, VCMixer::CH2_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(110, 306), module, VCMixer::CH3_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(110, 69), Port::OUTPUT, module, VCMixer::MIX_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(110, 145), Port::OUTPUT, module, VCMixer::CH1_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(110, 225), Port::OUTPUT, module, VCMixer::CH2_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(110, 306), Port::OUTPUT, module, VCMixer::CH3_OUTPUT));
 }

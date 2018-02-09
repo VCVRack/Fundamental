@@ -156,22 +156,22 @@ VCFWidget::VCFWidget() {
 		addChild(panel);
 	}
 
-	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<RoundHugeBlackKnob>(Vec(33, 61), module, VCF::FREQ_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(createParam<RoundBlackKnob>(Vec(12, 143), module, VCF::FINE_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(createParam<RoundBlackKnob>(Vec(71, 143), module, VCF::RES_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(createParam<RoundBlackKnob>(Vec(12, 208), module, VCF::FREQ_CV_PARAM, -1.0f, 1.0f, 0.0f));
-	addParam(createParam<RoundBlackKnob>(Vec(71, 208), module, VCF::DRIVE_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundHugeBlackKnob>(Vec(33, 61), module, VCF::FREQ_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(12, 143), module, VCF::FINE_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(71, 143), module, VCF::RES_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(12, 208), module, VCF::FREQ_CV_PARAM, -1.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(71, 208), module, VCF::DRIVE_PARAM, 0.0f, 1.0f, 0.0f));
 
-	addInput(createInput<PJ301MPort>(Vec(10, 276), module, VCF::FREQ_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(48, 276), module, VCF::RES_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(85, 276), module, VCF::DRIVE_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(10, 320), module, VCF::IN_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(10, 276), Port::INPUT, module, VCF::FREQ_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(48, 276), Port::INPUT, module, VCF::RES_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(85, 276), Port::INPUT, module, VCF::DRIVE_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(10, 320), Port::INPUT, module, VCF::IN_INPUT));
 
-	addOutput(createOutput<PJ301MPort>(Vec(48, 320), module, VCF::LPF_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(85, 320), module, VCF::HPF_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(48, 320), Port::OUTPUT, module, VCF::LPF_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(85, 320), Port::OUTPUT, module, VCF::HPF_OUTPUT));
 }

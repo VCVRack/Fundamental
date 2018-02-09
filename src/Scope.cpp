@@ -311,10 +311,10 @@ ScopeWidget::ScopeWidget() {
 		addChild(panel);
 	}
 
-	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 
 	{
 		ScopeDisplay *display = new ScopeDisplay();
@@ -324,21 +324,21 @@ ScopeWidget::ScopeWidget() {
 		addChild(display);
 	}
 
-	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(15, 209), module, Scope::X_SCALE_PARAM, -2.0f, 8.0f, 0.0f));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(15, 263), module, Scope::X_POS_PARAM, -10.0f, 10.0f, 0.0f));
-	addParam(createParam<RoundSmallBlackSnapKnob>(Vec(61, 209), module, Scope::Y_SCALE_PARAM, -2.0f, 8.0f, 0.0f));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(61, 263), module, Scope::Y_POS_PARAM, -10.0f, 10.0f, 0.0f));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(107, 209), module, Scope::TIME_PARAM, -6.0f, -16.0f, -14.0f));
-	addParam(createParam<CKD6>(Vec(106, 262), module, Scope::LISSAJOUS_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(createParam<RoundSmallBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM, -10.0f, 10.0f, 0.0f));
-	addParam(createParam<CKD6>(Vec(152, 262), module, Scope::EXTERNAL_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundSmallBlackSnapKnob>(Vec(15, 209), module, Scope::X_SCALE_PARAM, -2.0f, 8.0f, 0.0f));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(15, 263), module, Scope::X_POS_PARAM, -10.0f, 10.0f, 0.0f));
+	addParam(ParamWidget::create<RoundSmallBlackSnapKnob>(Vec(61, 209), module, Scope::Y_SCALE_PARAM, -2.0f, 8.0f, 0.0f));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(61, 263), module, Scope::Y_POS_PARAM, -10.0f, 10.0f, 0.0f));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(107, 209), module, Scope::TIME_PARAM, -6.0f, -16.0f, -14.0f));
+	addParam(ParamWidget::create<CKD6>(Vec(106, 262), module, Scope::LISSAJOUS_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM, -10.0f, 10.0f, 0.0f));
+	addParam(ParamWidget::create<CKD6>(Vec(152, 262), module, Scope::EXTERNAL_PARAM, 0.0f, 1.0f, 0.0f));
 
-	addInput(createInput<PJ301MPort>(Vec(17, 319), module, Scope::X_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(63, 319), module, Scope::Y_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(154, 319), module, Scope::TRIG_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(17, 319), Port::INPUT, module, Scope::X_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(63, 319), Port::INPUT, module, Scope::Y_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(154, 319), Port::INPUT, module, Scope::TRIG_INPUT));
 
-	addChild(createLight<SmallLight<GreenLight>>(Vec(104, 251), module, Scope::PLOT_LIGHT));
-	addChild(createLight<SmallLight<GreenLight>>(Vec(104, 296), module, Scope::LISSAJOUS_LIGHT));
-	addChild(createLight<SmallLight<GreenLight>>(Vec(150, 251), module, Scope::INTERNAL_LIGHT));
-	addChild(createLight<SmallLight<GreenLight>>(Vec(150, 296), module, Scope::EXTERNAL_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<GreenLight>>(Vec(104, 251), module, Scope::PLOT_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<GreenLight>>(Vec(104, 296), module, Scope::LISSAJOUS_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<GreenLight>>(Vec(150, 251), module, Scope::INTERNAL_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<GreenLight>>(Vec(150, 296), module, Scope::EXTERNAL_LIGHT));
 }

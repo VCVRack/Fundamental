@@ -132,31 +132,31 @@ LFOWidget::LFOWidget() {
 		addChild(panel);
 	}
 
-	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<CKSS>(Vec(15, 77), module, LFO::OFFSET_PARAM, 0.0f, 1.0f, 1.0f));
-	addParam(createParam<CKSS>(Vec(119, 77), module, LFO::INVERT_PARAM, 0.0f, 1.0f, 1.0f));
+	addParam(ParamWidget::create<CKSS>(Vec(15, 77), module, LFO::OFFSET_PARAM, 0.0f, 1.0f, 1.0f));
+	addParam(ParamWidget::create<CKSS>(Vec(119, 77), module, LFO::INVERT_PARAM, 0.0f, 1.0f, 1.0f));
 
-	addParam(createParam<RoundHugeBlackKnob>(Vec(47, 61), module, LFO::FREQ_PARAM, -8.0f, 6.0f, -1.0f));
-	addParam(createParam<RoundBlackKnob>(Vec(23, 143), module, LFO::FM1_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(createParam<RoundBlackKnob>(Vec(91, 143), module, LFO::PW_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(createParam<RoundBlackKnob>(Vec(23, 208), module, LFO::FM2_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(createParam<RoundBlackKnob>(Vec(91, 208), module, LFO::PWM_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundHugeBlackKnob>(Vec(47, 61), module, LFO::FREQ_PARAM, -8.0f, 6.0f, -1.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(23, 143), module, LFO::FM1_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(91, 143), module, LFO::PW_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(23, 208), module, LFO::FM2_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(91, 208), module, LFO::PWM_PARAM, 0.0f, 1.0f, 0.0f));
 
-	addInput(createInput<PJ301MPort>(Vec(11, 276), module, LFO::FM1_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(45, 276), module, LFO::FM2_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(80, 276), module, LFO::RESET_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(114, 276), module, LFO::PW_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(11, 276), Port::INPUT, module, LFO::FM1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(45, 276), Port::INPUT, module, LFO::FM2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(80, 276), Port::INPUT, module, LFO::RESET_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(114, 276), Port::INPUT, module, LFO::PW_INPUT));
 
-	addOutput(createOutput<PJ301MPort>(Vec(11, 320), module, LFO::SIN_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(45, 320), module, LFO::TRI_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, LFO::SAW_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, LFO::SQR_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(11, 320), Port::OUTPUT, module, LFO::SIN_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(45, 320), Port::OUTPUT, module, LFO::TRI_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(80, 320), Port::OUTPUT, module, LFO::SAW_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(114, 320), Port::OUTPUT, module, LFO::SQR_OUTPUT));
 
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42.5f), module, LFO::PHASE_POS_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<GreenRedLight>>(Vec(99, 42.5f), module, LFO::PHASE_POS_LIGHT));
 }
 
 
@@ -228,23 +228,23 @@ LFO2Widget::LFO2Widget() {
 		addChild(panel);
 	}
 
-	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<CKSS>(Vec(62, 150), module, LFO2::OFFSET_PARAM, 0.0f, 1.0f, 1.0f));
-	addParam(createParam<CKSS>(Vec(62, 215), module, LFO2::INVERT_PARAM, 0.0f, 1.0f, 1.0f));
+	addParam(ParamWidget::create<CKSS>(Vec(62, 150), module, LFO2::OFFSET_PARAM, 0.0f, 1.0f, 1.0f));
+	addParam(ParamWidget::create<CKSS>(Vec(62, 215), module, LFO2::INVERT_PARAM, 0.0f, 1.0f, 1.0f));
 
-	addParam(createParam<RoundHugeBlackKnob>(Vec(18, 60), module, LFO2::FREQ_PARAM, -8.0f, 6.0f, -1.0f));
-	addParam(createParam<RoundBlackKnob>(Vec(11, 142), module, LFO2::WAVE_PARAM, 0.0f, 3.0f, 1.5f));
-	addParam(createParam<RoundBlackKnob>(Vec(11, 207), module, LFO2::FM_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundHugeBlackKnob>(Vec(18, 60), module, LFO2::FREQ_PARAM, -8.0f, 6.0f, -1.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(11, 142), module, LFO2::WAVE_PARAM, 0.0f, 3.0f, 1.5f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(11, 207), module, LFO2::FM_PARAM, 0.0f, 1.0f, 0.5f));
 
-	addInput(createInput<PJ301MPort>(Vec(11, 276), module, LFO2::FM_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(54, 276), module, LFO2::RESET_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(11, 319), module, LFO2::WAVE_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(11, 276), Port::INPUT, module, LFO2::FM_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(54, 276), Port::INPUT, module, LFO2::RESET_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(11, 319), Port::INPUT, module, LFO2::WAVE_INPUT));
 
-	addOutput(createOutput<PJ301MPort>(Vec(54, 319), module, LFO2::INTERP_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(54, 319), Port::OUTPUT, module, LFO2::INTERP_OUTPUT));
 
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 42.5f), module, LFO2::PHASE_POS_LIGHT));
+	addChild(ModuleLightWidget::create<SmallLight<GreenRedLight>>(Vec(68, 42.5f), module, LFO2::PHASE_POS_LIGHT));
 }

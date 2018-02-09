@@ -55,21 +55,21 @@ VCAWidget::VCAWidget() {
 		addChild(panel);
 	}
 
-	addChild(createScrew<ScrewSilver>(Vec(15, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createScrew<ScrewSilver>(Vec(15, 365)));
-	addChild(createScrew<ScrewSilver>(Vec(box.size.x-30, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
+	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
+	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(createParam<RoundBlackKnob>(Vec(27, 57), module, VCA::LEVEL1_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(createParam<RoundBlackKnob>(Vec(27, 222), module, VCA::LEVEL2_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(27, 57), module, VCA::LEVEL1_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(27, 222), module, VCA::LEVEL2_PARAM, 0.0f, 1.0f, 0.5f));
 
-	addInput(createInput<PJ301MPort>(Vec(11, 113), module, VCA::EXP1_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(54, 113), module, VCA::LIN1_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(11, 156), module, VCA::IN1_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(11, 276), module, VCA::EXP2_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(54, 276), module, VCA::LIN2_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(11, 320), module, VCA::IN2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(11, 113), Port::INPUT, module, VCA::EXP1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(54, 113), Port::INPUT, module, VCA::LIN1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(11, 156), Port::INPUT, module, VCA::IN1_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(11, 276), Port::INPUT, module, VCA::EXP2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(54, 276), Port::INPUT, module, VCA::LIN2_INPUT));
+	addInput(Port::create<PJ301MPort>(Vec(11, 320), Port::INPUT, module, VCA::IN2_INPUT));
 
-	addOutput(createOutput<PJ301MPort>(Vec(54, 156), module, VCA::OUT1_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(54, 320), module, VCA::OUT2_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(54, 156), Port::OUTPUT, module, VCA::OUT1_OUTPUT));
+	addOutput(Port::create<PJ301MPort>(Vec(54, 320), Port::OUTPUT, module, VCA::OUT2_OUTPUT));
 }
