@@ -35,9 +35,7 @@ struct ADSR : Module {
 	float env = 0.0f;
 	SchmittTrigger trigger;
 
-	ADSR() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
-		trigger.setThresholds(0.0f, 1.0f);
-	}
+	ADSR() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
 	void step() override;
 };
 

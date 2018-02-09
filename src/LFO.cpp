@@ -9,9 +9,8 @@ struct LowFrequencyOscillator {
 	bool offset = false;
 	bool invert = false;
 	SchmittTrigger resetTrigger;
-	LowFrequencyOscillator() {
-		resetTrigger.setThresholds(0.0f, 0.01f);
-	}
+
+	LowFrequencyOscillator() {}
 	void setPitch(float pitch) {
 		pitch = fminf(pitch, 8.0f);
 		freq = powf(2.0f, pitch);
@@ -21,7 +20,7 @@ struct LowFrequencyOscillator {
 		pw = clamp(pw_, pwMin, 1.0f - pwMin);
 	}
 	void setReset(float reset) {
-		if (resetTrigger.process(reset)) {
+		if (resetTrigger.process(reset / 0.01f)) {
 			phase = 0.0f;
 		}
 	}

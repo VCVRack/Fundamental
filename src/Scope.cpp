@@ -116,12 +116,11 @@ void Scope::step() {
 		frameIndex++;
 
 		// Must go below 0.1fV to trigger
-		resetTrigger.setThresholds(params[TRIG_PARAM].value - 0.1f, params[TRIG_PARAM].value);
 		float gate = external ? inputs[TRIG_INPUT].value : inputs[X_INPUT].value;
 
 		// Reset if triggered
 		float holdTime = 0.1f;
-		if (resetTrigger.process(gate) || (frameIndex >= engineGetSampleRate() * holdTime)) {
+		if (resetTrigger.process(rescale(gate, params[TRIG_PARAM].value - 0.1f, params[TRIG_PARAM].value, 0.f, 1.f)) || (frameIndex >= engineGetSampleRate() * holdTime)) {
 			bufferIndex = 0; frameIndex = 0; return;
 		}
 

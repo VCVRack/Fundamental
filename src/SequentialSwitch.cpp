@@ -30,8 +30,6 @@ struct SequentialSwitch : Module {
 	SlewLimiter channelFilter[4];
 
 	SequentialSwitch() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {
-		clockTrigger.setThresholds(0.0f, 2.0f);
-		resetTrigger.setThresholds(0.0f, 2.0f);
 		for (int i = 0; i < 4; i++) {
 			channelFilter[i].rise = 0.01f;
 			channelFilter[i].fall = 0.01f;
@@ -40,10 +38,10 @@ struct SequentialSwitch : Module {
 
 	void step() override {
 		// Determine current channel
-		if (clockTrigger.process(inputs[CLOCK_INPUT].value)) {
+		if (clockTrigger.process(inputs[CLOCK_INPUT].value / 2.f)) {
 			channel++;
 		}
-		if (resetTrigger.process(inputs[RESET_INPUT].value)) {
+		if (resetTrigger.process(inputs[RESET_INPUT].value / 2.f)) {
 			channel = 0;
 		}
 		int channels = 4 - (int) params[CHANNELS_PARAM].value;
