@@ -172,4 +172,4 @@ VCFWidget::VCFWidget(VCF *module) : ModuleWidget(module) {
 }
 
 
-Model *modelVCFWidget = Model::create<VCF, VCFWidget>("Fundamental", "VCF", "VCF", FILTER_TAG);
+Model *modelVCF = Model::create<VCF, VCFWidget>("Fundamental", "VCF", "VCF", FILTER_TAG);

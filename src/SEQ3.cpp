@@ -301,4 +301,4 @@ Menu *SEQ3Widget::createContextMenu() {
 }
 
 
-Model *modelSEQ3Widget = Model::create<SEQ3, SEQ3Widget>("Fundamental", "SEQ3", "SEQ-3", SEQUENCER_TAG);
+Model *modelSEQ3 = Model::create<SEQ3, SEQ3Widget>("Fundamental", "SEQ3", "SEQ-3", SEQUENCER_TAG);

@@ -339,4 +339,4 @@ ScopeWidget::ScopeWidget(Scope *module) : ModuleWidget(module) {
 }
 
 
-Model *modelScopeWidget = Model::create<Scope, ScopeWidget>("Fundamental", "Scope", "Scope", VISUAL_TAG);
+Model *modelScope = Model::create<Scope, ScopeWidget>("Fundamental", "Scope", "Scope", VISUAL_TAG);

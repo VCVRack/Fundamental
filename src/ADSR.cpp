@@ -135,4 +135,4 @@ ADSRWidget::ADSRWidget(ADSR *module) : ModuleWidget(module) {
 }
 
 
-Model *modelADSRWidget = Model::create<ADSR, ADSRWidget>("Fundamental", "ADSR", "ADSR", ENVELOPE_GENERATOR_TAG);
+Model *modelADSR = Model::create<ADSR, ADSRWidget>("Fundamental", "ADSR", "ADSR", ENVELOPE_GENERATOR_TAG);

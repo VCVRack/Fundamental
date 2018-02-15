@@ -78,4 +78,4 @@ VCMixerWidget::VCMixerWidget(VCMixer *module) : ModuleWidget(module) {
 }
 
 
-Model *modelVCMixerWidget = Model::create<VCMixer, VCMixerWidget>("Fundamental", "VCMixer", "VC Mixer", MIXER_TAG, AMPLIFIER_TAG);
+Model *modelVCMixer = Model::create<VCMixer, VCMixerWidget>("Fundamental", "VCMixer", "VC Mixer", MIXER_TAG, AMPLIFIER_TAG);

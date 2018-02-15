@@ -6,21 +6,21 @@ using namespace rack;
 
 extern Plugin *plugin;
 
-extern Model *modelVCOWidget;
-extern Model *modelVCO2Widget;
-extern Model *modelVCFWidget;
-extern Model *modelVCAWidget;
-extern Model *modelLFOWidget;
-extern Model *modelLFO2Widget;
-extern Model *modelDelayWidget;
-extern Model *modelADSRWidget;
-extern Model *modelVCMixerWidget;
-extern Model *model_8vertWidget;
-extern Model *modelUnityWidget;
-extern Model *modelMutesWidget;
-extern Model *modelScopeWidget;
-extern Model *modelSEQ3Widget;
-extern Model *modelSequentialSwitch1Widget;
-extern Model *modelSequentialSwitch2Widget;
+extern Model *modelVCO;
+extern Model *modelVCO2;
+extern Model *modelVCF;
+extern Model *modelVCA;
+extern Model *modelLFO;
+extern Model *modelLFO2;
+extern Model *modelDelay;
+extern Model *modelADSR;
+extern Model *modelVCMixer;
+extern Model *model_8vert;
+extern Model *modelUnity;
+extern Model *modelMutes;
+extern Model *modelScope;
+extern Model *modelSEQ3;
+extern Model *modelSequentialSwitch1;
+extern Model *modelSequentialSwitch2;
 
 
