@@ -46,17 +46,12 @@ void VCMixer::step() {
 }
 
 
-VCMixerWidget::VCMixerWidget() {
-	VCMixer *module = new VCMixer();
-	setModule(module);
-	box.size = Vec(15*10, 380);
+struct VCMixerWidget : ModuleWidget {
+	VCMixerWidget(VCMixer *module);
+};
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/VCMixer.svg")));
-		addChild(panel);
-	}
+VCMixerWidget::VCMixerWidget(VCMixer *module) : ModuleWidget(module) {
+	setPanel(SVG::load(assetPlugin(plugin, "res/VCMixer.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
@@ -81,3 +76,6 @@ VCMixerWidget::VCMixerWidget() {
 	addOutput(Port::create<PJ301MPort>(Vec(110, 225), Port::OUTPUT, module, VCMixer::CH2_OUTPUT));
 	addOutput(Port::create<PJ301MPort>(Vec(110, 306), Port::OUTPUT, module, VCMixer::CH3_OUTPUT));
 }
+
+
+Model *modelVCMixerWidget = Model::create<VCMixer, VCMixerWidget>("Fundamental", "VCMixer", "VC Mixer", MIXER_TAG, AMPLIFIER_TAG);

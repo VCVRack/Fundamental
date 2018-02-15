@@ -86,9 +86,12 @@ struct MuteLight : BASE {
 	}
 };
 
-MutesWidget::MutesWidget() {
-	Mutes *module = new Mutes();
-	setModule(module);
+
+struct MutesWidget : ModuleWidget {
+	MutesWidget(Mutes *module);
+};
+
+MutesWidget::MutesWidget(Mutes *module) : ModuleWidget(module) {
 	setPanel(SVG::load(assetPlugin(plugin, "res/Mutes.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
@@ -140,3 +143,6 @@ MutesWidget::MutesWidget() {
 	addChild(ModuleLightWidget::create<MuteLight<GreenLight>>(mm2px(Vec(17.32, 98.915)), module, Mutes::MUTE_LIGHT + 8));
 	addChild(ModuleLightWidget::create<MuteLight<GreenLight>>(mm2px(Vec(17.32, 108.915)), module, Mutes::MUTE_LIGHT + 9));
 }
+
+
+Model *modelMutesWidget = Model::create<Mutes, MutesWidget>("Fundamental", "Mutes", "Mutes", SWITCH_TAG);

@@ -43,17 +43,12 @@ void VCA::step() {
 }
 
 
-VCAWidget::VCAWidget() {
-	VCA *module = new VCA();
-	setModule(module);
-	box.size = Vec(15*6, 380);
+struct VCAWidget : ModuleWidget {
+	VCAWidget(VCA *module);
+};
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/VCA.svg")));
-		addChild(panel);
-	}
+VCAWidget::VCAWidget(VCA *module) : ModuleWidget(module) {
+	setPanel(SVG::load(assetPlugin(plugin, "res/VCA.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
@@ -73,3 +68,6 @@ VCAWidget::VCAWidget() {
 	addOutput(Port::create<PJ301MPort>(Vec(54, 156), Port::OUTPUT, module, VCA::OUT1_OUTPUT));
 	addOutput(Port::create<PJ301MPort>(Vec(54, 320), Port::OUTPUT, module, VCA::OUT2_OUTPUT));
 }
+
+
+Model *modelVCAWidget = Model::create<VCA, VCAWidget>("Fundamental", "VCA", "VCA", AMPLIFIER_TAG);

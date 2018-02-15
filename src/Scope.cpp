@@ -299,17 +299,12 @@ struct ScopeDisplay : TransparentWidget {
 };
 
 
-ScopeWidget::ScopeWidget() {
-	Scope *module = new Scope();
-	setModule(module);
-	box.size = Vec(15*13, 380);
+struct ScopeWidget : ModuleWidget {
+	ScopeWidget(Scope *module);
+};
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/Scope.svg")));
-		addChild(panel);
-	}
+ScopeWidget::ScopeWidget(Scope *module) : ModuleWidget(module) {
+	setPanel(SVG::load(assetPlugin(plugin, "res/Scope.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
@@ -342,3 +337,6 @@ ScopeWidget::ScopeWidget() {
 	addChild(ModuleLightWidget::create<SmallLight<GreenLight>>(Vec(150, 251), module, Scope::INTERNAL_LIGHT));
 	addChild(ModuleLightWidget::create<SmallLight<GreenLight>>(Vec(150, 296), module, Scope::EXTERNAL_LIGHT));
 }
+
+
+Model *modelScopeWidget = Model::create<Scope, ScopeWidget>("Fundamental", "Scope", "Scope", VISUAL_TAG);

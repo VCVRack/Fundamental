@@ -90,9 +90,12 @@ void Unity::step() {
 }
 
 
-UnityWidget::UnityWidget() {
-	Unity *module = new Unity();
-	setModule(module);
+struct UnityWidget : ModuleWidget {
+	UnityWidget(Unity *module);
+	Menu *createContextMenu() override;
+};
+
+UnityWidget::UnityWidget(Unity *module) : ModuleWidget(module) {
 	setPanel(SVG::load(assetPlugin(plugin, "res/Unity.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
@@ -160,3 +163,6 @@ Menu *UnityWidget::createContextMenu() {
 
 	return menu;
 }
+
+
+Model *modelUnityWidget = Model::create<Unity, UnityWidget>("Fundamental", "Unity", "Unity", MIXER_TAG, UTILITY_TAG);

@@ -211,17 +211,13 @@ void SEQ3::step() {
 }
 
 
-SEQ3Widget::SEQ3Widget() {
-	SEQ3 *module = new SEQ3();
-	setModule(module);
-	box.size = Vec(15*22, 380);
+struct SEQ3Widget : ModuleWidget {
+	SEQ3Widget(SEQ3 *module);
+	Menu *createContextMenu() override;
+};
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/SEQ3.svg")));
-		addChild(panel);
-	}
+SEQ3Widget::SEQ3Widget(SEQ3 *module) : ModuleWidget(module) {
+	setPanel(SVG::load(assetPlugin(plugin, "res/SEQ3.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
@@ -303,3 +299,6 @@ Menu *SEQ3Widget::createContextMenu() {
 
 	return menu;
 }
+
+
+Model *modelSEQ3Widget = Model::create<SEQ3, SEQ3Widget>("Fundamental", "SEQ3", "SEQ-3", SEQUENCER_TAG);

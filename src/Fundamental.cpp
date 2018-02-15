@@ -8,20 +8,20 @@ void init(rack::Plugin *p) {
 	p->slug = TOSTRING(SLUG);
 	p->version = TOSTRING(VERSION);
 
-	p->addModel(createModel<VCOWidget>("Fundamental", "VCO", "VCO-1", OSCILLATOR_TAG));
-	p->addModel(createModel<VCO2Widget>("Fundamental", "VCO2", "VCO-2", OSCILLATOR_TAG));
-	p->addModel(createModel<VCFWidget>("Fundamental", "VCF", "VCF", FILTER_TAG));
-	p->addModel(createModel<VCAWidget>("Fundamental", "VCA", "VCA", AMPLIFIER_TAG));
-	p->addModel(createModel<LFOWidget>("Fundamental", "LFO", "LFO-1", LFO_TAG));
-	p->addModel(createModel<LFO2Widget>("Fundamental", "LFO2", "LFO-2", LFO_TAG));
-	p->addModel(createModel<DelayWidget>("Fundamental", "Delay", "Delay", DELAY_TAG));
-	p->addModel(createModel<ADSRWidget>("Fundamental", "ADSR", "ADSR", ENVELOPE_GENERATOR_TAG));
-	p->addModel(createModel<VCMixerWidget>("Fundamental", "VCMixer", "VC Mixer", MIXER_TAG, AMPLIFIER_TAG));
-	p->addModel(createModel<_8vertWidget>("Fundamental", "8vert", "8vert", ATTENUATOR_TAG));
-	p->addModel(createModel<UnityWidget>("Fundamental", "Unity", "Unity", MIXER_TAG, UTILITY_TAG));
-	p->addModel(createModel<MutesWidget>("Fundamental", "Mutes", "Mutes", SWITCH_TAG));
-	p->addModel(createModel<ScopeWidget>("Fundamental", "Scope", "Scope", VISUAL_TAG));
-	p->addModel(createModel<SEQ3Widget>("Fundamental", "SEQ3", "SEQ-3", SEQUENCER_TAG));
-	p->addModel(createModel<SequentialSwitch1Widget>("Fundamental", "SequentialSwitch1", "Sequential Switch 1", UTILITY_TAG));
-	p->addModel(createModel<SequentialSwitch2Widget>("Fundamental", "SequentialSwitch2", "Sequential Switch 2", UTILITY_TAG));
+	p->addModel(modelVCOWidget);
+	p->addModel(modelVCO2Widget);
+	p->addModel(modelVCFWidget);
+	p->addModel(modelVCAWidget);
+	p->addModel(modelLFOWidget);
+	p->addModel(modelLFO2Widget);
+	p->addModel(modelDelayWidget);
+	p->addModel(modelADSRWidget);
+	p->addModel(modelVCMixerWidget);
+	p->addModel(model_8vertWidget);
+	p->addModel(modelUnityWidget);
+	p->addModel(modelMutesWidget);
+	p->addModel(modelScopeWidget);
+	p->addModel(modelSEQ3Widget);
+	p->addModel(modelSequentialSwitch1Widget);
+	p->addModel(modelSequentialSwitch2Widget);
 }

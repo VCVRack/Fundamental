@@ -230,17 +230,12 @@ void VCO::step() {
 }
 
 
-VCOWidget::VCOWidget() {
-	VCO *module = new VCO();
-	setModule(module);
-	box.size = Vec(15*10, 380);
+struct VCOWidget : ModuleWidget {
+	VCOWidget(VCO *module);
+};
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/VCO-1.svg")));
-		addChild(panel);
-	}
+VCOWidget::VCOWidget(VCO *module) : ModuleWidget(module) {
+	setPanel(SVG::load(assetPlugin(plugin, "res/VCO-1.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
@@ -268,6 +263,9 @@ VCOWidget::VCOWidget() {
 
 	addChild(ModuleLightWidget::create<SmallLight<GreenRedLight>>(Vec(99, 42.5f), module, VCO::PHASE_POS_LIGHT));
 }
+
+
+Model *modelVCOWidget = Model::create<VCO, VCOWidget>("Fundamental", "VCO", "VCO-1", OSCILLATOR_TAG);
 
 
 struct VCO2 : Module {
@@ -328,17 +326,12 @@ void VCO2::step() {
 }
 
 
-VCO2Widget::VCO2Widget() {
-	VCO2 *module = new VCO2();
-	setModule(module);
-	box.size = Vec(15*6, 380);
+struct VCO2Widget : ModuleWidget {
+	VCO2Widget(VCO2 *module);
+};
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/VCO-2.svg")));
-		addChild(panel);
-	}
+VCO2Widget::VCO2Widget(VCO2 *module) : ModuleWidget(module) {
+	setPanel(SVG::load(assetPlugin(plugin, "res/VCO-2.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
@@ -360,6 +353,9 @@ VCO2Widget::VCO2Widget() {
 
 	addChild(ModuleLightWidget::create<SmallLight<GreenRedLight>>(Vec(68, 42.5f), module, VCO2::PHASE_POS_LIGHT));
 }
+
+
+Model *modelVCO2Widget = Model::create<VCO2, VCO2Widget>("Fundamental", "VCO2", "VCO-2", OSCILLATOR_TAG);
 
 
 float sawTable[2048] = {

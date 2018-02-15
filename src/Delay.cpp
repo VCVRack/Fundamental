@@ -107,17 +107,12 @@ void Delay::step() {
 }
 
 
-DelayWidget::DelayWidget() {
-	Delay *module = new Delay();
-	setModule(module);
-	box.size = Vec(15*8, 380);
+struct DelayWidget : ModuleWidget {
+	DelayWidget(Delay *module);
+};
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/Delay.svg")));
-		addChild(panel);
-	}
+DelayWidget::DelayWidget(Delay *module) : ModuleWidget(module) {
+	setPanel(SVG::load(assetPlugin(plugin, "res/Delay.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
@@ -136,3 +131,6 @@ DelayWidget::DelayWidget() {
 	addInput(Port::create<PJ301MPort>(Vec(14, 320), Port::INPUT, module, Delay::IN_INPUT));
 	addOutput(Port::create<PJ301MPort>(Vec(73, 320), Port::OUTPUT, module, Delay::OUT_OUTPUT));
 }
+
+
+Model *modelDelayWidget = Model::create<Delay, DelayWidget>("Fundamental", "Delay", "Delay", DELAY_TAG);

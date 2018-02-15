@@ -75,10 +75,12 @@ struct SequentialSwitch : Module {
 };
 
 
-SequentialSwitch1Widget::SequentialSwitch1Widget() {
+struct SequentialSwitch1Widget : ModuleWidget {
+	SequentialSwitch1Widget(SequentialSwitch<1> *module);
+};
+
+SequentialSwitch1Widget::SequentialSwitch1Widget(SequentialSwitch<1> *module) : ModuleWidget(module) {
 	typedef SequentialSwitch<1> TSequentialSwitch;
-	TSequentialSwitch *module = new TSequentialSwitch();
-	setModule(module);
 	setPanel(SVG::load(assetPlugin(plugin, "res/SequentialSwitch1.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
@@ -102,10 +104,15 @@ SequentialSwitch1Widget::SequentialSwitch1Widget() {
 }
 
 
-SequentialSwitch2Widget::SequentialSwitch2Widget() {
+Model *modelSequentialSwitch1Widget = Model::create<SequentialSwitch<1>, SequentialSwitch1Widget>("Fundamental", "SequentialSwitch1", "Sequential Switch 1", UTILITY_TAG);
+
+
+struct SequentialSwitch2Widget : ModuleWidget {
+	SequentialSwitch2Widget(SequentialSwitch<2> *module);
+};
+
+SequentialSwitch2Widget::SequentialSwitch2Widget(SequentialSwitch<2> *module) : ModuleWidget(module) {
 	typedef SequentialSwitch<2> TSequentialSwitch;
-	TSequentialSwitch *module = new TSequentialSwitch();
-	setModule(module);
 	setPanel(SVG::load(assetPlugin(plugin, "res/SequentialSwitch2.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
@@ -127,3 +134,6 @@ SequentialSwitch2Widget::SequentialSwitch2Widget() {
 	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(mm2px(Vec(10.7321, 82.6285)), module, TSequentialSwitch::CHANNEL_LIGHT + 2));
 	addChild(ModuleLightWidget::create<TinyLight<GreenLight>>(mm2px(Vec(10.7321, 92.6276)), module, TSequentialSwitch::CHANNEL_LIGHT + 3));
 }
+
+
+Model *modelSequentialSwitch2Widget = Model::create<SequentialSwitch<2>, SequentialSwitch2Widget>("Fundamental", "SequentialSwitch2", "Sequential Switch 2", UTILITY_TAG);

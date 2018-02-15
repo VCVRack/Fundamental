@@ -120,17 +120,12 @@ void LFO::step() {
 }
 
 
-LFOWidget::LFOWidget() {
-	LFO *module = new LFO();
-	setModule(module);
-	box.size = Vec(15*10, 380);
+struct LFOWidget : ModuleWidget {
+	LFOWidget(LFO *module);
+};
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/LFO-1.svg")));
-		addChild(panel);
-	}
+LFOWidget::LFOWidget(LFO *module) : ModuleWidget(module) {
+	setPanel(SVG::load(assetPlugin(plugin, "res/LFO-1.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
@@ -159,6 +154,8 @@ LFOWidget::LFOWidget() {
 	addChild(ModuleLightWidget::create<SmallLight<GreenRedLight>>(Vec(99, 42.5f), module, LFO::PHASE_POS_LIGHT));
 }
 
+
+Model *modelLFOWidget = Model::create<LFO, LFOWidget>("Fundamental", "LFO", "LFO-1", LFO_TAG);
 
 
 struct LFO2 : Module {
@@ -216,17 +213,12 @@ void LFO2::step() {
 }
 
 
-LFO2Widget::LFO2Widget() {
-	LFO2 *module = new LFO2();
-	setModule(module);
-	box.size = Vec(15*6, 380);
+struct LFO2Widget : ModuleWidget {
+	LFO2Widget(LFO2 *module);
+};
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/LFO-2.svg")));
-		addChild(panel);
-	}
+LFO2Widget::LFO2Widget(LFO2 *module) : ModuleWidget(module) {
+	setPanel(SVG::load(assetPlugin(plugin, "res/LFO-2.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
@@ -248,3 +240,6 @@ LFO2Widget::LFO2Widget() {
 
 	addChild(ModuleLightWidget::create<SmallLight<GreenRedLight>>(Vec(68, 42.5f), module, LFO2::PHASE_POS_LIGHT));
 }
+
+
+Model *modelLFO2Widget = Model::create<LFO2, LFO2Widget>("Fundamental", "LFO2", "LFO-2", LFO_TAG);

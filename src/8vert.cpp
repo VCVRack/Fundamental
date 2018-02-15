@@ -31,10 +31,11 @@ void _8vert::step() {
 }
 
 
-_8vertWidget::_8vertWidget() {
-	_8vert *module = new _8vert();
-	setModule(module);
-	box.size = Vec(8 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT);
+struct _8vertWidget : ModuleWidget {
+	_8vertWidget(_8vert *module);
+};
+
+_8vertWidget::_8vertWidget(_8vert *module) : ModuleWidget(module) {
 	setPanel(SVG::load(assetPlugin(plugin, "res/8vert.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
@@ -78,3 +79,6 @@ _8vertWidget::_8vertWidget() {
 	addChild(ModuleLightWidget::create<TinyLight<GreenRedLight>>(Vec(107.702, 281.076), module, 12));
 	addChild(ModuleLightWidget::create<TinyLight<GreenRedLight>>(Vec(107.702, 319.521), module, 14));
 }
+
+
+Model *model_8vertWidget = Model::create<_8vert, _8vertWidget>("Fundamental", "8vert", "8vert", ATTENUATOR_TAG);

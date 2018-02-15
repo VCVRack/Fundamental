@@ -102,17 +102,12 @@ void ADSR::step() {
 }
 
 
-ADSRWidget::ADSRWidget() {
-	ADSR *module = new ADSR();
-	setModule(module);
-	box.size = Vec(15*8, 380);
+struct ADSRWidget : ModuleWidget {
+	ADSRWidget(ADSR *module);
+};
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/ADSR.svg")));
-		addChild(panel);
-	}
+ADSRWidget::ADSRWidget(ADSR *module) : ModuleWidget(module) {
+	setPanel(SVG::load(assetPlugin(plugin, "res/ADSR.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
@@ -138,3 +133,6 @@ ADSRWidget::ADSRWidget() {
 	addChild(ModuleLightWidget::create<SmallLight<RedLight>>(Vec(94, 175), module, ADSR::SUSTAIN_LIGHT));
 	addChild(ModuleLightWidget::create<SmallLight<RedLight>>(Vec(94, 242), module, ADSR::RELEASE_LIGHT));
 }
+
+
+Model *modelADSRWidget = Model::create<ADSR, ADSRWidget>("Fundamental", "ADSR", "ADSR", ENVELOPE_GENERATOR_TAG);

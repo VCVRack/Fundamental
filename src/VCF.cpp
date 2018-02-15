@@ -144,17 +144,12 @@ void VCF::step() {
 }
 
 
-VCFWidget::VCFWidget() {
-	VCF *module = new VCF();
-	setModule(module);
-	box.size = Vec(15*8, 380);
+struct VCFWidget : ModuleWidget {
+	VCFWidget(VCF *module);
+};
 
-	{
-		SVGPanel *panel = new SVGPanel();
-		panel->box.size = box.size;
-		panel->setBackground(SVG::load(assetPlugin(plugin, "res/VCF.svg")));
-		addChild(panel);
-	}
+VCFWidget::VCFWidget(VCF *module) : ModuleWidget(module) {
+	setPanel(SVG::load(assetPlugin(plugin, "res/VCF.svg")));
 
 	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
@@ -175,3 +170,6 @@ VCFWidget::VCFWidget() {
 	addOutput(Port::create<PJ301MPort>(Vec(48, 320), Port::OUTPUT, module, VCF::LPF_OUTPUT));
 	addOutput(Port::create<PJ301MPort>(Vec(85, 320), Port::OUTPUT, module, VCF::HPF_OUTPUT));
 }
+
+
+Model *modelVCFWidget = Model::create<VCF, VCFWidget>("Fundamental", "VCF", "VCF", FILTER_TAG);
