@@ -213,7 +213,7 @@ void SEQ3::step() {
 
 struct SEQ3Widget : ModuleWidget {
 	SEQ3Widget(SEQ3 *module);
-	Menu *createContextMenu() override;
+	void appendContextMenu(Menu *menu) override;
 };
 
 SEQ3Widget::SEQ3Widget(SEQ3 *module) : ModuleWidget(module) {
@@ -266,38 +266,28 @@ struct SEQ3GateModeItem : MenuItem {
 	}
 };
 
-Menu *SEQ3Widget::createContextMenu() {
-	Menu *menu = ModuleWidget::createContextMenu();
-
-	MenuLabel *spacerLabel = new MenuLabel();
-	menu->addChild(spacerLabel);
+void SEQ3Widget::appendContextMenu(Menu *menu) {
+	menu->addChild(MenuEntry::create());
 
 	SEQ3 *seq3 = dynamic_cast<SEQ3*>(module);
 	assert(seq3);
 
-	MenuLabel *modeLabel = new MenuLabel();
-	modeLabel->text = "Gate Mode";
-	menu->addChild(modeLabel);
+	menu->addChild(MenuLabel::create("Gate Mode"));
 
-	SEQ3GateModeItem *triggerItem = new SEQ3GateModeItem();
-	triggerItem->text = "Trigger";
+	SEQ3GateModeItem *triggerItem = MenuItem::create<SEQ3GateModeItem>("Trigger");
 	triggerItem->seq3 = seq3;
 	triggerItem->gateMode = SEQ3::TRIGGER;
 	menu->addChild(triggerItem);
 
-	SEQ3GateModeItem *retriggerItem = new SEQ3GateModeItem();
-	retriggerItem->text = "Retrigger";
+	SEQ3GateModeItem *retriggerItem = MenuItem::create<SEQ3GateModeItem>("Retrigger");
 	retriggerItem->seq3 = seq3;
 	retriggerItem->gateMode = SEQ3::RETRIGGER;
 	menu->addChild(retriggerItem);
 
-	SEQ3GateModeItem *continuousItem = new SEQ3GateModeItem();
-	continuousItem->text = "Continuous";
+	SEQ3GateModeItem *continuousItem = MenuItem::create<SEQ3GateModeItem>("Continuous");
 	continuousItem->seq3 = seq3;
 	continuousItem->gateMode = SEQ3::CONTINUOUS;
 	menu->addChild(continuousItem);
-
-	return menu;
 }
 
 

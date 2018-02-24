@@ -92,7 +92,7 @@ void Unity::step() {
 
 struct UnityWidget : ModuleWidget {
 	UnityWidget(Unity *module);
-	Menu *createContextMenu() override;
+	void appendContextMenu(Menu *menu) override;
 };
 
 UnityWidget::UnityWidget(Unity *module) : ModuleWidget(module) {
@@ -147,21 +147,15 @@ struct UnityMergeItem : MenuItem {
 	}
 };
 
-Menu *UnityWidget::createContextMenu() {
-	Menu *menu = ModuleWidget::createContextMenu();
-
-	MenuLabel *spacerLabel = new MenuLabel();
-	menu->addChild(spacerLabel);
+void UnityWidget::appendContextMenu(Menu *menu) {
+	menu->addChild(MenuEntry::create());
 
 	Unity *unity = dynamic_cast<Unity*>(module);
 	assert(unity);
 
-	UnityMergeItem *mergeItem = new UnityMergeItem();
-	mergeItem->text = "Merge channels 1 & 2";
+	UnityMergeItem *mergeItem = MenuItem::create<UnityMergeItem>("Merge channels 1 & 2");
 	mergeItem->unity = unity;
 	menu->addChild(mergeItem);
-
-	return menu;
 }
 
 
