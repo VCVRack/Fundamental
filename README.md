@@ -13,8 +13,6 @@ To build for a previous version, use `git tag` to find a compatible version and 
 
 Source code licensed under [BSD-3-Clause](LICENSE.txt) by [Andrew Belt](https://andrewbelt.name/)
 
-VCV logo is © 2017
+VCV logo is © 2017. Derivative works may not use the VCV logo.
 
-Panel graphics in `res/` are © 2017 by [Grayscale](http://grayscale.info/)
-
-Derivative works may not use the VCV logo or panel graphics.
+Panel graphics in `res/` are © 2017 by [Grayscale](http://grayscale.info/). You may not create derivative works of Fundamental panels.
