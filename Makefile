@@ -1,5 +1,5 @@
 SLUG = Fundamental
-VERSION = 0.6.0dev
+VERSION = 0.6.0
 
 SOURCES += $(wildcard src/*.cpp)
 

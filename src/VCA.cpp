@@ -70,4 +70,4 @@ VCAWidget::VCAWidget(VCA *module) : ModuleWidget(module) {
 }
 
 
-Model *modelVCA = Model::create<VCA, VCAWidget>("Fundamental", "VCA", "VCA", AMPLIFIER_TAG);
+Model *modelVCA = Model::create<VCA, VCAWidget>("Fundamental", "VCA", "VCA", AMPLIFIER_TAG, DUAL_TAG);
