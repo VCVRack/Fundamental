@@ -157,10 +157,10 @@ VCFWidget::VCFWidget(VCF *module) : ModuleWidget(module) {
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 
 	addParam(ParamWidget::create<RoundHugeBlackKnob>(Vec(33, 61), module, VCF::FREQ_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(12, 143), module, VCF::FINE_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(71, 143), module, VCF::RES_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(12, 208), module, VCF::FREQ_CV_PARAM, -1.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(71, 208), module, VCF::DRIVE_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(12, 143), module, VCF::FINE_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(71, 143), module, VCF::RES_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(12, 208), module, VCF::FREQ_CV_PARAM, -1.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(71, 208), module, VCF::DRIVE_PARAM, 0.0f, 1.0f, 0.0f));
 
 	addInput(Port::create<PJ301MPort>(Vec(10, 276), Port::INPUT, module, VCF::FREQ_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(48, 276), Port::INPUT, module, VCF::RES_INPUT));

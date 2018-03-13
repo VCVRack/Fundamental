@@ -319,13 +319,13 @@ ScopeWidget::ScopeWidget(Scope *module) : ModuleWidget(module) {
 		addChild(display);
 	}
 
-	addParam(ParamWidget::create<RoundSmallBlackSnapKnob>(Vec(15, 209), module, Scope::X_SCALE_PARAM, -2.0f, 8.0f, 0.0f));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(15, 263), module, Scope::X_POS_PARAM, -10.0f, 10.0f, 0.0f));
-	addParam(ParamWidget::create<RoundSmallBlackSnapKnob>(Vec(61, 209), module, Scope::Y_SCALE_PARAM, -2.0f, 8.0f, 0.0f));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(61, 263), module, Scope::Y_POS_PARAM, -10.0f, 10.0f, 0.0f));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(107, 209), module, Scope::TIME_PARAM, -6.0f, -16.0f, -14.0f));
+	addParam(ParamWidget::create<RoundBlackSnapKnob>(Vec(15, 209), module, Scope::X_SCALE_PARAM, -2.0f, 8.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(15, 263), module, Scope::X_POS_PARAM, -10.0f, 10.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackSnapKnob>(Vec(61, 209), module, Scope::Y_SCALE_PARAM, -2.0f, 8.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(61, 263), module, Scope::Y_POS_PARAM, -10.0f, 10.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(107, 209), module, Scope::TIME_PARAM, -6.0f, -16.0f, -14.0f));
 	addParam(ParamWidget::create<CKD6>(Vec(106, 262), module, Scope::LISSAJOUS_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM, -10.0f, 10.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM, -10.0f, 10.0f, 0.0f));
 	addParam(ParamWidget::create<CKD6>(Vec(152, 262), module, Scope::EXTERNAL_PARAM, 0.0f, 1.0f, 0.0f));
 
 	addInput(Port::create<PJ301MPort>(Vec(17, 319), Port::INPUT, module, Scope::X_INPUT));

@@ -114,10 +114,10 @@ ADSRWidget::ADSRWidget(ADSR *module) : ModuleWidget(module) {
 	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(62, 57), module, ADSR::ATTACK_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(62, 124), module, ADSR::DECAY_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(62, 191), module, ADSR::SUSTAIN_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(62, 257), module, ADSR::RELEASE_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(62, 57), module, ADSR::ATTACK_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(62, 124), module, ADSR::DECAY_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(62, 191), module, ADSR::SUSTAIN_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(62, 257), module, ADSR::RELEASE_PARAM, 0.0f, 1.0f, 0.5f));
 
 	addInput(Port::create<PJ301MPort>(Vec(9, 63), Port::INPUT, module, ADSR::ATTACK_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(9, 129), Port::INPUT, module, ADSR::DECAY_INPUT));

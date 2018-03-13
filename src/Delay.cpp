@@ -119,10 +119,10 @@ DelayWidget::DelayWidget(Delay *module) : ModuleWidget(module) {
 	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(67, 57), module, Delay::TIME_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(67, 123), module, Delay::FEEDBACK_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(67, 190), module, Delay::COLOR_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(67, 257), module, Delay::MIX_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(67, 57), module, Delay::TIME_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(67, 123), module, Delay::FEEDBACK_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(67, 190), module, Delay::COLOR_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(67, 257), module, Delay::MIX_PARAM, 0.0f, 1.0f, 0.5f));
 
 	addInput(Port::create<PJ301MPort>(Vec(14, 63), Port::INPUT, module, Delay::TIME_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(14, 129), Port::INPUT, module, Delay::FEEDBACK_INPUT));

@@ -55,8 +55,8 @@ VCAWidget::VCAWidget(VCA *module) : ModuleWidget(module) {
 	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(27, 57), module, VCA::LEVEL1_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(27, 222), module, VCA::LEVEL2_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(27, 57), module, VCA::LEVEL1_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(27, 222), module, VCA::LEVEL2_PARAM, 0.0f, 1.0f, 0.5f));
 
 	addInput(Port::create<PJ301MPort>(Vec(11, 113), Port::INPUT, module, VCA::EXP1_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(54, 113), Port::INPUT, module, VCA::LIN1_INPUT));

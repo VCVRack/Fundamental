@@ -246,10 +246,10 @@ VCOWidget::VCOWidget(VCO *module) : ModuleWidget(module) {
 	addParam(ParamWidget::create<CKSS>(Vec(119, 77), module, VCO::SYNC_PARAM, 0.0f, 1.0f, 1.0f));
 
 	addParam(ParamWidget::create<RoundHugeBlackKnob>(Vec(47, 61), module, VCO::FREQ_PARAM, -54.0f, 54.0f, 0.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(23, 143), module, VCO::FINE_PARAM, -1.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(91, 143), module, VCO::PW_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(23, 208), module, VCO::FM_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(91, 208), module, VCO::PWM_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(23, 143), module, VCO::FINE_PARAM, -1.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(91, 143), module, VCO::PW_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(23, 208), module, VCO::FM_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(91, 208), module, VCO::PWM_PARAM, 0.0f, 1.0f, 0.0f));
 
 	addInput(Port::create<PJ301MPort>(Vec(11, 276), Port::INPUT, module, VCO::PITCH_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(45, 276), Port::INPUT, module, VCO::FM_INPUT));
@@ -342,8 +342,8 @@ VCO2Widget::VCO2Widget(VCO2 *module) : ModuleWidget(module) {
 	addParam(ParamWidget::create<CKSS>(Vec(62, 215), module, VCO2::SYNC_PARAM, 0.0f, 1.0f, 1.0f));
 
 	addParam(ParamWidget::create<RoundHugeBlackKnob>(Vec(17, 60), module, VCO2::FREQ_PARAM, -54.0f, 54.0f, 0.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(12, 143), module, VCO2::WAVE_PARAM, 0.0f, 3.0f, 1.5f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(12, 208), module, VCO2::FM_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(12, 143), module, VCO2::WAVE_PARAM, 0.0f, 3.0f, 1.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(12, 208), module, VCO2::FM_PARAM, 0.0f, 1.0f, 0.0f));
 
 	addInput(Port::create<PJ301MPort>(Vec(11, 276), Port::INPUT, module, VCO2::FM_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(54, 276), Port::INPUT, module, VCO2::SYNC_INPUT));

@@ -43,14 +43,14 @@ _8vertWidget::_8vertWidget(_8vert *module) : ModuleWidget(module) {
 	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 30, 365)));
 
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(45.308, 47.753), module, 0, -1.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(45.308, 86.198), module, 1, -1.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(45.308, 124.639), module, 2, -1.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(45.308, 163.084), module, 3, -1.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(45.308, 201.529), module, 4, -1.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(45.308, 239.974), module, 5, -1.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(45.308, 278.415), module, 6, -1.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(45.308, 316.86), module, 7, -1.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(45.308, 47.753), module, 0, -1.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(45.308, 86.198), module, 1, -1.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(45.308, 124.639), module, 2, -1.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(45.308, 163.084), module, 3, -1.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(45.308, 201.529), module, 4, -1.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(45.308, 239.974), module, 5, -1.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(45.308, 278.415), module, 6, -1.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundBlackKnob>(Vec(45.308, 316.86), module, 7, -1.0f, 1.0f, 0.0f));
 
 	addInput(Port::create<PJ301MPort>(Vec(9.507, 50.397), Port::INPUT, module, 0));
 	addInput(Port::create<PJ301MPort>(Vec(9.507, 88.842), Port::INPUT, module, 1));

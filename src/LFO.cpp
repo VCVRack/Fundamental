@@ -136,10 +136,10 @@ LFOWidget::LFOWidget(LFO *module) : ModuleWidget(module) {
 	addParam(ParamWidget::create<CKSS>(Vec(119, 77), module, LFO::INVERT_PARAM, 0.0f, 1.0f, 1.0f));
 
 	addParam(ParamWidget::create<RoundHugeBlackKnob>(Vec(47, 61), module, LFO::FREQ_PARAM, -8.0f, 6.0f, -1.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(23, 143), module, LFO::FM1_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(91, 143), module, LFO::PW_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(23, 208), module, LFO::FM2_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(91, 208), module, LFO::PWM_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(23, 143), module, LFO::FM1_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(91, 143), module, LFO::PW_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(23, 208), module, LFO::FM2_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(91, 208), module, LFO::PWM_PARAM, 0.0f, 1.0f, 0.0f));
 
 	addInput(Port::create<PJ301MPort>(Vec(11, 276), Port::INPUT, module, LFO::FM1_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(45, 276), Port::INPUT, module, LFO::FM2_INPUT));
@@ -229,8 +229,8 @@ LFO2Widget::LFO2Widget(LFO2 *module) : ModuleWidget(module) {
 	addParam(ParamWidget::create<CKSS>(Vec(62, 215), module, LFO2::INVERT_PARAM, 0.0f, 1.0f, 1.0f));
 
 	addParam(ParamWidget::create<RoundHugeBlackKnob>(Vec(18, 60), module, LFO2::FREQ_PARAM, -8.0f, 6.0f, -1.0f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(11, 142), module, LFO2::WAVE_PARAM, 0.0f, 3.0f, 1.5f));
-	addParam(ParamWidget::create<RoundBlackKnob>(Vec(11, 207), module, LFO2::FM_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(11, 142), module, LFO2::WAVE_PARAM, 0.0f, 3.0f, 1.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(11, 207), module, LFO2::FM_PARAM, 0.0f, 1.0f, 0.5f));
 
 	addInput(Port::create<PJ301MPort>(Vec(11, 276), Port::INPUT, module, LFO2::FM_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(54, 276), Port::INPUT, module, LFO2::RESET_INPUT));

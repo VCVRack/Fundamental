@@ -169,12 +169,12 @@ struct SEQ3Widget : ModuleWidget {
 		addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
 		addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-		addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(18, 56), module, SEQ3::CLOCK_PARAM, -2.0f, 6.0f, 2.0f));
+		addParam(ParamWidget::create<RoundBlackKnob>(Vec(18, 56), module, SEQ3::CLOCK_PARAM, -2.0f, 6.0f, 2.0f));
 		addParam(ParamWidget::create<LEDButton>(Vec(60, 61-1), module, SEQ3::RUN_PARAM, 0.0f, 1.0f, 0.0f));
 		addChild(ModuleLightWidget::create<MediumLight<GreenLight>>(Vec(64.4f, 64.4f), module, SEQ3::RUNNING_LIGHT));
 		addParam(ParamWidget::create<LEDButton>(Vec(99, 61-1), module, SEQ3::RESET_PARAM, 0.0f, 1.0f, 0.0f));
 		addChild(ModuleLightWidget::create<MediumLight<GreenLight>>(Vec(103.4f, 64.4f), module, SEQ3::RESET_LIGHT));
-		addParam(ParamWidget::create<RoundSmallBlackSnapKnob>(Vec(132, 56), module, SEQ3::STEPS_PARAM, 1.0f, 8.0f, 8.0f));
+		addParam(ParamWidget::create<RoundBlackSnapKnob>(Vec(132, 56), module, SEQ3::STEPS_PARAM, 1.0f, 8.0f, 8.0f));
 		addChild(ModuleLightWidget::create<MediumLight<GreenLight>>(Vec(179.4f, 64.4f), module, SEQ3::GATES_LIGHT));
 		addChild(ModuleLightWidget::create<MediumLight<GreenLight>>(Vec(218.4f, 64.4f), module, SEQ3::ROW_LIGHTS));
 		addChild(ModuleLightWidget::create<MediumLight<GreenLight>>(Vec(256.4f, 64.4f), module, SEQ3::ROW_LIGHTS + 1));
@@ -191,9 +191,9 @@ struct SEQ3Widget : ModuleWidget {
 		addOutput(Port::create<PJ301MPort>(Vec(portX[7]-1, 98), Port::OUTPUT, module, SEQ3::ROW3_OUTPUT));
 
 		for (int i = 0; i < 8; i++) {
-			addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(portX[i]-2, 157), module, SEQ3::ROW1_PARAM + i, 0.0f, 10.0f, 0.0f));
-			addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(portX[i]-2, 198), module, SEQ3::ROW2_PARAM + i, 0.0f, 10.0f, 0.0f));
-			addParam(ParamWidget::create<RoundSmallBlackKnob>(Vec(portX[i]-2, 240), module, SEQ3::ROW3_PARAM + i, 0.0f, 10.0f, 0.0f));
+			addParam(ParamWidget::create<RoundBlackKnob>(Vec(portX[i]-2, 157), module, SEQ3::ROW1_PARAM + i, 0.0f, 10.0f, 0.0f));
+			addParam(ParamWidget::create<RoundBlackKnob>(Vec(portX[i]-2, 198), module, SEQ3::ROW2_PARAM + i, 0.0f, 10.0f, 0.0f));
+			addParam(ParamWidget::create<RoundBlackKnob>(Vec(portX[i]-2, 240), module, SEQ3::ROW3_PARAM + i, 0.0f, 10.0f, 0.0f));
 			addParam(ParamWidget::create<LEDButton>(Vec(portX[i]+2, 278-1), module, SEQ3::GATE_PARAM + i, 0.0f, 1.0f, 0.0f));
 			addChild(ModuleLightWidget::create<MediumLight<GreenLight>>(Vec(portX[i]+6.4f, 281.4f), module, SEQ3::GATE_LIGHTS + i));
 			addOutput(Port::create<PJ301MPort>(Vec(portX[i]-1, 307), Port::OUTPUT, module, SEQ3::GATE_OUTPUT + i));
