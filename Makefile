@@ -1,19 +1,24 @@
+RACK_DIR ?= ../..
 SLUG = Fundamental
 VERSION = 0.6.0
 
-SOURCES += $(wildcard src/*.cpp)
+# Dependencies
 
-DISTRIBUTABLES += $(wildcard LICENSE*) res
+include $(RACK_DIR)/dep.mk
 
-FLAGS += -Idep/libsamplerate/src
-
-libsamplerate = dep/libsamplerate/src/.libs/libsamplerate.a
+libsamplerate = dep/libsamplerate-0.1.9/src/.libs/libsamplerate.a
 $(libsamplerate):
-	cd dep/libsamplerate && ./autogen.sh
-	cd dep/libsamplerate && CFLAGS=-fPIC ./configure
-	cd dep/libsamplerate && $(MAKE)
+	cd dep && $(WGET) http://www.mega-nerd.com/SRC/libsamplerate-0.1.9.tar.gz
+	cd dep && $(UNTAR) libsamplerate-0.1.9.tar.gz
+	cd dep/libsamplerate-0.1.9 && $(CONFIGURE)
+	cd dep/libsamplerate-0.1.9 && $(MAKE)
 
+# Plugin build
+
+FLAGS += -Idep/libsamplerate-0.1.9/src
+
+SOURCES += $(wildcard src/*.cpp)
+DISTRIBUTABLES += $(wildcard LICENSE*) res
 OBJECTS += $(libsamplerate)
 
-RACK_DIR ?= ../..
 include $(RACK_DIR)/plugin.mk
