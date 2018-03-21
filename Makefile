@@ -16,6 +16,9 @@ include $(RACK_DIR)/plugin.mk
 DEP_FLAGS += -fPIC
 DEP_LOCAL := dep
 
+DEPS += $(libsamplerate)
+include $(RACK_DIR)/dep.mk
+
 $(libsamplerate):
 	mkdir -p dep
 	cd dep && $(WGET) http://www.mega-nerd.com/SRC/libsamplerate-0.1.9.tar.gz
@@ -23,6 +26,3 @@ $(libsamplerate):
 	cd dep/libsamplerate-0.1.9 && $(CONFIGURE)
 	cd dep/libsamplerate-0.1.9 && $(MAKE)
 	cd dep/libsamplerate-0.1.9 && $(MAKE) install
-
-DEPS += $(libsamplerate)
-include $(RACK_DIR)/dep.mk
