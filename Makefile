@@ -6,7 +6,6 @@ SOURCES += $(wildcard src/*.cpp)
 DISTRIBUTABLES += $(wildcard LICENSE*) res
 
 FLAGS += -Idep/libsamplerate/src
-# LDFLAGS += -Ldep/libsamplerate/src/.libs -l:libsamplerate.a
 
 libsamplerate = dep/libsamplerate/src/.libs/libsamplerate.a
 $(libsamplerate):
