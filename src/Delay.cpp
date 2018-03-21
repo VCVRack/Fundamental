@@ -69,7 +69,7 @@ void Delay::step() {
 
 	if (outBuffer.empty()) {
 		double ratio = 1.f;
-		if (abs(consume) >= 16) {
+		if (fabsf(consume) >= 16.f) {
 			ratio = powf(10.f, clamp(consume / 10000.f, -1.f, 1.f));
 		}
 
