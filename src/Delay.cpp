@@ -59,8 +59,6 @@ void Delay::step() {
 	// Number of delay samples
 	float index = delay * engineGetSampleRate();
 
-	// TODO Rewrite this digital delay algorithm.
-
 	// Push dry sample into history buffer
 	if (!historyBuffer.full()) {
 		historyBuffer.push(dry);
@@ -68,12 +66,12 @@ void Delay::step() {
 
 	// How many samples do we need consume to catch up?
 	float consume = index - historyBuffer.size();
+
 	if (outBuffer.empty()) {
-		double ratio = 1.0f;
-		if (consume <= -16)
-			ratio = 0.5f;
-		else if (consume >= 16)
-			ratio = 2.0f;
+		double ratio = 1.f;
+		if (abs(consume) >= 16) {
+			ratio = powf(10.f, clamp(consume / 10000.f, -1.f, 1.f));
+		}
 
 		SRC_DATA srcData;
 		srcData.data_in = (const float*) historyBuffer.startData();
