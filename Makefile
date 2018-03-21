@@ -6,7 +6,7 @@ SOURCES += $(wildcard src/*.cpp)
 DISTRIBUTABLES += $(wildcard LICENSE*) res
 
 FLAGS += -Idep/libsamplerate/src
-LDFLAGS += -Ldep/libsamplerate/src/.libs -l:libsamplerate.a
+# LDFLAGS += -Ldep/libsamplerate/src/.libs -l:libsamplerate.a
 
 libsamplerate = dep/libsamplerate/src/.libs/libsamplerate.a
 $(libsamplerate):
@@ -14,7 +14,7 @@ $(libsamplerate):
 	cd dep/libsamplerate && CFLAGS=-fPIC ./configure
 	cd dep/libsamplerate && $(MAKE)
 
-RESOURCES += $(libsamplerate)
+OBJECTS += $(libsamplerate)
 
 RACK_DIR ?= ../..
 include $(RACK_DIR)/plugin.mk
