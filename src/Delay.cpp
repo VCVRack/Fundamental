@@ -2,6 +2,7 @@
 #include "dsp/samplerate.hpp"
 #include "dsp/ringbuffer.hpp"
 #include "dsp/filter.hpp"
+#include "samplerate.h"
 
 
 #define HISTORY_SIZE (1<<21)
@@ -29,12 +30,19 @@ struct Delay : Module {
 
 	DoubleRingBuffer<float, HISTORY_SIZE> historyBuffer;
 	DoubleRingBuffer<float, 16> outBuffer;
-	SampleRateConverter<1> src;
+	SRC_STATE *src;
 	float lastWet = 0.0f;
 	RCFilter lowpassFilter;
 	RCFilter highpassFilter;
 
-	Delay() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
+	Delay() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {
+		src = src_new(SRC_SINC_FASTEST, 1, NULL);
+		assert(src);
+	}
+
+	~Delay() {
+		src_delete(src);
+	}
 
 	void step() override;
 };
@@ -60,9 +68,6 @@ void Delay::step() {
 
 	// How many samples do we need consume to catch up?
 	float consume = index - historyBuffer.size();
-	// printf("%f\t%d\t%f\n", index, historyBuffer.size(), consume);
-
-	// printf("wanted: %f\tactual: %d\tdiff: %d\tratio: %f\n", index, historyBuffer.size(), consume, index / historyBuffer.size());
 	if (outBuffer.empty()) {
 		double ratio = 1.0f;
 		if (consume <= -16)
@@ -70,16 +75,16 @@ void Delay::step() {
 		else if (consume >= 16)
 			ratio = 2.0f;
 
-		// printf("%f\t%lf\n", consume, ratio);
-		int inFrames = min(historyBuffer.size(), 16);
-		int outFrames = outBuffer.capacity();
-		// printf(">\t%d\t%d\n", inFrames, outFrames);
-		src.setRates(ratio * engineGetSampleRate(), engineGetSampleRate());
-		src.process((const Frame<1>*)historyBuffer.startData(), &inFrames, (Frame<1>*)outBuffer.endData(), &outFrames);
-		historyBuffer.startIncr(inFrames);
-		outBuffer.endIncr(outFrames);
-		// printf("<\t%d\t%d\n", inFrames, outFrames);
-		// printf("====================================\n");
+		SRC_DATA srcData;
+		srcData.data_in = (const float*) historyBuffer.startData();
+		srcData.data_out = (float*) outBuffer.endData();
+		srcData.input_frames = min(historyBuffer.size(), 16);
+		srcData.output_frames = outBuffer.capacity();
+		srcData.end_of_input = false;
+		srcData.src_ratio = ratio;
+		src_process(src, &srcData);
+		historyBuffer.startIncr(srcData.input_frames_used);
+		outBuffer.endIncr(srcData.output_frames_gen);
 	}
 
 	float wet = 0.0f;
