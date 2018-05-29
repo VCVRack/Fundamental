@@ -41,10 +41,10 @@ struct ADSR : Module {
 
 
 void ADSR::step() {
-	float attack = clamp(params[ATTACK_INPUT].value + inputs[ATTACK_INPUT].value / 10.0f, 0.0f, 1.0f);
+	float attack = clamp(params[ATTACK_PARAM].value + inputs[ATTACK_INPUT].value / 10.0f, 0.0f, 1.0f);
 	float decay = clamp(params[DECAY_PARAM].value + inputs[DECAY_INPUT].value / 10.0f, 0.0f, 1.0f);
 	float sustain = clamp(params[SUSTAIN_PARAM].value + inputs[SUSTAIN_INPUT].value / 10.0f, 0.0f, 1.0f);
-	float release = clamp(params[RELEASE_PARAM].value + inputs[RELEASE_PARAM].value / 10.0f, 0.0f, 1.0f);
+	float release = clamp(params[RELEASE_PARAM].value + inputs[RELEASE_INPUT].value / 10.0f, 0.0f, 1.0f);
 
 	// Gate and trigger
 	bool gated = inputs[GATE_INPUT].value >= 1.0f;
