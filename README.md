@@ -6,8 +6,6 @@ They are also a great reference for creating your own plugins in C++.
 ## Building
 
 Follow the build instructions for [VCV Rack](https://github.com/VCVRack/Rack).
-The `master` branch of this repo builds against the `master` branch of Rack.
-To build for a previous version, use `git tag` to find a compatible version and `git checkout [TAG]` to check out the source for that version.
 
 ## License
 
