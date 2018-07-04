@@ -9,6 +9,7 @@ extern Plugin *plugin;
 extern Model *modelVCO;
 extern Model *modelVCO2;
 extern Model *modelVCF;
+extern Model *modelVCA_1;
 extern Model *modelVCA;
 extern Model *modelLFO;
 extern Model *modelLFO2;
