@@ -13,18 +13,20 @@
 
 
 #include "Fundamental.hpp"
+#include "dsp/functions.hpp"
 
 
 // The clipping function of a transistor pair is approximately tanh(x)
 // This one is a Pade-approx for tanh(sqrt(x))/sqrt(x)
 inline float clip(float x) {
-	float a = x*x;        
+	float a = x*x;
 	return ((a + 105)*a + 945) / ((15*a + 420)*a + 945);
 }
 
+
 struct LadderFilter {
-	float g = 0.1f;
-	float resonance = 0.5f;
+	float g = 0.f;
+	float resonance = 0.f;
 	float state[4] = {};
 	float zi = 0.f;
 	float output[3] = {};
@@ -42,28 +44,28 @@ struct LadderFilter {
 
 		// update last LP1 output
 		const float t2t3 = t2*t3;
-		
-		float y3 = (s[3]*(1+t3) + s[2]*t3)*(1+t2);
-		y3 = (y3 + t2t3*s[1])*(1+t1);
-		y3 = (y3 + t1*t2t3*(s[0]+t0*input));
+
+		float y3 = (state[3]*(1+t3) + state[2]*t3)*(1+t2);
+		y3 = (y3 + t2t3*state[1])*(1+t1);
+		y3 = (y3 + t1*t2t3*(state[0]+t0*input));
 		y3 = y3 / ((1+t1)*(1+t2)*(1+t3)*(1+t4) + resonance*t0*t1*t2t3);
 
-		// update other LP1 outputs 
+		// update other LP1 outputs
 		const float xx = t0 * (input - resonance * y3);
-		const float y0 = t1 * (s[0] + xx) / (1+t1);         
-		const float y1 = t2 * (s[1] + y0) / (1+t2);
-		const float y2 = t3 * (s[2] + y1) / (1+t3);
+		const float y0 = t1 * (state[0] + xx) / (1+t1);
+		const float y1 = t2 * (state[1] + y0) / (1+t2);
+		const float y2 = t3 * (state[2] + y1) / (1+t3);
 
 		// update states
-		s[0] += 2 * (xx - y0);
-		s[1] += 2 * (y0 - y1);
-		s[2] += 2 * (y1 - y2);
-		s[3] += 2 * (y2 - t4*y3);
+		state[0] += 2 * (xx - y0);
+		state[1] += 2 * (y0 - y1);
+		state[2] += 2 * (y1 - y2);
+		state[3] += 2 * (y2 - t4*y3);
 
 		// returns LP, HP and BP outputs
 		const float y1t2 = y1 / t2;
 		const float y2t3 = y2 / t3;
-		
+
 		output[0] = y3;
 		output[1] = xx/t0 - 4*y0/t1 + 6*y1t2 - 4*y2t3 + y3;
 		output[2] = y1t2 - 2*y2t3 + y3;
@@ -74,7 +76,7 @@ struct LadderFilter {
 
 	void reset() {
 		for (int i = 0; i < 4; i++) {
-			state[i] = 0.0f;
+			state[i] = 0.f;
 		}
 		zi = 0.f;
 	}
@@ -114,33 +116,33 @@ struct VCF : Module {
 
 
 void VCF::step() {
-	float input = inputs[IN_INPUT].value / 5.0f;
-	float drive = params[DRIVE_PARAM].value + inputs[DRIVE_INPUT].value / 10.0f;
-	float gain = powf(100.0f, drive);
+	float input = inputs[IN_INPUT].value / 5.f;
+	float gain = powf(1.f + params[DRIVE_PARAM].value, 5);
+	if (inputs[DRIVE_INPUT].active)
+		gain *= inputs[DRIVE_INPUT].value / 10.f;
 	input *= gain;
 	// Add -60dB noise to bootstrap self-oscillation
-	input += 1e-6f * (2.0f*randomUniform() - 1.0f);
+	input += 1e-6f * (2.f*randomUniform() - 1.f);
 
 	// Set resonance
-	float res = params[RES_PARAM].value + inputs[RES_INPUT].value / 5.0f;
-	res = clamp(res, 0.0f, 1.0f);   // resonance must be between 0 and 1
-	filter.resonance = res;
+	float res = clamp(params[RES_PARAM].value + inputs[RES_INPUT].value / 10.f, 0.f, 1.f);
+	filter.resonance = powf(res, 2) * 10.f;
 
 	// Set cutoff frequency
-	float cutoffExp = params[FREQ_PARAM].value + params[FREQ_CV_PARAM].value * inputs[FREQ_INPUT].value / 5.0f;
-	cutoffExp = clamp(cutoffExp, 0.0f, 1.0f);
-	const float minCutoff = 15.0f;
-	const float maxCutoff = 20000.0f;
-	float cutoff = minCutoff * powf(maxCutoff / minCutoff, cutoffExp);
-	filter.g = tanf(float_Pi * cutoff / engineGetSampleRate());
+	float pitch = inputs[FREQ_INPUT].value * quadraticBipolar(params[FREQ_CV_PARAM].value);
+	pitch += params[FREQ_PARAM].value * 10.f - 3.f;
+	pitch += quadraticBipolar(params[FINE_PARAM].value * 2.f - 1.f) * 7.f/12.f;
+	float cutoff = 261.626f * powf(2.f, pitch);
+	cutoff = clamp(cutoff, 1.f, 20000.f);
+	filter.g = tanf(M_PI * cutoff * engineGetSampleTime());
 
 	// Push a sample to the state filter
 	filter.process(input);
 
 	// Set outputs
-	outputs[LPF_OUTPUT].value = 5.0f * filter.output[0];
-	outputs[HPF_OUTPUT].value = 5.0f * filter.output[1];
-	//outputs[BPF_OUTPUT].value = 5.0f * filter.output[2];
+	outputs[LPF_OUTPUT].value = 5.f * filter.output[0];
+	outputs[HPF_OUTPUT].value = 5.f * filter.output[1];
+	//outputs[BPF_OUTPUT].value = 5.f * filter.output[2];
 }
 
 
@@ -156,11 +158,11 @@ VCFWidget::VCFWidget(VCF *module) : ModuleWidget(module) {
 	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
 	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(ParamWidget::create<RoundHugeBlackKnob>(Vec(33, 61), module, VCF::FREQ_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(12, 143), module, VCF::FINE_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(71, 143), module, VCF::RES_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(12, 208), module, VCF::FREQ_CV_PARAM, -1.0f, 1.0f, 0.0f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(71, 208), module, VCF::DRIVE_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(ParamWidget::create<RoundHugeBlackKnob>(Vec(33, 61), module, VCF::FREQ_PARAM, 0.f, 1.f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(12, 143), module, VCF::FINE_PARAM, 0.f, 1.f, 0.5f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(71, 143), module, VCF::RES_PARAM, 0.f, 1.f, 0.f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(12, 208), module, VCF::FREQ_CV_PARAM, -1.f, 1.f, 0.f));
+	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(71, 208), module, VCF::DRIVE_PARAM, 0.f, 1.f, 0.f));
 
 	addInput(Port::create<PJ301MPort>(Vec(10, 276), Port::INPUT, module, VCF::FREQ_INPUT));
 	addInput(Port::create<PJ301MPort>(Vec(48, 276), Port::INPUT, module, VCF::RES_INPUT));
