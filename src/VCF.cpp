@@ -41,10 +41,12 @@ struct LadderFilter {
 		const float t4 = g * clip(state[3]);
 
 		// update last LP1 output
+		const float t2t3 = t2*t3;
+		
 		float y3 = (s[3]*(1+t3) + s[2]*t3)*(1+t2);
-		y3 = (y3 + t2*t3*s[1])*(1+t1);
-		y3 = (y3 + t1*t2*t3*(s[0]+t0*input));
-		y3 = y3 / ((1+t1)*(1+t2)*(1+t3)*(1+t4) + resonance*t0*t1*t2*t3);
+		y3 = (y3 + t2t3*s[1])*(1+t1);
+		y3 = (y3 + t1*t2t3*(s[0]+t0*input));
+		y3 = y3 / ((1+t1)*(1+t2)*(1+t3)*(1+t4) + resonance*t0*t1*t2t3);
 
 		// update other LP1 outputs 
 		const float xx = t0 * (input - resonance * y3);
@@ -59,9 +61,12 @@ struct LadderFilter {
 		s[3] += 2 * (y2 - t4*y3);
 
 		// returns LP, HP and BP outputs
+		const float y1t2 = y1 / t2;
+		const float y2t3 = y2 / t3;
+		
 		output[0] = y3;
-		output[1] = xx/t0 - 4*y0/t1 + 6*y1/t2 - 4*y2/t3 + y3;
-		output[2] = y1/t2 - 2*y2/t3 + y3;
+		output[1] = xx/t0 - 4*y0/t1 + 6*y1t2 - 4*y2t3 + y3;
+		output[2] = y1t2 - 2*y2t3 + y3;
 
 		// update delay input state
 		zi = input;
