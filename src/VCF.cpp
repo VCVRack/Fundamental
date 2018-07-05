@@ -140,7 +140,8 @@ void VCF::step() {
 
 	// Set outputs
 	outputs[LPF_OUTPUT].value = 5.0f * filter.state[3];
-	outputs[HPF_OUTPUT].value = 5.0f * (input - filter.state[3]);
+	outputs[HPF_OUTPUT].value = 5.0f * (input - 4*filter.state[0] + 6*filter.state[1] - 4*filter.state[2] + filter.state[3]);
+	//outputs[BPF_OUTPUT].value = 5.0f * (filter.state[1] - 2*filter.state[2] + filter.state[3]);
 }
 
 
