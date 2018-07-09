@@ -46,6 +46,7 @@ struct LadderFilter {
 		});
 
 		lowpass = state[3];
+		// TODO This is incorrect when `resonance > 0`. Is the math wrong?
 		highpass = clip((input - resonance*state[3]) - 4 * state[0] + 6*state[1] - 4*state[2] + state[3]);
 	}
 };
