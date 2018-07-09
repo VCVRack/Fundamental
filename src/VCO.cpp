@@ -1,5 +1,5 @@
 #include "Fundamental.hpp"
-#include "dsp/decimator.hpp"
+#include "dsp/resampler.hpp"
 #include "dsp/filter.hpp"
 
 
