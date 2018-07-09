@@ -1,125 +1,57 @@
 #include "Fundamental.hpp"
 #include "dsp/functions.hpp"
 #include "dsp/resampler.hpp"
+#include "dsp/ode.hpp"
 
 
-/**
-This code is derived from the algorithm described in "Modeling and Measuring a
-Moog Voltage-Controlled Filter, by Effrosyni Paschou, Fabián Esqueda, Vesa Välimäki
-and John Mourjopoulos, for APSIPA Annual Summit and Conference 2017.
+inline float clip(float x) {
+	return tanhf(x);
+}
 
-It is a 0df algorithm using Newton-Raphson's method (4 iterations) for solving
-implicit equations, and midpoint integration method.
-
-Derived from the article and adapted to VCV Rack by Ivan COHEN.
-*/
-struct LadderFilter0dfMidPoint {
-	float cutoff = 1000.f;
+struct LadderFilter {
+	float omega0;
 	float resonance = 1.0f;
-	float gainFactor = 0.2f;
-	float A;
-	/** State variables */
-	float lastInput = 0.f;
-	float lastV[4] = {};
-	/** Outputs */
+	float state[4];
+	float input;
 	float lowpass;
 	float highpass;
 
-
-	LadderFilter0dfMidPoint() {
-		float VT = 26e-3f;
-		A = gainFactor / (2.f * VT);
-	}
-
-	inline float clip(float x) {
-		return tanhf(x);
-	}
-
-	void process(float input, float dt) {
-		float F[4];
-		float V[4];
-		float wc = 2 * M_PI * cutoff / A;
-
-		input *= gainFactor;
-
-		for (int i = 0; i < 4; i++) {
-			V[i] = lastV[i];
-		}
-
-		for (int i = 0; i < 4; i++) {
-			float S0 = A * (input + lastInput + resonance * (V[3] + lastV[3])) * 0.5f;
-			float S1 = A * (V[0] + lastV[0]) * 0.5f;
-			float S2 = A * (V[1] + lastV[1]) * 0.5f;
-			float S3 = A * (V[2] + lastV[2]) * 0.5f;
-			float S4 = A * (V[3] + lastV[3]) * 0.5f;
-
-			float t0 = clip(S0);
-			float t1 = clip(S1);
-			float t2 = clip(S2);
-			float t3 = clip(S3);
-			float t4 = clip(S4);
-
-			// F function (the one for which we need to find the roots with NR)
-			F[0] = V[0] - lastV[0] + wc * dt * (t0 + t1);
-			F[1] = V[1] - lastV[1] - wc * dt * (t1 - t2);
-			F[2] = V[2] - lastV[2] - wc * dt * (t2 - t3);
-			F[3] = V[3] - lastV[3] - wc * dt * (t3 - t4);
-
-			float g = wc * dt * A * 0.5f;
-
-			// derivatives of ti
-			float J0 = 1 - t0 * t0;
-			float J1 = 1 - t1 * t1;
-			float J2 = 1 - t2 * t2;
-			float J3 = 1 - t3 * t3;
-			float J4 = 1 - t4 * t4;
-
-			// Jacobian matrix elements
-			float a11 = 1 + g * J1;
-			float a14 = resonance * g * J0;
-			float a21 = -g * J1;
-			float a22 = 1 + g * J2;
-			float a32 = -g * J2;
-			float a33 = 1 + g * J3;
-			float a43 = -g * J3;
-			float a44 = 1 + g * J4;
-
-			// Newton-Raphson algorithm with Jacobian inverting
-			float deninv = 1.f / (a11 * a22 * a33 * a44 - a14 * a21 * a32 * a43);
-
-			float delta0 = ( F[0] * a22 * a33 * a44 - F[1] * a14 * a32 * a43 + F[2] * a14 * a22 * a43 - F[3] * a14 * a22 * a33) * deninv;
-			float delta1 = (-F[0] * a21 * a33 * a44 + F[1] * a11 * a33 * a44 - F[2] * a14 * a21 * a43 + F[3] * a14 * a21 * a33) * deninv;
-			float delta2 = ( F[0] * a21 * a32 * a44 - F[1] * a11 * a32 * a44 + F[2] * a11 * a22 * a44 - F[3] * a14 * a21 * a32) * deninv;
-			float delta3 = (-F[0] * a21 * a32 * a43 + F[1] * a11 * a32 * a43 - F[2] * a11 * a22 * a43 + F[3] * a11 * a22 * a33) * deninv;
-
-			delta0 = isfinite(delta0) ? delta0 : 0.f;
-			delta1 = isfinite(delta1) ? delta1 : 0.f;
-			delta2 = isfinite(delta2) ? delta2 : 0.f;
-			delta3 = isfinite(delta3) ? delta3 : 0.f;
-
-			V[0] -= delta0;
-			V[1] -= delta1;
-			V[2] -= delta2;
-			V[3] -= delta3;
-		}
-
-		lastInput = input;
-		for (int i = 0; i < 4; i++)
-			lastV[i] = V[i];
-
-		// outputs are inverted
-		lowpass = -clip(V[3] / gainFactor);
-		highpass = -clip(((input + resonance * V[3]) + 4 * V[0] - 6 * V[1] + 4 * V[2] - V[3]) / gainFactor);
+	LadderFilter() {
+		reset();
+		setCutoff(0.f);
 	}
 
 	void reset() {
 		for (int i = 0; i < 4; i++) {
-			lastV[i] = 0.f;
+			state[i] = 0.f;
 		}
-		lastInput = 0.f;
+	}
+
+	void setCutoff(float cutoff) {
+		omega0 = 2.f*M_PI * cutoff;
+	}
+
+	void process(float input, float dt) {
+		stepRK4(0.f, dt, state, 4, [&](float t, const float y[], float dydt[]) {
+			float inputc = clip(input - resonance * y[3]);
+			float yc0 = clip(y[0]);
+			float yc1 = clip(y[1]);
+			float yc2 = clip(y[2]);
+			float yc3 = clip(y[3]);
+
+			dydt[0] = omega0 * (inputc - yc0);
+			dydt[1] = omega0 * (yc0 - yc1);
+			dydt[2] = omega0 * (yc1 - yc2);
+			dydt[3] = omega0 * (yc2 - yc3);
+		});
+
+		lowpass = state[3];
+		highpass = clip((input - resonance*state[3]) - 4 * state[0] + 6*state[1] - 4*state[2] + state[3]);
 	}
 };
 
+
+static const int UPSAMPLE = 2;
 
 struct VCF : Module {
 	enum ParamIds {
@@ -143,7 +75,10 @@ struct VCF : Module {
 		NUM_OUTPUTS
 	};
 
-	LadderFilter0dfMidPoint filter;
+	LadderFilter filter;
+	// Upsampler<UPSAMPLE, 8> inputUpsampler;
+	// Decimator<UPSAMPLE, 8> lowpassDecimator;
+	// Decimator<UPSAMPLE, 8> highpassDecimator;
 
 	VCF() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
 
@@ -171,16 +106,38 @@ struct VCF : Module {
 		filter.resonance = powf(res, 2) * 10.f;
 
 		// Set cutoff frequency
-		float pitch = inputs[FREQ_INPUT].value * quadraticBipolar(params[FREQ_CV_PARAM].value);
-		pitch += params[FREQ_PARAM].value * 10.f - 3.f;
+		float pitch = 0.f;
+		if (inputs[FREQ_INPUT].active)
+			pitch += inputs[FREQ_INPUT].value * quadraticBipolar(params[FREQ_CV_PARAM].value);
+		pitch += params[FREQ_PARAM].value * 10.f - 5.f;
 		pitch += quadraticBipolar(params[FINE_PARAM].value * 2.f - 1.f) * 7.f / 12.f;
 		float cutoff = 261.626f * powf(2.f, pitch);
-		filter.cutoff = clamp(cutoff, 1.f, 20000.f);
+		cutoff = clamp(cutoff, 1.f, 8000.f);
+		filter.setCutoff(cutoff);
 
-		// Step the filter
-		filter.process(input, engineGetSampleTime());
+		/*
+		// Process sample
+		float dt = engineGetSampleTime() / UPSAMPLE;
+		float inputBuf[UPSAMPLE];
+		float lowpassBuf[UPSAMPLE];
+		float highpassBuf[UPSAMPLE];
+		inputUpsampler.process(input, inputBuf);
+		for (int i = 0; i < UPSAMPLE; i++) {
+			// Step the filter
+			filter.process(inputBuf[i], dt);
+			lowpassBuf[i] = filter.lowpass;
+			highpassBuf[i] = filter.highpass;
+		}
 
 		// Set outputs
+		if (outputs[LPF_OUTPUT].active) {
+			outputs[LPF_OUTPUT].value = 5.f * lowpassDecimator.process(lowpassBuf);
+		}
+		if (outputs[HPF_OUTPUT].active) {
+			outputs[HPF_OUTPUT].value = 5.f * highpassDecimator.process(highpassBuf);
+		}
+		*/
+		filter.process(input, engineGetSampleTime());
 		outputs[LPF_OUTPUT].value = 5.f * filter.lowpass;
 		outputs[HPF_OUTPUT].value = 5.f * filter.highpass;
 	}
