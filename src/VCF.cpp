@@ -9,12 +9,13 @@ inline float clip(float x) {
 }
 
 struct LadderFilter {
-	float omega0;
+	float w;
 	float resonance = 1.0f;
 	float state[4];
 	float input;
 	float lowpass;
 	float highpass;
+	float lastP3 = 0.f;
 
 	LadderFilter() {
 		reset();
@@ -28,26 +29,26 @@ struct LadderFilter {
 	}
 
 	void setCutoff(float cutoff) {
-		omega0 = 2.f*M_PI * cutoff;
+		w = 2.f*M_PI * cutoff;
 	}
 
 	void process(float input, float dt) {
 		stepRK4(0.f, dt, state, 4, [&](float t, const float y[], float dydt[]) {
-			float inputc = clip(input - resonance * y[3]);
-			float yc0 = clip(y[0]);
-			float yc1 = clip(y[1]);
-			float yc2 = clip(y[2]);
-			float yc3 = clip(y[3]);
+			float p0 = -y[0] - (input - 0.f * resonance);
+			float p1 = -y[1] - clip(-p0);
+			float p2 = -y[2] - clip(-p1);
+			float p3 = -y[3] - clip(-p2);
+			highpass = p3;
 
-			dydt[0] = omega0 * (inputc - yc0);
-			dydt[1] = omega0 * (yc0 - yc1);
-			dydt[2] = omega0 * (yc1 - yc2);
-			dydt[3] = omega0 * (yc2 - yc3);
+			dydt[0] = w * p0;
+			dydt[1] = w * p1;
+			dydt[2] = w * p2;
+			dydt[3] = w * p3;
 		});
 
-		lowpass = state[3];
+		// lowpass = state[3];
 		// TODO This is incorrect when `resonance > 0`. Is the math wrong?
-		highpass = clip((input - resonance*state[3]) - 4 * state[0] + 6*state[1] - 4*state[2] + state[3]);
+		// highpass = clip((input - resonance*state[3]) - 4 * state[0] + 6*state[1] - 4*state[2] + state[3]);
 	}
 };
 
@@ -94,7 +95,7 @@ struct VCF : Module {
 			return;
 		}
 
-		float input = inputs[IN_INPUT].value / 5.f;
+		float input = inputs[IN_INPUT].value / 10.f;
 		float drive = clamp(params[DRIVE_PARAM].value + inputs[DRIVE_INPUT].value / 10.f, 0.f, 1.f);
 		float gain = powf(1.f + drive, 5);
 		input *= gain;
@@ -139,8 +140,8 @@ struct VCF : Module {
 		}
 		*/
 		filter.process(input, engineGetSampleTime());
-		outputs[LPF_OUTPUT].value = 5.f * filter.lowpass;
-		outputs[HPF_OUTPUT].value = 5.f * filter.highpass;
+		outputs[LPF_OUTPUT].value = 10.f * filter.lowpass;
+		outputs[HPF_OUTPUT].value = 10.f * filter.highpass;
 	}
 };
 
