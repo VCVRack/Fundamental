@@ -125,8 +125,8 @@ struct VCA_1VUKnob : Knob {
 			float amplitude = value * module->lastCv;
 			float segAmplitude = clamp(amplitude * segs - (segs - i - 1), 0.f, 1.f);
 			nvgBeginPath(vg);
-			nvgRect(vg, r.pos.x, r.pos.y + r.size.y / segs * i,
-				r.size.x + 0.5, r.size.y / segs - 1.0);
+			nvgRect(vg, r.pos.x, r.pos.y + r.size.y / segs * i + 0.5,
+				r.size.x, r.size.y / segs - 1.0);
 			if (segValue > 0.f) {
 				nvgFillColor(vg, colorAlpha(nvgRGBf(0.33, 0.33, 0.33), segValue));
 				nvgFill(vg);
@@ -149,7 +149,7 @@ struct VCA_1Widget : ModuleWidget {
 		addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(ParamWidget::create<VCA_1VUKnob>(mm2px(Vec(2.62103, 12.31692)), module, VCA_1::LEVEL_PARAM, 0.0, 1.0, 0.0));
+		addParam(ParamWidget::create<VCA_1VUKnob>(mm2px(Vec(2.62103, 12.31692)), module, VCA_1::LEVEL_PARAM, 0.0, 1.0, 1.0));
 		addParam(ParamWidget::create<CKSS>(mm2px(Vec(5.24619, 79.9593)), module, VCA_1::EXP_PARAM, 0.0, 1.0, 1.0));
 
 		addInput(Port::create<PJ301MPort>(mm2px(Vec(3.51261, 60.4008)), Port::INPUT, module, VCA_1::CV_INPUT));
