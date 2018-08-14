@@ -94,7 +94,9 @@ struct VCA_1 : Module {
 	VCA_1() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
 
 	void step() override {
-		float cv = inputs[CV_INPUT].normalize(10.f) / 10.f;
+		float cv = 1.f;
+		if (inputs[CV_INPUT].active)
+			cv = fmaxf(inputs[CV_INPUT].value / 10.f, 0.f);
 		if ((int) params[EXP_PARAM].value == 0)
 			cv = powf(cv, 4.f);
 		lastCv = cv;
