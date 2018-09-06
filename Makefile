@@ -1,8 +1,8 @@
 RACK_DIR ?= ../..
 SLUG = Fundamental
-VERSION = 0.6.1
+VERSION = 0.6.2
 
-FLAGS += -Idep/include
+FLAGS += -I./libsamplerate-0.1.9/src
 SOURCES += $(wildcard src/*.cpp)
 SOURCES += $(wildcard libsamplerate-0.1.9/src/*.c)
 DISTRIBUTABLES += $(wildcard LICENSE*) res
