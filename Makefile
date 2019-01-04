@@ -1,6 +1,4 @@
 RACK_DIR ?= ../..
-SLUG = Fundamental
-VERSION = 0.6.1
 
 FLAGS += -Idep/include
 SOURCES += $(wildcard src/*.cpp)

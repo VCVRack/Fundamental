@@ -172,4 +172,4 @@ struct VCFWidget : ModuleWidget {
 
 
 
-Model *modelVCF = Model::create<VCF, VCFWidget>("Fundamental", "VCF", "VCF", FILTER_TAG);
+Model *modelVCF = createModel<VCF, VCFWidget>("VCF");

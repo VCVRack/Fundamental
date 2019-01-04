@@ -155,7 +155,7 @@ LFOWidget::LFOWidget(LFO *module) : ModuleWidget(module) {
 }
 
 
-Model *modelLFO = Model::create<LFO, LFOWidget>("Fundamental", "LFO", "LFO-1", LFO_TAG);
+Model *modelLFO = createModel<LFO, LFOWidget>("LFO");
 
 
 struct LFO2 : Module {
@@ -242,4 +242,4 @@ LFO2Widget::LFO2Widget(LFO2 *module) : ModuleWidget(module) {
 }
 
 
-Model *modelLFO2 = Model::create<LFO2, LFO2Widget>("Fundamental", "LFO2", "LFO-2", LFO_TAG);
+Model *modelLFO2 = createModel<LFO2, LFO2Widget>("LFO2");

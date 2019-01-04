@@ -159,4 +159,4 @@ void UnityWidget::appendContextMenu(Menu *menu) {
 }
 
 
-Model *modelUnity = Model::create<Unity, UnityWidget>("Fundamental", "Unity", "Unity", MIXER_TAG, UTILITY_TAG, DUAL_TAG);
+Model *modelUnity = Model::create<Unity, UnityWidget>("Unity");

@@ -160,5 +160,5 @@ struct VCA_1Widget : ModuleWidget {
 };
 
 
-Model *modelVCA_1 = Model::create<VCA_1, VCA_1Widget>("Fundamental", "VCA-1", "VCA-1", AMPLIFIER_TAG);
-Model *modelVCA = Model::create<VCA, VCAWidget>("Fundamental", "VCA", "VCA-2", AMPLIFIER_TAG, DUAL_TAG);
+Model *modelVCA_1 = createModel<VCA_1, VCA_1Widget>("VCA-1", "VCA-1", AMPLIFIER_TAG);
+Model *modelVCA = createModel<VCA, VCAWidget>("VCA", "VCA-2", AMPLIFIER_TAG, DUAL_TAG);

@@ -265,7 +265,7 @@ VCOWidget::VCOWidget(VCO *module) : ModuleWidget(module) {
 }
 
 
-Model *modelVCO = Model::create<VCO, VCOWidget>("Fundamental", "VCO", "VCO-1", OSCILLATOR_TAG);
+Model *modelVCO = createModel<VCO, VCOWidget>("VCO");
 
 
 struct VCO2 : Module {
@@ -355,7 +355,7 @@ VCO2Widget::VCO2Widget(VCO2 *module) : ModuleWidget(module) {
 }
 
 
-Model *modelVCO2 = Model::create<VCO2, VCO2Widget>("Fundamental", "VCO2", "VCO-2", OSCILLATOR_TAG);
+Model *modelVCO2 = createModel<VCO2, VCO2Widget>("VCO2");
 
 
 float sawTable[2048] = {

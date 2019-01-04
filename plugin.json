@@ -1,0 +1,81 @@
+{
+	"slug": "Fundamental",
+	"name": "Fundamental",
+	"author": "VCV",
+	"license": "BSD-3-Clause",
+	"authorEmail": "contact@vcvrack.com",
+	"pluginUrl": "https://vcvrack.com/Fundamental.html",
+	"authorUrl": "https://vcvrack.com/",
+	"sourceUrl": "https://github.com/VCVRack/Fundamental",
+	"version": "1.0.0",
+	"modules": {
+		"VCO": {
+			"name": "VCO-1",
+			"tags": ["VCO"]
+		},
+		"VCO2": {
+			"name": "VCO-2",
+			"tags": ["VCO"]
+		},
+		"VCF": {
+			"name": "VCF",
+			"tags": ["VCF"]
+		},
+		"VCA-1": {
+			"name": "VCA-1",
+			"tags": ["VCA"]
+		},
+		"VCA": {
+			"name": "VCA-2",
+			"tags": ["VCA", "Dual"]
+		},
+		"LFO": {
+			"name": "LFO-1",
+			"tags": ["LFO"]
+		},
+		"LFO2": {
+			"name": "LFO-2",
+			"tags": ["LFO"]
+		},
+		"Delay": {
+			"name": "Delay",
+			"tags": ["Delay"]
+		},
+		"ADSR": {
+			"name": "ADSR",
+			"tags": ["Envelope Generator"]
+		},
+		"VCMixer": {
+			"name": "Mixer",
+			"tags": ["Mixer", "VCA"]
+		},
+		"8vert": {
+			"name": "8vert",
+			"tags": ["Attenuator"]
+		},
+		"Unity": {
+			"name": "Unity",
+			"tags": ["Mixer", "Utility", "Dual"]
+		},
+		"Mutes": {
+			"name": "Mutes",
+			"tags": ["Switch"]
+		},
+		"Scope": {
+			"name": "Scope",
+			"tags": ["Visual"]
+		},
+		"SEQ3": {
+			"name": "SEQ-3",
+			"tags": ["Sequencer"]
+		},
+		"SequentialSwitch1": {
+			"name": "Sequential Switch 1",
+			"tags": ["Utility"]
+		},
+		"SequentialSwitch2": {
+			"name": "Sequential Switch 1",
+			"tags": ["Utility"]
+		}
+	}
+}

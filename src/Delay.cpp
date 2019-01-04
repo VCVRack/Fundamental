@@ -136,4 +136,4 @@ DelayWidget::DelayWidget(Delay *module) : ModuleWidget(module) {
 }
 
 
-Model *modelDelay = Model::create<Delay, DelayWidget>("Fundamental", "Delay", "Delay", DELAY_TAG);
+Model *modelDelay = createModel<Delay, DelayWidget>("Delay");

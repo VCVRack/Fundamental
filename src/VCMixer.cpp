@@ -74,4 +74,4 @@ struct VCMixerWidget : ModuleWidget {
 };
 
 
-Model *modelVCMixer = Model::create<VCMixer, VCMixerWidget>("Fundamental", "VCMixer", "Mixer", MIXER_TAG, AMPLIFIER_TAG);
+Model *modelVCMixer = Model::create<VCMixer, VCMixerWidget>("VCMixer");

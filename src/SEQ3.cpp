@@ -203,4 +203,4 @@ struct SEQ3Widget : ModuleWidget {
 
 
 
-Model *modelSEQ3 = Model::create<SEQ3, SEQ3Widget>("Fundamental", "SEQ3", "SEQ-3", SEQUENCER_TAG);
+Model *modelSEQ3 = Model::create<SEQ3, SEQ3Widget>("SEQ3");

@@ -81,4 +81,4 @@ _8vertWidget::_8vertWidget(_8vert *module) : ModuleWidget(module) {
 }
 
 
-Model *model_8vert = Model::create<_8vert, _8vertWidget>("Fundamental", "8vert", "8vert", ATTENUATOR_TAG);
+Model *model_8vert = Model::create<_8vert, _8vertWidget>("8vert");

@@ -145,4 +145,4 @@ MutesWidget::MutesWidget(Mutes *module) : ModuleWidget(module) {
 }
 
 
-Model *modelMutes = Model::create<Mutes, MutesWidget>("Fundamental", "Mutes", "Mutes", SWITCH_TAG);
+Model *modelMutes = Model::create<Mutes, MutesWidget>("Mutes");

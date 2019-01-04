@@ -104,7 +104,7 @@ SequentialSwitch1Widget::SequentialSwitch1Widget(SequentialSwitch<1> *module) : 
 }
 
 
-Model *modelSequentialSwitch1 = Model::create<SequentialSwitch<1>, SequentialSwitch1Widget>("Fundamental", "SequentialSwitch1", "Sequential Switch 1", UTILITY_TAG);
+Model *modelSequentialSwitch1 = Model::create<SequentialSwitch<1>, SequentialSwitch1Widget>("SequentialSwitch1");
 
 
 struct SequentialSwitch2Widget : ModuleWidget {
@@ -136,4 +136,4 @@ SequentialSwitch2Widget::SequentialSwitch2Widget(SequentialSwitch<2> *module) : 
 }
 
 
-Model *modelSequentialSwitch2 = Model::create<SequentialSwitch<2>, SequentialSwitch2Widget>("Fundamental", "SequentialSwitch2", "Sequential Switch 2", UTILITY_TAG);
+Model *modelSequentialSwitch2 = Model::create<SequentialSwitch<2>, SequentialSwitch2Widget>("SequentialSwitch2");
