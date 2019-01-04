@@ -109,30 +109,30 @@ struct ADSRWidget : ModuleWidget {
 ADSRWidget::ADSRWidget(ADSR *module) : ModuleWidget(module) {
 	setPanel(SVG::load(assetPlugin(plugin, "res/ADSR.svg")));
 
-	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
+	addChild(createWidget<ScrewSilver>(Vec(15, 0)));
+	addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
+	addChild(createWidget<ScrewSilver>(Vec(15, 365)));
+	addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(62, 57), module, ADSR::ATTACK_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(62, 124), module, ADSR::DECAY_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(62, 191), module, ADSR::SUSTAIN_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(62, 257), module, ADSR::RELEASE_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundLargeBlackKnob>(Vec(62, 57), module, ADSR::ATTACK_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundLargeBlackKnob>(Vec(62, 124), module, ADSR::DECAY_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundLargeBlackKnob>(Vec(62, 191), module, ADSR::SUSTAIN_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundLargeBlackKnob>(Vec(62, 257), module, ADSR::RELEASE_PARAM, 0.0f, 1.0f, 0.5f));
 
-	addInput(Port::create<PJ301MPort>(Vec(9, 63), Port::INPUT, module, ADSR::ATTACK_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(9, 129), Port::INPUT, module, ADSR::DECAY_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(9, 196), Port::INPUT, module, ADSR::SUSTAIN_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(9, 263), Port::INPUT, module, ADSR::RELEASE_INPUT));
+	addInput(createPort<PJ301MPort>(Vec(9, 63), PortWidget::INPUT, module, ADSR::ATTACK_INPUT));
+	addInput(createPort<PJ301MPort>(Vec(9, 129), PortWidget::INPUT, module, ADSR::DECAY_INPUT));
+	addInput(createPort<PJ301MPort>(Vec(9, 196), PortWidget::INPUT, module, ADSR::SUSTAIN_INPUT));
+	addInput(createPort<PJ301MPort>(Vec(9, 263), PortWidget::INPUT, module, ADSR::RELEASE_INPUT));
 
-	addInput(Port::create<PJ301MPort>(Vec(9, 320), Port::INPUT, module, ADSR::GATE_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(48, 320), Port::INPUT, module, ADSR::TRIG_INPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(87, 320), Port::OUTPUT, module, ADSR::ENVELOPE_OUTPUT));
+	addInput(createPort<PJ301MPort>(Vec(9, 320), PortWidget::INPUT, module, ADSR::GATE_INPUT));
+	addInput(createPort<PJ301MPort>(Vec(48, 320), PortWidget::INPUT, module, ADSR::TRIG_INPUT));
+	addOutput(createPort<PJ301MPort>(Vec(87, 320), PortWidget::OUTPUT, module, ADSR::ENVELOPE_OUTPUT));
 
-	addChild(ModuleLightWidget::create<SmallLight<RedLight>>(Vec(94, 41), module, ADSR::ATTACK_LIGHT));
-	addChild(ModuleLightWidget::create<SmallLight<RedLight>>(Vec(94, 109), module, ADSR::DECAY_LIGHT));
-	addChild(ModuleLightWidget::create<SmallLight<RedLight>>(Vec(94, 175), module, ADSR::SUSTAIN_LIGHT));
-	addChild(ModuleLightWidget::create<SmallLight<RedLight>>(Vec(94, 242), module, ADSR::RELEASE_LIGHT));
+	addChild(createLight<SmallLight<RedLight>>(Vec(94, 41), module, ADSR::ATTACK_LIGHT));
+	addChild(createLight<SmallLight<RedLight>>(Vec(94, 109), module, ADSR::DECAY_LIGHT));
+	addChild(createLight<SmallLight<RedLight>>(Vec(94, 175), module, ADSR::SUSTAIN_LIGHT));
+	addChild(createLight<SmallLight<RedLight>>(Vec(94, 242), module, ADSR::RELEASE_LIGHT));
 }
 
 
-Model *modelADSR = createModel<ADSR, ADSRWidget>("ADSR", "ADSR", ENVELOPE_GENERATOR_TAG);
+Model *modelADSR = createModel<ADSR, ADSRWidget>("ADSR");

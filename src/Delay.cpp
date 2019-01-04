@@ -117,22 +117,22 @@ struct DelayWidget : ModuleWidget {
 DelayWidget::DelayWidget(Delay *module) : ModuleWidget(module) {
 	setPanel(SVG::load(assetPlugin(plugin, "res/Delay.svg")));
 
-	addChild(Widget::create<ScrewSilver>(Vec(15, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(Widget::create<ScrewSilver>(Vec(15, 365)));
-	addChild(Widget::create<ScrewSilver>(Vec(box.size.x-30, 365)));
+	addChild(createWidget<ScrewSilver>(Vec(15, 0)));
+	addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
+	addChild(createWidget<ScrewSilver>(Vec(15, 365)));
+	addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 365)));
 
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(67, 57), module, Delay::TIME_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(67, 123), module, Delay::FEEDBACK_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(67, 190), module, Delay::COLOR_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(ParamWidget::create<RoundLargeBlackKnob>(Vec(67, 257), module, Delay::MIX_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundLargeBlackKnob>(Vec(67, 57), module, Delay::TIME_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundLargeBlackKnob>(Vec(67, 123), module, Delay::FEEDBACK_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundLargeBlackKnob>(Vec(67, 190), module, Delay::COLOR_PARAM, 0.0f, 1.0f, 0.5f));
+	addParam(createParam<RoundLargeBlackKnob>(Vec(67, 257), module, Delay::MIX_PARAM, 0.0f, 1.0f, 0.5f));
 
-	addInput(Port::create<PJ301MPort>(Vec(14, 63), Port::INPUT, module, Delay::TIME_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(14, 129), Port::INPUT, module, Delay::FEEDBACK_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(14, 196), Port::INPUT, module, Delay::COLOR_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(14, 263), Port::INPUT, module, Delay::MIX_INPUT));
-	addInput(Port::create<PJ301MPort>(Vec(14, 320), Port::INPUT, module, Delay::IN_INPUT));
-	addOutput(Port::create<PJ301MPort>(Vec(73, 320), Port::OUTPUT, module, Delay::OUT_OUTPUT));
+	addInput(createPort<PJ301MPort>(Vec(14, 63), PortWidget::INPUT, module, Delay::TIME_INPUT));
+	addInput(createPort<PJ301MPort>(Vec(14, 129), PortWidget::INPUT, module, Delay::FEEDBACK_INPUT));
+	addInput(createPort<PJ301MPort>(Vec(14, 196), PortWidget::INPUT, module, Delay::COLOR_INPUT));
+	addInput(createPort<PJ301MPort>(Vec(14, 263), PortWidget::INPUT, module, Delay::MIX_INPUT));
+	addInput(createPort<PJ301MPort>(Vec(14, 320), PortWidget::INPUT, module, Delay::IN_INPUT));
+	addOutput(createPort<PJ301MPort>(Vec(73, 320), PortWidget::OUTPUT, module, Delay::OUT_OUTPUT));
 }
 
 

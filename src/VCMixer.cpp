@@ -43,35 +43,35 @@ struct VCMixerWidget : ModuleWidget {
 	VCMixerWidget(VCMixer *module) : ModuleWidget(module) {
 		setPanel(SVG::load(assetPlugin(plugin, "res/VCMixer.svg")));
 
-		addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		addChild(Widget::create<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(Widget::create<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(ParamWidget::create<RoundLargeBlackKnob>(mm2px(Vec(19.049999, 21.161154)), module, VCMixer::MIX_LVL_PARAM, 0.0, 2.0, 1.0));
-		addParam(ParamWidget::create<LEDSliderGreen>(mm2px(Vec(5.8993969, 44.33149).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAM + 0, 0.0, 1.0, 1.0));
-		addParam(ParamWidget::create<LEDSliderGreen>(mm2px(Vec(17.899343, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAM + 1, 0.0, 1.0, 1.0));
-		addParam(ParamWidget::create<LEDSliderGreen>(mm2px(Vec(29.899292, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAM + 2, 0.0, 1.0, 1.0));
-		addParam(ParamWidget::create<LEDSliderGreen>(mm2px(Vec(41.90065, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAM + 3, 0.0, 1.0, 1.0));
+		addParam(createParam<RoundLargeBlackKnob>(mm2px(Vec(19.049999, 21.161154)), module, VCMixer::MIX_LVL_PARAM, 0.0, 2.0, 1.0));
+		addParam(createParam<LEDSliderGreen>(mm2px(Vec(5.8993969, 44.33149).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAM + 0, 0.0, 1.0, 1.0));
+		addParam(createParam<LEDSliderGreen>(mm2px(Vec(17.899343, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAM + 1, 0.0, 1.0, 1.0));
+		addParam(createParam<LEDSliderGreen>(mm2px(Vec(29.899292, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAM + 2, 0.0, 1.0, 1.0));
+		addParam(createParam<LEDSliderGreen>(mm2px(Vec(41.90065, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAM + 3, 0.0, 1.0, 1.0));
 
 		// Use old interleaved order for backward compatibility with <0.6
-		addInput(Port::create<PJ301MPort>(mm2px(Vec(3.2935331, 23.404598)), Port::INPUT, module, VCMixer::MIX_CV_INPUT));
-		addInput(Port::create<PJ301MPort>(mm2px(Vec(3.2935331, 78.531639)), Port::INPUT, module, VCMixer::CH_INPUT + 0));
-		addInput(Port::create<PJ301MPort>(mm2px(Vec(3.2935331, 93.531586)), Port::INPUT, module, VCMixer::CV_INPUT + 0));
-		addInput(Port::create<PJ301MPort>(mm2px(Vec(15.29348, 78.531639)), Port::INPUT, module, VCMixer::CH_INPUT + 1));
-		addInput(Port::create<PJ301MPort>(mm2px(Vec(15.29348, 93.531586)), Port::INPUT, module, VCMixer::CV_INPUT + 1));
-		addInput(Port::create<PJ301MPort>(mm2px(Vec(27.293465, 78.531639)), Port::INPUT, module, VCMixer::CH_INPUT + 2));
-		addInput(Port::create<PJ301MPort>(mm2px(Vec(27.293465, 93.531586)), Port::INPUT, module, VCMixer::CV_INPUT + 2));
-		addInput(Port::create<PJ301MPort>(mm2px(Vec(39.293411, 78.531639)), Port::INPUT, module, VCMixer::CH_INPUT + 3));
-		addInput(Port::create<PJ301MPort>(mm2px(Vec(39.293411, 93.531586)), Port::INPUT, module, VCMixer::CV_INPUT + 3));
+		addInput(createPort<PJ301MPort>(mm2px(Vec(3.2935331, 23.404598)), PortWidget::INPUT, module, VCMixer::MIX_CV_INPUT));
+		addInput(createPort<PJ301MPort>(mm2px(Vec(3.2935331, 78.531639)), PortWidget::INPUT, module, VCMixer::CH_INPUT + 0));
+		addInput(createPort<PJ301MPort>(mm2px(Vec(3.2935331, 93.531586)), PortWidget::INPUT, module, VCMixer::CV_INPUT + 0));
+		addInput(createPort<PJ301MPort>(mm2px(Vec(15.29348, 78.531639)), PortWidget::INPUT, module, VCMixer::CH_INPUT + 1));
+		addInput(createPort<PJ301MPort>(mm2px(Vec(15.29348, 93.531586)), PortWidget::INPUT, module, VCMixer::CV_INPUT + 1));
+		addInput(createPort<PJ301MPort>(mm2px(Vec(27.293465, 78.531639)), PortWidget::INPUT, module, VCMixer::CH_INPUT + 2));
+		addInput(createPort<PJ301MPort>(mm2px(Vec(27.293465, 93.531586)), PortWidget::INPUT, module, VCMixer::CV_INPUT + 2));
+		addInput(createPort<PJ301MPort>(mm2px(Vec(39.293411, 78.531639)), PortWidget::INPUT, module, VCMixer::CH_INPUT + 3));
+		addInput(createPort<PJ301MPort>(mm2px(Vec(39.293411, 93.531586)), PortWidget::INPUT, module, VCMixer::CV_INPUT + 3));
 
-		addOutput(Port::create<PJ301MPort>(mm2px(Vec(39.293411, 23.4046)), Port::OUTPUT, module, VCMixer::MIX_OUTPUT));
-		addOutput(Port::create<PJ301MPort>(mm2px(Vec(3.2935331, 108.53153)), Port::OUTPUT, module, VCMixer::CH_OUTPUT + 0));
-		addOutput(Port::create<PJ301MPort>(mm2px(Vec(15.29348, 108.53153)), Port::OUTPUT, module, VCMixer::CH_OUTPUT + 1));
-		addOutput(Port::create<PJ301MPort>(mm2px(Vec(27.293465, 108.53153)), Port::OUTPUT, module, VCMixer::CH_OUTPUT + 2));
-		addOutput(Port::create<PJ301MPort>(mm2px(Vec(39.293411, 108.53153)), Port::OUTPUT, module, VCMixer::CH_OUTPUT + 3));
+		addOutput(createPort<PJ301MPort>(mm2px(Vec(39.293411, 23.4046)), PortWidget::OUTPUT, module, VCMixer::MIX_OUTPUT));
+		addOutput(createPort<PJ301MPort>(mm2px(Vec(3.2935331, 108.53153)), PortWidget::OUTPUT, module, VCMixer::CH_OUTPUT + 0));
+		addOutput(createPort<PJ301MPort>(mm2px(Vec(15.29348, 108.53153)), PortWidget::OUTPUT, module, VCMixer::CH_OUTPUT + 1));
+		addOutput(createPort<PJ301MPort>(mm2px(Vec(27.293465, 108.53153)), PortWidget::OUTPUT, module, VCMixer::CH_OUTPUT + 2));
+		addOutput(createPort<PJ301MPort>(mm2px(Vec(39.293411, 108.53153)), PortWidget::OUTPUT, module, VCMixer::CH_OUTPUT + 3));
 	}
 };
 
 
-Model *modelVCMixer = Model::create<VCMixer, VCMixerWidget>("VCMixer");
+Model *modelVCMixer = createModel<VCMixer, VCMixerWidget>("VCMixer");
