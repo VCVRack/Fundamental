@@ -111,8 +111,9 @@ struct VCA_1VUKnob : Knob {
 	}
 
 	void draw(NVGcontext *vg) override {
-		if (!quantity || !module)
+		if (!quantity)
 			return;
+		float lastCv = module ? module->lastCv : 1.f;
 
 		nvgBeginPath(vg);
 		nvgRoundedRect(vg, 0, 0, box.size.x, box.size.y, 2.0);
@@ -126,7 +127,7 @@ struct VCA_1VUKnob : Knob {
 		for (int i = 0; i < segs; i++) {
 			float value = quantity->getValue();
 			float segValue = clamp(value * segs - (segs - i - 1), 0.f, 1.f);
-			float amplitude = value * module->lastCv;
+			float amplitude = value * lastCv;
 			float segAmplitude = clamp(amplitude * segs - (segs - i - 1), 0.f, 1.f);
 			nvgBeginPath(vg);
 			nvgRect(vg, r.pos.x, r.pos.y + r.size.y / segs * i + 0.5,

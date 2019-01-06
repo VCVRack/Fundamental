@@ -246,6 +246,9 @@ struct ScopeDisplay : TransparentWidget {
 	}
 
 	void draw(NVGcontext *vg) override {
+		if (!module)
+			return;
+
 		float gainX = powf(2.0f, roundf(module->params[Scope::X_SCALE_PARAM].value));
 		float gainY = powf(2.0f, roundf(module->params[Scope::Y_SCALE_PARAM].value));
 		float offsetX = module->params[Scope::X_POS_PARAM].value;
