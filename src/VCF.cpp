@@ -1,7 +1,4 @@
 #include "Fundamental.hpp"
-#include "dsp/functions.hpp"
-#include "dsp/resampler.hpp"
-#include "dsp/ode.hpp"
 
 
 inline float clip(float x) {
@@ -32,7 +29,7 @@ struct LadderFilter {
 	}
 
 	void process(float input, float dt) {
-		ode::stepRK4(0.f, dt, state, 4, [&](float t, const float x[], float dxdt[]) {
+		dsp::stepRK4(0.f, dt, state, 4, [&](float t, const float x[], float dxdt[]) {
 			float inputc = clip(input - resonance * x[3]);
 			float yc0 = clip(x[0]);
 			float yc1 = clip(x[1]);

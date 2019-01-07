@@ -1,6 +1,5 @@
 #include <string.h>
 #include "Fundamental.hpp"
-#include "dsp/digital.hpp"
 
 
 #define BUFFER_SIZE 512

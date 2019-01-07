@@ -1,6 +1,4 @@
 #include "Fundamental.hpp"
-#include "dsp/digital.hpp"
-#include "dsp/filter.hpp"
 
 
 template <int TYPE>

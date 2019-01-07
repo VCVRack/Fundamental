@@ -1,5 +1,4 @@
 #include "Fundamental.hpp"
-#include "dsp/digital.hpp"
 
 
 struct SEQ3 : Module {

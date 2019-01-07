@@ -1,5 +1,4 @@
 #include "Fundamental.hpp"
-#include "dsp/vumeter.hpp"
 
 
 struct Unity : Module {
