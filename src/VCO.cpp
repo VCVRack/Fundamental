@@ -46,7 +46,7 @@ struct VoltageControlledOscillator {
 		}
 		pitch += pitchCv;
 		// Note C4
-		freq = 261.626f * powf(2.0f, pitch / 12.0f);
+		freq = dsp::FREQ_C4 * powf(2.0f, pitch / 12.0f);
 	}
 	void setPulseWidth(float pulseWidth) {
 		const float pwMin = 0.01f;
@@ -197,7 +197,7 @@ struct VCO : Module {
 		setup(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		params[MODE_PARAM].setup(0.f, 1.f, 1.f);
 		params[SYNC_PARAM].setup(0.f, 1.f, 1.f);
-		params[FREQ_PARAM].setup(-54.0f, 54.0f, 0.0f, "Frequency", " Hz", std::pow(2, 1/12.f), 261.626f);
+		params[FREQ_PARAM].setup(-54.0f, 54.0f, 0.0f, "Frequency", " Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
 		params[FINE_PARAM].setup(-1.0f, 1.0f, 0.0f, "Fine frequency");
 		params[FM_PARAM].setup(0.0f, 1.0f, 0.0f, "Frequency modulation");
 		params[PW_PARAM].setup(0.0f, 1.0f, 0.5f, "Pulse width", "%", 0.f, 100.f);
@@ -306,7 +306,7 @@ struct VCO2 : Module {
 		setup(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		params[MODE_PARAM].setup(0.f, 1.f, 1.f);
 		params[SYNC_PARAM].setup(0.f, 1.f, 1.f);
-		params[FREQ_PARAM].setup(-54.0f, 54.0f, 0.0f, "Frequency", " Hz", std::pow(2, 1/12.f), 261.626f);
+		params[FREQ_PARAM].setup(-54.0f, 54.0f, 0.0f, "Frequency", " Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
 		params[WAVE_PARAM].setup(0.0f, 3.0f, 1.5f, "Wave");
 		params[FM_PARAM].setup(0.0f, 1.0f, 0.0f, "Frequency modulation");
 	}
