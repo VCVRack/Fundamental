@@ -58,7 +58,7 @@ struct VoltageControlledOscillator {
 			// Adjust pitch slew
 			if (++pitchSlewIndex > 32) {
 				const float pitchSlewTau = 100.0f; // Time constant for leaky integrator in seconds
-				pitchSlew += (random::normal() - pitchSlew / pitchSlewTau) * context()->engine->getSampleTime();
+				pitchSlew += (random::normal() - pitchSlew / pitchSlewTau) * app()->engine->getSampleTime();
 				pitchSlewIndex = 0;
 			}
 		}
@@ -220,7 +220,7 @@ void VCO::step() {
 	oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0f);
 	oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
-	oscillator.process(context()->engine->getSampleTime(), inputs[SYNC_INPUT].value);
+	oscillator.process(app()->engine->getSampleTime(), inputs[SYNC_INPUT].value);
 
 	// Set output
 	if (outputs[SIN_OUTPUT].active)
@@ -322,7 +322,7 @@ void VCO2::step() {
 	oscillator.setPitch(0.0f, pitchCv);
 	oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
-	oscillator.process(context()->engine->getSampleTime(), inputs[SYNC_INPUT].value);
+	oscillator.process(app()->engine->getSampleTime(), inputs[SYNC_INPUT].value);
 
 	// Set output
 	float wave = clamp(params[WAVE_PARAM].value + inputs[WAVE_INPUT].value, 0.0f, 3.0f);
