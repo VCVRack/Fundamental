@@ -195,8 +195,8 @@ struct VCO : Module {
 
 	VCO() {
 		setup(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[MODE_PARAM].setup(0.f, 1.f, 1.f);
-		params[SYNC_PARAM].setup(0.f, 1.f, 1.f);
+		params[MODE_PARAM].setup(0.f, 1.f, 1.f, "Mode");
+		params[SYNC_PARAM].setup(0.f, 1.f, 1.f, "Sync");
 		params[FREQ_PARAM].setup(-54.0f, 54.0f, 0.0f, "Frequency", " Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
 		params[FINE_PARAM].setup(-1.0f, 1.0f, 0.0f, "Fine frequency");
 		params[FM_PARAM].setup(0.0f, 1.0f, 0.0f, "Frequency modulation");
@@ -304,8 +304,8 @@ struct VCO2 : Module {
 
 	VCO2() {
 		setup(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[MODE_PARAM].setup(0.f, 1.f, 1.f);
-		params[SYNC_PARAM].setup(0.f, 1.f, 1.f);
+		params[MODE_PARAM].setup(0.f, 1.f, 1.f, "Mode");
+		params[SYNC_PARAM].setup(0.f, 1.f, 1.f, "Sync");
 		params[FREQ_PARAM].setup(-54.0f, 54.0f, 0.0f, "Frequency", " Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
 		params[WAVE_PARAM].setup(0.0f, 3.0f, 1.5f, "Wave");
 		params[FM_PARAM].setup(0.0f, 1.0f, 0.0f, "Frequency modulation");
