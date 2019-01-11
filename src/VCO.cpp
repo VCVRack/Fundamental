@@ -195,20 +195,13 @@ struct VCO : Module {
 
 	VCO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[MODE_PARAM].config(0.f, 1.f, 1.f);
-		paramInfos[MODE_PARAM].config("Mode");
-		params[SYNC_PARAM].config(0.f, 1.f, 1.f);
-		paramInfos[SYNC_PARAM].config("Sync");
-		params[FREQ_PARAM].config(-54.0f, 54.0f, 0.0f);
-		paramInfos[FREQ_PARAM].config("Frequency", " Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
-		params[FINE_PARAM].config(-1.0f, 1.0f, 0.0f);
-		paramInfos[FINE_PARAM].config("Fine frequency");
-		params[FM_PARAM].config(0.0f, 1.0f, 0.0f);
-		paramInfos[FM_PARAM].config("Frequency modulation");
-		params[PW_PARAM].config(0.0f, 1.0f, 0.5f);
-		paramInfos[PW_PARAM].config("Pulse width", "%", 0.f, 100.f);
-		params[PWM_PARAM].config(0.0f, 1.0f, 0.0f);
-		paramInfos[PWM_PARAM].config("Pulse width modulation", "%", 0.f, 100.f);
+		params[MODE_PARAM].config(0.f, 1.f, 1.f, "Mode");
+		params[SYNC_PARAM].config(0.f, 1.f, 1.f, "Sync");
+		params[FREQ_PARAM].config(-54.0f, 54.0f, 0.0f, "Frequency", " Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
+		params[FINE_PARAM].config(-1.0f, 1.0f, 0.0f, "Fine frequency");
+		params[FM_PARAM].config(0.0f, 1.0f, 0.0f, "Frequency modulation");
+		params[PW_PARAM].config(0.0f, 1.0f, 0.5f, "Pulse width", "%", 0.f, 100.f);
+		params[PWM_PARAM].config(0.0f, 1.0f, 0.0f, "Pulse width modulation", "%", 0.f, 100.f);
 	}
 	void step() override;
 };
@@ -311,16 +304,11 @@ struct VCO2 : Module {
 
 	VCO2() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[MODE_PARAM].config(0.f, 1.f, 1.f);
-		paramInfos[MODE_PARAM].config("Mode");
-		params[SYNC_PARAM].config(0.f, 1.f, 1.f);
-		paramInfos[SYNC_PARAM].config("Sync");
-		params[FREQ_PARAM].config(-54.0f, 54.0f, 0.0f);
-		paramInfos[FREQ_PARAM].config("Frequency", " Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
-		params[WAVE_PARAM].config(0.0f, 3.0f, 1.5f);
-		paramInfos[WAVE_PARAM].config("Wave");
-		params[FM_PARAM].config(0.0f, 1.0f, 0.0f);
-		paramInfos[FM_PARAM].config("Frequency modulation");
+		params[MODE_PARAM].config(0.f, 1.f, 1.f, "Mode");
+		params[SYNC_PARAM].config(0.f, 1.f, 1.f, "Sync");
+		params[FREQ_PARAM].config(-54.0f, 54.0f, 0.0f, "Frequency", " Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
+		params[WAVE_PARAM].config(0.0f, 3.0f, 1.5f, "Wave");
+		params[FM_PARAM].config(0.0f, 1.0f, 0.0f, "Frequency modulation");
 	}
 	void step() override;
 };

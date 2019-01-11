@@ -86,8 +86,8 @@ void Scope::step() {
 	lights[EXTERNAL_LIGHT].value = external ? 1.0f : 0.0f;
 
 	// Compute time
-	float deltaTime = powf(2.0f, params[TIME_PARAM].value);
-	int frameCount = (int)ceilf(deltaTime * engineGetSampleRate());
+	float deltaTime = std::pow(2.0f, -params[TIME_PARAM].value);
+	int frameCount = (int) std::ceil(deltaTime * engineGetSampleRate());
 
 	// Add frame to buffer
 	if (bufferIndex < BUFFER_SIZE) {
@@ -325,7 +325,7 @@ ScopeWidget::ScopeWidget(Scope *module) : ModuleWidget(module) {
 	addParam(createParam<RoundBlackKnob>(Vec(15, 263), module, Scope::X_POS_PARAM, -10.0f, 10.0f, 0.0f));
 	addParam(createParam<RoundBlackSnapKnob>(Vec(61, 209), module, Scope::Y_SCALE_PARAM, -2.0f, 8.0f, 0.0f));
 	addParam(createParam<RoundBlackKnob>(Vec(61, 263), module, Scope::Y_POS_PARAM, -10.0f, 10.0f, 0.0f));
-	addParam(createParam<RoundBlackKnob>(Vec(107, 209), module, Scope::TIME_PARAM, -6.0f, -16.0f, -14.0f));
+	addParam(createParam<RoundBlackKnob>(Vec(107, 209), module, Scope::TIME_PARAM, 6.0f, 16.0f, 14.0f));
 	addParam(createParam<CKD6>(Vec(106, 262), module, Scope::LISSAJOUS_PARAM, 0.0f, 1.0f, 0.0f));
 	addParam(createParam<RoundBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM, -10.0f, 10.0f, 0.0f));
 	addParam(createParam<CKD6>(Vec(152, 262), module, Scope::EXTERNAL_PARAM, 0.0f, 1.0f, 0.0f));
