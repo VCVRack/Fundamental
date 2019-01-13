@@ -17,11 +17,11 @@ struct VoltageControlledOscillator {
 	bool syncEnabled = false;
 	bool syncDirection = false;
 
-	Decimator<OVERSAMPLE, QUALITY> sinDecimator;
-	Decimator<OVERSAMPLE, QUALITY> triDecimator;
-	Decimator<OVERSAMPLE, QUALITY> sawDecimator;
-	Decimator<OVERSAMPLE, QUALITY> sqrDecimator;
-	RCFilter sqrFilter;
+	dsp::Decimator<OVERSAMPLE, QUALITY> sinDecimator;
+	dsp::Decimator<OVERSAMPLE, QUALITY> triDecimator;
+	dsp::Decimator<OVERSAMPLE, QUALITY> sawDecimator;
+	dsp::Decimator<OVERSAMPLE, QUALITY> sqrDecimator;
+	dsp::RCFilter sqrFilter;
 
 	// For analog detuning effect
 	float pitchSlew = 0.0f;
@@ -42,11 +42,11 @@ struct VoltageControlledOscillator {
 		}
 		else {
 			// Quantize coarse knob if digital mode
-			pitch = roundf(pitch);
+			pitch = std::round(pitch);
 		}
 		pitch += pitchCv;
 		// Note C4
-		freq = dsp::FREQ_C4 * powf(2.0f, pitch / 12.0f);
+		freq = dsp::FREQ_C4 * std::pow(2.0f, pitch / 12.0f);
 	}
 	void setPulseWidth(float pulseWidth) {
 		const float pwMin = 0.01f;
@@ -101,9 +101,9 @@ struct VoltageControlledOscillator {
 			if (analog) {
 				// Quadratic approximation of sine, slightly richer harmonics
 				if (phase < 0.5f)
-					sinBuffer[i] = 1.f - 16.f * powf(phase - 0.25f, 2);
+					sinBuffer[i] = 1.f - 16.f * std::pow(phase - 0.25f, 2);
 				else
-					sinBuffer[i] = -1.f + 16.f * powf(phase - 0.75f, 2);
+					sinBuffer[i] = -1.f + 16.f * std::pow(phase - 0.75f, 2);
 				sinBuffer[i] *= 1.08f;
 			}
 			else {
@@ -211,10 +211,10 @@ void VCO::step() {
 	oscillator.analog = params[MODE_PARAM].value > 0.0f;
 	oscillator.soft = params[SYNC_PARAM].value <= 0.0f;
 
-	float pitchFine = 3.0f * quadraticBipolar(params[FINE_PARAM].value);
+	float pitchFine = 3.0f * dsp::quadraticBipolar(params[FINE_PARAM].value);
 	float pitchCv = 12.0f * inputs[PITCH_INPUT].value;
 	if (inputs[FM_INPUT].active) {
-		pitchCv += quadraticBipolar(params[FM_PARAM].value) * 12.0f * inputs[FM_INPUT].value;
+		pitchCv += dsp::quadraticBipolar(params[FM_PARAM].value) * 12.0f * inputs[FM_INPUT].value;
 	}
 	oscillator.setPitch(params[FREQ_PARAM].value, pitchFine + pitchCv);
 	oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0f);
@@ -318,7 +318,7 @@ void VCO2::step() {
 	oscillator.analog = params[MODE_PARAM].value > 0.0f;
 	oscillator.soft = params[SYNC_PARAM].value <= 0.0f;
 
-	float pitchCv = params[FREQ_PARAM].value + quadraticBipolar(params[FM_PARAM].value) * 12.0f * inputs[FM_INPUT].value;
+	float pitchCv = params[FREQ_PARAM].value + dsp::quadraticBipolar(params[FM_PARAM].value) * 12.0f * inputs[FM_INPUT].value;
 	oscillator.setPitch(0.0f, pitchCv);
 	oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 

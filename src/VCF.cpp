@@ -1,8 +1,8 @@
 #include "Fundamental.hpp"
 
 
-inline float clip(float x) {
-	return tanhf(x);
+static float clip(float x) {
+	return std::tanh(x);
 }
 
 struct LadderFilter {
@@ -78,7 +78,14 @@ struct VCF : Module {
 	// Decimator<UPSAMPLE, 8> lowpassDecimator;
 	// Decimator<UPSAMPLE, 8> highpassDecimator;
 
-	VCF() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
+	VCF() {
+		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
+		params[FREQ_PARAM].config(0.f, 1.f, 0.5f);
+		params[FINE_PARAM].config(0.f, 1.f, 0.5f);
+		params[RES_PARAM].config(0.f, 1.f, 0.f);
+		params[FREQ_CV_PARAM].config(-1.f, 1.f, 0.f);
+		params[DRIVE_PARAM].config(0.f, 1.f, 0.f);
+	}
 
 	void onReset() override {
 		filter.reset();
@@ -97,7 +104,7 @@ struct VCF : Module {
 		input *= gain;
 
 		// Add -60dB noise to bootstrap self-oscillation
-		input += 1e-6f * (2.f * randomUniform() - 1.f);
+		input += 1e-6f * (2.f * random::uniform() - 1.f);
 
 		// Set resonance
 		float res = clamp(params[RES_PARAM].value + inputs[RES_INPUT].value / 10.f, 0.f, 1.f);
@@ -106,16 +113,16 @@ struct VCF : Module {
 		// Set cutoff frequency
 		float pitch = 0.f;
 		if (inputs[FREQ_INPUT].active)
-			pitch += inputs[FREQ_INPUT].value * quadraticBipolar(params[FREQ_CV_PARAM].value);
+			pitch += inputs[FREQ_INPUT].value * dsp::quadraticBipolar(params[FREQ_CV_PARAM].value);
 		pitch += params[FREQ_PARAM].value * 10.f - 5.f;
-		pitch += quadraticBipolar(params[FINE_PARAM].value * 2.f - 1.f) * 7.f / 12.f;
+		pitch += dsp::quadraticBipolar(params[FINE_PARAM].value * 2.f - 1.f) * 7.f / 12.f;
 		float cutoff = 261.626f * powf(2.f, pitch);
 		cutoff = clamp(cutoff, 1.f, 8000.f);
 		filter.setCutoff(cutoff);
 
 		/*
 		// Process sample
-		float dt = engineGetSampleTime() / UPSAMPLE;
+		float dt = app()->engine->getSampleTime() / UPSAMPLE;
 		float inputBuf[UPSAMPLE];
 		float lowpassBuf[UPSAMPLE];
 		float highpassBuf[UPSAMPLE];
@@ -135,7 +142,7 @@ struct VCF : Module {
 			outputs[HPF_OUTPUT].value = 5.f * highpassDecimator.process(highpassBuf);
 		}
 		*/
-		filter.process(input, engineGetSampleTime());
+		filter.process(input, app()->engine->getSampleTime());
 		outputs[LPF_OUTPUT].value = 5.f * filter.lowpass;
 		outputs[HPF_OUTPUT].value = 5.f * filter.highpass;
 	}
@@ -144,29 +151,28 @@ struct VCF : Module {
 
 struct VCFWidget : ModuleWidget {
 	VCFWidget(VCF *module) : ModuleWidget(module) {
-		setPanel(SVG::load(assetPlugin(plugin, "res/VCF.svg")));
+		setPanel(SVG::load(asset::plugin(plugin, "res/VCF.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
 
-		addParam(createParam<RoundHugeBlackKnob>(Vec(33, 61), module, VCF::FREQ_PARAM, 0.f, 1.f, 0.5f));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(12, 143), module, VCF::FINE_PARAM, 0.f, 1.f, 0.5f));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(71, 143), module, VCF::RES_PARAM, 0.f, 1.f, 0.f));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(12, 208), module, VCF::FREQ_CV_PARAM, -1.f, 1.f, 0.f));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(71, 208), module, VCF::DRIVE_PARAM, 0.f, 1.f, 0.f));
+		addParam(createParam<RoundHugeBlackKnob>(Vec(33, 61), module, VCF::FREQ_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(12, 143), module, VCF::FINE_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(71, 143), module, VCF::RES_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(12, 208), module, VCF::FREQ_CV_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(71, 208), module, VCF::DRIVE_PARAM));
 
-		addInput(createPort<PJ301MPort>(Vec(10, 276), PortWidget::INPUT, module, VCF::FREQ_INPUT));
-		addInput(createPort<PJ301MPort>(Vec(48, 276), PortWidget::INPUT, module, VCF::RES_INPUT));
-		addInput(createPort<PJ301MPort>(Vec(85, 276), PortWidget::INPUT, module, VCF::DRIVE_INPUT));
-		addInput(createPort<PJ301MPort>(Vec(10, 320), PortWidget::INPUT, module, VCF::IN_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(10, 276), module, VCF::FREQ_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(48, 276), module, VCF::RES_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(85, 276), module, VCF::DRIVE_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(10, 320), module, VCF::IN_INPUT));
 
-		addOutput(createPort<PJ301MPort>(Vec(48, 320), PortWidget::OUTPUT, module, VCF::LPF_OUTPUT));
-		addOutput(createPort<PJ301MPort>(Vec(85, 320), PortWidget::OUTPUT, module, VCF::HPF_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(48, 320), module, VCF::LPF_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(85, 320), module, VCF::HPF_OUTPUT));
 	}
 };
-
 
 
 Model *modelVCF = createModel<VCF, VCFWidget>("VCF");

@@ -22,25 +22,28 @@ struct VCA : Module {
 		NUM_OUTPUTS
 	};
 
-	VCA() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {}
-	void step() override;
+	VCA() {
+		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
+		params[LEVEL1_PARAM].config(0.0, 1.0, 0.0);
+		params[LEVEL2_PARAM].config(0.0, 1.0, 0.0);
+	}
+
+	void stepChannel(InputIds in, ParamIds level, InputIds lin, InputIds exp, OutputIds out) {
+		float v = inputs[in].value * params[level].value;
+		if (inputs[lin].active)
+			v *= clamp(inputs[lin].value / 10.0f, 0.0f, 1.0f);
+		const float expBase = 50.0f;
+		if (inputs[exp].active)
+			v *= rescale(std::pow(expBase, clamp(inputs[exp].value / 10.0f, 0.0f, 1.0f)), 1.0f, expBase, 0.0f, 1.0f);
+		outputs[out].value = v;
+	}
+
+	void step() override {
+		stepChannel(IN1_INPUT, LEVEL1_PARAM, LIN1_INPUT, EXP1_INPUT, OUT1_OUTPUT);
+		stepChannel(IN2_INPUT, LEVEL2_PARAM, LIN2_INPUT, EXP2_INPUT, OUT2_OUTPUT);
+	}
 };
 
-
-static void stepChannel(Input &in, Param &level, Input &lin, Input &exp, Output &out) {
-	float v = in.value * level.value;
-	if (lin.active)
-		v *= clamp(lin.value / 10.0f, 0.0f, 1.0f);
-	const float expBase = 50.0f;
-	if (exp.active)
-		v *= rescale(powf(expBase, clamp(exp.value / 10.0f, 0.0f, 1.0f)), 1.0f, expBase, 0.0f, 1.0f);
-	out.value = v;
-}
-
-void VCA::step() {
-	stepChannel(inputs[IN1_INPUT], params[LEVEL1_PARAM], inputs[LIN1_INPUT], inputs[EXP1_INPUT], outputs[OUT1_OUTPUT]);
-	stepChannel(inputs[IN2_INPUT], params[LEVEL2_PARAM], inputs[LIN2_INPUT], inputs[EXP2_INPUT], outputs[OUT2_OUTPUT]);
-}
 
 
 struct VCAWidget : ModuleWidget {
@@ -48,25 +51,25 @@ struct VCAWidget : ModuleWidget {
 };
 
 VCAWidget::VCAWidget(VCA *module) : ModuleWidget(module) {
-	setPanel(SVG::load(assetPlugin(plugin, "res/VCA.svg")));
+	setPanel(SVG::load(asset::plugin(plugin, "res/VCA.svg")));
 
 	addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 	addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
 	addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 	addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-	addParam(createParam<RoundLargeBlackKnob>(mm2px(Vec(6.35, 19.11753)), module, VCA::LEVEL1_PARAM, 0.0, 1.0, 0.0));
-	addParam(createParam<RoundLargeBlackKnob>(mm2px(Vec(6.35, 74.80544)), module, VCA::LEVEL2_PARAM, 0.0, 1.0, 0.0));
+	addParam(createParam<RoundLargeBlackKnob>(mm2px(Vec(6.35, 19.11753)), module, VCA::LEVEL1_PARAM));
+	addParam(createParam<RoundLargeBlackKnob>(mm2px(Vec(6.35, 74.80544)), module, VCA::LEVEL2_PARAM));
 
-	addInput(createPort<PJ301MPort>(mm2px(Vec(2.5907, 38.19371)), PortWidget::INPUT, module, VCA::EXP1_INPUT));
-	addInput(createPort<PJ301MPort>(mm2px(Vec(14.59752, 38.19371)), PortWidget::INPUT, module, VCA::LIN1_INPUT));
-	addInput(createPort<PJ301MPort>(mm2px(Vec(2.5907, 52.80642)), PortWidget::INPUT, module, VCA::IN1_INPUT));
-	addInput(createPort<PJ301MPort>(mm2px(Vec(2.5907, 93.53435)), PortWidget::INPUT, module, VCA::EXP2_INPUT));
-	addInput(createPort<PJ301MPort>(mm2px(Vec(14.59752, 93.53435)), PortWidget::INPUT, module, VCA::LIN2_INPUT));
-	addInput(createPort<PJ301MPort>(mm2px(Vec(2.5907, 108.14706)), PortWidget::INPUT, module, VCA::IN2_INPUT));
+	addInput(createInput<PJ301MPort>(mm2px(Vec(2.5907, 38.19371)), module, VCA::EXP1_INPUT));
+	addInput(createInput<PJ301MPort>(mm2px(Vec(14.59752, 38.19371)), module, VCA::LIN1_INPUT));
+	addInput(createInput<PJ301MPort>(mm2px(Vec(2.5907, 52.80642)), module, VCA::IN1_INPUT));
+	addInput(createInput<PJ301MPort>(mm2px(Vec(2.5907, 93.53435)), module, VCA::EXP2_INPUT));
+	addInput(createInput<PJ301MPort>(mm2px(Vec(14.59752, 93.53435)), module, VCA::LIN2_INPUT));
+	addInput(createInput<PJ301MPort>(mm2px(Vec(2.5907, 108.14706)), module, VCA::IN2_INPUT));
 
-	addOutput(createPort<PJ301MPort>(mm2px(Vec(14.59752, 52.80642)), PortWidget::OUTPUT, module, VCA::OUT1_OUTPUT));
-	addOutput(createPort<PJ301MPort>(mm2px(Vec(14.59752, 108.14706)), PortWidget::OUTPUT, module, VCA::OUT2_OUTPUT));
+	addOutput(createOutput<PJ301MPort>(mm2px(Vec(14.59752, 52.80642)), module, VCA::OUT1_OUTPUT));
+	addOutput(createOutput<PJ301MPort>(mm2px(Vec(14.59752, 108.14706)), module, VCA::OUT2_OUTPUT));
 }
 
 
@@ -91,12 +94,16 @@ struct VCA_1 : Module {
 
 	float lastCv = 0.f;
 
-	VCA_1() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
+	VCA_1() {
+		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+		params[LEVEL_PARAM].config(0.0, 1.0, 1.0);
+		params[EXP_PARAM].config(0.0, 1.0, 1.0);
+	}
 
 	void step() override {
 		float cv = inputs[CV_INPUT].normalize(10.f) / 10.f;
 		if ((int) params[EXP_PARAM].value == 0)
-			cv = powf(cv, 4.f);
+			cv = std::pow(cv, 4.f);
 		lastCv = cv;
 		outputs[OUT_OUTPUT].value = inputs[IN_INPUT].value * params[LEVEL_PARAM].value * cv;
 	}
@@ -133,11 +140,11 @@ struct VCA_1VUKnob : Knob {
 			nvgRect(vg, r.pos.x, r.pos.y + r.size.y / segs * i + 0.5,
 				r.size.x, r.size.y / segs - 1.0);
 			if (segValue > 0.f) {
-				nvgFillColor(vg, colorAlpha(nvgRGBf(0.33, 0.33, 0.33), segValue));
+				nvgFillColor(vg, color::alpha(nvgRGBf(0.33, 0.33, 0.33), segValue));
 				nvgFill(vg);
 			}
 			if (segAmplitude > 0.f) {
-				nvgFillColor(vg, colorAlpha(COLOR_GREEN, segAmplitude));
+				nvgFillColor(vg, color::alpha(color::GREEN, segAmplitude));
 				nvgFill(vg);
 			}
 		}
@@ -147,22 +154,22 @@ struct VCA_1VUKnob : Knob {
 
 struct VCA_1Widget : ModuleWidget {
 	VCA_1Widget(VCA_1 *module) : ModuleWidget(module) {
-		setPanel(SVG::load(assetPlugin(plugin, "res/VCA-1.svg")));
+		setPanel(SVG::load(asset::plugin(plugin, "res/VCA-1.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		VCA_1VUKnob *levelParam = createParam<VCA_1VUKnob>(mm2px(Vec(2.62103, 12.31692)), module, VCA_1::LEVEL_PARAM, 0.0, 1.0, 1.0);
+		VCA_1VUKnob *levelParam = createParam<VCA_1VUKnob>(mm2px(Vec(2.62103, 12.31692)), module, VCA_1::LEVEL_PARAM);
 		levelParam->module = module;
 		addParam(levelParam);
-		addParam(createParam<CKSS>(mm2px(Vec(5.24619, 79.9593)), module, VCA_1::EXP_PARAM, 0.0, 1.0, 1.0));
+		addParam(createParam<CKSS>(mm2px(Vec(5.24619, 79.9593)), module, VCA_1::EXP_PARAM));
 
-		addInput(createPort<PJ301MPort>(mm2px(Vec(3.51261, 60.4008)), PortWidget::INPUT, module, VCA_1::CV_INPUT));
-		addInput(createPort<PJ301MPort>(mm2px(Vec(3.51398, 97.74977)), PortWidget::INPUT, module, VCA_1::IN_INPUT));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51261, 60.4008)), module, VCA_1::CV_INPUT));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 97.74977)), module, VCA_1::IN_INPUT));
 
-		addOutput(createPort<PJ301MPort>(mm2px(Vec(3.51398, 108.64454)), PortWidget::OUTPUT, module, VCA_1::OUT_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(mm2px(Vec(3.51398, 108.64454)), module, VCA_1::OUT_OUTPUT));
 	}
 };
 

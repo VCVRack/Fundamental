@@ -2,7 +2,8 @@
 #include "Fundamental.hpp"
 
 
-#define BUFFER_SIZE 512
+static const int BUFFER_SIZE = 512;
+
 
 struct Scope : Module {
 	enum ParamIds {
@@ -38,14 +39,82 @@ struct Scope : Module {
 	int bufferIndex = 0;
 	float frameIndex = 0;
 
-	SchmittTrigger sumTrigger;
-	SchmittTrigger extTrigger;
+	dsp::SchmittTrigger sumTrigger;
+	dsp::SchmittTrigger extTrigger;
 	bool lissajous = false;
 	bool external = false;
-	SchmittTrigger resetTrigger;
+	dsp::SchmittTrigger resetTrigger;
 
-	Scope() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS) {}
-	void step() override;
+	Scope() {
+		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+		params[X_SCALE_PARAM].config(-2.0f, 8.0f, 0.0f);
+		params[X_POS_PARAM].config(-10.0f, 10.0f, 0.0f);
+		params[Y_SCALE_PARAM].config(-2.0f, 8.0f, 0.0f);
+		params[Y_POS_PARAM].config(-10.0f, 10.0f, 0.0f);
+		params[TIME_PARAM].config(6.0f, 16.0f, 14.0f);
+		params[LISSAJOUS_PARAM].config(0.0f, 1.0f, 0.0f);
+		params[TRIG_PARAM].config(-10.0f, 10.0f, 0.0f);
+		params[EXTERNAL_PARAM].config(0.0f, 1.0f, 0.0f);
+	}
+
+	void step() override {
+		// Modes
+		if (sumTrigger.process(params[LISSAJOUS_PARAM].value)) {
+			lissajous = !lissajous;
+		}
+		lights[PLOT_LIGHT].value = lissajous ? 0.0f : 1.0f;
+		lights[LISSAJOUS_LIGHT].value = lissajous ? 1.0f : 0.0f;
+
+		if (extTrigger.process(params[EXTERNAL_PARAM].value)) {
+			external = !external;
+		}
+		lights[INTERNAL_LIGHT].value = external ? 0.0f : 1.0f;
+		lights[EXTERNAL_LIGHT].value = external ? 1.0f : 0.0f;
+
+		// Compute time
+		float deltaTime = std::pow(2.0f, -params[TIME_PARAM].value);
+		int frameCount = (int) std::ceil(deltaTime * app()->engine->getSampleRate());
+
+		// Add frame to buffer
+		if (bufferIndex < BUFFER_SIZE) {
+			if (++frameIndex > frameCount) {
+				frameIndex = 0;
+				bufferX[bufferIndex] = inputs[X_INPUT].value;
+				bufferY[bufferIndex] = inputs[Y_INPUT].value;
+				bufferIndex++;
+			}
+		}
+
+		// Are we waiting on the next trigger?
+		if (bufferIndex >= BUFFER_SIZE) {
+			// Trigger immediately if external but nothing plugged in, or in Lissajous mode
+			if (lissajous || (external && !inputs[TRIG_INPUT].active)) {
+				bufferIndex = 0;
+				frameIndex = 0;
+				return;
+			}
+
+			// Reset the Schmitt trigger so we don't trigger immediately if the input is high
+			if (frameIndex == 0) {
+				resetTrigger.reset();
+			}
+			frameIndex++;
+
+			// Must go below 0.1fV to trigger
+			float gate = external ? inputs[TRIG_INPUT].value : inputs[X_INPUT].value;
+
+			// Reset if triggered
+			float holdTime = 0.1f;
+			if (resetTrigger.process(rescale(gate, params[TRIG_PARAM].value - 0.1f, params[TRIG_PARAM].value, 0.f, 1.f)) || (frameIndex >= app()->engine->getSampleRate() * holdTime)) {
+				bufferIndex = 0; frameIndex = 0; return;
+			}
+
+			// Reset if we've waited too long
+			if (frameIndex >= app()->engine->getSampleRate() * holdTime) {
+				bufferIndex = 0; frameIndex = 0; return;
+			}
+		}
+	}
 
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
@@ -71,66 +140,6 @@ struct Scope : Module {
 };
 
 
-void Scope::step() {
-	// Modes
-	if (sumTrigger.process(params[LISSAJOUS_PARAM].value)) {
-		lissajous = !lissajous;
-	}
-	lights[PLOT_LIGHT].value = lissajous ? 0.0f : 1.0f;
-	lights[LISSAJOUS_LIGHT].value = lissajous ? 1.0f : 0.0f;
-
-	if (extTrigger.process(params[EXTERNAL_PARAM].value)) {
-		external = !external;
-	}
-	lights[INTERNAL_LIGHT].value = external ? 0.0f : 1.0f;
-	lights[EXTERNAL_LIGHT].value = external ? 1.0f : 0.0f;
-
-	// Compute time
-	float deltaTime = std::pow(2.0f, -params[TIME_PARAM].value);
-	int frameCount = (int) std::ceil(deltaTime * engineGetSampleRate());
-
-	// Add frame to buffer
-	if (bufferIndex < BUFFER_SIZE) {
-		if (++frameIndex > frameCount) {
-			frameIndex = 0;
-			bufferX[bufferIndex] = inputs[X_INPUT].value;
-			bufferY[bufferIndex] = inputs[Y_INPUT].value;
-			bufferIndex++;
-		}
-	}
-
-	// Are we waiting on the next trigger?
-	if (bufferIndex >= BUFFER_SIZE) {
-		// Trigger immediately if external but nothing plugged in, or in Lissajous mode
-		if (lissajous || (external && !inputs[TRIG_INPUT].active)) {
-			bufferIndex = 0;
-			frameIndex = 0;
-			return;
-		}
-
-		// Reset the Schmitt trigger so we don't trigger immediately if the input is high
-		if (frameIndex == 0) {
-			resetTrigger.reset();
-		}
-		frameIndex++;
-
-		// Must go below 0.1fV to trigger
-		float gate = external ? inputs[TRIG_INPUT].value : inputs[X_INPUT].value;
-
-		// Reset if triggered
-		float holdTime = 0.1f;
-		if (resetTrigger.process(rescale(gate, params[TRIG_PARAM].value - 0.1f, params[TRIG_PARAM].value, 0.f, 1.f)) || (frameIndex >= engineGetSampleRate() * holdTime)) {
-			bufferIndex = 0; frameIndex = 0; return;
-		}
-
-		// Reset if we've waited too long
-		if (frameIndex >= engineGetSampleRate() * holdTime) {
-			bufferIndex = 0; frameIndex = 0; return;
-		}
-	}
-}
-
-
 struct ScopeDisplay : TransparentWidget {
 	Scope *module;
 	int frame = 0;
@@ -145,17 +154,17 @@ struct ScopeDisplay : TransparentWidget {
 			for (int i = 0; i < BUFFER_SIZE; i++) {
 				float v = values[i];
 				vrms += v*v;
-				vmax = fmaxf(vmax, v);
-				vmin = fminf(vmin, v);
+				vmax = std::max(vmax, v);
+				vmin = std::min(vmin, v);
 			}
-			vrms = sqrtf(vrms / BUFFER_SIZE);
+			vrms = std::sqrt(vrms / BUFFER_SIZE);
 			vpp = vmax - vmin;
 		}
 	};
 	Stats statsX, statsY;
 
 	ScopeDisplay() {
-		font = Font::load(assetPlugin(plugin, "res/fonts/Sudo.ttf"));
+		font = Font::load(asset::plugin(plugin, "res/fonts/Sudo.ttf"));
 	}
 
 	void drawWaveform(NVGcontext *vg, float *valuesX, float *valuesY) {
@@ -306,7 +315,7 @@ struct ScopeWidget : ModuleWidget {
 };
 
 ScopeWidget::ScopeWidget(Scope *module) : ModuleWidget(module) {
-	setPanel(SVG::load(assetPlugin(plugin, "res/Scope.svg")));
+	setPanel(SVG::load(asset::plugin(plugin, "res/Scope.svg")));
 
 	addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 	addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
@@ -321,18 +330,18 @@ ScopeWidget::ScopeWidget(Scope *module) : ModuleWidget(module) {
 		addChild(display);
 	}
 
-	addParam(createParam<RoundBlackSnapKnob>(Vec(15, 209), module, Scope::X_SCALE_PARAM, -2.0f, 8.0f, 0.0f));
-	addParam(createParam<RoundBlackKnob>(Vec(15, 263), module, Scope::X_POS_PARAM, -10.0f, 10.0f, 0.0f));
-	addParam(createParam<RoundBlackSnapKnob>(Vec(61, 209), module, Scope::Y_SCALE_PARAM, -2.0f, 8.0f, 0.0f));
-	addParam(createParam<RoundBlackKnob>(Vec(61, 263), module, Scope::Y_POS_PARAM, -10.0f, 10.0f, 0.0f));
-	addParam(createParam<RoundBlackKnob>(Vec(107, 209), module, Scope::TIME_PARAM, 6.0f, 16.0f, 14.0f));
-	addParam(createParam<CKD6>(Vec(106, 262), module, Scope::LISSAJOUS_PARAM, 0.0f, 1.0f, 0.0f));
-	addParam(createParam<RoundBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM, -10.0f, 10.0f, 0.0f));
-	addParam(createParam<CKD6>(Vec(152, 262), module, Scope::EXTERNAL_PARAM, 0.0f, 1.0f, 0.0f));
+	addParam(createParam<RoundBlackSnapKnob>(Vec(15, 209), module, Scope::X_SCALE_PARAM));
+	addParam(createParam<RoundBlackKnob>(Vec(15, 263), module, Scope::X_POS_PARAM));
+	addParam(createParam<RoundBlackSnapKnob>(Vec(61, 209), module, Scope::Y_SCALE_PARAM));
+	addParam(createParam<RoundBlackKnob>(Vec(61, 263), module, Scope::Y_POS_PARAM));
+	addParam(createParam<RoundBlackKnob>(Vec(107, 209), module, Scope::TIME_PARAM));
+	addParam(createParam<CKD6>(Vec(106, 262), module, Scope::LISSAJOUS_PARAM));
+	addParam(createParam<RoundBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM));
+	addParam(createParam<CKD6>(Vec(152, 262), module, Scope::EXTERNAL_PARAM));
 
-	addInput(createPort<PJ301MPort>(Vec(17, 319), PortWidget::INPUT, module, Scope::X_INPUT));
-	addInput(createPort<PJ301MPort>(Vec(63, 319), PortWidget::INPUT, module, Scope::Y_INPUT));
-	addInput(createPort<PJ301MPort>(Vec(154, 319), PortWidget::INPUT, module, Scope::TRIG_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(17, 319), module, Scope::X_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(63, 319), module, Scope::Y_INPUT));
+	addInput(createInput<PJ301MPort>(Vec(154, 319), module, Scope::TRIG_INPUT));
 
 	addChild(createLight<SmallLight<GreenLight>>(Vec(104, 251), module, Scope::PLOT_LIGHT));
 	addChild(createLight<SmallLight<GreenLight>>(Vec(104, 296), module, Scope::LISSAJOUS_LIGHT));

@@ -25,14 +25,20 @@ struct Delay : Module {
 		NUM_OUTPUTS
 	};
 
-	DoubleRingBuffer<float, HISTORY_SIZE> historyBuffer;
-	DoubleRingBuffer<float, 16> outBuffer;
+	dsp::DoubleRingBuffer<float, HISTORY_SIZE> historyBuffer;
+	dsp::DoubleRingBuffer<float, 16> outBuffer;
 	SRC_STATE *src;
 	float lastWet = 0.0f;
-	RCFilter lowpassFilter;
-	RCFilter highpassFilter;
+	dsp::RCFilter lowpassFilter;
+	dsp::RCFilter highpassFilter;
 
-	Delay() : Module(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS) {
+	Delay() {
+		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
+		params[TIME_PARAM].config(0.0f, 1.0f, 0.5f);
+		params[FEEDBACK_PARAM].config(0.0f, 1.0f, 0.5f);
+		params[COLOR_PARAM].config(0.0f, 1.0f, 0.5f);
+		params[MIX_PARAM].config(0.0f, 1.0f, 0.5f);
+
 		src = src_new(SRC_SINC_FASTEST, 1, NULL);
 		assert(src);
 	}
@@ -41,96 +47,91 @@ struct Delay : Module {
 		src_delete(src);
 	}
 
-	void step() override;
-};
+	void step() override {
+		// Get input to delay block
+		float in = inputs[IN_INPUT].value;
+		float feedback = clamp(params[FEEDBACK_PARAM].value + inputs[FEEDBACK_INPUT].value / 10.0f, 0.0f, 1.0f);
+		float dry = in + lastWet * feedback;
 
+		// Compute delay time in seconds
+		float delay = 1e-3 * std::pow(10.0f / 1e-3, clamp(params[TIME_PARAM].value + inputs[TIME_INPUT].value / 10.0f, 0.0f, 1.0f));
+		// Number of delay samples
+		float index = delay * app()->engine->getSampleRate();
 
-void Delay::step() {
-	// Get input to delay block
-	float in = inputs[IN_INPUT].value;
-	float feedback = clamp(params[FEEDBACK_PARAM].value + inputs[FEEDBACK_INPUT].value / 10.0f, 0.0f, 1.0f);
-	float dry = in + lastWet * feedback;
-
-	// Compute delay time in seconds
-	float delay = 1e-3 * powf(10.0f / 1e-3, clamp(params[TIME_PARAM].value + inputs[TIME_INPUT].value / 10.0f, 0.0f, 1.0f));
-	// Number of delay samples
-	float index = delay * engineGetSampleRate();
-
-	// Push dry sample into history buffer
-	if (!historyBuffer.full()) {
-		historyBuffer.push(dry);
-	}
-
-	// How many samples do we need consume to catch up?
-	float consume = index - historyBuffer.size();
-
-	if (outBuffer.empty()) {
-		double ratio = 1.f;
-		if (fabsf(consume) >= 16.f) {
-			ratio = powf(10.f, clamp(consume / 10000.f, -1.f, 1.f));
+		// Push dry sample into history buffer
+		if (!historyBuffer.full()) {
+			historyBuffer.push(dry);
 		}
 
-		SRC_DATA srcData;
-		srcData.data_in = (const float*) historyBuffer.startData();
-		srcData.data_out = (float*) outBuffer.endData();
-		srcData.input_frames = min(historyBuffer.size(), 16);
-		srcData.output_frames = outBuffer.capacity();
-		srcData.end_of_input = false;
-		srcData.src_ratio = ratio;
-		src_process(src, &srcData);
-		historyBuffer.startIncr(srcData.input_frames_used);
-		outBuffer.endIncr(srcData.output_frames_gen);
+		// How many samples do we need consume to catch up?
+		float consume = index - historyBuffer.size();
+
+		if (outBuffer.empty()) {
+			double ratio = 1.f;
+			if (std::abs(consume) >= 16.f) {
+				ratio = std::pow(10.f, clamp(consume / 10000.f, -1.f, 1.f));
+			}
+
+			SRC_DATA srcData;
+			srcData.data_in = (const float*) historyBuffer.startData();
+			srcData.data_out = (float*) outBuffer.endData();
+			srcData.input_frames = std::min((int) historyBuffer.size(), 16);
+			srcData.output_frames = outBuffer.capacity();
+			srcData.end_of_input = false;
+			srcData.src_ratio = ratio;
+			src_process(src, &srcData);
+			historyBuffer.startIncr(srcData.input_frames_used);
+			outBuffer.endIncr(srcData.output_frames_gen);
+		}
+
+		float wet = 0.0f;
+		if (!outBuffer.empty()) {
+			wet = outBuffer.shift();
+		}
+
+		// Apply color to delay wet output
+		// TODO Make it sound better
+		float color = clamp(params[COLOR_PARAM].value + inputs[COLOR_INPUT].value / 10.0f, 0.0f, 1.0f);
+		float lowpassFreq = 10000.0f * std::pow(10.0f, clamp(2.0f*color, 0.0f, 1.0f));
+		lowpassFilter.setCutoff(lowpassFreq / app()->engine->getSampleRate());
+		lowpassFilter.process(wet);
+		wet = lowpassFilter.lowpass();
+		float highpassFreq = 10.0f * std::pow(100.0f, clamp(2.0f*color - 1.0f, 0.0f, 1.0f));
+		highpassFilter.setCutoff(highpassFreq / app()->engine->getSampleRate());
+		highpassFilter.process(wet);
+		wet = highpassFilter.highpass();
+
+		lastWet = wet;
+
+		float mix = clamp(params[MIX_PARAM].value + inputs[MIX_INPUT].value / 10.0f, 0.0f, 1.0f);
+		float out = crossfade(in, wet, mix);
+		outputs[OUT_OUTPUT].value = out;
 	}
-
-	float wet = 0.0f;
-	if (!outBuffer.empty()) {
-		wet = outBuffer.shift();
-	}
-
-	// Apply color to delay wet output
-	// TODO Make it sound better
-	float color = clamp(params[COLOR_PARAM].value + inputs[COLOR_INPUT].value / 10.0f, 0.0f, 1.0f);
-	float lowpassFreq = 10000.0f * powf(10.0f, clamp(2.0f*color, 0.0f, 1.0f));
-	lowpassFilter.setCutoff(lowpassFreq / engineGetSampleRate());
-	lowpassFilter.process(wet);
-	wet = lowpassFilter.lowpass();
-	float highpassFreq = 10.0f * powf(100.0f, clamp(2.0f*color - 1.0f, 0.0f, 1.0f));
-	highpassFilter.setCutoff(highpassFreq / engineGetSampleRate());
-	highpassFilter.process(wet);
-	wet = highpassFilter.highpass();
-
-	lastWet = wet;
-
-	float mix = clamp(params[MIX_PARAM].value + inputs[MIX_INPUT].value / 10.0f, 0.0f, 1.0f);
-	float out = crossfade(in, wet, mix);
-	outputs[OUT_OUTPUT].value = out;
-}
+};
 
 
 struct DelayWidget : ModuleWidget {
-	DelayWidget(Delay *module);
+	DelayWidget(Delay *module) : ModuleWidget(module) {
+		setPanel(SVG::load(asset::plugin(plugin, "res/Delay.svg")));
+
+		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 365)));
+
+		addParam(createParam<RoundLargeBlackKnob>(Vec(67, 57), module, Delay::TIME_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(67, 123), module, Delay::FEEDBACK_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(67, 190), module, Delay::COLOR_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(67, 257), module, Delay::MIX_PARAM));
+
+		addInput(createInput<PJ301MPort>(Vec(14, 63), module, Delay::TIME_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(14, 129), module, Delay::FEEDBACK_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(14, 196), module, Delay::COLOR_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(14, 263), module, Delay::MIX_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(14, 320), module, Delay::IN_INPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(73, 320), module, Delay::OUT_OUTPUT));
+	}
 };
-
-DelayWidget::DelayWidget(Delay *module) : ModuleWidget(module) {
-	setPanel(SVG::load(assetPlugin(plugin, "res/Delay.svg")));
-
-	addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-	addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-	addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 365)));
-
-	addParam(createParam<RoundLargeBlackKnob>(Vec(67, 57), module, Delay::TIME_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(createParam<RoundLargeBlackKnob>(Vec(67, 123), module, Delay::FEEDBACK_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(createParam<RoundLargeBlackKnob>(Vec(67, 190), module, Delay::COLOR_PARAM, 0.0f, 1.0f, 0.5f));
-	addParam(createParam<RoundLargeBlackKnob>(Vec(67, 257), module, Delay::MIX_PARAM, 0.0f, 1.0f, 0.5f));
-
-	addInput(createPort<PJ301MPort>(Vec(14, 63), PortWidget::INPUT, module, Delay::TIME_INPUT));
-	addInput(createPort<PJ301MPort>(Vec(14, 129), PortWidget::INPUT, module, Delay::FEEDBACK_INPUT));
-	addInput(createPort<PJ301MPort>(Vec(14, 196), PortWidget::INPUT, module, Delay::COLOR_INPUT));
-	addInput(createPort<PJ301MPort>(Vec(14, 263), PortWidget::INPUT, module, Delay::MIX_INPUT));
-	addInput(createPort<PJ301MPort>(Vec(14, 320), PortWidget::INPUT, module, Delay::IN_INPUT));
-	addOutput(createPort<PJ301MPort>(Vec(73, 320), PortWidget::OUTPUT, module, Delay::OUT_OUTPUT));
-}
 
 
 Model *modelDelay = createModel<Delay, DelayWidget>("Delay");
