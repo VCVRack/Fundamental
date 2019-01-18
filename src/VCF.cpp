@@ -150,7 +150,8 @@ struct VCF : Module {
 
 
 struct VCFWidget : ModuleWidget {
-	VCFWidget(VCF *module) : ModuleWidget(module) {
+	VCFWidget(VCF *module) {
+		setModule(module);
 		setPanel(SVG::load(asset::plugin(plugin, "res/VCF.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));

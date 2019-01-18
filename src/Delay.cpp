@@ -111,7 +111,8 @@ struct Delay : Module {
 
 
 struct DelayWidget : ModuleWidget {
-	DelayWidget(Delay *module) : ModuleWidget(module) {
+	DelayWidget(Delay *module) {
+		setModule(module);
 		setPanel(SVG::load(asset::plugin(plugin, "res/Delay.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));

@@ -107,7 +107,7 @@ struct VoltageControlledOscillator {
 				sinBuffer[i] *= 1.08f;
 			}
 			else {
-				sinBuffer[i] = sinf(2.f*M_PI * phase);
+				sinBuffer[i] = std::sin(2.f*M_PI * phase);
 			}
 			if (analog) {
 				triBuffer[i] = 1.25f * interpolateLinear(triTable, phase * 2047.f);
@@ -155,7 +155,7 @@ struct VoltageControlledOscillator {
 		return sqrDecimator.process(sqrBuffer);
 	}
 	float light() {
-		return sinf(2*M_PI * phase);
+		return std::sin(2*M_PI * phase);
 	}
 };
 
@@ -195,81 +195,78 @@ struct VCO : Module {
 
 	VCO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[MODE_PARAM].config(0.f, 1.f, 1.f, "Mode");
-		params[SYNC_PARAM].config(0.f, 1.f, 1.f, "Sync");
+		params[MODE_PARAM].config(0.f, 1.f, 1.f, "Analog mode");
+		params[SYNC_PARAM].config(0.f, 1.f, 1.f, "Hard sync");
 		params[FREQ_PARAM].config(-54.0f, 54.0f, 0.0f, "Frequency", " Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
 		params[FINE_PARAM].config(-1.0f, 1.0f, 0.0f, "Fine frequency");
 		params[FM_PARAM].config(0.0f, 1.0f, 0.0f, "Frequency modulation");
 		params[PW_PARAM].config(0.0f, 1.0f, 0.5f, "Pulse width", "%", 0.f, 100.f);
 		params[PWM_PARAM].config(0.0f, 1.0f, 0.0f, "Pulse width modulation", "%", 0.f, 100.f);
 	}
-	void step() override;
-};
 
+	void step() override {
+		oscillator.analog = params[MODE_PARAM].value > 0.0f;
+		oscillator.soft = params[SYNC_PARAM].value <= 0.0f;
 
-void VCO::step() {
-	oscillator.analog = params[MODE_PARAM].value > 0.0f;
-	oscillator.soft = params[SYNC_PARAM].value <= 0.0f;
+		float pitchFine = 3.0f * dsp::quadraticBipolar(params[FINE_PARAM].value);
+		float pitchCv = 12.0f * inputs[PITCH_INPUT].value;
+		if (inputs[FM_INPUT].active) {
+			pitchCv += dsp::quadraticBipolar(params[FM_PARAM].value) * 12.0f * inputs[FM_INPUT].value;
+		}
+		oscillator.setPitch(params[FREQ_PARAM].value, pitchFine + pitchCv);
+		oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0f);
+		oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
-	float pitchFine = 3.0f * dsp::quadraticBipolar(params[FINE_PARAM].value);
-	float pitchCv = 12.0f * inputs[PITCH_INPUT].value;
-	if (inputs[FM_INPUT].active) {
-		pitchCv += dsp::quadraticBipolar(params[FM_PARAM].value) * 12.0f * inputs[FM_INPUT].value;
+		oscillator.process(app()->engine->getSampleTime(), inputs[SYNC_INPUT].value);
+
+		// Set output
+		if (outputs[SIN_OUTPUT].active)
+			outputs[SIN_OUTPUT].value = 5.0f * oscillator.sin();
+		if (outputs[TRI_OUTPUT].active)
+			outputs[TRI_OUTPUT].value = 5.0f * oscillator.tri();
+		if (outputs[SAW_OUTPUT].active)
+			outputs[SAW_OUTPUT].value = 5.0f * oscillator.saw();
+		if (outputs[SQR_OUTPUT].active)
+			outputs[SQR_OUTPUT].value = 5.0f * oscillator.sqr();
+
+		lights[PHASE_POS_LIGHT].setBrightnessSmooth(fmaxf(0.0f, oscillator.light()));
+		lights[PHASE_NEG_LIGHT].setBrightnessSmooth(fmaxf(0.0f, -oscillator.light()));
 	}
-	oscillator.setPitch(params[FREQ_PARAM].value, pitchFine + pitchCv);
-	oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0f);
-	oscillator.syncEnabled = inputs[SYNC_INPUT].active;
-
-	oscillator.process(app()->engine->getSampleTime(), inputs[SYNC_INPUT].value);
-
-	// Set output
-	if (outputs[SIN_OUTPUT].active)
-		outputs[SIN_OUTPUT].value = 5.0f * oscillator.sin();
-	if (outputs[TRI_OUTPUT].active)
-		outputs[TRI_OUTPUT].value = 5.0f * oscillator.tri();
-	if (outputs[SAW_OUTPUT].active)
-		outputs[SAW_OUTPUT].value = 5.0f * oscillator.saw();
-	if (outputs[SQR_OUTPUT].active)
-		outputs[SQR_OUTPUT].value = 5.0f * oscillator.sqr();
-
-	lights[PHASE_POS_LIGHT].setBrightnessSmooth(fmaxf(0.0f, oscillator.light()));
-	lights[PHASE_NEG_LIGHT].setBrightnessSmooth(fmaxf(0.0f, -oscillator.light()));
-}
+};
 
 
 struct VCOWidget : ModuleWidget {
-	VCOWidget(VCO *module);
+	VCOWidget(VCO *module) {
+		setModule(module);
+		setPanel(SVG::load(asset::plugin(plugin, "res/VCO-1.svg")));
+
+		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 365)));
+
+		addParam(createParam<CKSS>(Vec(15, 77), module, VCO::MODE_PARAM));
+		addParam(createParam<CKSS>(Vec(119, 77), module, VCO::SYNC_PARAM));
+
+		addParam(createParam<RoundHugeBlackKnob>(Vec(47, 61), module, VCO::FREQ_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(23, 143), module, VCO::FINE_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(91, 143), module, VCO::PW_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(23, 208), module, VCO::FM_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(91, 208), module, VCO::PWM_PARAM));
+
+		addInput(createInput<PJ301MPort>(Vec(11, 276), module, VCO::PITCH_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(45, 276), module, VCO::FM_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(80, 276), module, VCO::SYNC_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(114, 276), module, VCO::PW_INPUT));
+
+		addOutput(createOutput<PJ301MPort>(Vec(11, 320), module, VCO::SIN_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(45, 320), module, VCO::TRI_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, VCO::SAW_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, VCO::SQR_OUTPUT));
+
+		addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42.5f), module, VCO::PHASE_POS_LIGHT));
+	}
 };
-
-VCOWidget::VCOWidget(VCO *module) : ModuleWidget(module) {
-	setPanel(SVG::load(asset::plugin(plugin, "res/VCO-1.svg")));
-
-	addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-	addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-	addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 365)));
-
-	addParam(createParam<CKSS>(Vec(15, 77), module, VCO::MODE_PARAM));
-	addParam(createParam<CKSS>(Vec(119, 77), module, VCO::SYNC_PARAM));
-
-	addParam(createParam<RoundHugeBlackKnob>(Vec(47, 61), module, VCO::FREQ_PARAM));
-	addParam(createParam<RoundLargeBlackKnob>(Vec(23, 143), module, VCO::FINE_PARAM));
-	addParam(createParam<RoundLargeBlackKnob>(Vec(91, 143), module, VCO::PW_PARAM));
-	addParam(createParam<RoundLargeBlackKnob>(Vec(23, 208), module, VCO::FM_PARAM));
-	addParam(createParam<RoundLargeBlackKnob>(Vec(91, 208), module, VCO::PWM_PARAM));
-
-	addInput(createInput<PJ301MPort>(Vec(11, 276), module, VCO::PITCH_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(45, 276), module, VCO::FM_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(80, 276), module, VCO::SYNC_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(114, 276), module, VCO::PW_INPUT));
-
-	addOutput(createOutput<PJ301MPort>(Vec(11, 320), module, VCO::SIN_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(45, 320), module, VCO::TRI_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, VCO::SAW_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, VCO::SQR_OUTPUT));
-
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42.5f), module, VCO::PHASE_POS_LIGHT));
-}
 
 
 Model *modelVCO = createModel<VCO, VCOWidget>("VCO");
@@ -304,69 +301,68 @@ struct VCO2 : Module {
 
 	VCO2() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[MODE_PARAM].config(0.f, 1.f, 1.f, "Mode");
-		params[SYNC_PARAM].config(0.f, 1.f, 1.f, "Sync");
+		params[MODE_PARAM].config(0.f, 1.f, 1.f, "Analog mode");
+		params[SYNC_PARAM].config(0.f, 1.f, 1.f, "Hard sync");
 		params[FREQ_PARAM].config(-54.0f, 54.0f, 0.0f, "Frequency", " Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
 		params[WAVE_PARAM].config(0.0f, 3.0f, 1.5f, "Wave");
 		params[FM_PARAM].config(0.0f, 1.0f, 0.0f, "Frequency modulation");
 	}
-	void step() override;
+
+	void step() override {
+		oscillator.analog = params[MODE_PARAM].value > 0.0f;
+		oscillator.soft = params[SYNC_PARAM].value <= 0.0f;
+
+		float pitchCv = params[FREQ_PARAM].value + dsp::quadraticBipolar(params[FM_PARAM].value) * 12.0f * inputs[FM_INPUT].value;
+		oscillator.setPitch(0.0f, pitchCv);
+		oscillator.syncEnabled = inputs[SYNC_INPUT].active;
+
+		oscillator.process(app()->engine->getSampleTime(), inputs[SYNC_INPUT].value);
+
+		// Set output
+		float wave = clamp(params[WAVE_PARAM].value + inputs[WAVE_INPUT].value, 0.0f, 3.0f);
+		float out;
+		if (wave < 1.0f)
+			out = crossfade(oscillator.sin(), oscillator.tri(), wave);
+		else if (wave < 2.0f)
+			out = crossfade(oscillator.tri(), oscillator.saw(), wave - 1.0f);
+		else
+			out = crossfade(oscillator.saw(), oscillator.sqr(), wave - 2.0f);
+		outputs[OUT_OUTPUT].value = 5.0f * out;
+
+		lights[PHASE_POS_LIGHT].setBrightnessSmooth(fmaxf(0.0f, oscillator.light()));
+		lights[PHASE_NEG_LIGHT].setBrightnessSmooth(fmaxf(0.0f, -oscillator.light()));
+	}
 };
 
 
-void VCO2::step() {
-	oscillator.analog = params[MODE_PARAM].value > 0.0f;
-	oscillator.soft = params[SYNC_PARAM].value <= 0.0f;
-
-	float pitchCv = params[FREQ_PARAM].value + dsp::quadraticBipolar(params[FM_PARAM].value) * 12.0f * inputs[FM_INPUT].value;
-	oscillator.setPitch(0.0f, pitchCv);
-	oscillator.syncEnabled = inputs[SYNC_INPUT].active;
-
-	oscillator.process(app()->engine->getSampleTime(), inputs[SYNC_INPUT].value);
-
-	// Set output
-	float wave = clamp(params[WAVE_PARAM].value + inputs[WAVE_INPUT].value, 0.0f, 3.0f);
-	float out;
-	if (wave < 1.0f)
-		out = crossfade(oscillator.sin(), oscillator.tri(), wave);
-	else if (wave < 2.0f)
-		out = crossfade(oscillator.tri(), oscillator.saw(), wave - 1.0f);
-	else
-		out = crossfade(oscillator.saw(), oscillator.sqr(), wave - 2.0f);
-	outputs[OUT_OUTPUT].value = 5.0f * out;
-
-	lights[PHASE_POS_LIGHT].setBrightnessSmooth(fmaxf(0.0f, oscillator.light()));
-	lights[PHASE_NEG_LIGHT].setBrightnessSmooth(fmaxf(0.0f, -oscillator.light()));
-}
 
 
 struct VCO2Widget : ModuleWidget {
-	VCO2Widget(VCO2 *module);
+	VCO2Widget(VCO2 *module) {
+		setModule(module);
+		setPanel(SVG::load(asset::plugin(plugin, "res/VCO-2.svg")));
+
+		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 365)));
+
+		addParam(createParam<CKSS>(Vec(62, 150), module, VCO2::MODE_PARAM));
+		addParam(createParam<CKSS>(Vec(62, 215), module, VCO2::SYNC_PARAM));
+
+		addParam(createParam<RoundHugeBlackKnob>(Vec(17, 60), module, VCO2::FREQ_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(12, 143), module, VCO2::WAVE_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(Vec(12, 208), module, VCO2::FM_PARAM));
+
+		addInput(createInput<PJ301MPort>(Vec(11, 276), module, VCO2::FM_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(54, 276), module, VCO2::SYNC_INPUT));
+		addInput(createInput<PJ301MPort>(Vec(11, 320), module, VCO2::WAVE_INPUT));
+
+		addOutput(createOutput<PJ301MPort>(Vec(54, 320), module, VCO2::OUT_OUTPUT));
+
+		addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 42.5f), module, VCO2::PHASE_POS_LIGHT));
+	}
 };
-
-VCO2Widget::VCO2Widget(VCO2 *module) : ModuleWidget(module) {
-	setPanel(SVG::load(asset::plugin(plugin, "res/VCO-2.svg")));
-
-	addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-	addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
-	addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-	addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 365)));
-
-	addParam(createParam<CKSS>(Vec(62, 150), module, VCO2::MODE_PARAM));
-	addParam(createParam<CKSS>(Vec(62, 215), module, VCO2::SYNC_PARAM));
-
-	addParam(createParam<RoundHugeBlackKnob>(Vec(17, 60), module, VCO2::FREQ_PARAM));
-	addParam(createParam<RoundLargeBlackKnob>(Vec(12, 143), module, VCO2::WAVE_PARAM));
-	addParam(createParam<RoundLargeBlackKnob>(Vec(12, 208), module, VCO2::FM_PARAM));
-
-	addInput(createInput<PJ301MPort>(Vec(11, 276), module, VCO2::FM_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(54, 276), module, VCO2::SYNC_INPUT));
-	addInput(createInput<PJ301MPort>(Vec(11, 320), module, VCO2::WAVE_INPUT));
-
-	addOutput(createOutput<PJ301MPort>(Vec(54, 320), module, VCO2::OUT_OUTPUT));
-
-	addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 42.5f), module, VCO2::PHASE_POS_LIGHT));
-}
 
 
 Model *modelVCO2 = createModel<VCO2, VCO2Widget>("VCO2");

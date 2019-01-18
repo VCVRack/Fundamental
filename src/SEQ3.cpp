@@ -173,7 +173,8 @@ struct SEQ3 : Module {
 
 
 struct SEQ3Widget : ModuleWidget {
-	SEQ3Widget(SEQ3 *module) : ModuleWidget(module) {
+	SEQ3Widget(SEQ3 *module) {
+		setModule(module);
 		setPanel(SVG::load(asset::plugin(plugin, "res/SEQ3.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));

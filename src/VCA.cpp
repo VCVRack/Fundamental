@@ -24,8 +24,8 @@ struct VCA : Module {
 
 	VCA() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
-		params[LEVEL1_PARAM].config(0.0, 1.0, 0.0);
-		params[LEVEL2_PARAM].config(0.0, 1.0, 0.0);
+		params[LEVEL1_PARAM].config(0.0, 1.0, 0.0, "Ch 1 level", "%", 0, 100);
+		params[LEVEL2_PARAM].config(0.0, 1.0, 0.0, "Ch 2 level", "%", 0, 100);
 	}
 
 	void stepChannel(InputIds in, ParamIds level, InputIds lin, InputIds exp, OutputIds out) {
@@ -47,30 +47,30 @@ struct VCA : Module {
 
 
 struct VCAWidget : ModuleWidget {
-	VCAWidget(VCA *module);
+	VCAWidget(VCA *module) {
+		setModule(module);
+		setPanel(SVG::load(asset::plugin(plugin, "res/VCA.svg")));
+
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+
+		addParam(createParam<RoundLargeBlackKnob>(mm2px(Vec(6.35, 19.11753)), module, VCA::LEVEL1_PARAM));
+		addParam(createParam<RoundLargeBlackKnob>(mm2px(Vec(6.35, 74.80544)), module, VCA::LEVEL2_PARAM));
+
+		addInput(createInput<PJ301MPort>(mm2px(Vec(2.5907, 38.19371)), module, VCA::EXP1_INPUT));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(14.59752, 38.19371)), module, VCA::LIN1_INPUT));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(2.5907, 52.80642)), module, VCA::IN1_INPUT));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(2.5907, 93.53435)), module, VCA::EXP2_INPUT));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(14.59752, 93.53435)), module, VCA::LIN2_INPUT));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(2.5907, 108.14706)), module, VCA::IN2_INPUT));
+
+		addOutput(createOutput<PJ301MPort>(mm2px(Vec(14.59752, 52.80642)), module, VCA::OUT1_OUTPUT));
+		addOutput(createOutput<PJ301MPort>(mm2px(Vec(14.59752, 108.14706)), module, VCA::OUT2_OUTPUT));
+	}
 };
 
-VCAWidget::VCAWidget(VCA *module) : ModuleWidget(module) {
-	setPanel(SVG::load(asset::plugin(plugin, "res/VCA.svg")));
-
-	addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-	addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-	addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-	addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-
-	addParam(createParam<RoundLargeBlackKnob>(mm2px(Vec(6.35, 19.11753)), module, VCA::LEVEL1_PARAM));
-	addParam(createParam<RoundLargeBlackKnob>(mm2px(Vec(6.35, 74.80544)), module, VCA::LEVEL2_PARAM));
-
-	addInput(createInput<PJ301MPort>(mm2px(Vec(2.5907, 38.19371)), module, VCA::EXP1_INPUT));
-	addInput(createInput<PJ301MPort>(mm2px(Vec(14.59752, 38.19371)), module, VCA::LIN1_INPUT));
-	addInput(createInput<PJ301MPort>(mm2px(Vec(2.5907, 52.80642)), module, VCA::IN1_INPUT));
-	addInput(createInput<PJ301MPort>(mm2px(Vec(2.5907, 93.53435)), module, VCA::EXP2_INPUT));
-	addInput(createInput<PJ301MPort>(mm2px(Vec(14.59752, 93.53435)), module, VCA::LIN2_INPUT));
-	addInput(createInput<PJ301MPort>(mm2px(Vec(2.5907, 108.14706)), module, VCA::IN2_INPUT));
-
-	addOutput(createOutput<PJ301MPort>(mm2px(Vec(14.59752, 52.80642)), module, VCA::OUT1_OUTPUT));
-	addOutput(createOutput<PJ301MPort>(mm2px(Vec(14.59752, 108.14706)), module, VCA::OUT2_OUTPUT));
-}
 
 
 struct VCA_1 : Module {
@@ -96,8 +96,8 @@ struct VCA_1 : Module {
 
 	VCA_1() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[LEVEL_PARAM].config(0.0, 1.0, 1.0);
-		params[EXP_PARAM].config(0.0, 1.0, 1.0);
+		params[LEVEL_PARAM].config(0.0, 1.0, 1.0, "Level", "%", 0, 100);
+		params[EXP_PARAM].config(0.0, 1.0, 1.0, "Response mode");
 	}
 
 	void step() override {
@@ -153,7 +153,8 @@ struct VCA_1VUKnob : Knob {
 
 
 struct VCA_1Widget : ModuleWidget {
-	VCA_1Widget(VCA_1 *module) : ModuleWidget(module) {
+	VCA_1Widget(VCA_1 *module) {
+		setModule(module);
 		setPanel(SVG::load(asset::plugin(plugin, "res/VCA-1.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
