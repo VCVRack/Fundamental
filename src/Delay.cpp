@@ -34,10 +34,10 @@ struct Delay : Module {
 
 	Delay() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
-		params[TIME_PARAM].config(0.0f, 1.0f, 0.5f);
-		params[FEEDBACK_PARAM].config(0.0f, 1.0f, 0.5f);
-		params[COLOR_PARAM].config(0.0f, 1.0f, 0.5f);
-		params[MIX_PARAM].config(0.0f, 1.0f, 0.5f);
+		params[TIME_PARAM].config(0.0f, 1.0f, 0.5f, "Time");
+		params[FEEDBACK_PARAM].config(0.0f, 1.0f, 0.5f, "Feedback");
+		params[COLOR_PARAM].config(0.0f, 1.0f, 0.5f, "Color");
+		params[MIX_PARAM].config(0.0f, 1.0f, 0.5f, "Mix", "%", 0, 100);
 
 		src = src_new(SRC_SINC_FASTEST, 1, NULL);
 		assert(src);

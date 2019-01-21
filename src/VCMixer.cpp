@@ -21,11 +21,11 @@ struct VCMixer : Module {
 
 	VCMixer() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
-		params[MIX_LVL_PARAM].config(0.0, 2.0, 1.0);
-		params[LVL_PARAM + 0].config(0.0, 1.0, 1.0);
-		params[LVL_PARAM + 1].config(0.0, 1.0, 1.0);
-		params[LVL_PARAM + 2].config(0.0, 1.0, 1.0);
-		params[LVL_PARAM + 3].config(0.0, 1.0, 1.0);
+		params[MIX_LVL_PARAM].config(0.0, 2.0, 1.0, "Master level");
+		params[LVL_PARAM + 0].config(0.0, 1.0, 1.0, "Ch 1 level");
+		params[LVL_PARAM + 1].config(0.0, 1.0, 1.0, "Ch 2 level");
+		params[LVL_PARAM + 2].config(0.0, 1.0, 1.0, "Ch 3 level");
+		params[LVL_PARAM + 3].config(0.0, 1.0, 1.0, "Ch 4 level");
 	}
 
 	void step() override {

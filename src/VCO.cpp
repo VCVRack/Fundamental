@@ -197,7 +197,7 @@ struct VCO : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		params[MODE_PARAM].config(0.f, 1.f, 1.f, "Analog mode");
 		params[SYNC_PARAM].config(0.f, 1.f, 1.f, "Hard sync");
-		params[FREQ_PARAM].config(-54.0f, 54.0f, 0.0f, "Frequency", " Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
+		params[FREQ_PARAM].config(-54.0f, 54.0f, 0.0f, "Frequency", "Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
 		params[FINE_PARAM].config(-1.0f, 1.0f, 0.0f, "Fine frequency");
 		params[FM_PARAM].config(0.0f, 1.0f, 0.0f, "Frequency modulation");
 		params[PW_PARAM].config(0.0f, 1.0f, 0.5f, "Pulse width", "%", 0.f, 100.f);
@@ -303,7 +303,7 @@ struct VCO2 : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		params[MODE_PARAM].config(0.f, 1.f, 1.f, "Analog mode");
 		params[SYNC_PARAM].config(0.f, 1.f, 1.f, "Hard sync");
-		params[FREQ_PARAM].config(-54.0f, 54.0f, 0.0f, "Frequency", " Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
+		params[FREQ_PARAM].config(-54.0f, 54.0f, 0.0f, "Frequency", "Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
 		params[WAVE_PARAM].config(0.0f, 3.0f, 1.5f, "Wave");
 		params[FM_PARAM].config(0.0f, 1.0f, 0.0f, "Frequency modulation");
 	}

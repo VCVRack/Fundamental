@@ -29,8 +29,8 @@ struct Unity : Module {
 
 	Unity() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[AVG1_PARAM].config(0.0, 1.0, 0.0);
-		params[AVG2_PARAM].config(0.0, 1.0, 0.0);
+		params[AVG1_PARAM].config(0.0, 1.0, 0.0, "Ch 1 average mode");
+		params[AVG2_PARAM].config(0.0, 1.0, 0.0, "Ch 2 average mode");
 	}
 
 	void step() override {

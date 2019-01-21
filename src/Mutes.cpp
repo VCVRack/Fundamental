@@ -28,7 +28,7 @@ struct Mutes : Module {
 	Mutes() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		for (int i = 0; i < NUM_CHANNELS; i++) {
-			params[MUTE_PARAM + i].config(0.0, 1.0, 0.0, string::f("Ch %d mute", i));
+			params[MUTE_PARAM + i].config(0.0, 1.0, 0.0, string::f("Ch %d mute", i+1));
 		}
 
 		onReset();

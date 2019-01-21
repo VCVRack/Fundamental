@@ -29,7 +29,7 @@ struct SequentialSwitch : Module {
 
 	SequentialSwitch() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[CHANNELS_PARAM].config(0.0, 2.0, 0.0);
+		params[CHANNELS_PARAM].config(0.0, 2.0, 0.0, "Channels", "", 0.f, 1.f, 2.f);
 
 		for (int i = 0; i < 4; i++) {
 			channelFilter[i].rise = 0.01f;

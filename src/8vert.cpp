@@ -21,14 +21,9 @@ struct _8vert : Module {
 
 	_8vert() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[GAIN_PARAMS + 0].config(-1.f, 1.f, 0.f);
-		params[GAIN_PARAMS + 1].config(-1.f, 1.f, 0.f);
-		params[GAIN_PARAMS + 2].config(-1.f, 1.f, 0.f);
-		params[GAIN_PARAMS + 3].config(-1.f, 1.f, 0.f);
-		params[GAIN_PARAMS + 4].config(-1.f, 1.f, 0.f);
-		params[GAIN_PARAMS + 5].config(-1.f, 1.f, 0.f);
-		params[GAIN_PARAMS + 6].config(-1.f, 1.f, 0.f);
-		params[GAIN_PARAMS + 7].config(-1.f, 1.f, 0.f);
+		for (int i = 0; i < 8; i++) {
+			params[GAIN_PARAMS + i].config(-1.f, 1.f, 0.f, string::f("Ch %d gain", i+1));
+		}
 	}
 
 	void step() override {
