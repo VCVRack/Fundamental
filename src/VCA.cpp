@@ -101,7 +101,7 @@ struct VCA_1 : Module {
 	}
 
 	void step() override {
-		float cv = inputs[CV_INPUT].normalize(10.f) / 10.f;
+		float cv = inputs[CV_INPUT].getNormalVoltage(10.f) / 10.f;
 		if ((int) params[EXP_PARAM].value == 0)
 			cv = std::pow(cv, 4.f);
 		lastCv = cv;

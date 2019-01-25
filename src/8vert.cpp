@@ -29,7 +29,7 @@ struct _8vert : Module {
 	void step() override {
 		float lastIn = 10.f;
 		for (int i = 0; i < 8; i++) {
-			lastIn = inputs[i].normalize(lastIn);
+			lastIn = inputs[i].getNormalVoltage(lastIn);
 			float out = lastIn * params[i].value;
 			outputs[i].value = out;
 			lights[2*i + 0].setBrightnessSmooth(std::max(0.f, out / 5.f));

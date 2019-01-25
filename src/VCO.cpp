@@ -9,8 +9,8 @@ template <int OVERSAMPLE, int QUALITY>
 struct VoltageControlledOscillator {
 	bool analog = false;
 	bool soft = false;
-	float lastSyncValue = 0.0f;
-	float phase = 0.0f;
+	float lastSyncValue = 0.f;
+	float phase = 0.f;
 	float freq;
 	float pw = 0.5f;
 	float pitch;
@@ -24,7 +24,7 @@ struct VoltageControlledOscillator {
 	dsp::RCFilter sqrFilter;
 
 	// For analog detuning effect
-	float pitchSlew = 0.0f;
+	float pitchSlew = 0.f;
 	int pitchSlewIndex = 0;
 
 	float sinBuffer[OVERSAMPLE] = {};
@@ -37,7 +37,7 @@ struct VoltageControlledOscillator {
 		pitch = pitchKnob;
 		if (analog) {
 			// Apply pitch slew
-			const float pitchSlewAmount = 3.0f;
+			const float pitchSlewAmount = 3.f;
 			pitch += pitchSlew * pitchSlewAmount;
 		}
 		else {
@@ -46,18 +46,18 @@ struct VoltageControlledOscillator {
 		}
 		pitch += pitchCv;
 		// Note C4
-		freq = dsp::FREQ_C4 * std::pow(2.0f, pitch / 12.0f);
+		freq = dsp::FREQ_C4 * std::pow(2.f, pitch / 12.f);
 	}
 	void setPulseWidth(float pulseWidth) {
 		const float pwMin = 0.01f;
-		pw = clamp(pulseWidth, pwMin, 1.0f - pwMin);
+		pw = clamp(pulseWidth, pwMin, 1.f - pwMin);
 	}
 
 	void process(float deltaTime, float syncValue) {
 		if (analog) {
 			// Adjust pitch slew
 			if (++pitchSlewIndex > 32) {
-				const float pitchSlewTau = 100.0f; // Time constant for leaky integrator in seconds
+				const float pitchSlewTau = 100.f; // Time constant for leaky integrator in seconds
 				pitchSlew += (random::normal() - pitchSlew / pitchSlewTau) * app()->engine->getSampleTime();
 				pitchSlewIndex = 0;
 			}
@@ -68,12 +68,12 @@ struct VoltageControlledOscillator {
 
 		// Detect sync
 		int syncIndex = -1; // Index in the oversample loop where sync occurs [0, OVERSAMPLE)
-		float syncCrossing = 0.0f; // Offset that sync occurs [0.0f, 1.0f)
+		float syncCrossing = 0.f; // Offset that sync occurs [0.f, 1.f)
 		if (syncEnabled) {
 			syncValue -= 0.01f;
-			if (syncValue > 0.0f && lastSyncValue <= 0.0f) {
+			if (syncValue > 0.f && lastSyncValue <= 0.f) {
 				float deltaSync = syncValue - lastSyncValue;
-				syncCrossing = 1.0f - syncValue / deltaSync;
+				syncCrossing = 1.f - syncValue / deltaSync;
 				syncCrossing *= OVERSAMPLE;
 				syncIndex = (int)syncCrossing;
 				syncCrossing -= syncIndex;
@@ -82,19 +82,19 @@ struct VoltageControlledOscillator {
 		}
 
 		if (syncDirection)
-			deltaPhase *= -1.0f;
+			deltaPhase *= -1.f;
 
-		sqrFilter.setCutoff(40.0f * deltaTime);
+		sqrFilter.setCutoff(40.f * deltaTime);
 
 		for (int i = 0; i < OVERSAMPLE; i++) {
 			if (syncIndex == i) {
 				if (soft) {
 					syncDirection = !syncDirection;
-					deltaPhase *= -1.0f;
+					deltaPhase *= -1.f;
 				}
 				else {
 					// phase = syncCrossing * deltaPhase / OVERSAMPLE;
-					phase = 0.0f;
+					phase = 0.f;
 				}
 			}
 
@@ -138,7 +138,7 @@ struct VoltageControlledOscillator {
 
 			// Advance phase
 			phase += deltaPhase / OVERSAMPLE;
-			phase = eucMod(phase, 1.0f);
+			phase = eucMod(phase, 1.f);
 		}
 	}
 
@@ -197,40 +197,40 @@ struct VCO : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		params[MODE_PARAM].config(0.f, 1.f, 1.f, "Analog mode");
 		params[SYNC_PARAM].config(0.f, 1.f, 1.f, "Hard sync");
-		params[FREQ_PARAM].config(-54.0f, 54.0f, 0.0f, "Frequency", "Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
-		params[FINE_PARAM].config(-1.0f, 1.0f, 0.0f, "Fine frequency");
-		params[FM_PARAM].config(0.0f, 1.0f, 0.0f, "Frequency modulation");
-		params[PW_PARAM].config(0.0f, 1.0f, 0.5f, "Pulse width", "%", 0.f, 100.f);
-		params[PWM_PARAM].config(0.0f, 1.0f, 0.0f, "Pulse width modulation", "%", 0.f, 100.f);
+		params[FREQ_PARAM].config(-54.f, 54.f, 0.f, "Frequency", "Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
+		params[FINE_PARAM].config(-1.f, 1.f, 0.f, "Fine frequency");
+		params[FM_PARAM].config(0.f, 1.f, 0.f, "Frequency modulation");
+		params[PW_PARAM].config(0.f, 1.f, 0.5f, "Pulse width", "%", 0.f, 100.f);
+		params[PWM_PARAM].config(0.f, 1.f, 0.f, "Pulse width modulation", "%", 0.f, 100.f);
 	}
 
 	void step() override {
-		oscillator.analog = params[MODE_PARAM].value > 0.0f;
-		oscillator.soft = params[SYNC_PARAM].value <= 0.0f;
+		oscillator.analog = params[MODE_PARAM].value > 0.f;
+		oscillator.soft = params[SYNC_PARAM].value <= 0.f;
 
-		float pitchFine = 3.0f * dsp::quadraticBipolar(params[FINE_PARAM].value);
-		float pitchCv = 12.0f * inputs[PITCH_INPUT].value;
+		float pitchFine = 3.f * dsp::quadraticBipolar(params[FINE_PARAM].value);
+		float pitchCv = 12.f * inputs[PITCH_INPUT].value;
 		if (inputs[FM_INPUT].active) {
-			pitchCv += dsp::quadraticBipolar(params[FM_PARAM].value) * 12.0f * inputs[FM_INPUT].value;
+			pitchCv += dsp::quadraticBipolar(params[FM_PARAM].value) * 12.f * inputs[FM_INPUT].value;
 		}
 		oscillator.setPitch(params[FREQ_PARAM].value, pitchFine + pitchCv);
-		oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.0f);
+		oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.f);
 		oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
 		oscillator.process(app()->engine->getSampleTime(), inputs[SYNC_INPUT].value);
 
 		// Set output
 		if (outputs[SIN_OUTPUT].active)
-			outputs[SIN_OUTPUT].value = 5.0f * oscillator.sin();
+			outputs[SIN_OUTPUT].value = 5.f * oscillator.sin();
 		if (outputs[TRI_OUTPUT].active)
-			outputs[TRI_OUTPUT].value = 5.0f * oscillator.tri();
+			outputs[TRI_OUTPUT].value = 5.f * oscillator.tri();
 		if (outputs[SAW_OUTPUT].active)
-			outputs[SAW_OUTPUT].value = 5.0f * oscillator.saw();
+			outputs[SAW_OUTPUT].value = 5.f * oscillator.saw();
 		if (outputs[SQR_OUTPUT].active)
-			outputs[SQR_OUTPUT].value = 5.0f * oscillator.sqr();
+			outputs[SQR_OUTPUT].value = 5.f * oscillator.sqr();
 
-		lights[PHASE_POS_LIGHT].setBrightnessSmooth(fmaxf(0.0f, oscillator.light()));
-		lights[PHASE_NEG_LIGHT].setBrightnessSmooth(fmaxf(0.0f, -oscillator.light()));
+		lights[PHASE_POS_LIGHT].setBrightnessSmooth(std::fmax(0.f, oscillator.light()));
+		lights[PHASE_NEG_LIGHT].setBrightnessSmooth(std::fmax(0.f, -oscillator.light()));
 	}
 };
 
@@ -303,34 +303,34 @@ struct VCO2 : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		params[MODE_PARAM].config(0.f, 1.f, 1.f, "Analog mode");
 		params[SYNC_PARAM].config(0.f, 1.f, 1.f, "Hard sync");
-		params[FREQ_PARAM].config(-54.0f, 54.0f, 0.0f, "Frequency", "Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
-		params[WAVE_PARAM].config(0.0f, 3.0f, 1.5f, "Wave");
-		params[FM_PARAM].config(0.0f, 1.0f, 0.0f, "Frequency modulation");
+		params[FREQ_PARAM].config(-54.f, 54.f, 0.f, "Frequency", "Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
+		params[WAVE_PARAM].config(0.f, 3.f, 1.5f, "Wave");
+		params[FM_PARAM].config(0.f, 1.f, 0.f, "Frequency modulation");
 	}
 
 	void step() override {
-		oscillator.analog = params[MODE_PARAM].value > 0.0f;
-		oscillator.soft = params[SYNC_PARAM].value <= 0.0f;
+		oscillator.analog = params[MODE_PARAM].value > 0.f;
+		oscillator.soft = params[SYNC_PARAM].value <= 0.f;
 
-		float pitchCv = params[FREQ_PARAM].value + dsp::quadraticBipolar(params[FM_PARAM].value) * 12.0f * inputs[FM_INPUT].value;
-		oscillator.setPitch(0.0f, pitchCv);
+		float pitchCv = params[FREQ_PARAM].value + dsp::quadraticBipolar(params[FM_PARAM].value) * 12.f * inputs[FM_INPUT].value;
+		oscillator.setPitch(0.f, pitchCv);
 		oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
 		oscillator.process(app()->engine->getSampleTime(), inputs[SYNC_INPUT].value);
 
 		// Set output
-		float wave = clamp(params[WAVE_PARAM].value + inputs[WAVE_INPUT].value, 0.0f, 3.0f);
+		float wave = clamp(params[WAVE_PARAM].value + inputs[WAVE_INPUT].value, 0.f, 3.f);
 		float out;
-		if (wave < 1.0f)
+		if (wave < 1.f)
 			out = crossfade(oscillator.sin(), oscillator.tri(), wave);
-		else if (wave < 2.0f)
-			out = crossfade(oscillator.tri(), oscillator.saw(), wave - 1.0f);
+		else if (wave < 2.f)
+			out = crossfade(oscillator.tri(), oscillator.saw(), wave - 1.f);
 		else
-			out = crossfade(oscillator.saw(), oscillator.sqr(), wave - 2.0f);
-		outputs[OUT_OUTPUT].value = 5.0f * out;
+			out = crossfade(oscillator.saw(), oscillator.sqr(), wave - 2.f);
+		outputs[OUT_OUTPUT].value = 5.f * out;
 
-		lights[PHASE_POS_LIGHT].setBrightnessSmooth(fmaxf(0.0f, oscillator.light()));
-		lights[PHASE_NEG_LIGHT].setBrightnessSmooth(fmaxf(0.0f, -oscillator.light()));
+		lights[PHASE_POS_LIGHT].setBrightnessSmooth(std::fmax(0.f, oscillator.light()));
+		lights[PHASE_NEG_LIGHT].setBrightnessSmooth(std::fmax(0.f, -oscillator.light()));
 	}
 };
 
