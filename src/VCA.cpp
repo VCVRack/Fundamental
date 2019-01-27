@@ -72,6 +72,8 @@ struct VCAWidget : ModuleWidget {
 };
 
 
+Model *modelVCA = createModel<VCA, VCAWidget>("VCA");
+
 
 struct VCA_1 : Module {
 	enum ParamIds {
@@ -110,7 +112,7 @@ struct VCA_1 : Module {
 };
 
 
-struct VCA_1VUKnob : Knob {
+struct VCA_1VUKnob : SliderKnob {
 	VCA_1 *module = NULL;
 
 	VCA_1VUKnob() {
@@ -118,8 +120,6 @@ struct VCA_1VUKnob : Knob {
 	}
 
 	void draw(NVGcontext *vg) override {
-		if (!paramQuantity)
-			return;
 		float lastCv = module ? module->lastCv : 1.f;
 
 		nvgBeginPath(vg);
@@ -128,11 +128,11 @@ struct VCA_1VUKnob : Knob {
 		nvgFill(vg);
 
 		const int segs = 25;
-		const Vec margin = Vec(4, 4);
-		Rect r = box.zeroPos().grow(margin);
+		const Vec margin = Vec(3, 3);
+		Rect r = box.zeroPos().grow(margin.neg());
 
 		for (int i = 0; i < segs; i++) {
-			float value = paramQuantity->getValue();
+			float value = paramQuantity ? paramQuantity->getValue() : 1.f;
 			float segValue = clamp(value * segs - (segs - i - 1), 0.f, 1.f);
 			float amplitude = value * lastCv;
 			float segAmplitude = clamp(amplitude * segs - (segs - i - 1), 0.f, 1.f);
@@ -144,7 +144,7 @@ struct VCA_1VUKnob : Knob {
 				nvgFill(vg);
 			}
 			if (segAmplitude > 0.f) {
-				nvgFillColor(vg, color::alpha(color::GREEN, segAmplitude));
+				nvgFillColor(vg, color::alpha(SCHEME_GREEN, segAmplitude));
 				nvgFill(vg);
 			}
 		}
@@ -176,4 +176,3 @@ struct VCA_1Widget : ModuleWidget {
 
 
 Model *modelVCA_1 = createModel<VCA_1, VCA_1Widget>("VCA-1");
-Model *modelVCA = createModel<VCA, VCAWidget>("VCA");
