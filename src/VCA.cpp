@@ -119,13 +119,13 @@ struct VCA_1VUKnob : SliderKnob {
 		box.size = mm2px(Vec(10, 46));
 	}
 
-	void draw(NVGcontext *vg) override {
+	void draw(const DrawContext &ctx) override {
 		float lastCv = module ? module->lastCv : 1.f;
 
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, 0, 0, box.size.x, box.size.y, 2.0);
-		nvgFillColor(vg, nvgRGB(0, 0, 0));
-		nvgFill(vg);
+		nvgBeginPath(ctx.vg);
+		nvgRoundedRect(ctx.vg, 0, 0, box.size.x, box.size.y, 2.0);
+		nvgFillColor(ctx.vg, nvgRGB(0, 0, 0));
+		nvgFill(ctx.vg);
 
 		const int segs = 25;
 		const Vec margin = Vec(3, 3);
@@ -136,16 +136,16 @@ struct VCA_1VUKnob : SliderKnob {
 			float segValue = clamp(value * segs - (segs - i - 1), 0.f, 1.f);
 			float amplitude = value * lastCv;
 			float segAmplitude = clamp(amplitude * segs - (segs - i - 1), 0.f, 1.f);
-			nvgBeginPath(vg);
-			nvgRect(vg, r.pos.x, r.pos.y + r.size.y / segs * i + 0.5,
+			nvgBeginPath(ctx.vg);
+			nvgRect(ctx.vg, r.pos.x, r.pos.y + r.size.y / segs * i + 0.5,
 				r.size.x, r.size.y / segs - 1.0);
 			if (segValue > 0.f) {
-				nvgFillColor(vg, color::alpha(nvgRGBf(0.33, 0.33, 0.33), segValue));
-				nvgFill(vg);
+				nvgFillColor(ctx.vg, color::alpha(nvgRGBf(0.33, 0.33, 0.33), segValue));
+				nvgFill(ctx.vg);
 			}
 			if (segAmplitude > 0.f) {
-				nvgFillColor(vg, color::alpha(SCHEME_GREEN, segAmplitude));
-				nvgFill(vg);
+				nvgFillColor(ctx.vg, color::alpha(SCHEME_GREEN, segAmplitude));
+				nvgFill(ctx.vg);
 			}
 		}
 	}

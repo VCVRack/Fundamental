@@ -167,13 +167,13 @@ struct ScopeDisplay : TransparentWidget {
 		font = Font::load(asset::plugin(plugin, "res/fonts/Sudo.ttf"));
 	}
 
-	void drawWaveform(NVGcontext *vg, float *valuesX, float *valuesY) {
+	void drawWaveform(const DrawContext &ctx, float *valuesX, float *valuesY) {
 		if (!valuesX)
 			return;
-		nvgSave(vg);
+		nvgSave(ctx.vg);
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
-		nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
-		nvgBeginPath(vg);
+		nvgScissor(ctx.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
+		nvgBeginPath(ctx.vg);
 		// Draw maximum display left to right
 		for (int i = 0; i < BUFFER_SIZE; i++) {
 			float x, y;
@@ -189,71 +189,71 @@ struct ScopeDisplay : TransparentWidget {
 			p.x = b.pos.x + b.size.x * x;
 			p.y = b.pos.y + b.size.y * (1.0f - y);
 			if (i == 0)
-				nvgMoveTo(vg, p.x, p.y);
+				nvgMoveTo(ctx.vg, p.x, p.y);
 			else
-				nvgLineTo(vg, p.x, p.y);
+				nvgLineTo(ctx.vg, p.x, p.y);
 		}
-		nvgLineCap(vg, NVG_ROUND);
-		nvgMiterLimit(vg, 2.0f);
-		nvgStrokeWidth(vg, 1.5f);
-		nvgGlobalCompositeOperation(vg, NVG_LIGHTER);
-		nvgStroke(vg);
-		nvgResetScissor(vg);
-		nvgRestore(vg);
+		nvgLineCap(ctx.vg, NVG_ROUND);
+		nvgMiterLimit(ctx.vg, 2.0f);
+		nvgStrokeWidth(ctx.vg, 1.5f);
+		nvgGlobalCompositeOperation(ctx.vg, NVG_LIGHTER);
+		nvgStroke(ctx.vg);
+		nvgResetScissor(ctx.vg);
+		nvgRestore(ctx.vg);
 	}
 
-	void drawTrig(NVGcontext *vg, float value) {
+	void drawTrig(const DrawContext &ctx, float value) {
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
-		nvgScissor(vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
+		nvgScissor(ctx.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
 
 		value = value / 2.0f + 0.5f;
 		Vec p = Vec(box.size.x, b.pos.y + b.size.y * (1.0f - value));
 
 		// Draw line
-		nvgStrokeColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
+		nvgStrokeColor(ctx.vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
 		{
-			nvgBeginPath(vg);
-			nvgMoveTo(vg, p.x - 13, p.y);
-			nvgLineTo(vg, 0, p.y);
-			nvgClosePath(vg);
+			nvgBeginPath(ctx.vg);
+			nvgMoveTo(ctx.vg, p.x - 13, p.y);
+			nvgLineTo(ctx.vg, 0, p.y);
+			nvgClosePath(ctx.vg);
 		}
-		nvgStroke(vg);
+		nvgStroke(ctx.vg);
 
 		// Draw indicator
-		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x60));
+		nvgFillColor(ctx.vg, nvgRGBA(0xff, 0xff, 0xff, 0x60));
 		{
-			nvgBeginPath(vg);
-			nvgMoveTo(vg, p.x - 2, p.y - 4);
-			nvgLineTo(vg, p.x - 9, p.y - 4);
-			nvgLineTo(vg, p.x - 13, p.y);
-			nvgLineTo(vg, p.x - 9, p.y + 4);
-			nvgLineTo(vg, p.x - 2, p.y + 4);
-			nvgClosePath(vg);
+			nvgBeginPath(ctx.vg);
+			nvgMoveTo(ctx.vg, p.x - 2, p.y - 4);
+			nvgLineTo(ctx.vg, p.x - 9, p.y - 4);
+			nvgLineTo(ctx.vg, p.x - 13, p.y);
+			nvgLineTo(ctx.vg, p.x - 9, p.y + 4);
+			nvgLineTo(ctx.vg, p.x - 2, p.y + 4);
+			nvgClosePath(ctx.vg);
 		}
-		nvgFill(vg);
+		nvgFill(ctx.vg);
 
-		nvgFontSize(vg, 9);
-		nvgFontFaceId(vg, font->handle);
-		nvgFillColor(vg, nvgRGBA(0x1e, 0x28, 0x2b, 0xff));
-		nvgText(vg, p.x - 8, p.y + 3, "T", NULL);
-		nvgResetScissor(vg);
+		nvgFontSize(ctx.vg, 9);
+		nvgFontFaceId(ctx.vg, font->handle);
+		nvgFillColor(ctx.vg, nvgRGBA(0x1e, 0x28, 0x2b, 0xff));
+		nvgText(ctx.vg, p.x - 8, p.y + 3, "T", NULL);
+		nvgResetScissor(ctx.vg);
 	}
 
-	void drawStats(NVGcontext *vg, Vec pos, const char *title, Stats *stats) {
-		nvgFontSize(vg, 13);
-		nvgFontFaceId(vg, font->handle);
-		nvgTextLetterSpacing(vg, -2);
+	void drawStats(const DrawContext &ctx, Vec pos, const char *title, Stats *stats) {
+		nvgFontSize(ctx.vg, 13);
+		nvgFontFaceId(ctx.vg, font->handle);
+		nvgTextLetterSpacing(ctx.vg, -2);
 
-		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x40));
-		nvgText(vg, pos.x + 6, pos.y + 11, title, NULL);
+		nvgFillColor(ctx.vg, nvgRGBA(0xff, 0xff, 0xff, 0x40));
+		nvgText(ctx.vg, pos.x + 6, pos.y + 11, title, NULL);
 
-		nvgFillColor(vg, nvgRGBA(0xff, 0xff, 0xff, 0x80));
+		nvgFillColor(ctx.vg, nvgRGBA(0xff, 0xff, 0xff, 0x80));
 		char text[128];
 		snprintf(text, sizeof(text), "pp % 06.2f  max % 06.2f  min % 06.2f", stats->vpp, stats->vmax, stats->vmin);
-		nvgText(vg, pos.x + 22, pos.y + 11, text, NULL);
+		nvgText(ctx.vg, pos.x + 22, pos.y + 11, text, NULL);
 	}
 
-	void draw(NVGcontext *vg) override {
+	void draw(const DrawContext &ctx) override {
 		if (!module)
 			return;
 
@@ -277,25 +277,25 @@ struct ScopeDisplay : TransparentWidget {
 		if (module->lissajous) {
 			// X x Y
 			if (module->inputs[Scope::X_INPUT].active || module->inputs[Scope::Y_INPUT].active) {
-				nvgStrokeColor(vg, nvgRGBA(0x9f, 0xe4, 0x36, 0xc0));
-				drawWaveform(vg, valuesX, valuesY);
+				nvgStrokeColor(ctx.vg, nvgRGBA(0x9f, 0xe4, 0x36, 0xc0));
+				drawWaveform(ctx, valuesX, valuesY);
 			}
 		}
 		else {
 			// Y
 			if (module->inputs[Scope::Y_INPUT].active) {
-				nvgStrokeColor(vg, nvgRGBA(0xe1, 0x02, 0x78, 0xc0));
-				drawWaveform(vg, valuesY, NULL);
+				nvgStrokeColor(ctx.vg, nvgRGBA(0xe1, 0x02, 0x78, 0xc0));
+				drawWaveform(ctx, valuesY, NULL);
 			}
 
 			// X
 			if (module->inputs[Scope::X_INPUT].active) {
-				nvgStrokeColor(vg, nvgRGBA(0x28, 0xb0, 0xf3, 0xc0));
-				drawWaveform(vg, valuesX, NULL);
+				nvgStrokeColor(ctx.vg, nvgRGBA(0x28, 0xb0, 0xf3, 0xc0));
+				drawWaveform(ctx, valuesX, NULL);
 			}
 
 			float valueTrig = (module->params[Scope::TRIG_PARAM].value + offsetX) * gainX / 10.0f;
-			drawTrig(vg, valueTrig);
+			drawTrig(ctx, valueTrig);
 		}
 
 		// Calculate and draw stats
@@ -304,8 +304,8 @@ struct ScopeDisplay : TransparentWidget {
 			statsX.calculate(module->bufferX);
 			statsY.calculate(module->bufferY);
 		}
-		drawStats(vg, Vec(0, 0), "X", &statsX);
-		drawStats(vg, Vec(0, box.size.y - 15), "Y", &statsY);
+		drawStats(ctx, Vec(0, 0), "X", &statsX);
+		drawStats(ctx, Vec(0, box.size.y - 15), "Y", &statsY);
 	}
 };
 
