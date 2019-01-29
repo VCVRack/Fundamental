@@ -73,7 +73,7 @@ struct Scope : Module {
 
 		// Compute time
 		float deltaTime = std::pow(2.0f, -params[TIME_PARAM].value);
-		int frameCount = (int) std::ceil(deltaTime * app()->engine->getSampleRate());
+		int frameCount = (int) std::ceil(deltaTime * APP->engine->getSampleRate());
 
 		// Add frame to buffer
 		if (bufferIndex < BUFFER_SIZE) {
@@ -105,12 +105,12 @@ struct Scope : Module {
 
 			// Reset if triggered
 			float holdTime = 0.1f;
-			if (resetTrigger.process(rescale(gate, params[TRIG_PARAM].value - 0.1f, params[TRIG_PARAM].value, 0.f, 1.f)) || (frameIndex >= app()->engine->getSampleRate() * holdTime)) {
+			if (resetTrigger.process(rescale(gate, params[TRIG_PARAM].value - 0.1f, params[TRIG_PARAM].value, 0.f, 1.f)) || (frameIndex >= APP->engine->getSampleRate() * holdTime)) {
 				bufferIndex = 0; frameIndex = 0; return;
 			}
 
 			// Reset if we've waited too long
-			if (frameIndex >= app()->engine->getSampleRate() * holdTime) {
+			if (frameIndex >= APP->engine->getSampleRate() * holdTime) {
 				bufferIndex = 0; frameIndex = 0; return;
 			}
 		}

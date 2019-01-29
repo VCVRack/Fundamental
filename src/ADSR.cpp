@@ -62,7 +62,7 @@ struct ADSR : Module {
 					env = sustain;
 				}
 				else {
-					env += std::pow(base, 1 - decay) / maxTime * (sustain - env) * app()->engine->getSampleTime();
+					env += std::pow(base, 1 - decay) / maxTime * (sustain - env) * APP->engine->getSampleTime();
 				}
 			}
 			else {
@@ -72,7 +72,7 @@ struct ADSR : Module {
 					env = 1.f;
 				}
 				else {
-					env += std::pow(base, 1 - attack) / maxTime * (1.01f - env) * app()->engine->getSampleTime();
+					env += std::pow(base, 1 - attack) / maxTime * (1.01f - env) * APP->engine->getSampleTime();
 				}
 				if (env >= 1.f) {
 					env = 1.f;
@@ -86,7 +86,7 @@ struct ADSR : Module {
 				env = 0.f;
 			}
 			else {
-				env += std::pow(base, 1 - release) / maxTime * (0.f - env) * app()->engine->getSampleTime();
+				env += std::pow(base, 1 - release) / maxTime * (0.f - env) * APP->engine->getSampleTime();
 			}
 			decaying = false;
 		}

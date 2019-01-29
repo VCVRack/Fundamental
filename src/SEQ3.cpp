@@ -135,7 +135,7 @@ struct SEQ3 : Module {
 			else {
 				// Internal clock
 				float clockTime = std::pow(2.0f, params[CLOCK_PARAM].value + inputs[CLOCK_INPUT].value);
-				phase += clockTime * app()->engine->getSampleTime();
+				phase += clockTime * APP->engine->getSampleTime();
 				if (phase >= 1.0f) {
 					setIndex(index + 1);
 				}

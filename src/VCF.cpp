@@ -122,7 +122,7 @@ struct VCF : Module {
 
 		/*
 		// Process sample
-		float dt = app()->engine->getSampleTime() / UPSAMPLE;
+		float dt = APP->engine->getSampleTime() / UPSAMPLE;
 		float inputBuf[UPSAMPLE];
 		float lowpassBuf[UPSAMPLE];
 		float highpassBuf[UPSAMPLE];
@@ -142,7 +142,7 @@ struct VCF : Module {
 			outputs[HPF_OUTPUT].value = 5.f * highpassDecimator.process(highpassBuf);
 		}
 		*/
-		filter.process(input, app()->engine->getSampleTime());
+		filter.process(input, APP->engine->getSampleTime());
 		outputs[LPF_OUTPUT].value = 5.f * filter.lowpass;
 		outputs[HPF_OUTPUT].value = 5.f * filter.highpass;
 	}
