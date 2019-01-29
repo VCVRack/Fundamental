@@ -5,7 +5,7 @@
 using namespace rack;
 
 
-extern Plugin *plugin;
+extern Plugin *pluginInstance;
 
 extern Model *modelVCO;
 extern Model *modelVCO2;
