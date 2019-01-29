@@ -49,7 +49,7 @@ struct VCMixer : Module {
 struct VCMixerWidget : ModuleWidget {
 	VCMixerWidget(VCMixer *module) {
 		setModule(module);
-		setPanel(SVG::load(asset::plugin(plugin, "res/VCMixer.svg")));
+		setPanel(SVG::load(asset::plugin(pluginInstance, "res/VCMixer.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));

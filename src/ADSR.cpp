@@ -108,7 +108,7 @@ struct ADSR : Module {
 struct ADSRWidget : ModuleWidget {
 	ADSRWidget(ADSR *module) {
 		setModule(module);
-		setPanel(SVG::load(asset::plugin(plugin, "res/ADSR.svg")));
+		setPanel(SVG::load(asset::plugin(pluginInstance, "res/ADSR.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));

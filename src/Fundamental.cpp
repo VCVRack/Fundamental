@@ -1,10 +1,10 @@
 #include "Fundamental.hpp"
 
 
-Plugin *plugin;
+Plugin *pluginInstance;
 
 void init(rack::Plugin *p) {
-	plugin = p;
+	pluginInstance = p;
 
 	p->addModel(modelVCO);
 	p->addModel(modelVCO2);

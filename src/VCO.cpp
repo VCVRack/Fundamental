@@ -238,7 +238,7 @@ struct VCO : Module {
 struct VCOWidget : ModuleWidget {
 	VCOWidget(VCO *module) {
 		setModule(module);
-		setPanel(SVG::load(asset::plugin(plugin, "res/VCO-1.svg")));
+		setPanel(SVG::load(asset::plugin(pluginInstance, "res/VCO-1.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
@@ -340,7 +340,7 @@ struct VCO2 : Module {
 struct VCO2Widget : ModuleWidget {
 	VCO2Widget(VCO2 *module) {
 		setModule(module);
-		setPanel(SVG::load(asset::plugin(plugin, "res/VCO-2.svg")));
+		setPanel(SVG::load(asset::plugin(pluginInstance, "res/VCO-2.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));

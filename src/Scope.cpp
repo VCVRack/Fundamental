@@ -164,7 +164,7 @@ struct ScopeDisplay : TransparentWidget {
 	Stats statsX, statsY;
 
 	ScopeDisplay() {
-		font = Font::load(asset::plugin(plugin, "res/fonts/Sudo.ttf"));
+		font = Font::load(asset::plugin(pluginInstance, "res/fonts/Sudo.ttf"));
 	}
 
 	void drawWaveform(const DrawContext &ctx, float *valuesX, float *valuesY) {
@@ -313,7 +313,7 @@ struct ScopeDisplay : TransparentWidget {
 struct ScopeWidget : ModuleWidget {
 	ScopeWidget(Scope *module) {
 		setModule(module);
-		setPanel(SVG::load(asset::plugin(plugin, "res/Scope.svg")));
+		setPanel(SVG::load(asset::plugin(pluginInstance, "res/Scope.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
