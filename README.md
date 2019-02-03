@@ -13,4 +13,5 @@ Source code licensed under [BSD-3-Clause](LICENSE.txt) by [Andrew Belt](https://
 
 VCV logo is © 2017. Derivative works may not use the VCV logo.
 
-Panel graphics in `res/` are © 2017 by [Grayscale](http://grayscale.info/). You may not create derivative works of Fundamental panels.
+The panel graphics in the `res` directory are copyright © 2017-2019 [Grayscale](http://grayscale.info/) and licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
+You may not create derivative works of these graphics.

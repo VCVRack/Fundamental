@@ -131,7 +131,7 @@ struct LFO : Module {
 struct LFOWidget : ModuleWidget {
 	LFOWidget(LFO *module) {
 		setModule(module);
-		setPanel(SVG::load(asset::plugin(pluginInstance, "res/LFO-1.svg")));
+		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/LFO-1.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
@@ -228,7 +228,7 @@ struct LFO2 : Module {
 struct LFO2Widget : ModuleWidget {
 	LFO2Widget(LFO2 *module) {
 		setModule(module);
-		setPanel(SVG::load(asset::plugin(pluginInstance, "res/LFO-2.svg")));
+		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/LFO-2.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));

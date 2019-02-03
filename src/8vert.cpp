@@ -42,7 +42,7 @@ struct _8vert : Module {
 struct _8vertWidget : ModuleWidget {
 	_8vertWidget(_8vert *module) {
 		setModule(module);
-		setPanel(SVG::load(asset::plugin(pluginInstance, "res/8vert.svg")));
+		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/8vert.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));

@@ -13,7 +13,6 @@ DEP_LOCAL := dep
 DEPS += $(libsamplerate)
 
 $(libsamplerate):
-	mkdir -p dep
 	cd dep && $(WGET) http://www.mega-nerd.com/SRC/libsamplerate-0.1.9.tar.gz
 	cd dep && $(UNTAR) libsamplerate-0.1.9.tar.gz
 	cd dep/libsamplerate-0.1.9 && $(CONFIGURE)

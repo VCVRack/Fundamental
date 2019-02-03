@@ -106,7 +106,7 @@ struct UnityMergeItem : MenuItem {
 struct UnityWidget : ModuleWidget {
 	UnityWidget(Unity *module) {
 		setModule(module);
-		setPanel(SVG::load(asset::plugin(pluginInstance, "res/Unity.svg")));
+		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Unity.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
