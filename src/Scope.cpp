@@ -1,5 +1,5 @@
 #include <string.h>
-#include "Fundamental.hpp"
+#include "plugin.hpp"
 
 
 static const int BUFFER_SIZE = 512;
@@ -146,7 +146,10 @@ struct ScopeDisplay : TransparentWidget {
 	std::shared_ptr<Font> font;
 
 	struct Stats {
-		float vrms, vpp, vmin, vmax;
+		float vrms = 0.f;
+		float vpp = 0.f;
+		float vmin = 0.f;
+		float vmax = 0.f;
 		void calculate(float *values) {
 			vrms = 0.0f;
 			vmax = -INFINITY;
@@ -164,7 +167,7 @@ struct ScopeDisplay : TransparentWidget {
 	Stats statsX, statsY;
 
 	ScopeDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/fonts/Sudo.ttf"));
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/Sudo/Sudo.ttf"));
 	}
 
 	void drawWaveform(const DrawContext &ctx, float *valuesX, float *valuesY) {

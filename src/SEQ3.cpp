@@ -1,4 +1,4 @@
-#include "Fundamental.hpp"
+#include "plugin.hpp"
 
 
 struct SEQ3 : Module {

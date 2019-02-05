@@ -1,4 +1,4 @@
-#include "Fundamental.hpp"
+#include "plugin.hpp"
 
 
 Plugin *pluginInstance;
@@ -23,4 +23,8 @@ void init(rack::Plugin *p) {
 	p->addModel(modelSEQ3);
 	p->addModel(modelSequentialSwitch1);
 	p->addModel(modelSequentialSwitch2);
+	p->addModel(modelSplit);
+	p->addModel(modelMerge);
+	p->addModel(modelSum);
+	p->addModel(modelViz);
 }

@@ -76,6 +76,26 @@
 		"SequentialSwitch2": {
 			"name": "Sequential Switch 1",
 			"tags": ["Utility"]
+		},
+		"Split": {
+			"name": "Split",
+			"description": "Splits a polyphonic cable into multiple monophonic cables",
+			"tags": ["Poly", "Utility"]
+		},
+		"Merge": {
+			"name": "Merge",
+			"description": "Combines multiple monophonic cables into a polyphonic cable",
+			"tags": ["Poly", "Utility"]
+		},
+		"Sum": {
+			"name": "Sum",
+			"description": "Sums all channels in a polyphonic cable",
+			"tags": ["Poly", "Utility"]
+		},
+		"Viz": {
+			"name": "Viz",
+			"description": "Visualizes all channels of a polyphonic cable",
+			"tags": ["Poly", "Visual"]
 		}
 	}
 }

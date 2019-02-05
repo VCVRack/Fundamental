@@ -9,9 +9,8 @@ Follow the build instructions for [VCV Rack](https://github.com/VCVRack/Rack).
 
 ## License
 
-Source code licensed under [BSD-3-Clause](LICENSE.txt) by [Andrew Belt](https://andrewbelt.name/)
+All **source code** is copyright © 2019 Andrew Belt and licensed under the [BSD-3-Clause License](https://opensource.org/licenses/BSD-3-Clause).
 
-VCV logo is © 2017. Derivative works may not use the VCV logo.
+The **VCV logo and icon** are copyright © 2017 Andrew Belt and may not be used in derivative works.
 
-The panel graphics in the `res` directory are copyright © 2017-2019 [Grayscale](http://grayscale.info/) and licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
-You may not create derivative works of these graphics.
+The **panel graphics** in the `res` directory are copyright © 2019 [Grayscale](http://grayscale.info/) and licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
