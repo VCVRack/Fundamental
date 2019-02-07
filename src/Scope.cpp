@@ -167,7 +167,7 @@ struct ScopeDisplay : TransparentWidget {
 	Stats statsX, statsY;
 
 	ScopeDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/Sudo/Sudo.ttf"));
+		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/sudo/Sudo.ttf"));
 	}
 
 	void drawWaveform(const DrawContext &ctx, float *valuesX, float *valuesY) {
