@@ -18,43 +18,26 @@ struct Viz : Module {
 	};
 
 	int channels = 0;
-	dsp::VUMeter2 vuMeter[16];
 	int frame = 0;
+	dsp::Counter counter;
 
 	Viz() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-		for (int c = 0; c < 16; c++) {
-			vuMeter[c].lambda = 1 / 0.1f;
-		}
+		counter.period = 16;
 	}
 
 	void step() override {
-		if (frame % 16 == 0) {
+		if (counter.process()) {
 			channels = inputs[POLY_INPUT].getChannels();
-			float deltaTime = APP->engine->getSampleTime() * 16;
+			float deltaTime = APP->engine->getSampleTime() * counter.period;
 
-			// Process VU meters
-			for (int c = 0; c < channels; c++) {
-				float value = inputs[POLY_INPUT].getVoltage(c) / 10.f;
-				vuMeter[c].process(deltaTime, value);
-			}
-			for (int c = channels; c < 16; c++) {
-				vuMeter[c].reset();
-			}
-		}
-
-		if (frame % 256 == 0) {
-			// Set lights
 			for (int c = 0; c < 16; c++) {
-				float green = vuMeter[c].getBrightness(-24.f, -6.f);
-				float red = vuMeter[c].getBrightness(-6.f, 0.f);
-				lights[VU_LIGHTS + c*2 + 0].setBrightness(green - red);
-				lights[VU_LIGHTS + c*2 + 1].setBrightness(red);
+				float v = inputs[POLY_INPUT].getVoltage(c) / 10.f;
+				lights[VU_LIGHTS + c*2 + 0].setSmoothBrightness(v, deltaTime);
+				lights[VU_LIGHTS + c*2 + 1].setSmoothBrightness(-v, deltaTime);
 			}
 		}
-
-		frame++;
 	}
 };
 

@@ -8,9 +8,8 @@ struct Unity : Module {
 		NUM_PARAMS
 	};
 	enum InputIds {
-		IN1_INPUT,
-		IN2_INPUT = IN1_INPUT + 6,
-		NUM_INPUTS = IN2_INPUT + 6
+		ENUMS(IN_INPUTS, 2 * 6),
+		NUM_INPUTS
 	};
 	enum OutputIds {
 		MIX1_OUTPUT,
@@ -20,28 +19,32 @@ struct Unity : Module {
 		NUM_OUTPUTS
 	};
 	enum LightIds {
-		VU1_LIGHT,
-		VU2_LIGHT = VU1_LIGHT + 5,
-		NUM_LIGHTS = VU2_LIGHT + 5
+		ENUMS(VU_LIGHTS, 2 * 5),
+		NUM_LIGHTS
 	};
 
 	bool merge = false;
+	dsp::VuMeter2 vuMeters[2];
+	dsp::Counter vuCounter;
 
 	Unity() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		params[AVG1_PARAM].config(0.0, 1.0, 0.0, "Ch 1 average mode");
 		params[AVG2_PARAM].config(0.0, 1.0, 0.0, "Ch 2 average mode");
+
+		vuCounter.setPeriod(256);
 	}
 
 	void step() override {
+		float deltaTime = APP->engine->getSampleTime();
 		float mix[2] = {};
 		int count[2] = {};
 
 		for (int i = 0; i < 2; i++) {
 			// Inputs
 			for (int j = 0; j < 6; j++) {
-				mix[i] += inputs[IN1_INPUT + 6*i + j].value;
-				if (inputs[IN1_INPUT + 6*i + j].active)
+				mix[i] += inputs[IN_INPUTS + 6 * i + j].value;
+				if (inputs[IN_INPUTS + 6 * i + j].active)
 					count[i]++;
 			}
 		}
@@ -56,18 +59,22 @@ struct Unity : Module {
 
 		for (int i = 0; i < 2; i++) {
 			// Params
-			if ((int) params[AVG1_PARAM + i].value == 1 && count[i] > 0)
+			if (count[i] > 0 && (int) std::round(params[AVG1_PARAM + i].value) == 1)
 				mix[i] /= count[i];
 
 			// Outputs
-			outputs[MIX1_OUTPUT + 2*i].value = mix[i];
-			outputs[INV1_OUTPUT + 2*i].value = -mix[i];
+			outputs[MIX1_OUTPUT + 2 * i].value = mix[i];
+			outputs[INV1_OUTPUT + 2 * i].value = -mix[i];
+			vuMeters[i].process(deltaTime, mix[i] / 10.f);
+		}
+
+		if (vuCounter.process()) {
 			// Lights
-			dsp::VUMeter vuMeter;
-			vuMeter.dBInterval = 6.0f;
-			vuMeter.setValue(mix[i] / 10.0f);
-			for (int j = 0; j < 5; j++) {
-				lights[VU1_LIGHT + 5*i + j].setBrightnessSmooth(vuMeter.getBrightness(j));
+			for (int i = 0; i < 2; i++) {
+				lights[VU_LIGHTS + 5 * i + 0].setBrightness(vuMeters[i].getBrightness(0.f, 0.f));
+				for (int j = 1; j < 5; j++) {
+					lights[VU_LIGHTS + 5 * i + j].setBrightness(vuMeters[i].getBrightness(-6.f * (j + 1), -6.f * j));
+				}
 			}
 		}
 	}
@@ -116,34 +123,34 @@ struct UnityWidget : ModuleWidget {
 		addParam(createParam<CKSS>(mm2px(Vec(12.867, 52.961)), module, Unity::AVG1_PARAM));
 		addParam(createParam<CKSS>(mm2px(Vec(12.867, 107.006)), module, Unity::AVG2_PARAM));
 
-		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 17.144)), module, Unity::IN1_INPUT + 0));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 17.144)), module, Unity::IN1_INPUT + 1));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 28.145)), module, Unity::IN1_INPUT + 2));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 28.145)), module, Unity::IN1_INPUT + 3));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 39.145)), module, Unity::IN1_INPUT + 4));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 39.145)), module, Unity::IN1_INPUT + 5));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 71.145)), module, Unity::IN2_INPUT + 0));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 71.145)), module, Unity::IN2_INPUT + 1));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 82.145)), module, Unity::IN2_INPUT + 2));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 82.145)), module, Unity::IN2_INPUT + 3));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 93.144)), module, Unity::IN2_INPUT + 4));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 93.144)), module, Unity::IN2_INPUT + 5));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 17.144)), module, Unity::IN_INPUTS + 0 * 6 + 0));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 17.144)), module, Unity::IN_INPUTS + 0 * 6 + 1));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 28.145)), module, Unity::IN_INPUTS + 0 * 6 + 2));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 28.145)), module, Unity::IN_INPUTS + 0 * 6 + 3));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 39.145)), module, Unity::IN_INPUTS + 0 * 6 + 4));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 39.145)), module, Unity::IN_INPUTS + 0 * 6 + 5));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 71.145)), module, Unity::IN_INPUTS + 1 * 6 + 0));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 71.145)), module, Unity::IN_INPUTS + 1 * 6 + 1));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 82.145)), module, Unity::IN_INPUTS + 1 * 6 + 2));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 82.145)), module, Unity::IN_INPUTS + 1 * 6 + 3));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 93.144)), module, Unity::IN_INPUTS + 1 * 6 + 4));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 93.144)), module, Unity::IN_INPUTS + 1 * 6 + 5));
 
 		addOutput(createOutput<PJ301MPort>(mm2px(Vec(2.361, 54.15)), module, Unity::MIX1_OUTPUT));
 		addOutput(createOutput<PJ301MPort>(mm2px(Vec(19.907, 54.15)), module, Unity::INV1_OUTPUT));
 		addOutput(createOutput<PJ301MPort>(mm2px(Vec(2.361, 108.144)), module, Unity::MIX2_OUTPUT));
 		addOutput(createOutput<PJ301MPort>(mm2px(Vec(19.907, 108.144)), module, Unity::INV2_OUTPUT));
 
-		addChild(createLight<MediumLight<RedLight>>(mm2px(Vec(13.652, 19.663)), module, Unity::VU1_LIGHT + 0));
-		addChild(createLight<MediumLight<YellowLight>>(mm2px(Vec(13.652, 25.163)), module, Unity::VU1_LIGHT + 1));
-		addChild(createLight<MediumLight<GreenLight>>(mm2px(Vec(13.652, 30.663)), module, Unity::VU1_LIGHT + 2));
-		addChild(createLight<MediumLight<GreenLight>>(mm2px(Vec(13.652, 36.162)), module, Unity::VU1_LIGHT + 3));
-		addChild(createLight<MediumLight<GreenLight>>(mm2px(Vec(13.652, 41.662)), module, Unity::VU1_LIGHT + 4));
-		addChild(createLight<MediumLight<RedLight>>(mm2px(Vec(13.652, 73.663)), module, Unity::VU2_LIGHT + 0));
-		addChild(createLight<MediumLight<YellowLight>>(mm2px(Vec(13.652, 79.163)), module, Unity::VU2_LIGHT + 1));
-		addChild(createLight<MediumLight<GreenLight>>(mm2px(Vec(13.652, 84.663)), module, Unity::VU2_LIGHT + 2));
-		addChild(createLight<MediumLight<GreenLight>>(mm2px(Vec(13.652, 90.162)), module, Unity::VU2_LIGHT + 3));
-		addChild(createLight<MediumLight<GreenLight>>(mm2px(Vec(13.652, 95.662)), module, Unity::VU2_LIGHT + 4));
+		addChild(createLight<MediumLight<RedLight>>(mm2px(Vec(13.652, 19.663)), module, Unity::VU_LIGHTS + 0 * 5 + 0));
+		addChild(createLight<MediumLight<YellowLight>>(mm2px(Vec(13.652, 25.163)), module, Unity::VU_LIGHTS + 0 * 5 + 1));
+		addChild(createLight<MediumLight<GreenLight>>(mm2px(Vec(13.652, 30.663)), module, Unity::VU_LIGHTS + 0 * 5 + 2));
+		addChild(createLight<MediumLight<GreenLight>>(mm2px(Vec(13.652, 36.162)), module, Unity::VU_LIGHTS + 0 * 5 + 3));
+		addChild(createLight<MediumLight<GreenLight>>(mm2px(Vec(13.652, 41.662)), module, Unity::VU_LIGHTS + 0 * 5 + 4));
+		addChild(createLight<MediumLight<RedLight>>(mm2px(Vec(13.652, 73.663)), module, Unity::VU_LIGHTS + 1 * 5 + 0));
+		addChild(createLight<MediumLight<YellowLight>>(mm2px(Vec(13.652, 79.163)), module, Unity::VU_LIGHTS + 1 * 5 + 1));
+		addChild(createLight<MediumLight<GreenLight>>(mm2px(Vec(13.652, 84.663)), module, Unity::VU_LIGHTS + 1 * 5 + 2));
+		addChild(createLight<MediumLight<GreenLight>>(mm2px(Vec(13.652, 90.162)), module, Unity::VU_LIGHTS + 1 * 5 + 3));
+		addChild(createLight<MediumLight<GreenLight>>(mm2px(Vec(13.652, 95.662)), module, Unity::VU_LIGHTS + 1 * 5 + 4));
 	}
 
 	void appendContextMenu(Menu *menu) override {

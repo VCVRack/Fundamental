@@ -36,10 +36,10 @@ struct ADSR : Module {
 
 	ADSR() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[ATTACK_PARAM].config(0.f, 1.f, 0.5f);
-		params[DECAY_PARAM].config(0.f, 1.f, 0.5f);
-		params[SUSTAIN_PARAM].config(0.f, 1.f, 0.5f);
-		params[RELEASE_PARAM].config(0.f, 1.f, 0.5f);
+		params[ATTACK_PARAM].config(0.f, 1.f, 0.5f, "Attack");
+		params[DECAY_PARAM].config(0.f, 1.f, 0.5f, "Decay");
+		params[SUSTAIN_PARAM].config(0.f, 1.f, 0.5f, "Sustain");
+		params[RELEASE_PARAM].config(0.f, 1.f, 0.5f, "Release");
 	}
 
 	void step() override {

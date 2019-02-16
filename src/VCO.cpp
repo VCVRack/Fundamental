@@ -205,6 +205,7 @@ struct VCO : Module {
 	}
 
 	void step() override {
+		float deltaTime = APP->engine->getSampleTime();
 		oscillator.analog = params[MODE_PARAM].value > 0.f;
 		oscillator.soft = params[SYNC_PARAM].value <= 0.f;
 
@@ -217,7 +218,7 @@ struct VCO : Module {
 		oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.f);
 		oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
-		oscillator.process(APP->engine->getSampleTime(), inputs[SYNC_INPUT].value);
+		oscillator.process(deltaTime, inputs[SYNC_INPUT].value);
 
 		// Set output
 		if (outputs[SIN_OUTPUT].active)
@@ -229,8 +230,8 @@ struct VCO : Module {
 		if (outputs[SQR_OUTPUT].active)
 			outputs[SQR_OUTPUT].value = 5.f * oscillator.sqr();
 
-		lights[PHASE_POS_LIGHT].setBrightnessSmooth(std::fmax(0.f, oscillator.light()));
-		lights[PHASE_NEG_LIGHT].setBrightnessSmooth(std::fmax(0.f, -oscillator.light()));
+		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), deltaTime);
+		lights[PHASE_NEG_LIGHT].setSmoothBrightness(-oscillator.light(), deltaTime);
 	}
 };
 
@@ -309,6 +310,7 @@ struct VCO2 : Module {
 	}
 
 	void step() override {
+		float deltaTime = APP->engine->getSampleTime();
 		oscillator.analog = params[MODE_PARAM].value > 0.f;
 		oscillator.soft = params[SYNC_PARAM].value <= 0.f;
 
@@ -316,7 +318,7 @@ struct VCO2 : Module {
 		oscillator.setPitch(0.f, pitchCv);
 		oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
-		oscillator.process(APP->engine->getSampleTime(), inputs[SYNC_INPUT].value);
+		oscillator.process(deltaTime, inputs[SYNC_INPUT].value);
 
 		// Set output
 		float wave = clamp(params[WAVE_PARAM].value + inputs[WAVE_INPUT].value, 0.f, 3.f);
@@ -329,8 +331,8 @@ struct VCO2 : Module {
 			out = crossfade(oscillator.saw(), oscillator.sqr(), wave - 2.f);
 		outputs[OUT_OUTPUT].value = 5.f * out;
 
-		lights[PHASE_POS_LIGHT].setBrightnessSmooth(std::fmax(0.f, oscillator.light()));
-		lights[PHASE_NEG_LIGHT].setBrightnessSmooth(std::fmax(0.f, -oscillator.light()));
+		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), deltaTime);
+		lights[PHASE_NEG_LIGHT].setSmoothBrightness(-oscillator.light(), deltaTime);
 	}
 };
 

@@ -21,7 +21,7 @@ struct Sum : Module {
 	};
 
 	int frame = 0;
-	dsp::VUMeter2 vuMeter;
+	dsp::VuMeter2 vuMeter;
 
 	Sum() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
