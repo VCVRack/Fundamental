@@ -107,13 +107,12 @@ struct LFO : Module {
 		params[PWM_PARAM].config(0.f, 1.f, 0.f);
 	}
 
-	void step() override {
-		float deltaTime = APP->engine->getSampleTime();
+	void process(const ProcessArgs &args) override {
 		oscillator.setPitch(params[FREQ_PARAM].value + params[FM1_PARAM].value * inputs[FM1_INPUT].value + params[FM2_PARAM].value * inputs[FM2_INPUT].value);
 		oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.f);
 		oscillator.offset = (params[OFFSET_PARAM].value > 0.f);
 		oscillator.invert = (params[INVERT_PARAM].value <= 0.f);
-		oscillator.step(deltaTime);
+		oscillator.step(args.sampleTime);
 		oscillator.setReset(inputs[RESET_INPUT].value);
 
 		outputs[SIN_OUTPUT].value = 5.f * oscillator.sin();
@@ -121,8 +120,8 @@ struct LFO : Module {
 		outputs[SAW_OUTPUT].value = 5.f * oscillator.saw();
 		outputs[SQR_OUTPUT].value = 5.f * oscillator.sqr();
 
-		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), deltaTime);
-		lights[PHASE_NEG_LIGHT].setSmoothBrightness(-oscillator.light(), deltaTime);
+		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), args.sampleTime);
+		lights[PHASE_NEG_LIGHT].setSmoothBrightness(-oscillator.light(), args.sampleTime);
 	}
 
 };
@@ -202,8 +201,8 @@ struct LFO2 : Module {
 		params[FM_PARAM].config(0.f, 1.f, 0.5f);
 	}
 
-	void step() override {
-		float deltaTime = APP->engine->getSampleTime();
+	void process(const ProcessArgs &args) override {
+		float deltaTime = args.sampleTime;
 		oscillator.setPitch(params[FREQ_PARAM].value + params[FM_PARAM].value * inputs[FM_INPUT].value);
 		oscillator.offset = (params[OFFSET_PARAM].value > 0.f);
 		oscillator.invert = (params[INVERT_PARAM].value <= 0.f);

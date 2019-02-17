@@ -117,9 +117,7 @@ struct SEQ3 : Module {
 			this->index = 0;
 	}
 
-	void step() override {
-		float deltaTime = APP->engine->getSampleTime();
-
+	void process(const ProcessArgs &args) override {
 		// Run
 		if (runningTrigger.process(params[RUN_PARAM].value)) {
 			running = !running;
@@ -137,7 +135,7 @@ struct SEQ3 : Module {
 			else {
 				// Internal clock
 				float clockTime = std::pow(2.0f, params[CLOCK_PARAM].value + inputs[CLOCK_INPUT].value);
-				phase += clockTime * deltaTime;
+				phase += clockTime * args.sampleTime;
 				if (phase >= 1.0f) {
 					setIndex(index + 1);
 				}
@@ -156,7 +154,7 @@ struct SEQ3 : Module {
 				gates[i] = !gates[i];
 			}
 			outputs[GATE_OUTPUT + i].value = (running && gateIn && i == index && gates[i]) ? 10.0f : 0.0f;
-			lights[GATE_LIGHTS + i].setSmoothBrightness((gateIn && i == index) ? (gates[i] ? 1.f : 0.33) : (gates[i] ? 0.66 : 0.0), deltaTime);
+			lights[GATE_LIGHTS + i].setSmoothBrightness((gateIn && i == index) ? (gates[i] ? 1.f : 0.33) : (gates[i] ? 0.66 : 0.0), args.sampleTime);
 		}
 
 		// Outputs
@@ -165,8 +163,8 @@ struct SEQ3 : Module {
 		outputs[ROW3_OUTPUT].value = params[ROW3_PARAM + index].value;
 		outputs[GATES_OUTPUT].value = (gateIn && gates[index]) ? 10.0f : 0.0f;
 		lights[RUNNING_LIGHT].value = (running);
-		lights[RESET_LIGHT].setSmoothBrightness(resetTrigger.isHigh(), deltaTime);
-		lights[GATES_LIGHT].setSmoothBrightness(gateIn, deltaTime);
+		lights[RESET_LIGHT].setSmoothBrightness(resetTrigger.isHigh(), args.sampleTime);
+		lights[GATES_LIGHT].setSmoothBrightness(gateIn, args.sampleTime);
 		lights[ROW_LIGHTS].value = outputs[ROW1_OUTPUT].value / 10.0f;
 		lights[ROW_LIGHTS + 1].value = outputs[ROW2_OUTPUT].value / 10.0f;
 		lights[ROW_LIGHTS + 2].value = outputs[ROW3_OUTPUT].value / 10.0f;

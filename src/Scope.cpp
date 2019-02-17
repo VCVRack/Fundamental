@@ -57,7 +57,7 @@ struct Scope : Module {
 		params[EXTERNAL_PARAM].config(0.0f, 1.0f, 0.0f);
 	}
 
-	void step() override {
+	void process(const ProcessArgs &args) override {
 		// Modes
 		if (sumTrigger.process(params[LISSAJOUS_PARAM].value)) {
 			lissajous = !lissajous;
@@ -73,7 +73,7 @@ struct Scope : Module {
 
 		// Compute time
 		float deltaTime = std::pow(2.0f, -params[TIME_PARAM].value);
-		int frameCount = (int) std::ceil(deltaTime * APP->engine->getSampleRate());
+		int frameCount = (int) std::ceil(deltaTime * args.sampleRate);
 
 		// Add frame to buffer
 		if (bufferIndex < BUFFER_SIZE) {
@@ -105,12 +105,12 @@ struct Scope : Module {
 
 			// Reset if triggered
 			float holdTime = 0.1f;
-			if (resetTrigger.process(rescale(gate, params[TRIG_PARAM].value - 0.1f, params[TRIG_PARAM].value, 0.f, 1.f)) || (frameIndex >= APP->engine->getSampleRate() * holdTime)) {
+			if (resetTrigger.process(rescale(gate, params[TRIG_PARAM].value - 0.1f, params[TRIG_PARAM].value, 0.f, 1.f)) || (frameIndex >= args.sampleRate * holdTime)) {
 				bufferIndex = 0; frameIndex = 0; return;
 			}
 
 			// Reset if we've waited too long
-			if (frameIndex >= APP->engine->getSampleRate() * holdTime) {
+			if (frameIndex >= args.sampleRate * holdTime) {
 				bufferIndex = 0; frameIndex = 0; return;
 			}
 		}
@@ -170,13 +170,13 @@ struct ScopeDisplay : TransparentWidget {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/sudo/Sudo.ttf"));
 	}
 
-	void drawWaveform(const DrawContext &ctx, float *valuesX, float *valuesY) {
+	void drawWaveform(const DrawArgs &args, float *valuesX, float *valuesY) {
 		if (!valuesX)
 			return;
-		nvgSave(ctx.vg);
+		nvgSave(args.vg);
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
-		nvgScissor(ctx.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
-		nvgBeginPath(ctx.vg);
+		nvgScissor(args.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
+		nvgBeginPath(args.vg);
 		// Draw maximum display left to right
 		for (int i = 0; i < BUFFER_SIZE; i++) {
 			float x, y;
@@ -192,71 +192,71 @@ struct ScopeDisplay : TransparentWidget {
 			p.x = b.pos.x + b.size.x * x;
 			p.y = b.pos.y + b.size.y * (1.0f - y);
 			if (i == 0)
-				nvgMoveTo(ctx.vg, p.x, p.y);
+				nvgMoveTo(args.vg, p.x, p.y);
 			else
-				nvgLineTo(ctx.vg, p.x, p.y);
+				nvgLineTo(args.vg, p.x, p.y);
 		}
-		nvgLineCap(ctx.vg, NVG_ROUND);
-		nvgMiterLimit(ctx.vg, 2.0f);
-		nvgStrokeWidth(ctx.vg, 1.5f);
-		nvgGlobalCompositeOperation(ctx.vg, NVG_LIGHTER);
-		nvgStroke(ctx.vg);
-		nvgResetScissor(ctx.vg);
-		nvgRestore(ctx.vg);
+		nvgLineCap(args.vg, NVG_ROUND);
+		nvgMiterLimit(args.vg, 2.0f);
+		nvgStrokeWidth(args.vg, 1.5f);
+		nvgGlobalCompositeOperation(args.vg, NVG_LIGHTER);
+		nvgStroke(args.vg);
+		nvgResetScissor(args.vg);
+		nvgRestore(args.vg);
 	}
 
-	void drawTrig(const DrawContext &ctx, float value) {
+	void drawTrig(const DrawArgs &args, float value) {
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
-		nvgScissor(ctx.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
+		nvgScissor(args.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
 
 		value = value / 2.0f + 0.5f;
 		Vec p = Vec(box.size.x, b.pos.y + b.size.y * (1.0f - value));
 
 		// Draw line
-		nvgStrokeColor(ctx.vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
+		nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
 		{
-			nvgBeginPath(ctx.vg);
-			nvgMoveTo(ctx.vg, p.x - 13, p.y);
-			nvgLineTo(ctx.vg, 0, p.y);
-			nvgClosePath(ctx.vg);
+			nvgBeginPath(args.vg);
+			nvgMoveTo(args.vg, p.x - 13, p.y);
+			nvgLineTo(args.vg, 0, p.y);
+			nvgClosePath(args.vg);
 		}
-		nvgStroke(ctx.vg);
+		nvgStroke(args.vg);
 
 		// Draw indicator
-		nvgFillColor(ctx.vg, nvgRGBA(0xff, 0xff, 0xff, 0x60));
+		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x60));
 		{
-			nvgBeginPath(ctx.vg);
-			nvgMoveTo(ctx.vg, p.x - 2, p.y - 4);
-			nvgLineTo(ctx.vg, p.x - 9, p.y - 4);
-			nvgLineTo(ctx.vg, p.x - 13, p.y);
-			nvgLineTo(ctx.vg, p.x - 9, p.y + 4);
-			nvgLineTo(ctx.vg, p.x - 2, p.y + 4);
-			nvgClosePath(ctx.vg);
+			nvgBeginPath(args.vg);
+			nvgMoveTo(args.vg, p.x - 2, p.y - 4);
+			nvgLineTo(args.vg, p.x - 9, p.y - 4);
+			nvgLineTo(args.vg, p.x - 13, p.y);
+			nvgLineTo(args.vg, p.x - 9, p.y + 4);
+			nvgLineTo(args.vg, p.x - 2, p.y + 4);
+			nvgClosePath(args.vg);
 		}
-		nvgFill(ctx.vg);
+		nvgFill(args.vg);
 
-		nvgFontSize(ctx.vg, 9);
-		nvgFontFaceId(ctx.vg, font->handle);
-		nvgFillColor(ctx.vg, nvgRGBA(0x1e, 0x28, 0x2b, 0xff));
-		nvgText(ctx.vg, p.x - 8, p.y + 3, "T", NULL);
-		nvgResetScissor(ctx.vg);
+		nvgFontSize(args.vg, 9);
+		nvgFontFaceId(args.vg, font->handle);
+		nvgFillColor(args.vg, nvgRGBA(0x1e, 0x28, 0x2b, 0xff));
+		nvgText(args.vg, p.x - 8, p.y + 3, "T", NULL);
+		nvgResetScissor(args.vg);
 	}
 
-	void drawStats(const DrawContext &ctx, Vec pos, const char *title, Stats *stats) {
-		nvgFontSize(ctx.vg, 13);
-		nvgFontFaceId(ctx.vg, font->handle);
-		nvgTextLetterSpacing(ctx.vg, -2);
+	void drawStats(const DrawArgs &args, Vec pos, const char *title, Stats *stats) {
+		nvgFontSize(args.vg, 13);
+		nvgFontFaceId(args.vg, font->handle);
+		nvgTextLetterSpacing(args.vg, -2);
 
-		nvgFillColor(ctx.vg, nvgRGBA(0xff, 0xff, 0xff, 0x40));
-		nvgText(ctx.vg, pos.x + 6, pos.y + 11, title, NULL);
+		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x40));
+		nvgText(args.vg, pos.x + 6, pos.y + 11, title, NULL);
 
-		nvgFillColor(ctx.vg, nvgRGBA(0xff, 0xff, 0xff, 0x80));
+		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x80));
 		char text[128];
 		snprintf(text, sizeof(text), "pp % 06.2f  max % 06.2f  min % 06.2f", stats->vpp, stats->vmax, stats->vmin);
-		nvgText(ctx.vg, pos.x + 22, pos.y + 11, text, NULL);
+		nvgText(args.vg, pos.x + 22, pos.y + 11, text, NULL);
 	}
 
-	void draw(const DrawContext &ctx) override {
+	void draw(const DrawArgs &args) override {
 		if (!module)
 			return;
 
@@ -280,25 +280,25 @@ struct ScopeDisplay : TransparentWidget {
 		if (module->lissajous) {
 			// X x Y
 			if (module->inputs[Scope::X_INPUT].active || module->inputs[Scope::Y_INPUT].active) {
-				nvgStrokeColor(ctx.vg, nvgRGBA(0x9f, 0xe4, 0x36, 0xc0));
-				drawWaveform(ctx, valuesX, valuesY);
+				nvgStrokeColor(args.vg, nvgRGBA(0x9f, 0xe4, 0x36, 0xc0));
+				drawWaveform(args, valuesX, valuesY);
 			}
 		}
 		else {
 			// Y
 			if (module->inputs[Scope::Y_INPUT].active) {
-				nvgStrokeColor(ctx.vg, nvgRGBA(0xe1, 0x02, 0x78, 0xc0));
-				drawWaveform(ctx, valuesY, NULL);
+				nvgStrokeColor(args.vg, nvgRGBA(0xe1, 0x02, 0x78, 0xc0));
+				drawWaveform(args, valuesY, NULL);
 			}
 
 			// X
 			if (module->inputs[Scope::X_INPUT].active) {
-				nvgStrokeColor(ctx.vg, nvgRGBA(0x28, 0xb0, 0xf3, 0xc0));
-				drawWaveform(ctx, valuesX, NULL);
+				nvgStrokeColor(args.vg, nvgRGBA(0x28, 0xb0, 0xf3, 0xc0));
+				drawWaveform(args, valuesX, NULL);
 			}
 
 			float valueTrig = (module->params[Scope::TRIG_PARAM].value + offsetX) * gainX / 10.0f;
-			drawTrig(ctx, valueTrig);
+			drawTrig(args, valueTrig);
 		}
 
 		// Calculate and draw stats
@@ -307,8 +307,8 @@ struct ScopeDisplay : TransparentWidget {
 			statsX.calculate(module->bufferX);
 			statsY.calculate(module->bufferY);
 		}
-		drawStats(ctx, Vec(0, 0), "X", &statsX);
-		drawStats(ctx, Vec(0, box.size.y - 15), "Y", &statsY);
+		drawStats(args, Vec(0, 0), "X", &statsX);
+		drawStats(args, Vec(0, box.size.y - 15), "Y", &statsY);
 	}
 };
 

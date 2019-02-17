@@ -42,7 +42,7 @@ struct ADSR : Module {
 		params[RELEASE_PARAM].config(0.f, 1.f, 0.5f, "Release");
 	}
 
-	void step() override {
+	void process(const ProcessArgs &args) override {
 		float attack = clamp(params[ATTACK_PARAM].value + inputs[ATTACK_INPUT].value / 10.f, 0.f, 1.f);
 		float decay = clamp(params[DECAY_PARAM].value + inputs[DECAY_INPUT].value / 10.f, 0.f, 1.f);
 		float sustain = clamp(params[SUSTAIN_PARAM].value + inputs[SUSTAIN_INPUT].value / 10.f, 0.f, 1.f);
@@ -62,7 +62,7 @@ struct ADSR : Module {
 					env = sustain;
 				}
 				else {
-					env += std::pow(base, 1 - decay) / maxTime * (sustain - env) * APP->engine->getSampleTime();
+					env += std::pow(base, 1 - decay) / maxTime * (sustain - env) * args.sampleTime;
 				}
 			}
 			else {
@@ -72,7 +72,7 @@ struct ADSR : Module {
 					env = 1.f;
 				}
 				else {
-					env += std::pow(base, 1 - attack) / maxTime * (1.01f - env) * APP->engine->getSampleTime();
+					env += std::pow(base, 1 - attack) / maxTime * (1.01f - env) * args.sampleTime;
 				}
 				if (env >= 1.f) {
 					env = 1.f;
@@ -86,7 +86,7 @@ struct ADSR : Module {
 				env = 0.f;
 			}
 			else {
-				env += std::pow(base, 1 - release) / maxTime * (0.f - env) * APP->engine->getSampleTime();
+				env += std::pow(base, 1 - release) / maxTime * (0.f - env) * args.sampleTime;
 			}
 			decaying = false;
 		}

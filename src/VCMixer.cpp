@@ -28,7 +28,7 @@ struct VCMixer : Module {
 		params[LVL_PARAM + 3].config(0.0, 1.0, 1.0, "Ch 4 level");
 	}
 
-	void step() override {
+	void process(const ProcessArgs &args) override {
 		float mix = 0.f;
 		for (int i = 0; i < 4; i++) {
 			float ch = inputs[CH_INPUT + i].value;

@@ -47,7 +47,7 @@ struct Delay : Module {
 		src_delete(src);
 	}
 
-	void step() override {
+	void process(const ProcessArgs &args) override {
 		// Get input to delay block
 		float in = inputs[IN_INPUT].value;
 		float feedback = clamp(params[FEEDBACK_PARAM].value + inputs[FEEDBACK_INPUT].value / 10.0f, 0.0f, 1.0f);
@@ -56,7 +56,7 @@ struct Delay : Module {
 		// Compute delay time in seconds
 		float delay = 1e-3 * std::pow(10.0f / 1e-3, clamp(params[TIME_PARAM].value + inputs[TIME_INPUT].value / 10.0f, 0.0f, 1.0f));
 		// Number of delay samples
-		float index = delay * APP->engine->getSampleRate();
+		float index = delay * args.sampleRate;
 
 		// Push dry sample into history buffer
 		if (!historyBuffer.full()) {
@@ -93,11 +93,11 @@ struct Delay : Module {
 		// TODO Make it sound better
 		float color = clamp(params[COLOR_PARAM].value + inputs[COLOR_INPUT].value / 10.0f, 0.0f, 1.0f);
 		float lowpassFreq = 10000.0f * std::pow(10.0f, clamp(2.0f*color, 0.0f, 1.0f));
-		lowpassFilter.setCutoff(lowpassFreq / APP->engine->getSampleRate());
+		lowpassFilter.setCutoff(lowpassFreq / args.sampleRate);
 		lowpassFilter.process(wet);
 		wet = lowpassFilter.lowpass();
 		float highpassFreq = 10.0f * std::pow(100.0f, clamp(2.0f*color - 1.0f, 0.0f, 1.0f));
-		highpassFilter.setCutoff(highpassFreq / APP->engine->getSampleRate());
+		highpassFilter.setCutoff(highpassFreq / args.sampleRate);
 		highpassFilter.process(wet);
 		wet = highpassFilter.highpass();
 

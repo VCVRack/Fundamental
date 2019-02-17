@@ -24,7 +24,7 @@ struct Split : Module {
 
 	int lightFrame = 0;
 
-	void step() override {
+	void process(const ProcessArgs &args) override {
 		for (int c = 0; c < 16; c++) {
 			float v = inputs[POLY_INPUT].getVoltage(c);
 			outputs[MONO_OUTPUTS + c].setVoltage(v);

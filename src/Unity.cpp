@@ -25,18 +25,17 @@ struct Unity : Module {
 
 	bool merge = false;
 	dsp::VuMeter2 vuMeters[2];
-	dsp::Counter vuCounter;
+	dsp::Counter lightCounter;
 
 	Unity() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		params[AVG1_PARAM].config(0.0, 1.0, 0.0, "Ch 1 average mode");
 		params[AVG2_PARAM].config(0.0, 1.0, 0.0, "Ch 2 average mode");
 
-		vuCounter.setPeriod(256);
+		lightCounter.setPeriod(256);
 	}
 
-	void step() override {
-		float deltaTime = APP->engine->getSampleTime();
+	void process(const ProcessArgs &args) override {
 		float mix[2] = {};
 		int count[2] = {};
 
@@ -65,10 +64,10 @@ struct Unity : Module {
 			// Outputs
 			outputs[MIX1_OUTPUT + 2 * i].value = mix[i];
 			outputs[INV1_OUTPUT + 2 * i].value = -mix[i];
-			vuMeters[i].process(deltaTime, mix[i] / 10.f);
+			vuMeters[i].process(args.sampleTime, mix[i] / 10.f);
 		}
 
-		if (vuCounter.process()) {
+		if (lightCounter.process()) {
 			// Lights
 			for (int i = 0; i < 2; i++) {
 				lights[VU_LIGHTS + 5 * i + 0].setBrightness(vuMeters[i].getBrightness(0.f, 0.f));

@@ -38,7 +38,7 @@ struct VCA : Module {
 		outputs[out].value = v;
 	}
 
-	void step() override {
+	void process(const ProcessArgs &args) override {
 		stepChannel(IN1_INPUT, LEVEL1_PARAM, LIN1_INPUT, EXP1_INPUT, OUT1_OUTPUT);
 		stepChannel(IN2_INPUT, LEVEL2_PARAM, LIN2_INPUT, EXP2_INPUT, OUT2_OUTPUT);
 	}
@@ -102,7 +102,7 @@ struct VCA_1 : Module {
 		params[EXP_PARAM].config(0.0, 1.0, 1.0, "Response mode");
 	}
 
-	void step() override {
+	void process(const ProcessArgs &args) override {
 		float cv = inputs[CV_INPUT].getNormalVoltage(10.f) / 10.f;
 		if ((int) params[EXP_PARAM].value == 0)
 			cv = std::pow(cv, 4.f);
@@ -119,13 +119,13 @@ struct VCA_1VUKnob : SliderKnob {
 		box.size = mm2px(Vec(10, 46));
 	}
 
-	void draw(const DrawContext &ctx) override {
+	void draw(const DrawArgs &args) override {
 		float lastCv = module ? module->lastCv : 1.f;
 
-		nvgBeginPath(ctx.vg);
-		nvgRoundedRect(ctx.vg, 0, 0, box.size.x, box.size.y, 2.0);
-		nvgFillColor(ctx.vg, nvgRGB(0, 0, 0));
-		nvgFill(ctx.vg);
+		nvgBeginPath(args.vg);
+		nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, 2.0);
+		nvgFillColor(args.vg, nvgRGB(0, 0, 0));
+		nvgFill(args.vg);
 
 		const int segs = 25;
 		const Vec margin = Vec(3, 3);
@@ -136,16 +136,16 @@ struct VCA_1VUKnob : SliderKnob {
 			float segValue = clamp(value * segs - (segs - i - 1), 0.f, 1.f);
 			float amplitude = value * lastCv;
 			float segAmplitude = clamp(amplitude * segs - (segs - i - 1), 0.f, 1.f);
-			nvgBeginPath(ctx.vg);
-			nvgRect(ctx.vg, r.pos.x, r.pos.y + r.size.y / segs * i + 0.5,
+			nvgBeginPath(args.vg);
+			nvgRect(args.vg, r.pos.x, r.pos.y + r.size.y / segs * i + 0.5,
 				r.size.x, r.size.y / segs - 1.0);
 			if (segValue > 0.f) {
-				nvgFillColor(ctx.vg, color::alpha(nvgRGBf(0.33, 0.33, 0.33), segValue));
-				nvgFill(ctx.vg);
+				nvgFillColor(args.vg, color::alpha(nvgRGBf(0.33, 0.33, 0.33), segValue));
+				nvgFill(args.vg);
 			}
 			if (segAmplitude > 0.f) {
-				nvgFillColor(ctx.vg, color::alpha(component::GREEN, segAmplitude));
-				nvgFill(ctx.vg);
+				nvgFillColor(args.vg, color::alpha(component::GREEN, segAmplitude));
+				nvgFill(args.vg);
 			}
 		}
 	}

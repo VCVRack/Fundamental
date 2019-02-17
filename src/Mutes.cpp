@@ -34,7 +34,7 @@ struct Mutes : Module {
 		onReset();
 	}
 
-	void step() override {
+	void process(const ProcessArgs &args) override {
 		float out = 0.f;
 		for (int i = 0; i < NUM_CHANNELS; i++) {
 			if (muteTrigger[i].process(params[MUTE_PARAM + i].value))

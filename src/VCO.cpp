@@ -58,7 +58,7 @@ struct VoltageControlledOscillator {
 			// Adjust pitch slew
 			if (++pitchSlewIndex > 32) {
 				const float pitchSlewTau = 100.f; // Time constant for leaky integrator in seconds
-				pitchSlew += (random::normal() - pitchSlew / pitchSlewTau) * APP->engine->getSampleTime();
+				pitchSlew += (random::normal() - pitchSlew / pitchSlewTau) * deltaTime;
 				pitchSlewIndex = 0;
 			}
 		}
@@ -204,8 +204,7 @@ struct VCO : Module {
 		params[PWM_PARAM].config(0.f, 1.f, 0.f, "Pulse width modulation", "%", 0.f, 100.f);
 	}
 
-	void step() override {
-		float deltaTime = APP->engine->getSampleTime();
+	void process(const ProcessArgs &args) override {
 		oscillator.analog = params[MODE_PARAM].value > 0.f;
 		oscillator.soft = params[SYNC_PARAM].value <= 0.f;
 
@@ -218,7 +217,7 @@ struct VCO : Module {
 		oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.f);
 		oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
-		oscillator.process(deltaTime, inputs[SYNC_INPUT].value);
+		oscillator.process(args.sampleTime, inputs[SYNC_INPUT].value);
 
 		// Set output
 		if (outputs[SIN_OUTPUT].active)
@@ -230,8 +229,8 @@ struct VCO : Module {
 		if (outputs[SQR_OUTPUT].active)
 			outputs[SQR_OUTPUT].value = 5.f * oscillator.sqr();
 
-		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), deltaTime);
-		lights[PHASE_NEG_LIGHT].setSmoothBrightness(-oscillator.light(), deltaTime);
+		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), args.sampleTime);
+		lights[PHASE_NEG_LIGHT].setSmoothBrightness(-oscillator.light(), args.sampleTime);
 	}
 };
 
@@ -309,8 +308,8 @@ struct VCO2 : Module {
 		params[FM_PARAM].config(0.f, 1.f, 0.f, "Frequency modulation");
 	}
 
-	void step() override {
-		float deltaTime = APP->engine->getSampleTime();
+	void process(const ProcessArgs &args) override {
+		float deltaTime = args.sampleTime;
 		oscillator.analog = params[MODE_PARAM].value > 0.f;
 		oscillator.soft = params[SYNC_PARAM].value <= 0.f;
 

@@ -22,15 +22,19 @@ struct Sum : Module {
 
 	int frame = 0;
 	dsp::VuMeter2 vuMeter;
+	dsp::Counter vuCounter;
+	dsp::Counter lightCounter;
 
 	Sum() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		params[LEVEL_PARAM].config(0.f, 1.f, 1.f, "Level", "%", 0.f, 100.f);
 
 		vuMeter.lambda = 1 / 0.1f;
+		vuCounter.setPeriod(16);
+		lightCounter.setPeriod(256);
 	}
 
-	void step() override {
+	void process(const ProcessArgs &args) override {
 		int channels = inputs[POLY_INPUT].getChannels();
 		float sum = 0.f;
 		for (int c = 0; c < channels; c++) {
@@ -40,12 +44,12 @@ struct Sum : Module {
 		sum *= params[LEVEL_PARAM].getValue();
 		outputs[MONO_OUTPUT].setVoltage(sum);
 
-		if (frame % 16 == 0) {
-			vuMeter.process(APP->engine->getSampleTime() * 16, sum / 10.f);
+		if (vuCounter.process()) {
+			vuMeter.process(args.sampleTime * vuCounter.period, sum / 10.f);
 		}
 
 		// Set channel lights infrequently
-		if (frame % 256 == 0) {
+		if (lightCounter.process()) {
 			for (int c = 0; c < 16; c++) {
 				bool active = (c < inputs[POLY_INPUT].getChannels());
 				lights[CHANNEL_LIGHTS + c].setBrightness(active);
@@ -56,8 +60,6 @@ struct Sum : Module {
 				lights[VU_LIGHTS + i].setBrightness(vuMeter.getBrightness(-3.f * i, -3.f * (i - 1)));
 			}
 		}
-
-		frame++;
 	}
 };
 

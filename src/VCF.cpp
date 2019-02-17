@@ -91,7 +91,7 @@ struct VCF : Module {
 		filter.reset();
 	}
 
-	void step() override {
+	void process(const ProcessArgs &args) override {
 		if (!outputs[LPF_OUTPUT].active && !outputs[HPF_OUTPUT].active) {
 			outputs[LPF_OUTPUT].value = 0.f;
 			outputs[HPF_OUTPUT].value = 0.f;
@@ -100,7 +100,7 @@ struct VCF : Module {
 
 		float input = inputs[IN_INPUT].value / 5.f;
 		float drive = clamp(params[DRIVE_PARAM].value + inputs[DRIVE_INPUT].value / 10.f, 0.f, 1.f);
-		float gain = powf(1.f + drive, 5);
+		float gain = std::pow(1.f + drive, 5);
 		input *= gain;
 
 		// Add -60dB noise to bootstrap self-oscillation
@@ -108,7 +108,7 @@ struct VCF : Module {
 
 		// Set resonance
 		float res = clamp(params[RES_PARAM].value + inputs[RES_INPUT].value / 10.f, 0.f, 1.f);
-		filter.resonance = powf(res, 2) * 10.f;
+		filter.resonance = std::pow(res, 2) * 10.f;
 
 		// Set cutoff frequency
 		float pitch = 0.f;
@@ -116,13 +116,13 @@ struct VCF : Module {
 			pitch += inputs[FREQ_INPUT].value * dsp::quadraticBipolar(params[FREQ_CV_PARAM].value);
 		pitch += params[FREQ_PARAM].value * 10.f - 5.f;
 		pitch += dsp::quadraticBipolar(params[FINE_PARAM].value * 2.f - 1.f) * 7.f / 12.f;
-		float cutoff = 261.626f * powf(2.f, pitch);
+		float cutoff = 261.626f * std::pow(2.f, pitch);
 		cutoff = clamp(cutoff, 1.f, 8000.f);
 		filter.setCutoff(cutoff);
 
 		/*
 		// Process sample
-		float dt = APP->engine->getSampleTime() / UPSAMPLE;
+		float dt = args.sampleTime / UPSAMPLE;
 		float inputBuf[UPSAMPLE];
 		float lowpassBuf[UPSAMPLE];
 		float highpassBuf[UPSAMPLE];
@@ -142,7 +142,7 @@ struct VCF : Module {
 			outputs[HPF_OUTPUT].value = 5.f * highpassDecimator.process(highpassBuf);
 		}
 		*/
-		filter.process(input, APP->engine->getSampleTime());
+		filter.process(input, args.sampleTime);
 		outputs[LPF_OUTPUT].value = 5.f * filter.lowpass;
 		outputs[HPF_OUTPUT].value = 5.f * filter.highpass;
 	}

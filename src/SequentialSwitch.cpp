@@ -37,7 +37,7 @@ struct SequentialSwitch : Module {
 		}
 	}
 
-	void step() override {
+	void process(const ProcessArgs &args) override {
 		// Determine current channel
 		if (clockTrigger.process(inputs[CLOCK_INPUT].value / 2.f)) {
 			channel++;

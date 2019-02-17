@@ -24,7 +24,7 @@ struct Merge : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 	}
 
-	void step() override {
+	void process(const ProcessArgs &args) override {
 		int lastChannel = -1;
 		for (int c = 0; c < 16; c++) {
 			if (inputs[MONO_INPUTS + c].isConnected()) {

@@ -27,15 +27,15 @@ struct Viz : Module {
 		counter.period = 16;
 	}
 
-	void step() override {
+	void process(const ProcessArgs &args) override {
 		if (counter.process()) {
 			channels = inputs[POLY_INPUT].getChannels();
-			float deltaTime = APP->engine->getSampleTime() * counter.period;
+			float deltaTime = args.sampleTime * counter.period;
 
 			for (int c = 0; c < 16; c++) {
 				float v = inputs[POLY_INPUT].getVoltage(c) / 10.f;
-				lights[VU_LIGHTS + c*2 + 0].setSmoothBrightness(v, deltaTime);
-				lights[VU_LIGHTS + c*2 + 1].setSmoothBrightness(-v, deltaTime);
+				lights[VU_LIGHTS + c*2 + 0].setSmoothBrightness(v, deltaTime * counter.period);
+				lights[VU_LIGHTS + c*2 + 1].setSmoothBrightness(-v, deltaTime * counter.period);
 			}
 		}
 	}
@@ -51,20 +51,20 @@ struct VizDisplay : Widget {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/nunito/Nunito-Bold.ttf"));
 	}
 
-	void draw(const widget::DrawContext &ctx) override {
+	void draw(const DrawArgs &args) override {
 		for (int c = 0; c < 16; c++) {
 			Vec p = Vec(15, 16 + (float) c / 16 * (box.size.y - 10));
 			std::string text = string::f("%d", c + 1);
 
-			nvgFontFaceId(ctx.vg, font->handle);
-			nvgFontSize(ctx.vg, 11);
-			nvgTextLetterSpacing(ctx.vg, 0.0);
-			nvgTextAlign(ctx.vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
+			nvgFontFaceId(args.vg, font->handle);
+			nvgFontSize(args.vg, 11);
+			nvgTextLetterSpacing(args.vg, 0.0);
+			nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
 			if (module && c < module->channels)
-				nvgFillColor(ctx.vg, nvgRGB(255, 255, 255));
+				nvgFillColor(args.vg, nvgRGB(255, 255, 255));
 			else
-				nvgFillColor(ctx.vg, nvgRGB(99, 99, 99));
-			nvgText(ctx.vg, p.x, p.y, text.c_str(), NULL);
+				nvgFillColor(args.vg, nvgRGB(99, 99, 99));
+			nvgText(args.vg, p.x, p.y, text.c_str(), NULL);
 		}
 	}
 };
