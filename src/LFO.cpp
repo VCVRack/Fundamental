@@ -11,8 +11,8 @@ struct LowFrequencyOscillator {
 
 	LowFrequencyOscillator() {}
 	void setPitch(float pitch) {
-		pitch = fminf(pitch, 10.f);
-		freq = powf(2.f, pitch);
+		pitch = std::fmin(pitch, 10.f);
+		freq = std::pow(2.f, pitch);
 	}
 	void setPulseWidth(float pw_) {
 		const float pwMin = 0.01f;
@@ -24,7 +24,7 @@ struct LowFrequencyOscillator {
 		}
 	}
 	void step(float dt) {
-		float deltaPhase = fminf(freq * dt, 0.5f);
+		float deltaPhase = std::fmin(freq * dt, 0.5f);
 		phase += deltaPhase;
 		if (phase >= 1.f)
 			phase -= 1.f;
@@ -36,7 +36,7 @@ struct LowFrequencyOscillator {
 			return std::sin(2*M_PI * phase) * (invert ? -1.f : 1.f);
 	}
 	float tri(float x) {
-		return 4.f * std::abs(x - std::round(x));
+		return 4.f * std::fabs(x - std::round(x));
 	}
 	float tri() {
 		if (offset)

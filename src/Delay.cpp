@@ -68,7 +68,7 @@ struct Delay : Module {
 
 		if (outBuffer.empty()) {
 			double ratio = 1.f;
-			if (std::abs(consume) >= 16.f) {
+			if (std::fabs(consume) >= 16.f) {
 				ratio = std::pow(10.f, clamp(consume / 10000.f, -1.f, 1.f));
 			}
 

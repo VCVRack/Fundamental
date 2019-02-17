@@ -157,8 +157,8 @@ struct ScopeDisplay : TransparentWidget {
 			for (int i = 0; i < BUFFER_SIZE; i++) {
 				float v = values[i];
 				vrms += v*v;
-				vmax = std::max(vmax, v);
-				vmin = std::min(vmin, v);
+				vmax = std::fmax(vmax, v);
+				vmin = std::fmin(vmin, v);
 			}
 			vrms = std::sqrt(vrms / BUFFER_SIZE);
 			vpp = vmax - vmin;
@@ -260,8 +260,8 @@ struct ScopeDisplay : TransparentWidget {
 		if (!module)
 			return;
 
-		float gainX = powf(2.0f, roundf(module->params[Scope::X_SCALE_PARAM].value));
-		float gainY = powf(2.0f, roundf(module->params[Scope::Y_SCALE_PARAM].value));
+		float gainX = std::pow(2.0f, std::round(module->params[Scope::X_SCALE_PARAM].value));
+		float gainY = std::pow(2.0f, std::round(module->params[Scope::Y_SCALE_PARAM].value));
 		float offsetX = module->params[Scope::X_POS_PARAM].value;
 		float offsetY = module->params[Scope::Y_POS_PARAM].value;
 
