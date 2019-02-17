@@ -20,7 +20,6 @@ struct Sum : Module {
 		NUM_LIGHTS
 	};
 
-	int frame = 0;
 	dsp::VuMeter2 vuMeter;
 	dsp::Counter vuCounter;
 	dsp::Counter lightCounter;

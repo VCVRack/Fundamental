@@ -18,21 +18,22 @@ struct Split : Module {
 		NUM_LIGHTS
 	};
 
+	dsp::Counter lightCounter;
+
 	Split() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+		lightCounter.setPeriod(512);
 	}
-
-	int lightFrame = 0;
 
 	void process(const ProcessArgs &args) override {
 		for (int c = 0; c < 16; c++) {
 			float v = inputs[POLY_INPUT].getVoltage(c);
+			// To allow users to debug buggy modules, don't assume that undefined channels are 0V.
 			outputs[MONO_OUTPUTS + c].setVoltage(v);
 		}
 
 		// Set channel lights infrequently
-		if (++lightFrame >= 512) {
-			lightFrame = 0;
+		if (lightCounter.process()) {
 			for (int c = 0; c < 16; c++) {
 				bool active = (c < inputs[POLY_INPUT].getChannels());
 				lights[CHANNEL_LIGHTS + c].setBrightness(active);

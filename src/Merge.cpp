@@ -18,10 +18,11 @@ struct Merge : Module {
 		NUM_LIGHTS
 	};
 
-	int lightFrame = 0;
+	dsp::Counter lightCounter;
 
 	Merge() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+		lightCounter.setPeriod(512);
 	}
 
 	void process(const ProcessArgs &args) override {
@@ -32,16 +33,13 @@ struct Merge : Module {
 				float v = inputs[MONO_INPUTS + c].getVoltage();
 				outputs[POLY_OUTPUT].setVoltage(v, c);
 			}
-			else {
-				outputs[POLY_OUTPUT].setVoltage(0.f, c);
-			}
 		}
 
+		// This also sets higher channels to 0V if the number of channels shrinks.
 		outputs[POLY_OUTPUT].setChannels(lastChannel + 1);
 
 		// Set channel lights infrequently
-		if (++lightFrame >= 512) {
-			lightFrame = 0;
+		if (lightCounter.process()) {
 			for (int c = 0; c < 16; c++) {
 				bool active = (c < outputs[POLY_OUTPUT].getChannels());
 				lights[CHANNEL_LIGHTS + c].setBrightness(active);
