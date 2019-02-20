@@ -41,7 +41,7 @@ struct Mutes : Module {
 
 			// Get input
 			// Inputs are normalized to the input above it, so only set if connected
-			if (inputs[IN_INPUT + i].active) {
+			if (inputs[IN_INPUT + i].isConnected()) {
 				inputs[IN_INPUT + i].getVoltages(out);
 				channels = inputs[IN_INPUT + i].getChannels();
 			}

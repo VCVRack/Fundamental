@@ -33,13 +33,13 @@ struct VCMixer : Module {
 		for (int i = 0; i < 4; i++) {
 			float ch = inputs[CH_INPUT + i].getVoltage();
 			ch *= std::pow(params[LVL_PARAM + i].getValue(), 2.f);
-			if (inputs[CV_INPUT + i].active)
+			if (inputs[CV_INPUT + i].isConnected())
 				ch *= clamp(inputs[CV_INPUT + i].getVoltage() / 10.f, 0.f, 1.f);
 			outputs[CH_OUTPUT + i].setVoltage(ch);
 			mix += ch;
 		}
 		mix *= params[MIX_LVL_PARAM].getValue();
-		if (inputs[MIX_CV_INPUT].active)
+		if (inputs[MIX_CV_INPUT].isConnected())
 			mix *= clamp(inputs[MIX_CV_INPUT].getVoltage() / 10.f, 0.f, 1.f);
 		outputs[MIX_OUTPUT].setVoltage(mix);
 	}

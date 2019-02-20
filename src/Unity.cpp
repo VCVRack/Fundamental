@@ -43,7 +43,7 @@ struct Unity : Module {
 			// Inputs
 			for (int j = 0; j < 6; j++) {
 				mix[i] += inputs[IN_INPUTS + 6 * i + j].getVoltage();
-				if (inputs[IN_INPUTS + 6 * i + j].active)
+				if (inputs[IN_INPUTS + 6 * i + j].isConnected())
 					count[i]++;
 			}
 		}

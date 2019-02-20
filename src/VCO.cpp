@@ -210,23 +210,23 @@ struct VCO : Module {
 
 		float pitchFine = 3.f * dsp::quadraticBipolar(params[FINE_PARAM].getValue());
 		float pitchCv = 12.f * inputs[PITCH_INPUT].getVoltage();
-		if (inputs[FM_INPUT].active) {
+		if (inputs[FM_INPUT].isConnected()) {
 			pitchCv += dsp::quadraticBipolar(params[FM_PARAM].getValue()) * 12.f * inputs[FM_INPUT].getVoltage();
 		}
 		oscillator.setPitch(params[FREQ_PARAM].getValue(), pitchFine + pitchCv);
 		oscillator.setPulseWidth(params[PW_PARAM].getValue() + params[PWM_PARAM].getValue() * inputs[PW_INPUT].getVoltage() / 10.f);
-		oscillator.syncEnabled = inputs[SYNC_INPUT].active;
+		oscillator.syncEnabled = inputs[SYNC_INPUT].isConnected();
 
 		oscillator.process(args.sampleTime, inputs[SYNC_INPUT].getVoltage());
 
 		// Set output
-		if (outputs[SIN_OUTPUT].active)
+		if (outputs[SIN_OUTPUT].isConnected())
 			outputs[SIN_OUTPUT].setVoltage(5.f * oscillator.sin());
-		if (outputs[TRI_OUTPUT].active)
+		if (outputs[TRI_OUTPUT].isConnected())
 			outputs[TRI_OUTPUT].setVoltage(5.f * oscillator.tri());
-		if (outputs[SAW_OUTPUT].active)
+		if (outputs[SAW_OUTPUT].isConnected())
 			outputs[SAW_OUTPUT].setVoltage(5.f * oscillator.saw());
-		if (outputs[SQR_OUTPUT].active)
+		if (outputs[SQR_OUTPUT].isConnected())
 			outputs[SQR_OUTPUT].setVoltage(5.f * oscillator.sqr());
 
 		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), args.sampleTime);
@@ -315,7 +315,7 @@ struct VCO2 : Module {
 
 		float pitchCv = params[FREQ_PARAM].getValue() + dsp::quadraticBipolar(params[FM_PARAM].getValue()) * 12.f * inputs[FM_INPUT].getVoltage();
 		oscillator.setPitch(0.f, pitchCv);
-		oscillator.syncEnabled = inputs[SYNC_INPUT].active;
+		oscillator.syncEnabled = inputs[SYNC_INPUT].isConnected();
 
 		oscillator.process(deltaTime, inputs[SYNC_INPUT].getVoltage());
 

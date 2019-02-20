@@ -88,7 +88,7 @@ struct Scope : Module {
 		// Are we waiting on the next trigger?
 		if (bufferIndex >= BUFFER_SIZE) {
 			// Trigger immediately if external but nothing plugged in, or in Lissajous mode
-			if (lissajous || (external && !inputs[TRIG_INPUT].active)) {
+			if (lissajous || (external && !inputs[TRIG_INPUT].isConnected())) {
 				bufferIndex = 0;
 				frameIndex = 0;
 				return;
@@ -279,20 +279,20 @@ struct ScopeDisplay : TransparentWidget {
 		// Draw waveforms
 		if (module->lissajous) {
 			// X x Y
-			if (module->inputs[Scope::X_INPUT].active || module->inputs[Scope::Y_INPUT].active) {
+			if (module->inputs[Scope::X_INPUT].isConnected() || module->inputs[Scope::Y_INPUT].isConnected()) {
 				nvgStrokeColor(args.vg, nvgRGBA(0x9f, 0xe4, 0x36, 0xc0));
 				drawWaveform(args, valuesX, valuesY);
 			}
 		}
 		else {
 			// Y
-			if (module->inputs[Scope::Y_INPUT].active) {
+			if (module->inputs[Scope::Y_INPUT].isConnected()) {
 				nvgStrokeColor(args.vg, nvgRGBA(0xe1, 0x02, 0x78, 0xc0));
 				drawWaveform(args, valuesY, NULL);
 			}
 
 			// X
-			if (module->inputs[Scope::X_INPUT].active) {
+			if (module->inputs[Scope::X_INPUT].isConnected()) {
 				nvgStrokeColor(args.vg, nvgRGBA(0x28, 0xb0, 0xf3, 0xc0));
 				drawWaveform(args, valuesX, NULL);
 			}

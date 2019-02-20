@@ -30,10 +30,10 @@ struct VCA : Module {
 
 	void stepChannel(InputIds in, ParamIds level, InputIds lin, InputIds exp, OutputIds out) {
 		float v = inputs[in].getVoltage() * params[level].getValue();
-		if (inputs[lin].active)
+		if (inputs[lin].isConnected())
 			v *= clamp(inputs[lin].getVoltage() / 10.0f, 0.0f, 1.0f);
 		const float expBase = 50.0f;
-		if (inputs[exp].active)
+		if (inputs[exp].isConnected())
 			v *= rescale(std::pow(expBase, clamp(inputs[exp].getVoltage() / 10.0f, 0.0f, 1.0f)), 1.0f, expBase, 0.0f, 1.0f);
 		outputs[out].setVoltage(v);
 	}

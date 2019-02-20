@@ -92,7 +92,7 @@ struct VCF : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		if (!outputs[LPF_OUTPUT].active && !outputs[HPF_OUTPUT].active) {
+		if (!outputs[LPF_OUTPUT].isConnected() && !outputs[HPF_OUTPUT].isConnected()) {
 			outputs[LPF_OUTPUT].setVoltage(0.f);
 			outputs[HPF_OUTPUT].setVoltage(0.f);
 			return;
@@ -112,7 +112,7 @@ struct VCF : Module {
 
 		// Set cutoff frequency
 		float pitch = 0.f;
-		if (inputs[FREQ_INPUT].active)
+		if (inputs[FREQ_INPUT].isConnected())
 			pitch += inputs[FREQ_INPUT].getVoltage() * dsp::quadraticBipolar(params[FREQ_CV_PARAM].getValue());
 		pitch += params[FREQ_PARAM].getValue() * 10.f - 5.f;
 		pitch += dsp::quadraticBipolar(params[FINE_PARAM].getValue() * 2.f - 1.f) * 7.f / 12.f;
@@ -135,10 +135,10 @@ struct VCF : Module {
 		}
 
 		// Set outputs
-		if (outputs[LPF_OUTPUT].active) {
+		if (outputs[LPF_OUTPUT].isConnected()) {
 			outputs[LPF_OUTPUT].setVoltage(5.f * lowpassDecimator.process(lowpassBuf));
 		}
-		if (outputs[HPF_OUTPUT].active) {
+		if (outputs[HPF_OUTPUT].isConnected()) {
 			outputs[HPF_OUTPUT].setVoltage(5.f * highpassDecimator.process(highpassBuf));
 		}
 		*/

@@ -125,7 +125,7 @@ struct SEQ3 : Module {
 
 		bool gateIn = false;
 		if (running) {
-			if (inputs[EXT_CLOCK_INPUT].active) {
+			if (inputs[EXT_CLOCK_INPUT].isConnected()) {
 				// External clock
 				if (clockTrigger.process(inputs[EXT_CLOCK_INPUT].getVoltage())) {
 					setIndex(index + 1);
