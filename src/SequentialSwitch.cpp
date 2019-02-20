@@ -5,7 +5,7 @@
 template <int INPUTS, int OUTPUTS>
 struct SequentialSwitch : Module {
 	enum ParamIds {
-		CHANNELS_PARAM,
+		STEPS_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -25,13 +25,13 @@ struct SequentialSwitch : Module {
 
 	dsp::SchmittTrigger clockTrigger;
 	dsp::SchmittTrigger resetTrigger;
-	int channel = 0;
+	int index = 0;
 	dsp::Counter lightCounter;
 	dsp::SlewLimiter clickFilters[4];
 
 	SequentialSwitch() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[CHANNELS_PARAM].config(0.0, 2.0, 0.0, "Channels", "", 0, -1, 4);
+		params[STEPS_PARAM].config(0.0, 2.0, 0.0, "Steps", "", 0, -1, 4);
 
 		for (int i = 0; i < OUTPUTS; i++) {
 			clickFilters[i].rise = 400.f; // Hz
@@ -41,44 +41,70 @@ struct SequentialSwitch : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		// Determine current channel
+		// Determine current index
 		if (clockTrigger.process(rescale(inputs[CLOCK_INPUT].getVoltage(), 0.1f, 2.f, 0.f, 1.f))) {
-			channel++;
+			index++;
 		}
 		if (resetTrigger.process(rescale(inputs[RESET_INPUT].getVoltage(), 0.1f, 2.f, 0.f, 1.f))) {
-			channel = 0;
+			index = 0;
 		}
-		int channels = 4 - (int) std::round(params[CHANNELS_PARAM].getValue());
-		if (channel >= channels)
-			channel = 0;
+		int length = 4 - (int) std::round(params[STEPS_PARAM].getValue());
+		if (index >= length)
+			index = 0;
 
-		// Get input
-		float v = 0.f;
+		// Use first input to get number of channels
+		int channels = inputs[IN_INPUTS + 0].getChannels();
+
 		if (INPUTS == 1) {
-			v = inputs[IN_INPUTS + 0].getVoltage();
-		}
-		else {
-			for (int i = 0; i < INPUTS; i++) {
-				float in = inputs[IN_INPUTS + i].getVoltage();
-				v += in * clickFilters[i].process(args.sampleTime, channel == i);
+			// <1, 4>
+			// Get input
+			float in[16];
+			for (int c = 0; c < channels; c++) {
+				in[c] = inputs[IN_INPUTS].getVoltage(c);
 			}
-		}
 
-		// Set output
-		if (OUTPUTS == 1) {
-			outputs[OUT_OUTPUTS + 0].setVoltage(v);
+			// Set output
+			for (int i = 0; i < OUTPUTS; i++) {
+				float gain = clickFilters[i].process(args.sampleTime, index == i);
+				if (gain != 0.f) {
+					for (int c = 0; c < channels; c++) {
+						float out = in[c] * gain;
+						outputs[OUT_OUTPUTS + i].setVoltage(out);
+					}
+				}
+				else {
+					for (int c = 0; c < channels; c++) {
+						outputs[OUT_OUTPUTS + i].setVoltage(0.f);
+					}
+				}
+				outputs[OUT_OUTPUTS + i].setChannels(channels);
+			}
 		}
 		else {
-			for (int i = 0; i < OUTPUTS; i++) {
-				float out = v * clickFilters[i].process(args.sampleTime, channel == i);
-				outputs[OUT_OUTPUTS + i].setVoltage(out);
+			// <4, 1>
+			// Get input
+			float out[16] = {};
+			for (int i = 0; i < INPUTS; i++) {
+				float gain = clickFilters[i].process(args.sampleTime, index == i);
+				if (gain != 0.f) {
+					for (int c = 0; c < channels; c++) {
+						float in = inputs[IN_INPUTS + i].getVoltage(c);
+						out[c] += in * gain;
+					}
+				}
 			}
+
+			// Set output
+			for (int c = 0; c < channels; c++) {
+				outputs[OUT_OUTPUTS].setVoltage(out[c], c);
+			}
+			outputs[OUT_OUTPUTS].setChannels(channels);
 		}
 
 		// Set lights
 		if (lightCounter.process()) {
 			for (int i = 0; i < 4; i++) {
-				lights[CHANNEL_LIGHT + i].setBrightness(channel == i);
+				lights[CHANNEL_LIGHT + i].setBrightness(index == i);
 			}
 		}
 	}
@@ -95,7 +121,7 @@ struct SequentialSwitch1Widget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<CKSSThree>(mm2px(Vec(5.24619, 46.9153)), module, TSequentialSwitch::CHANNELS_PARAM));
+		addParam(createParam<CKSSThree>(mm2px(Vec(5.24619, 46.9153)), module, TSequentialSwitch::STEPS_PARAM));
 
 		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 17.694)), module, TSequentialSwitch::CLOCK_INPUT));
 		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 32.1896)), module, TSequentialSwitch::RESET_INPUT));
@@ -127,7 +153,7 @@ struct SequentialSwitch2Widget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<CKSSThree>(mm2px(Vec(5.24619, 46.9153)), module, TSequentialSwitch::CHANNELS_PARAM));
+		addParam(createParam<CKSSThree>(mm2px(Vec(5.24619, 46.9153)), module, TSequentialSwitch::STEPS_PARAM));
 
 		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 17.694)), module, TSequentialSwitch::CLOCK_INPUT));
 		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 32.191)), module, TSequentialSwitch::RESET_INPUT));
