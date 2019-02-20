@@ -1,33 +1,30 @@
 #include "plugin.hpp"
 
 
-#define NUM_CHANNELS 10
-
-
 struct Mutes : Module {
 	enum ParamIds {
-		MUTE_PARAM,
-		NUM_PARAMS = MUTE_PARAM + NUM_CHANNELS
+		ENUMS(MUTE_PARAM, 10),
+		NUM_PARAMS
 	};
 	enum InputIds {
-		IN_INPUT,
-		NUM_INPUTS = IN_INPUT + NUM_CHANNELS
+		ENUMS(IN_INPUT, 10),
+		NUM_INPUTS
 	};
 	enum OutputIds {
-		OUT_OUTPUT,
-		NUM_OUTPUTS = OUT_OUTPUT + NUM_CHANNELS
+		ENUMS(OUT_OUTPUT, 10),
+		NUM_OUTPUTS
 	};
 	enum LightIds {
-		MUTE_LIGHT,
-		NUM_LIGHTS = MUTE_LIGHT + NUM_CHANNELS
+		ENUMS(MUTE_LIGHT, 10),
+		NUM_LIGHTS
 	};
 
-	bool state[NUM_CHANNELS];
-	dsp::SchmittTrigger muteTrigger[NUM_CHANNELS];
+	bool state[10];
+	dsp::BooleanTrigger muteTrigger[10];
 
 	Mutes() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		for (int i = 0; i < NUM_CHANNELS; i++) {
+		for (int i = 0; i < 10; i++) {
 			params[MUTE_PARAM + i].config(0.0, 1.0, 0.0, string::f("Ch %d mute", i+1));
 		}
 
@@ -35,24 +32,41 @@ struct Mutes : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		float out = 0.f;
-		for (int i = 0; i < NUM_CHANNELS; i++) {
-			if (muteTrigger[i].process(params[MUTE_PARAM + i].getValue()))
+		float out[16] = {};
+		int channels = 1;
+		for (int i = 0; i < 10; i++) {
+			// Process trigger
+			if (muteTrigger[i].process(params[MUTE_PARAM + i].getValue() > 0.f))
 				state[i] ^= true;
-			if (inputs[IN_INPUT + i].active)
-				out = inputs[IN_INPUT + i].getVoltage();
-			outputs[OUT_OUTPUT + i].setVoltage(state[i] ? out : 0.f);
-			lights[MUTE_LIGHT + i].setBrightness(state[i] ? 0.9f : 0.f);
+
+			// Get input
+			// Inputs are normalized to the input above it, so only set if connected
+			if (inputs[IN_INPUT + i].active) {
+				inputs[IN_INPUT + i].getVoltages(out);
+				channels = inputs[IN_INPUT + i].getChannels();
+			}
+
+			// Set output and light
+			outputs[OUT_OUTPUT + i].setChannels(channels);
+			if (state[i]) {
+				outputs[OUT_OUTPUT + i].setVoltages(out);
+				lights[MUTE_LIGHT + i].setBrightness(0.9f);
+			}
+			else {
+				for (int c = 0; c < channels; c++)
+					outputs[OUT_OUTPUT + i].setVoltage(0.f);
+				lights[MUTE_LIGHT + i].setBrightness(0.f);
+			}
 		}
 	}
 
 	void onReset() override {
-		for (int i = 0; i < NUM_CHANNELS; i++) {
+		for (int i = 0; i < 10; i++) {
 			state[i] = true;
 		}
 	}
 	void onRandomize() override {
-		for (int i = 0; i < NUM_CHANNELS; i++) {
+		for (int i = 0; i < 10; i++) {
 			state[i] = (random::uniform() < 0.5f);
 		}
 	}
@@ -61,7 +75,7 @@ struct Mutes : Module {
 		json_t *rootJ = json_object();
 		// states
 		json_t *statesJ = json_array();
-		for (int i = 0; i < NUM_CHANNELS; i++) {
+		for (int i = 0; i < 10; i++) {
 			json_t *stateJ = json_boolean(state[i]);
 			json_array_append_new(statesJ, stateJ);
 		}
@@ -73,7 +87,7 @@ struct Mutes : Module {
 		// states
 		json_t *statesJ = json_object_get(rootJ, "states");
 		if (statesJ) {
-			for (int i = 0; i < NUM_CHANNELS; i++) {
+			for (int i = 0; i < 10; i++) {
 				json_t *stateJ = json_array_get(statesJ, i);
 				if (stateJ)
 					state[i] = json_boolean_value(stateJ);
