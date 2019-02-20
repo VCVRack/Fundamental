@@ -32,8 +32,11 @@ struct Mutes : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
+		const float zero[16] = {};
 		float out[16] = {};
 		int channels = 1;
+
+		// Iterate rows
 		for (int i = 0; i < 10; i++) {
 			// Process trigger
 			if (muteTrigger[i].process(params[MUTE_PARAM + i].getValue() > 0.f))
@@ -46,17 +49,14 @@ struct Mutes : Module {
 				channels = inputs[IN_INPUT + i].getChannels();
 			}
 
-			// Set output and light
-			outputs[OUT_OUTPUT + i].setChannels(channels);
-			if (state[i]) {
-				outputs[OUT_OUTPUT + i].setVoltages(out);
-				lights[MUTE_LIGHT + i].setBrightness(0.9f);
+			// Set output
+			if (outputs[OUT_OUTPUT + i].isConnected()) {
+				outputs[OUT_OUTPUT + i].setChannels(channels);
+				outputs[OUT_OUTPUT + i].setVoltages(state[i] ? out : zero);
 			}
-			else {
-				for (int c = 0; c < channels; c++)
-					outputs[OUT_OUTPUT + i].setVoltage(0.f);
-				lights[MUTE_LIGHT + i].setBrightness(0.f);
-			}
+
+			// Set light
+			lights[MUTE_LIGHT + i].setBrightness(state[i] ? 0.9f : 0.f);
 		}
 	}
 
@@ -73,6 +73,7 @@ struct Mutes : Module {
 
 	json_t *dataToJson() override {
 		json_t *rootJ = json_object();
+
 		// states
 		json_t *statesJ = json_array();
 		for (int i = 0; i < 10; i++) {
@@ -80,6 +81,7 @@ struct Mutes : Module {
 			json_array_append_new(statesJ, stateJ);
 		}
 		json_object_set_new(rootJ, "states", statesJ);
+
 		return rootJ;
 	}
 
