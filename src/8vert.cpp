@@ -15,25 +15,38 @@ struct _8vert : Module {
 		NUM_OUTPUTS
 	};
 	enum LightIds {
-		ENUMS(OUT_LIGHTS, 8*2),
 		NUM_LIGHTS
 	};
 
 	_8vert() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		for (int i = 0; i < 8; i++) {
-			params[GAIN_PARAMS + i].config(-1.f, 1.f, 0.f, string::f("Ch %d gain", i+1));
+			params[GAIN_PARAMS + i].config(-1.f, 1.f, 0.f, string::f("Ch %d gain", i + 1), "%", 0, 100);
 		}
 	}
 
 	void process(const ProcessArgs &args) override {
-		float lastIn = 10.f;
+		float in[16] = {10.f};
+		int channels = 1;
+
 		for (int i = 0; i < 8; i++) {
-			lastIn = inputs[i].getNormalVoltage(lastIn);
-			float out = lastIn * params[i].getValue();
-			outputs[i].setVoltage(out);
-			lights[2*i + 0].setSmoothBrightness(out / 5.f, args.sampleTime);
-			lights[2*i + 1].setSmoothBrightness(-out / 5.f, args.sampleTime);
+			// Get input
+			if (inputs[IN_INPUTS + i].isConnected()) {
+				channels = inputs[IN_INPUTS + i].getChannels();
+				inputs[IN_INPUTS + i].getVoltages(in);
+			}
+
+			if (outputs[OUT_OUTPUTS + i].isConnected()) {
+				// Apply gain
+				float out[16];
+				float gain = params[GAIN_PARAMS + i].getValue();
+				for (int c = 0; c < channels; c++)
+					out[c] = gain * in[c];
+
+				// Set output
+				outputs[OUT_OUTPUTS + i].setChannels(channels);
+				outputs[OUT_OUTPUTS + i].setVoltages(out);
+			}
 		}
 	}
 };
@@ -75,15 +88,6 @@ struct _8vertWidget : ModuleWidget {
 		addOutput(createOutput<PJ301MPort>(Vec(86.393, 242.614), module, _8vert::OUT_OUTPUTS + 5));
 		addOutput(createOutput<PJ301MPort>(Vec(86.393, 281.059), module, _8vert::OUT_OUTPUTS + 6));
 		addOutput(createOutput<PJ301MPort>(Vec(86.393, 319.504), module, _8vert::OUT_OUTPUTS + 7));
-
-		addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 50.414), module, _8vert::OUT_LIGHTS + 0*2));
-		addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 88.859), module, _8vert::OUT_LIGHTS + 1*2));
-		addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 127.304), module, _8vert::OUT_LIGHTS + 2*2));
-		addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 165.745), module, _8vert::OUT_LIGHTS + 3*2));
-		addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 204.19), module, _8vert::OUT_LIGHTS + 4*2));
-		addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 242.635), module, _8vert::OUT_LIGHTS + 5*2));
-		addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 281.076), module, _8vert::OUT_LIGHTS + 6*2));
-		addChild(createLight<TinyLight<GreenRedLight>>(Vec(107.702, 319.521), module, _8vert::OUT_LIGHTS + 7*2));
 	}
 };
 

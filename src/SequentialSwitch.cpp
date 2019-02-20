@@ -66,6 +66,7 @@ struct SequentialSwitch : Module {
 			// Set output
 			for (int i = 0; i < OUTPUTS; i++) {
 				float gain = clickFilters[i].process(args.sampleTime, index == i);
+				outputs[OUT_OUTPUTS + i].setChannels(channels);
 				if (gain != 0.f) {
 					for (int c = 0; c < channels; c++) {
 						float out = in[c] * gain;
@@ -77,7 +78,6 @@ struct SequentialSwitch : Module {
 						outputs[OUT_OUTPUTS + i].setVoltage(0.f);
 					}
 				}
-				outputs[OUT_OUTPUTS + i].setChannels(channels);
 			}
 		}
 		else {
