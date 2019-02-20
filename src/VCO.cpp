@@ -205,29 +205,29 @@ struct VCO : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		oscillator.analog = params[MODE_PARAM].value > 0.f;
-		oscillator.soft = params[SYNC_PARAM].value <= 0.f;
+		oscillator.analog = params[MODE_PARAM].getValue() > 0.f;
+		oscillator.soft = params[SYNC_PARAM].getValue() <= 0.f;
 
-		float pitchFine = 3.f * dsp::quadraticBipolar(params[FINE_PARAM].value);
-		float pitchCv = 12.f * inputs[PITCH_INPUT].value;
+		float pitchFine = 3.f * dsp::quadraticBipolar(params[FINE_PARAM].getValue());
+		float pitchCv = 12.f * inputs[PITCH_INPUT].getVoltage();
 		if (inputs[FM_INPUT].active) {
-			pitchCv += dsp::quadraticBipolar(params[FM_PARAM].value) * 12.f * inputs[FM_INPUT].value;
+			pitchCv += dsp::quadraticBipolar(params[FM_PARAM].getValue()) * 12.f * inputs[FM_INPUT].getVoltage();
 		}
-		oscillator.setPitch(params[FREQ_PARAM].value, pitchFine + pitchCv);
-		oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.f);
+		oscillator.setPitch(params[FREQ_PARAM].getValue(), pitchFine + pitchCv);
+		oscillator.setPulseWidth(params[PW_PARAM].getValue() + params[PWM_PARAM].getValue() * inputs[PW_INPUT].getVoltage() / 10.f);
 		oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
-		oscillator.process(args.sampleTime, inputs[SYNC_INPUT].value);
+		oscillator.process(args.sampleTime, inputs[SYNC_INPUT].getVoltage());
 
 		// Set output
 		if (outputs[SIN_OUTPUT].active)
-			outputs[SIN_OUTPUT].value = 5.f * oscillator.sin();
+			outputs[SIN_OUTPUT].setVoltage(5.f * oscillator.sin());
 		if (outputs[TRI_OUTPUT].active)
-			outputs[TRI_OUTPUT].value = 5.f * oscillator.tri();
+			outputs[TRI_OUTPUT].setVoltage(5.f * oscillator.tri());
 		if (outputs[SAW_OUTPUT].active)
-			outputs[SAW_OUTPUT].value = 5.f * oscillator.saw();
+			outputs[SAW_OUTPUT].setVoltage(5.f * oscillator.saw());
 		if (outputs[SQR_OUTPUT].active)
-			outputs[SQR_OUTPUT].value = 5.f * oscillator.sqr();
+			outputs[SQR_OUTPUT].setVoltage(5.f * oscillator.sqr());
 
 		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), args.sampleTime);
 		lights[PHASE_NEG_LIGHT].setSmoothBrightness(-oscillator.light(), args.sampleTime);
@@ -310,17 +310,17 @@ struct VCO2 : Module {
 
 	void process(const ProcessArgs &args) override {
 		float deltaTime = args.sampleTime;
-		oscillator.analog = params[MODE_PARAM].value > 0.f;
-		oscillator.soft = params[SYNC_PARAM].value <= 0.f;
+		oscillator.analog = params[MODE_PARAM].getValue() > 0.f;
+		oscillator.soft = params[SYNC_PARAM].getValue() <= 0.f;
 
-		float pitchCv = params[FREQ_PARAM].value + dsp::quadraticBipolar(params[FM_PARAM].value) * 12.f * inputs[FM_INPUT].value;
+		float pitchCv = params[FREQ_PARAM].getValue() + dsp::quadraticBipolar(params[FM_PARAM].getValue()) * 12.f * inputs[FM_INPUT].getVoltage();
 		oscillator.setPitch(0.f, pitchCv);
 		oscillator.syncEnabled = inputs[SYNC_INPUT].active;
 
-		oscillator.process(deltaTime, inputs[SYNC_INPUT].value);
+		oscillator.process(deltaTime, inputs[SYNC_INPUT].getVoltage());
 
 		// Set output
-		float wave = clamp(params[WAVE_PARAM].value + inputs[WAVE_INPUT].value, 0.f, 3.f);
+		float wave = clamp(params[WAVE_PARAM].getValue() + inputs[WAVE_INPUT].getVoltage(), 0.f, 3.f);
 		float out;
 		if (wave < 1.f)
 			out = crossfade(oscillator.sin(), oscillator.tri(), wave);
@@ -328,7 +328,7 @@ struct VCO2 : Module {
 			out = crossfade(oscillator.tri(), oscillator.saw(), wave - 1.f);
 		else
 			out = crossfade(oscillator.saw(), oscillator.sqr(), wave - 2.f);
-		outputs[OUT_OUTPUT].value = 5.f * out;
+		outputs[OUT_OUTPUT].setVoltage(5.f * out);
 
 		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), deltaTime);
 		lights[PHASE_NEG_LIGHT].setSmoothBrightness(-oscillator.light(), deltaTime);

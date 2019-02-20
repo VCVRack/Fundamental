@@ -30,8 +30,8 @@ struct _8vert : Module {
 		float lastIn = 10.f;
 		for (int i = 0; i < 8; i++) {
 			lastIn = inputs[i].getNormalVoltage(lastIn);
-			float out = lastIn * params[i].value;
-			outputs[i].value = out;
+			float out = lastIn * params[i].getValue();
+			outputs[i].setVoltage(out);
 			lights[2*i + 0].setSmoothBrightness(out / 5.f, args.sampleTime);
 			lights[2*i + 1].setSmoothBrightness(-out / 5.f, args.sampleTime);
 		}

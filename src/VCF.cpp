@@ -93,13 +93,13 @@ struct VCF : Module {
 
 	void process(const ProcessArgs &args) override {
 		if (!outputs[LPF_OUTPUT].active && !outputs[HPF_OUTPUT].active) {
-			outputs[LPF_OUTPUT].value = 0.f;
-			outputs[HPF_OUTPUT].value = 0.f;
+			outputs[LPF_OUTPUT].setVoltage(0.f);
+			outputs[HPF_OUTPUT].setVoltage(0.f);
 			return;
 		}
 
-		float input = inputs[IN_INPUT].value / 5.f;
-		float drive = clamp(params[DRIVE_PARAM].value + inputs[DRIVE_INPUT].value / 10.f, 0.f, 1.f);
+		float input = inputs[IN_INPUT].getVoltage() / 5.f;
+		float drive = clamp(params[DRIVE_PARAM].getValue() + inputs[DRIVE_INPUT].getVoltage() / 10.f, 0.f, 1.f);
 		float gain = std::pow(1.f + drive, 5);
 		input *= gain;
 
@@ -107,15 +107,15 @@ struct VCF : Module {
 		input += 1e-6f * (2.f * random::uniform() - 1.f);
 
 		// Set resonance
-		float res = clamp(params[RES_PARAM].value + inputs[RES_INPUT].value / 10.f, 0.f, 1.f);
+		float res = clamp(params[RES_PARAM].getValue() + inputs[RES_INPUT].getVoltage() / 10.f, 0.f, 1.f);
 		filter.resonance = std::pow(res, 2) * 10.f;
 
 		// Set cutoff frequency
 		float pitch = 0.f;
 		if (inputs[FREQ_INPUT].active)
-			pitch += inputs[FREQ_INPUT].value * dsp::quadraticBipolar(params[FREQ_CV_PARAM].value);
-		pitch += params[FREQ_PARAM].value * 10.f - 5.f;
-		pitch += dsp::quadraticBipolar(params[FINE_PARAM].value * 2.f - 1.f) * 7.f / 12.f;
+			pitch += inputs[FREQ_INPUT].getVoltage() * dsp::quadraticBipolar(params[FREQ_CV_PARAM].getValue());
+		pitch += params[FREQ_PARAM].getValue() * 10.f - 5.f;
+		pitch += dsp::quadraticBipolar(params[FINE_PARAM].getValue() * 2.f - 1.f) * 7.f / 12.f;
 		float cutoff = 261.626f * std::pow(2.f, pitch);
 		cutoff = clamp(cutoff, 1.f, 8000.f);
 		filter.setCutoff(cutoff);
@@ -136,15 +136,15 @@ struct VCF : Module {
 
 		// Set outputs
 		if (outputs[LPF_OUTPUT].active) {
-			outputs[LPF_OUTPUT].value = 5.f * lowpassDecimator.process(lowpassBuf);
+			outputs[LPF_OUTPUT].setVoltage(5.f * lowpassDecimator.process(lowpassBuf));
 		}
 		if (outputs[HPF_OUTPUT].active) {
-			outputs[HPF_OUTPUT].value = 5.f * highpassDecimator.process(highpassBuf);
+			outputs[HPF_OUTPUT].setVoltage(5.f * highpassDecimator.process(highpassBuf));
 		}
 		*/
 		filter.process(input, args.sampleTime);
-		outputs[LPF_OUTPUT].value = 5.f * filter.lowpass;
-		outputs[HPF_OUTPUT].value = 5.f * filter.highpass;
+		outputs[LPF_OUTPUT].setVoltage(5.f * filter.lowpass);
+		outputs[HPF_OUTPUT].setVoltage(5.f * filter.highpass);
 	}
 };
 

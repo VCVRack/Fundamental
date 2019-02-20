@@ -108,17 +108,17 @@ struct LFO : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		oscillator.setPitch(params[FREQ_PARAM].value + params[FM1_PARAM].value * inputs[FM1_INPUT].value + params[FM2_PARAM].value * inputs[FM2_INPUT].value);
-		oscillator.setPulseWidth(params[PW_PARAM].value + params[PWM_PARAM].value * inputs[PW_INPUT].value / 10.f);
-		oscillator.offset = (params[OFFSET_PARAM].value > 0.f);
-		oscillator.invert = (params[INVERT_PARAM].value <= 0.f);
+		oscillator.setPitch(params[FREQ_PARAM].getValue() + params[FM1_PARAM].getValue() * inputs[FM1_INPUT].getVoltage() + params[FM2_PARAM].getValue() * inputs[FM2_INPUT].getVoltage());
+		oscillator.setPulseWidth(params[PW_PARAM].getValue() + params[PWM_PARAM].getValue() * inputs[PW_INPUT].getVoltage() / 10.f);
+		oscillator.offset = (params[OFFSET_PARAM].getValue() > 0.f);
+		oscillator.invert = (params[INVERT_PARAM].getValue() <= 0.f);
 		oscillator.step(args.sampleTime);
-		oscillator.setReset(inputs[RESET_INPUT].value);
+		oscillator.setReset(inputs[RESET_INPUT].getVoltage());
 
-		outputs[SIN_OUTPUT].value = 5.f * oscillator.sin();
-		outputs[TRI_OUTPUT].value = 5.f * oscillator.tri();
-		outputs[SAW_OUTPUT].value = 5.f * oscillator.saw();
-		outputs[SQR_OUTPUT].value = 5.f * oscillator.sqr();
+		outputs[SIN_OUTPUT].setVoltage(5.f * oscillator.sin());
+		outputs[TRI_OUTPUT].setVoltage(5.f * oscillator.tri());
+		outputs[SAW_OUTPUT].setVoltage(5.f * oscillator.saw());
+		outputs[SQR_OUTPUT].setVoltage(5.f * oscillator.sqr());
 
 		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), args.sampleTime);
 		lights[PHASE_NEG_LIGHT].setSmoothBrightness(-oscillator.light(), args.sampleTime);
@@ -203,13 +203,13 @@ struct LFO2 : Module {
 
 	void process(const ProcessArgs &args) override {
 		float deltaTime = args.sampleTime;
-		oscillator.setPitch(params[FREQ_PARAM].value + params[FM_PARAM].value * inputs[FM_INPUT].value);
-		oscillator.offset = (params[OFFSET_PARAM].value > 0.f);
-		oscillator.invert = (params[INVERT_PARAM].value <= 0.f);
+		oscillator.setPitch(params[FREQ_PARAM].getValue() + params[FM_PARAM].getValue() * inputs[FM_INPUT].getVoltage());
+		oscillator.offset = (params[OFFSET_PARAM].getValue() > 0.f);
+		oscillator.invert = (params[INVERT_PARAM].getValue() <= 0.f);
 		oscillator.step(deltaTime);
-		oscillator.setReset(inputs[RESET_INPUT].value);
+		oscillator.setReset(inputs[RESET_INPUT].getVoltage());
 
-		float wave = params[WAVE_PARAM].value + inputs[WAVE_INPUT].value;
+		float wave = params[WAVE_PARAM].getValue() + inputs[WAVE_INPUT].getVoltage();
 		wave = clamp(wave, 0.f, 3.f);
 		float interp;
 		if (wave < 1.f)
@@ -218,7 +218,7 @@ struct LFO2 : Module {
 			interp = crossfade(oscillator.tri(), oscillator.saw(), wave - 1.f);
 		else
 			interp = crossfade(oscillator.saw(), oscillator.sqr(), wave - 2.f);
-		outputs[INTERP_OUTPUT].value = 5.f * interp;
+		outputs[INTERP_OUTPUT].setVoltage(5.f * interp);
 
 		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), deltaTime);
 		lights[PHASE_NEG_LIGHT].setSmoothBrightness(-oscillator.light(), deltaTime);

@@ -43,14 +43,14 @@ struct ADSR : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		float attack = clamp(params[ATTACK_PARAM].value + inputs[ATTACK_INPUT].value / 10.f, 0.f, 1.f);
-		float decay = clamp(params[DECAY_PARAM].value + inputs[DECAY_INPUT].value / 10.f, 0.f, 1.f);
-		float sustain = clamp(params[SUSTAIN_PARAM].value + inputs[SUSTAIN_INPUT].value / 10.f, 0.f, 1.f);
-		float release = clamp(params[RELEASE_PARAM].value + inputs[RELEASE_INPUT].value / 10.f, 0.f, 1.f);
+		float attack = clamp(params[ATTACK_PARAM].getValue() + inputs[ATTACK_INPUT].getVoltage() / 10.f, 0.f, 1.f);
+		float decay = clamp(params[DECAY_PARAM].getValue() + inputs[DECAY_INPUT].getVoltage() / 10.f, 0.f, 1.f);
+		float sustain = clamp(params[SUSTAIN_PARAM].getValue() + inputs[SUSTAIN_INPUT].getVoltage() / 10.f, 0.f, 1.f);
+		float release = clamp(params[RELEASE_PARAM].getValue() + inputs[RELEASE_INPUT].getVoltage() / 10.f, 0.f, 1.f);
 
 		// Gate and trigger
-		bool gated = inputs[GATE_INPUT].value >= 1.f;
-		if (trigger.process(inputs[TRIG_INPUT].value))
+		bool gated = inputs[GATE_INPUT].getVoltage() >= 1.f;
+		if (trigger.process(inputs[TRIG_INPUT].getVoltage()))
 			decaying = false;
 
 		const float base = 20000.f;
@@ -94,7 +94,7 @@ struct ADSR : Module {
 		bool sustaining = isNear(env, sustain, 1e-3);
 		bool resting = isNear(env, 0.f, 1e-3);
 
-		outputs[ENVELOPE_OUTPUT].value = 10.f * env;
+		outputs[ENVELOPE_OUTPUT].setVoltage(10.f * env);
 
 		// Lights
 		lights[ATTACK_LIGHT].value = (gated && !decaying) ? 1.f : 0.f;

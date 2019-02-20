@@ -59,28 +59,28 @@ struct Scope : Module {
 
 	void process(const ProcessArgs &args) override {
 		// Modes
-		if (sumTrigger.process(params[LISSAJOUS_PARAM].value)) {
+		if (sumTrigger.process(params[LISSAJOUS_PARAM].getValue())) {
 			lissajous = !lissajous;
 		}
 		lights[PLOT_LIGHT].value = lissajous ? 0.0f : 1.0f;
 		lights[LISSAJOUS_LIGHT].value = lissajous ? 1.0f : 0.0f;
 
-		if (extTrigger.process(params[EXTERNAL_PARAM].value)) {
+		if (extTrigger.process(params[EXTERNAL_PARAM].getValue())) {
 			external = !external;
 		}
 		lights[INTERNAL_LIGHT].value = external ? 0.0f : 1.0f;
 		lights[EXTERNAL_LIGHT].value = external ? 1.0f : 0.0f;
 
 		// Compute time
-		float deltaTime = std::pow(2.0f, -params[TIME_PARAM].value);
+		float deltaTime = std::pow(2.0f, -params[TIME_PARAM].getValue());
 		int frameCount = (int) std::ceil(deltaTime * args.sampleRate);
 
 		// Add frame to buffer
 		if (bufferIndex < BUFFER_SIZE) {
 			if (++frameIndex > frameCount) {
 				frameIndex = 0;
-				bufferX[bufferIndex] = inputs[X_INPUT].value;
-				bufferY[bufferIndex] = inputs[Y_INPUT].value;
+				bufferX[bufferIndex] = inputs[X_INPUT].getVoltage();
+				bufferY[bufferIndex] = inputs[Y_INPUT].getVoltage();
 				bufferIndex++;
 			}
 		}
@@ -101,11 +101,11 @@ struct Scope : Module {
 			frameIndex++;
 
 			// Must go below 0.1fV to trigger
-			float gate = external ? inputs[TRIG_INPUT].value : inputs[X_INPUT].value;
+			float gate = external ? inputs[TRIG_INPUT].getVoltage() : inputs[X_INPUT].getVoltage();
 
 			// Reset if triggered
 			float holdTime = 0.1f;
-			if (resetTrigger.process(rescale(gate, params[TRIG_PARAM].value - 0.1f, params[TRIG_PARAM].value, 0.f, 1.f)) || (frameIndex >= args.sampleRate * holdTime)) {
+			if (resetTrigger.process(rescale(gate, params[TRIG_PARAM].getValue() - 0.1f, params[TRIG_PARAM].getValue(), 0.f, 1.f)) || (frameIndex >= args.sampleRate * holdTime)) {
 				bufferIndex = 0; frameIndex = 0; return;
 			}
 
@@ -260,10 +260,10 @@ struct ScopeDisplay : TransparentWidget {
 		if (!module)
 			return;
 
-		float gainX = std::pow(2.0f, std::round(module->params[Scope::X_SCALE_PARAM].value));
-		float gainY = std::pow(2.0f, std::round(module->params[Scope::Y_SCALE_PARAM].value));
-		float offsetX = module->params[Scope::X_POS_PARAM].value;
-		float offsetY = module->params[Scope::Y_POS_PARAM].value;
+		float gainX = std::pow(2.0f, std::round(module->params[Scope::X_SCALE_PARAM].getValue()));
+		float gainY = std::pow(2.0f, std::round(module->params[Scope::Y_SCALE_PARAM].getValue()));
+		float offsetX = module->params[Scope::X_POS_PARAM].getValue();
+		float offsetY = module->params[Scope::Y_POS_PARAM].getValue();
 
 		float valuesX[BUFFER_SIZE];
 		float valuesY[BUFFER_SIZE];
@@ -297,7 +297,7 @@ struct ScopeDisplay : TransparentWidget {
 				drawWaveform(args, valuesX, NULL);
 			}
 
-			float valueTrig = (module->params[Scope::TRIG_PARAM].value + offsetX) * gainX / 10.0f;
+			float valueTrig = (module->params[Scope::TRIG_PARAM].getValue() + offsetX) * gainX / 10.0f;
 			drawTrig(args, valueTrig);
 		}
 

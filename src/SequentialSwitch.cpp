@@ -1,7 +1,8 @@
 #include "plugin.hpp"
 
 
-template <int TYPE>
+// Only valid for <1, 4> and <4, 1>
+template <int INPUTS, int OUTPUTS>
 struct SequentialSwitch : Module {
 	enum ParamIds {
 		CHANNELS_PARAM,
@@ -10,11 +11,11 @@ struct SequentialSwitch : Module {
 	enum InputIds {
 		CLOCK_INPUT,
 		RESET_INPUT,
-		ENUMS(IN_INPUT, TYPE == 1 ? 1 : 4),
+		ENUMS(IN_INPUTS, INPUTS),
 		NUM_INPUTS
 	};
 	enum OutputIds {
-		ENUMS(OUT_OUTPUT, TYPE == 1 ? 4 : 1),
+		ENUMS(OUT_OUTPUTS, OUTPUTS),
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -25,61 +26,69 @@ struct SequentialSwitch : Module {
 	dsp::SchmittTrigger clockTrigger;
 	dsp::SchmittTrigger resetTrigger;
 	int channel = 0;
-	dsp::SlewLimiter channelFilter[4];
+	dsp::Counter lightCounter;
+	dsp::SlewLimiter clickFilters[4];
 
 	SequentialSwitch() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[CHANNELS_PARAM].config(0.0, 2.0, 0.0, "Channels", "", 0.f, 1.f, 2.f);
+		params[CHANNELS_PARAM].config(0.0, 2.0, 0.0, "Channels", "", 0, -1, 4);
 
-		for (int i = 0; i < 4; i++) {
-			channelFilter[i].rise = 0.01f;
-			channelFilter[i].fall = 0.01f;
+		for (int i = 0; i < OUTPUTS; i++) {
+			clickFilters[i].rise = 400.f; // Hz
+			clickFilters[i].fall = 400.f; // Hz
 		}
+		lightCounter.setPeriod(512);
 	}
 
 	void process(const ProcessArgs &args) override {
 		// Determine current channel
-		if (clockTrigger.process(inputs[CLOCK_INPUT].value / 2.f)) {
+		if (clockTrigger.process(rescale(inputs[CLOCK_INPUT].getVoltage(), 0.1f, 2.f, 0.f, 1.f))) {
 			channel++;
 		}
-		if (resetTrigger.process(inputs[RESET_INPUT].value / 2.f)) {
+		if (resetTrigger.process(rescale(inputs[RESET_INPUT].getVoltage(), 0.1f, 2.f, 0.f, 1.f))) {
 			channel = 0;
 		}
-		int channels = 4 - (int) params[CHANNELS_PARAM].value;
-		channel %= channels;
+		int channels = 4 - (int) std::round(params[CHANNELS_PARAM].getValue());
+		if (channel >= channels)
+			channel = 0;
 
-		// Filter channels
-		for (int i = 0; i < 4; i++) {
-			channelFilter[i].process(channel == i ? 1.f : 0.f);
-		}
-
-		// Set outputs
-		if (TYPE == 1) {
-			float out = inputs[IN_INPUT + 0].value;
-			for (int i = 0; i < 4; i++) {
-				outputs[OUT_OUTPUT + i].value = channelFilter[i].out * out;
-			}
+		// Get input
+		float v = 0.f;
+		if (INPUTS == 1) {
+			v = inputs[IN_INPUTS + 0].getVoltage();
 		}
 		else {
-			float out = 0.f;
-			for (int i = 0; i < 4; i++) {
-				out += channelFilter[i].out * inputs[IN_INPUT + i].value;
+			for (int i = 0; i < INPUTS; i++) {
+				float in = inputs[IN_INPUTS + i].getVoltage();
+				v += in * clickFilters[i].process(args.sampleTime, channel == i);
 			}
-			outputs[OUT_OUTPUT + 0].value = out;
+		}
+
+		// Set output
+		if (OUTPUTS == 1) {
+			outputs[OUT_OUTPUTS + 0].setVoltage(v);
+		}
+		else {
+			for (int i = 0; i < OUTPUTS; i++) {
+				float out = v * clickFilters[i].process(args.sampleTime, channel == i);
+				outputs[OUT_OUTPUTS + i].setVoltage(out);
+			}
 		}
 
 		// Set lights
-		for (int i = 0; i < 4; i++) {
-			lights[CHANNEL_LIGHT + i].setBrightness(channelFilter[i].out);
+		if (lightCounter.process()) {
+			for (int i = 0; i < 4; i++) {
+				lights[CHANNEL_LIGHT + i].setBrightness(channel == i);
+			}
 		}
 	}
 };
 
 
 struct SequentialSwitch1Widget : ModuleWidget {
-	typedef SequentialSwitch<1> TSequentialSwitch;
+	typedef SequentialSwitch<1, 4> TSequentialSwitch;
 
-	SequentialSwitch1Widget(SequentialSwitch<1> *module) {
+	SequentialSwitch1Widget(TSequentialSwitch *module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SequentialSwitch1.svg")));
 
@@ -90,12 +99,12 @@ struct SequentialSwitch1Widget : ModuleWidget {
 
 		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 17.694)), module, TSequentialSwitch::CLOCK_INPUT));
 		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 32.1896)), module, TSequentialSwitch::RESET_INPUT));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51536, 62.8096)), module, TSequentialSwitch::IN_INPUT + 0));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51536, 62.8096)), module, TSequentialSwitch::IN_INPUTS + 0));
 
-		addOutput(createOutput<PJ301MPort>(mm2px(Vec(3.51536, 77.8095)), module, TSequentialSwitch::OUT_OUTPUT + 0));
-		addOutput(createOutput<PJ301MPort>(mm2px(Vec(3.51398, 87.8113)), module, TSequentialSwitch::OUT_OUTPUT + 1));
-		addOutput(createOutput<PJ301MPort>(mm2px(Vec(3.51398, 97.809)), module, TSequentialSwitch::OUT_OUTPUT + 2));
-		addOutput(createOutput<PJ301MPort>(mm2px(Vec(3.51398, 107.809)), module, TSequentialSwitch::OUT_OUTPUT + 3));
+		addOutput(createOutput<PJ301MPort>(mm2px(Vec(3.51536, 77.8095)), module, TSequentialSwitch::OUT_OUTPUTS + 0));
+		addOutput(createOutput<PJ301MPort>(mm2px(Vec(3.51398, 87.8113)), module, TSequentialSwitch::OUT_OUTPUTS + 1));
+		addOutput(createOutput<PJ301MPort>(mm2px(Vec(3.51398, 97.809)), module, TSequentialSwitch::OUT_OUTPUTS + 2));
+		addOutput(createOutput<PJ301MPort>(mm2px(Vec(3.51398, 107.809)), module, TSequentialSwitch::OUT_OUTPUTS + 3));
 
 		addChild(createLight<TinyLight<GreenLight>>(mm2px(Vec(10.8203, 77.7158)), module, TSequentialSwitch::CHANNEL_LIGHT + 0));
 		addChild(createLight<TinyLight<GreenLight>>(mm2px(Vec(10.8203, 87.7163)), module, TSequentialSwitch::CHANNEL_LIGHT + 1));
@@ -105,13 +114,13 @@ struct SequentialSwitch1Widget : ModuleWidget {
 };
 
 
-Model *modelSequentialSwitch1 = createModel<SequentialSwitch<1>, SequentialSwitch1Widget>("SequentialSwitch1");
+Model *modelSequentialSwitch1 = createModel<SequentialSwitch<1, 4>, SequentialSwitch1Widget>("SequentialSwitch1");
 
 
 struct SequentialSwitch2Widget : ModuleWidget {
-	typedef SequentialSwitch<2> TSequentialSwitch;
+	typedef SequentialSwitch<4, 1> TSequentialSwitch;
 
-	SequentialSwitch2Widget(SequentialSwitch<2> *module) {
+	SequentialSwitch2Widget(TSequentialSwitch *module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SequentialSwitch2.svg")));
 
@@ -122,12 +131,12 @@ struct SequentialSwitch2Widget : ModuleWidget {
 
 		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 17.694)), module, TSequentialSwitch::CLOCK_INPUT));
 		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 32.191)), module, TSequentialSwitch::RESET_INPUT));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 62.811)), module, TSequentialSwitch::IN_INPUT + 0));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 72.8114)), module, TSequentialSwitch::IN_INPUT + 1));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 82.8091)), module, TSequentialSwitch::IN_INPUT + 2));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 92.8109)), module, TSequentialSwitch::IN_INPUT + 3));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 62.811)), module, TSequentialSwitch::IN_INPUTS + 0));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 72.8114)), module, TSequentialSwitch::IN_INPUTS + 1));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 82.8091)), module, TSequentialSwitch::IN_INPUTS + 2));
+		addInput(createInput<PJ301MPort>(mm2px(Vec(3.51398, 92.8109)), module, TSequentialSwitch::IN_INPUTS + 3));
 
-		addOutput(createOutput<PJ301MPort>(mm2px(Vec(3.51398, 107.622)), module, TSequentialSwitch::OUT_OUTPUT + 0));
+		addOutput(createOutput<PJ301MPort>(mm2px(Vec(3.51398, 107.622)), module, TSequentialSwitch::OUT_OUTPUTS + 0));
 
 		addChild(createLight<TinyLight<GreenLight>>(mm2px(Vec(10.7321, 62.6277)), module, TSequentialSwitch::CHANNEL_LIGHT + 0));
 		addChild(createLight<TinyLight<GreenLight>>(mm2px(Vec(10.7321, 72.6281)), module, TSequentialSwitch::CHANNEL_LIGHT + 1));
@@ -137,4 +146,4 @@ struct SequentialSwitch2Widget : ModuleWidget {
 };
 
 
-Model *modelSequentialSwitch2 = createModel<SequentialSwitch<2>, SequentialSwitch2Widget>("SequentialSwitch2");
+Model *modelSequentialSwitch2 = createModel<SequentialSwitch<4, 1>, SequentialSwitch2Widget>("SequentialSwitch2");

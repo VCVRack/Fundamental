@@ -6,6 +6,7 @@
 	"authorEmail": "contact@vcvrack.com",
 	"pluginUrl": "https://vcvrack.com/Fundamental.html",
 	"authorUrl": "https://vcvrack.com/",
+	"manualUrl": "https://vcvrack.com/Fundamental.html#manual",
 	"sourceUrl": "https://github.com/VCVRack/Fundamental",
 	"version": "1.0.0",
 	"modules": {

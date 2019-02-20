@@ -29,13 +29,13 @@ struct VCA : Module {
 	}
 
 	void stepChannel(InputIds in, ParamIds level, InputIds lin, InputIds exp, OutputIds out) {
-		float v = inputs[in].value * params[level].value;
+		float v = inputs[in].getVoltage() * params[level].getValue();
 		if (inputs[lin].active)
-			v *= clamp(inputs[lin].value / 10.0f, 0.0f, 1.0f);
+			v *= clamp(inputs[lin].getVoltage() / 10.0f, 0.0f, 1.0f);
 		const float expBase = 50.0f;
 		if (inputs[exp].active)
-			v *= rescale(std::pow(expBase, clamp(inputs[exp].value / 10.0f, 0.0f, 1.0f)), 1.0f, expBase, 0.0f, 1.0f);
-		outputs[out].value = v;
+			v *= rescale(std::pow(expBase, clamp(inputs[exp].getVoltage() / 10.0f, 0.0f, 1.0f)), 1.0f, expBase, 0.0f, 1.0f);
+		outputs[out].setVoltage(v);
 	}
 
 	void process(const ProcessArgs &args) override {
@@ -104,10 +104,10 @@ struct VCA_1 : Module {
 
 	void process(const ProcessArgs &args) override {
 		float cv = inputs[CV_INPUT].getNormalVoltage(10.f) / 10.f;
-		if ((int) params[EXP_PARAM].value == 0)
+		if ((int) params[EXP_PARAM].getValue() == 0)
 			cv = std::pow(cv, 4.f);
 		lastCv = cv;
-		outputs[OUT_OUTPUT].value = inputs[IN_INPUT].value * params[LEVEL_PARAM].value * cv;
+		outputs[OUT_OUTPUT].setVoltage(inputs[IN_INPUT].getVoltage() * params[LEVEL_PARAM].getValue() * cv);
 	}
 };
 

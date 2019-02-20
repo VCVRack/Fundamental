@@ -110,7 +110,7 @@ struct SEQ3 : Module {
 	}
 
 	void setIndex(int index) {
-		int numSteps = (int) clamp(std::round(params[STEPS_PARAM].value + inputs[STEPS_INPUT].value), 1.0f, 8.0f);
+		int numSteps = (int) clamp(std::round(params[STEPS_PARAM].getValue() + inputs[STEPS_INPUT].getVoltage()), 1.0f, 8.0f);
 		phase = 0.f;
 		this->index = index;
 		if (this->index >= numSteps)
@@ -119,7 +119,7 @@ struct SEQ3 : Module {
 
 	void process(const ProcessArgs &args) override {
 		// Run
-		if (runningTrigger.process(params[RUN_PARAM].value)) {
+		if (runningTrigger.process(params[RUN_PARAM].getValue())) {
 			running = !running;
 		}
 
@@ -127,14 +127,14 @@ struct SEQ3 : Module {
 		if (running) {
 			if (inputs[EXT_CLOCK_INPUT].active) {
 				// External clock
-				if (clockTrigger.process(inputs[EXT_CLOCK_INPUT].value)) {
+				if (clockTrigger.process(inputs[EXT_CLOCK_INPUT].getVoltage())) {
 					setIndex(index + 1);
 				}
 				gateIn = clockTrigger.isHigh();
 			}
 			else {
 				// Internal clock
-				float clockTime = std::pow(2.0f, params[CLOCK_PARAM].value + inputs[CLOCK_INPUT].value);
+				float clockTime = std::pow(2.0f, params[CLOCK_PARAM].getValue() + inputs[CLOCK_INPUT].getVoltage());
 				phase += clockTime * args.sampleTime;
 				if (phase >= 1.0f) {
 					setIndex(index + 1);
@@ -144,24 +144,24 @@ struct SEQ3 : Module {
 		}
 
 		// Reset
-		if (resetTrigger.process(params[RESET_PARAM].value + inputs[RESET_INPUT].value)) {
+		if (resetTrigger.process(params[RESET_PARAM].getValue() + inputs[RESET_INPUT].getVoltage())) {
 			setIndex(0);
 		}
 
 		// Gate buttons
 		for (int i = 0; i < 8; i++) {
-			if (gateTriggers[i].process(params[GATE_PARAM + i].value)) {
+			if (gateTriggers[i].process(params[GATE_PARAM + i].getValue())) {
 				gates[i] = !gates[i];
 			}
-			outputs[GATE_OUTPUT + i].value = (running && gateIn && i == index && gates[i]) ? 10.0f : 0.0f;
+			outputs[GATE_OUTPUT + i].setVoltage((running && gateIn && i == index && gates[i]) ? 10.0f : 0.0f);
 			lights[GATE_LIGHTS + i].setSmoothBrightness((gateIn && i == index) ? (gates[i] ? 1.f : 0.33) : (gates[i] ? 0.66 : 0.0), args.sampleTime);
 		}
 
 		// Outputs
-		outputs[ROW1_OUTPUT].value = params[ROW1_PARAM + index].value;
-		outputs[ROW2_OUTPUT].value = params[ROW2_PARAM + index].value;
-		outputs[ROW3_OUTPUT].value = params[ROW3_PARAM + index].value;
-		outputs[GATES_OUTPUT].value = (gateIn && gates[index]) ? 10.0f : 0.0f;
+		outputs[ROW1_OUTPUT].setVoltage(params[ROW1_PARAM + index].getValue());
+		outputs[ROW2_OUTPUT].setVoltage(params[ROW2_PARAM + index].getValue());
+		outputs[ROW3_OUTPUT].setVoltage(params[ROW3_PARAM + index].getValue());
+		outputs[GATES_OUTPUT].setVoltage((gateIn && gates[index]) ? 10.0f : 0.0f);
 		lights[RUNNING_LIGHT].value = (running);
 		lights[RESET_LIGHT].setSmoothBrightness(resetTrigger.isHigh(), args.sampleTime);
 		lights[GATES_LIGHT].setSmoothBrightness(gateIn, args.sampleTime);

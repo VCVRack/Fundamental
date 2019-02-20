@@ -42,7 +42,7 @@ struct Unity : Module {
 		for (int i = 0; i < 2; i++) {
 			// Inputs
 			for (int j = 0; j < 6; j++) {
-				mix[i] += inputs[IN_INPUTS + 6 * i + j].value;
+				mix[i] += inputs[IN_INPUTS + 6 * i + j].getVoltage();
 				if (inputs[IN_INPUTS + 6 * i + j].active)
 					count[i]++;
 			}
@@ -58,12 +58,12 @@ struct Unity : Module {
 
 		for (int i = 0; i < 2; i++) {
 			// Params
-			if (count[i] > 0 && (int) std::round(params[AVG1_PARAM + i].value) == 1)
+			if (count[i] > 0 && (int) std::round(params[AVG1_PARAM + i].getValue()) == 1)
 				mix[i] /= count[i];
 
 			// Outputs
-			outputs[MIX1_OUTPUT + 2 * i].value = mix[i];
-			outputs[INV1_OUTPUT + 2 * i].value = -mix[i];
+			outputs[MIX1_OUTPUT + 2 * i].setVoltage(mix[i]);
+			outputs[INV1_OUTPUT + 2 * i].setVoltage(-mix[i]);
 			vuMeters[i].process(args.sampleTime, mix[i] / 10.f);
 		}
 

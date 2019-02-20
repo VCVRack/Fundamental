@@ -37,11 +37,11 @@ struct Mutes : Module {
 	void process(const ProcessArgs &args) override {
 		float out = 0.f;
 		for (int i = 0; i < NUM_CHANNELS; i++) {
-			if (muteTrigger[i].process(params[MUTE_PARAM + i].value))
+			if (muteTrigger[i].process(params[MUTE_PARAM + i].getValue()))
 				state[i] ^= true;
 			if (inputs[IN_INPUT + i].active)
-				out = inputs[IN_INPUT + i].value;
-			outputs[OUT_OUTPUT + i].value = state[i] ? out : 0.f;
+				out = inputs[IN_INPUT + i].getVoltage();
+			outputs[OUT_OUTPUT + i].setVoltage(state[i] ? out : 0.f);
 			lights[MUTE_LIGHT + i].setBrightness(state[i] ? 0.9f : 0.f);
 		}
 	}

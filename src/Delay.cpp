@@ -49,12 +49,12 @@ struct Delay : Module {
 
 	void process(const ProcessArgs &args) override {
 		// Get input to delay block
-		float in = inputs[IN_INPUT].value;
-		float feedback = clamp(params[FEEDBACK_PARAM].value + inputs[FEEDBACK_INPUT].value / 10.0f, 0.0f, 1.0f);
+		float in = inputs[IN_INPUT].getVoltage();
+		float feedback = clamp(params[FEEDBACK_PARAM].getValue() + inputs[FEEDBACK_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);
 		float dry = in + lastWet * feedback;
 
 		// Compute delay time in seconds
-		float delay = 1e-3 * std::pow(10.0f / 1e-3, clamp(params[TIME_PARAM].value + inputs[TIME_INPUT].value / 10.0f, 0.0f, 1.0f));
+		float delay = 1e-3 * std::pow(10.0f / 1e-3, clamp(params[TIME_PARAM].getValue() + inputs[TIME_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f));
 		// Number of delay samples
 		float index = delay * args.sampleRate;
 
@@ -91,7 +91,7 @@ struct Delay : Module {
 
 		// Apply color to delay wet output
 		// TODO Make it sound better
-		float color = clamp(params[COLOR_PARAM].value + inputs[COLOR_INPUT].value / 10.0f, 0.0f, 1.0f);
+		float color = clamp(params[COLOR_PARAM].getValue() + inputs[COLOR_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);
 		float lowpassFreq = 10000.0f * std::pow(10.0f, clamp(2.0f*color, 0.0f, 1.0f));
 		lowpassFilter.setCutoff(lowpassFreq / args.sampleRate);
 		lowpassFilter.process(wet);
@@ -103,9 +103,9 @@ struct Delay : Module {
 
 		lastWet = wet;
 
-		float mix = clamp(params[MIX_PARAM].value + inputs[MIX_INPUT].value / 10.0f, 0.0f, 1.0f);
+		float mix = clamp(params[MIX_PARAM].getValue() + inputs[MIX_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);
 		float out = crossfade(in, wet, mix);
-		outputs[OUT_OUTPUT].value = out;
+		outputs[OUT_OUTPUT].setVoltage(out);
 	}
 };
 

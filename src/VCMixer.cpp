@@ -21,27 +21,27 @@ struct VCMixer : Module {
 
 	VCMixer() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
-		params[MIX_LVL_PARAM].config(0.0, 2.0, 1.0, "Master level");
-		params[LVL_PARAM + 0].config(0.0, 1.0, 1.0, "Ch 1 level");
-		params[LVL_PARAM + 1].config(0.0, 1.0, 1.0, "Ch 2 level");
-		params[LVL_PARAM + 2].config(0.0, 1.0, 1.0, "Ch 3 level");
-		params[LVL_PARAM + 3].config(0.0, 1.0, 1.0, "Ch 4 level");
+		params[MIX_LVL_PARAM].config(0.0, 2.0, 1.0, "Master level", "%", 0, 100);
+		params[LVL_PARAM + 0].config(0.0, 1.0, 1.0, "Ch 1 level", "%", 0, 100);
+		params[LVL_PARAM + 1].config(0.0, 1.0, 1.0, "Ch 2 level", "%", 0, 100);
+		params[LVL_PARAM + 2].config(0.0, 1.0, 1.0, "Ch 3 level", "%", 0, 100);
+		params[LVL_PARAM + 3].config(0.0, 1.0, 1.0, "Ch 4 level", "%", 0, 100);
 	}
 
 	void process(const ProcessArgs &args) override {
 		float mix = 0.f;
 		for (int i = 0; i < 4; i++) {
-			float ch = inputs[CH_INPUT + i].value;
-			ch *= std::pow(params[LVL_PARAM + i].value, 2.f);
+			float ch = inputs[CH_INPUT + i].getVoltage();
+			ch *= std::pow(params[LVL_PARAM + i].getValue(), 2.f);
 			if (inputs[CV_INPUT + i].active)
-				ch *= clamp(inputs[CV_INPUT + i].value / 10.f, 0.f, 1.f);
-			outputs[CH_OUTPUT + i].value = ch;
+				ch *= clamp(inputs[CV_INPUT + i].getVoltage() / 10.f, 0.f, 1.f);
+			outputs[CH_OUTPUT + i].setVoltage(ch);
 			mix += ch;
 		}
-		mix *= params[MIX_LVL_PARAM].value;
+		mix *= params[MIX_LVL_PARAM].getValue();
 		if (inputs[MIX_CV_INPUT].active)
-			mix *= clamp(inputs[MIX_CV_INPUT].value / 10.f, 0.f, 1.f);
-		outputs[MIX_OUTPUT].value = mix;
+			mix *= clamp(inputs[MIX_CV_INPUT].getVoltage() / 10.f, 0.f, 1.f);
+		outputs[MIX_OUTPUT].setVoltage(mix);
 	}
 };
 
