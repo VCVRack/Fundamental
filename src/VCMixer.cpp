@@ -21,27 +21,76 @@ struct VCMixer : Module {
 
 	VCMixer() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
-		params[MIX_LVL_PARAM].config(0.0, 2.0, 1.0, "Master level", "%", 0, 100);
-		params[LVL_PARAM + 0].config(0.0, 1.0, 1.0, "Ch 1 level", "%", 0, 100);
-		params[LVL_PARAM + 1].config(0.0, 1.0, 1.0, "Ch 2 level", "%", 0, 100);
-		params[LVL_PARAM + 2].config(0.0, 1.0, 1.0, "Ch 3 level", "%", 0, 100);
-		params[LVL_PARAM + 3].config(0.0, 1.0, 1.0, "Ch 4 level", "%", 0, 100);
+		// x^1 scaling up to 6 dB
+		params[MIX_LVL_PARAM].config(0.0, 2.0, 1.0, "Master level", " dB", -10, 20);
+		// x^2 scaling up to 6 dB
+		params[LVL_PARAM + 0].config(0.0, M_SQRT2, 1.0, "Ch 1 level", " dB", -10, 40);
+		params[LVL_PARAM + 1].config(0.0, M_SQRT2, 1.0, "Ch 2 level", " dB", -10, 40);
+		params[LVL_PARAM + 2].config(0.0, M_SQRT2, 1.0, "Ch 3 level", " dB", -10, 40);
+		params[LVL_PARAM + 3].config(0.0, M_SQRT2, 1.0, "Ch 4 level", " dB", -10, 40);
 	}
 
 	void process(const ProcessArgs &args) override {
-		float mix = 0.f;
+		float mix[16] = {};
+		int maxChannels = 1;
+
 		for (int i = 0; i < 4; i++) {
-			float ch = inputs[CH_INPUT + i].getVoltage();
-			ch *= std::pow(params[LVL_PARAM + i].getValue(), 2.f);
-			if (inputs[CV_INPUT + i].isConnected())
-				ch *= clamp(inputs[CV_INPUT + i].getVoltage() / 10.f, 0.f, 1.f);
-			outputs[CH_OUTPUT + i].setVoltage(ch);
-			mix += ch;
+			// Skip channel if not patched
+			if (!inputs[CH_INPUT + i].isConnected())
+				continue;
+
+			float in[16] = {};
+			int channels = inputs[CH_INPUT + i].getChannels();
+			maxChannels = std::max(maxChannels, channels);
+
+			// Get input
+			inputs[CH_INPUT + i].getVoltages(in);
+
+			// Apply fader gain
+			float gain = std::pow(params[LVL_PARAM + i].getValue(), 2.f);
+			for (int c = 0; c < channels; c++) {
+				in[c] *= gain;
+			}
+
+			// Apply CV gain
+			if (inputs[CV_INPUT + i].isConnected()) {
+				for (int c = 0; c < channels; c++) {
+					float cv = clamp(inputs[CV_INPUT + i].getPolyVoltage(c) / 10.f, 0.f, 1.f);
+					in[c] *= cv;
+				}
+			}
+
+			// Set channel output
+			if (outputs[CH_OUTPUT + i].isConnected()) {
+				outputs[CH_OUTPUT + i].setChannels(channels);
+				outputs[CH_OUTPUT + i].setVoltages(in);
+			}
+
+			// Add to mix
+			for (int c = 0; c < channels; c++) {
+				mix[c] += in[c];
+			}
 		}
-		mix *= params[MIX_LVL_PARAM].getValue();
-		if (inputs[MIX_CV_INPUT].isConnected())
-			mix *= clamp(inputs[MIX_CV_INPUT].getVoltage() / 10.f, 0.f, 1.f);
-		outputs[MIX_OUTPUT].setVoltage(mix);
+
+		if (outputs[MIX_OUTPUT].isConnected()) {
+			// Apply mix knob gain
+			float gain = params[MIX_LVL_PARAM].getValue();
+			for (int c = 0; c < maxChannels; c++) {
+				mix[c] *= gain;
+			}
+
+			// Apply mix CV gain
+			if (inputs[MIX_CV_INPUT].isConnected()) {
+				for (int c = 0; c < maxChannels; c++) {
+					float cv = clamp(inputs[MIX_CV_INPUT].getPolyVoltage(c) / 10.f, 0.f, 1.f);
+					mix[c] *= cv;
+				}
+			}
+
+			// Set mix output
+			outputs[MIX_OUTPUT].setChannels(maxChannels);
+			outputs[MIX_OUTPUT].setVoltages(mix);
+		}
 	}
 };
 
