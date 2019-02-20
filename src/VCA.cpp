@@ -144,7 +144,7 @@ struct VCA_1VUKnob : SliderKnob {
 				nvgFill(args.vg);
 			}
 			if (segAmplitude > 0.f) {
-				nvgFillColor(args.vg, color::alpha(component::GREEN, segAmplitude));
+				nvgFillColor(args.vg, color::alpha(SCHEME_GREEN, segAmplitude));
 				nvgFill(args.vg);
 			}
 		}
