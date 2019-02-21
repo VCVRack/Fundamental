@@ -24,18 +24,43 @@ struct VCA : Module {
 
 	VCA() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
-		params[LEVEL1_PARAM].config(0.0, 1.0, 0.0, "Ch 1 level", "%", 0, 100);
-		params[LEVEL2_PARAM].config(0.0, 1.0, 0.0, "Ch 2 level", "%", 0, 100);
+		params[LEVEL1_PARAM].config(0.0, 1.0, 1.0, "Ch 1 level", "%", 0, 100);
+		params[LEVEL2_PARAM].config(0.0, 1.0, 1.0, "Ch 2 level", "%", 0, 100);
 	}
 
 	void stepChannel(InputIds in, ParamIds level, InputIds lin, InputIds exp, OutputIds out) {
-		float v = inputs[in].getVoltage() * params[level].getValue();
-		if (inputs[lin].isConnected())
-			v *= clamp(inputs[lin].getVoltage() / 10.0f, 0.0f, 1.0f);
-		const float expBase = 50.0f;
-		if (inputs[exp].isConnected())
-			v *= rescale(std::pow(expBase, clamp(inputs[exp].getVoltage() / 10.0f, 0.0f, 1.0f)), 1.0f, expBase, 0.0f, 1.0f);
-		outputs[out].setVoltage(v);
+		// Get input
+		int channels = inputs[in].getChannels();
+		float v[16];
+		inputs[in].getVoltages(v);
+
+		// Apply knob gain
+		float gain = params[level].getValue();
+		for (int c = 0; c < channels; c++) {
+			v[c] *= gain;
+		}
+
+		// Apply linear CV gain
+		if (inputs[lin].isConnected()) {
+			for (int c = 0; c < channels; c++) {
+				float cv = clamp(inputs[lin].getPolyVoltage(c) / 10.f, 0.f, 1.f);
+				v[c] *= cv;
+			}
+		}
+
+		// Apply exponential CV gain
+		const float expBase = 50.f;
+		if (inputs[exp].isConnected()) {
+			for (int c = 0; c < channels; c++) {
+				float cv = clamp(inputs[exp].getPolyVoltage(c) / 10.f, 0.f, 1.f);
+				cv = rescale(std::pow(expBase, cv), 1.f, expBase, 0.f, 1.f);
+				v[c] *= cv;
+			}
+		}
+
+		// Set output
+		outputs[out].setChannels(channels);
+		outputs[out].setVoltages(v);
 	}
 
 	void process(const ProcessArgs &args) override {
