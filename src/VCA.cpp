@@ -119,7 +119,7 @@ struct VCA_1 : Module {
 		NUM_LIGHTS
 	};
 
-	float lastCv = 0.f;
+	float amplitude = 0.f;
 
 	VCA_1() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -128,11 +128,33 @@ struct VCA_1 : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		float cv = inputs[CV_INPUT].getNormalVoltage(10.f) / 10.f;
-		if ((int) params[EXP_PARAM].getValue() == 0)
-			cv = std::pow(cv, 4.f);
-		lastCv = cv;
-		outputs[OUT_OUTPUT].setVoltage(inputs[IN_INPUT].getVoltage() * params[LEVEL_PARAM].getValue() * cv);
+		int channels = inputs[IN_INPUT].getChannels();
+		float amplitudeSum = 0.f;
+		float level = params[LEVEL_PARAM].getValue();
+
+		for (int c = 0; c < channels; c++) {
+			// Get input
+			float in = inputs[IN_INPUT].getVoltage(c);
+
+			// Get gain
+			float gain = level;
+			if (inputs[CV_INPUT].isConnected()) {
+				float cv = clamp(inputs[CV_INPUT].getPolyVoltage(c) / 10.f, 0.f, 1.f);
+				if ((int) std::round(params[EXP_PARAM].getValue()) == 0)
+					cv = std::pow(cv, 4.f);
+				gain *= cv;
+			}
+
+			// Apply gain
+			in *= gain;
+			amplitudeSum += gain;
+
+			// Set output
+			outputs[OUT_OUTPUT].setVoltage(in, c);
+		}
+
+		outputs[OUT_OUTPUT].setChannels(channels);
+		amplitude = (channels > 0) ? (amplitudeSum / channels) : 0.f;
 	}
 };
 
@@ -145,7 +167,7 @@ struct VCA_1VUKnob : SliderKnob {
 	}
 
 	void draw(const DrawArgs &args) override {
-		float lastCv = module ? module->lastCv : 1.f;
+		float amplitude = module ? module->amplitude : 1.f;
 
 		nvgBeginPath(args.vg);
 		nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, 2.0);
@@ -159,7 +181,6 @@ struct VCA_1VUKnob : SliderKnob {
 		for (int i = 0; i < segs; i++) {
 			float value = paramQuantity ? paramQuantity->getValue() : 1.f;
 			float segValue = clamp(value * segs - (segs - i - 1), 0.f, 1.f);
-			float amplitude = value * lastCv;
 			float segAmplitude = clamp(amplitude * segs - (segs - i - 1), 0.f, 1.f);
 			nvgBeginPath(args.vg);
 			nvgRect(args.vg, r.pos.x, r.pos.y + r.size.y / segs * i + 0.5,
