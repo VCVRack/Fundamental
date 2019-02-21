@@ -39,40 +39,40 @@ struct Scope : Module {
 	int bufferIndex = 0;
 	float frameIndex = 0;
 
-	dsp::SchmittTrigger sumTrigger;
-	dsp::SchmittTrigger extTrigger;
+	dsp::BooleanTrigger sumTrigger;
+	dsp::BooleanTrigger extTrigger;
 	bool lissajous = false;
 	bool external = false;
 	dsp::SchmittTrigger resetTrigger;
 
 	Scope() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[X_SCALE_PARAM].config(-2.0f, 8.0f, 0.0f);
-		params[X_POS_PARAM].config(-10.0f, 10.0f, 0.0f);
-		params[Y_SCALE_PARAM].config(-2.0f, 8.0f, 0.0f);
-		params[Y_POS_PARAM].config(-10.0f, 10.0f, 0.0f);
-		params[TIME_PARAM].config(6.0f, 16.0f, 14.0f);
-		params[LISSAJOUS_PARAM].config(0.0f, 1.0f, 0.0f);
-		params[TRIG_PARAM].config(-10.0f, 10.0f, 0.0f);
-		params[EXTERNAL_PARAM].config(0.0f, 1.0f, 0.0f);
+		params[X_SCALE_PARAM].config(-2.f, 8.f, 0.f);
+		params[X_POS_PARAM].config(-10.f, 10.f, 0.f);
+		params[Y_SCALE_PARAM].config(-2.f, 8.f, 0.f);
+		params[Y_POS_PARAM].config(-10.f, 10.f, 0.f);
+		params[TIME_PARAM].config(6.f, 16.f, 14.f);
+		params[LISSAJOUS_PARAM].config(0.f, 1.f, 0.f);
+		params[TRIG_PARAM].config(-10.f, 10.f, 0.f);
+		params[EXTERNAL_PARAM].config(0.f, 1.f, 0.f);
 	}
 
 	void process(const ProcessArgs &args) override {
 		// Modes
-		if (sumTrigger.process(params[LISSAJOUS_PARAM].getValue())) {
+		if (sumTrigger.process(params[LISSAJOUS_PARAM].getValue() > 0.f)) {
 			lissajous = !lissajous;
 		}
-		lights[PLOT_LIGHT].value = lissajous ? 0.0f : 1.0f;
-		lights[LISSAJOUS_LIGHT].value = lissajous ? 1.0f : 0.0f;
+		lights[PLOT_LIGHT].value = lissajous ? 0.f : 1.f;
+		lights[LISSAJOUS_LIGHT].value = lissajous ? 1.f : 0.f;
 
-		if (extTrigger.process(params[EXTERNAL_PARAM].getValue())) {
+		if (extTrigger.process(params[EXTERNAL_PARAM].getValue() > 0.f)) {
 			external = !external;
 		}
-		lights[INTERNAL_LIGHT].value = external ? 0.0f : 1.0f;
-		lights[EXTERNAL_LIGHT].value = external ? 1.0f : 0.0f;
+		lights[INTERNAL_LIGHT].value = external ? 0.f : 1.f;
+		lights[EXTERNAL_LIGHT].value = external ? 1.f : 0.f;
 
 		// Compute time
-		float deltaTime = std::pow(2.0f, -params[TIME_PARAM].getValue());
+		float deltaTime = std::pow(2.f, -params[TIME_PARAM].getValue());
 		int frameCount = (int) std::ceil(deltaTime * args.sampleRate);
 
 		// Add frame to buffer
@@ -151,7 +151,7 @@ struct ScopeDisplay : TransparentWidget {
 		float vmin = 0.f;
 		float vmax = 0.f;
 		void calculate(float *values) {
-			vrms = 0.0f;
+			vrms = 0.f;
 			vmax = -INFINITY;
 			vmin = INFINITY;
 			for (int i = 0; i < BUFFER_SIZE; i++) {
@@ -181,23 +181,23 @@ struct ScopeDisplay : TransparentWidget {
 		for (int i = 0; i < BUFFER_SIZE; i++) {
 			float x, y;
 			if (valuesY) {
-				x = valuesX[i] / 2.0f + 0.5f;
-				y = valuesY[i] / 2.0f + 0.5f;
+				x = valuesX[i] / 2.f + 0.5f;
+				y = valuesY[i] / 2.f + 0.5f;
 			}
 			else {
 				x = (float)i / (BUFFER_SIZE - 1);
-				y = valuesX[i] / 2.0f + 0.5f;
+				y = valuesX[i] / 2.f + 0.5f;
 			}
 			Vec p;
 			p.x = b.pos.x + b.size.x * x;
-			p.y = b.pos.y + b.size.y * (1.0f - y);
+			p.y = b.pos.y + b.size.y * (1.f - y);
 			if (i == 0)
 				nvgMoveTo(args.vg, p.x, p.y);
 			else
 				nvgLineTo(args.vg, p.x, p.y);
 		}
 		nvgLineCap(args.vg, NVG_ROUND);
-		nvgMiterLimit(args.vg, 2.0f);
+		nvgMiterLimit(args.vg, 2.f);
 		nvgStrokeWidth(args.vg, 1.5f);
 		nvgGlobalCompositeOperation(args.vg, NVG_LIGHTER);
 		nvgStroke(args.vg);
@@ -209,8 +209,8 @@ struct ScopeDisplay : TransparentWidget {
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
 		nvgScissor(args.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
 
-		value = value / 2.0f + 0.5f;
-		Vec p = Vec(box.size.x, b.pos.y + b.size.y * (1.0f - value));
+		value = value / 2.f + 0.5f;
+		Vec p = Vec(box.size.x, b.pos.y + b.size.y * (1.f - value));
 
 		// Draw line
 		nvgStrokeColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x10));
@@ -260,8 +260,8 @@ struct ScopeDisplay : TransparentWidget {
 		if (!module)
 			return;
 
-		float gainX = std::pow(2.0f, std::round(module->params[Scope::X_SCALE_PARAM].getValue()));
-		float gainY = std::pow(2.0f, std::round(module->params[Scope::Y_SCALE_PARAM].getValue()));
+		float gainX = std::pow(2.f, std::round(module->params[Scope::X_SCALE_PARAM].getValue()));
+		float gainY = std::pow(2.f, std::round(module->params[Scope::Y_SCALE_PARAM].getValue()));
 		float offsetX = module->params[Scope::X_POS_PARAM].getValue();
 		float offsetY = module->params[Scope::Y_POS_PARAM].getValue();
 
@@ -272,8 +272,8 @@ struct ScopeDisplay : TransparentWidget {
 			// Lock display to buffer if buffer update deltaTime <= 2^-11
 			if (module->lissajous)
 				j = (i + module->bufferIndex) % BUFFER_SIZE;
-			valuesX[i] = (module->bufferX[j] + offsetX) * gainX / 10.0f;
-			valuesY[i] = (module->bufferY[j] + offsetY) * gainY / 10.0f;
+			valuesX[i] = (module->bufferX[j] + offsetX) * gainX / 10.f;
+			valuesY[i] = (module->bufferY[j] + offsetY) * gainY / 10.f;
 		}
 
 		// Draw waveforms
@@ -297,7 +297,7 @@ struct ScopeDisplay : TransparentWidget {
 				drawWaveform(args, valuesX, NULL);
 			}
 
-			float valueTrig = (module->params[Scope::TRIG_PARAM].getValue() + offsetX) * gainX / 10.0f;
+			float valueTrig = (module->params[Scope::TRIG_PARAM].getValue() + offsetX) * gainX / 10.f;
 			drawTrig(args, valueTrig);
 		}
 

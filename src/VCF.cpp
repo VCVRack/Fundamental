@@ -7,7 +7,7 @@ static float clip(float x) {
 
 struct LadderFilter {
 	float omega0;
-	float resonance = 1.0f;
+	float resonance = 1.f;
 	float state[4];
 	float input;
 	float lowpass;

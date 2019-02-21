@@ -49,15 +49,15 @@ struct SEQ3 : Module {
 
 	SEQ3() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[CLOCK_PARAM].config(-2.0f, 6.0f, 2.0f);
-		params[RUN_PARAM].config(0.0f, 1.0f, 0.0f);
-		params[RESET_PARAM].config(0.0f, 1.0f, 0.0f);
-		params[STEPS_PARAM].config(1.0f, 8.0f, 8.0f);
+		params[CLOCK_PARAM].config(-2.f, 6.f, 2.f);
+		params[RUN_PARAM].config(0.f, 1.f, 0.f);
+		params[RESET_PARAM].config(0.f, 1.f, 0.f);
+		params[STEPS_PARAM].config(1.f, 8.f, 8.f);
 		for (int i = 0; i < 8; i++) {
-			params[ROW1_PARAM + i].config(0.0f, 10.0f, 0.0f);
-			params[ROW2_PARAM + i].config(0.0f, 10.0f, 0.0f);
-			params[ROW3_PARAM + i].config(0.0f, 10.0f, 0.0f);
-			params[GATE_PARAM + i].config(0.0f, 1.0f, 0.0f);
+			params[ROW1_PARAM + i].config(0.f, 10.f, 0.f);
+			params[ROW2_PARAM + i].config(0.f, 10.f, 0.f);
+			params[ROW3_PARAM + i].config(0.f, 10.f, 0.f);
+			params[GATE_PARAM + i].config(0.f, 1.f, 0.f);
 		}
 
 
@@ -110,7 +110,7 @@ struct SEQ3 : Module {
 	}
 
 	void setIndex(int index) {
-		int numSteps = (int) clamp(std::round(params[STEPS_PARAM].getValue() + inputs[STEPS_INPUT].getVoltage()), 1.0f, 8.0f);
+		int numSteps = (int) clamp(std::round(params[STEPS_PARAM].getValue() + inputs[STEPS_INPUT].getVoltage()), 1.f, 8.f);
 		phase = 0.f;
 		this->index = index;
 		if (this->index >= numSteps)
@@ -134,9 +134,9 @@ struct SEQ3 : Module {
 			}
 			else {
 				// Internal clock
-				float clockTime = std::pow(2.0f, params[CLOCK_PARAM].getValue() + inputs[CLOCK_INPUT].getVoltage());
+				float clockTime = std::pow(2.f, params[CLOCK_PARAM].getValue() + inputs[CLOCK_INPUT].getVoltage());
 				phase += clockTime * args.sampleTime;
-				if (phase >= 1.0f) {
+				if (phase >= 1.f) {
 					setIndex(index + 1);
 				}
 				gateIn = (phase < 0.5f);
@@ -153,7 +153,7 @@ struct SEQ3 : Module {
 			if (gateTriggers[i].process(params[GATE_PARAM + i].getValue())) {
 				gates[i] = !gates[i];
 			}
-			outputs[GATE_OUTPUT + i].setVoltage((running && gateIn && i == index && gates[i]) ? 10.0f : 0.0f);
+			outputs[GATE_OUTPUT + i].setVoltage((running && gateIn && i == index && gates[i]) ? 10.f : 0.f);
 			lights[GATE_LIGHTS + i].setSmoothBrightness((gateIn && i == index) ? (gates[i] ? 1.f : 0.33) : (gates[i] ? 0.66 : 0.0), args.sampleTime);
 		}
 
@@ -161,13 +161,13 @@ struct SEQ3 : Module {
 		outputs[ROW1_OUTPUT].setVoltage(params[ROW1_PARAM + index].getValue());
 		outputs[ROW2_OUTPUT].setVoltage(params[ROW2_PARAM + index].getValue());
 		outputs[ROW3_OUTPUT].setVoltage(params[ROW3_PARAM + index].getValue());
-		outputs[GATES_OUTPUT].setVoltage((gateIn && gates[index]) ? 10.0f : 0.0f);
+		outputs[GATES_OUTPUT].setVoltage((gateIn && gates[index]) ? 10.f : 0.f);
 		lights[RUNNING_LIGHT].value = (running);
 		lights[RESET_LIGHT].setSmoothBrightness(resetTrigger.isHigh(), args.sampleTime);
 		lights[GATES_LIGHT].setSmoothBrightness(gateIn, args.sampleTime);
-		lights[ROW_LIGHTS].value = outputs[ROW1_OUTPUT].value / 10.0f;
-		lights[ROW_LIGHTS + 1].value = outputs[ROW2_OUTPUT].value / 10.0f;
-		lights[ROW_LIGHTS + 2].value = outputs[ROW3_OUTPUT].value / 10.0f;
+		lights[ROW_LIGHTS].value = outputs[ROW1_OUTPUT].value / 10.f;
+		lights[ROW_LIGHTS + 1].value = outputs[ROW2_OUTPUT].value / 10.f;
+		lights[ROW_LIGHTS + 2].value = outputs[ROW3_OUTPUT].value / 10.f;
 	}
 };
 

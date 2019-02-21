@@ -28,16 +28,16 @@ struct Delay : Module {
 	dsp::DoubleRingBuffer<float, HISTORY_SIZE> historyBuffer;
 	dsp::DoubleRingBuffer<float, 16> outBuffer;
 	SRC_STATE *src;
-	float lastWet = 0.0f;
+	float lastWet = 0.f;
 	dsp::RCFilter lowpassFilter;
 	dsp::RCFilter highpassFilter;
 
 	Delay() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
-		params[TIME_PARAM].config(0.0f, 1.0f, 0.5f, "Time");
-		params[FEEDBACK_PARAM].config(0.0f, 1.0f, 0.5f, "Feedback");
-		params[COLOR_PARAM].config(0.0f, 1.0f, 0.5f, "Color");
-		params[MIX_PARAM].config(0.0f, 1.0f, 0.5f, "Mix", "%", 0, 100);
+		params[TIME_PARAM].config(0.f, 1.f, 0.5f, "Time");
+		params[FEEDBACK_PARAM].config(0.f, 1.f, 0.5f, "Feedback");
+		params[COLOR_PARAM].config(0.f, 1.f, 0.5f, "Color");
+		params[MIX_PARAM].config(0.f, 1.f, 0.5f, "Mix", "%", 0, 100);
 
 		src = src_new(SRC_SINC_FASTEST, 1, NULL);
 		assert(src);
@@ -50,11 +50,11 @@ struct Delay : Module {
 	void process(const ProcessArgs &args) override {
 		// Get input to delay block
 		float in = inputs[IN_INPUT].getVoltage();
-		float feedback = clamp(params[FEEDBACK_PARAM].getValue() + inputs[FEEDBACK_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);
+		float feedback = clamp(params[FEEDBACK_PARAM].getValue() + inputs[FEEDBACK_INPUT].getVoltage() / 10.f, 0.f, 1.f);
 		float dry = in + lastWet * feedback;
 
 		// Compute delay time in seconds
-		float delay = 1e-3 * std::pow(10.0f / 1e-3, clamp(params[TIME_PARAM].getValue() + inputs[TIME_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f));
+		float delay = 1e-3 * std::pow(10.f / 1e-3, clamp(params[TIME_PARAM].getValue() + inputs[TIME_INPUT].getVoltage() / 10.f, 0.f, 1.f));
 		// Number of delay samples
 		float index = delay * args.sampleRate;
 
@@ -84,26 +84,26 @@ struct Delay : Module {
 			outBuffer.endIncr(srcData.output_frames_gen);
 		}
 
-		float wet = 0.0f;
+		float wet = 0.f;
 		if (!outBuffer.empty()) {
 			wet = outBuffer.shift();
 		}
 
 		// Apply color to delay wet output
 		// TODO Make it sound better
-		float color = clamp(params[COLOR_PARAM].getValue() + inputs[COLOR_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);
-		float lowpassFreq = 10000.0f * std::pow(10.0f, clamp(2.0f*color, 0.0f, 1.0f));
+		float color = clamp(params[COLOR_PARAM].getValue() + inputs[COLOR_INPUT].getVoltage() / 10.f, 0.f, 1.f);
+		float lowpassFreq = 10000.f * std::pow(10.f, clamp(2.f*color, 0.f, 1.f));
 		lowpassFilter.setCutoff(lowpassFreq / args.sampleRate);
 		lowpassFilter.process(wet);
 		wet = lowpassFilter.lowpass();
-		float highpassFreq = 10.0f * std::pow(100.0f, clamp(2.0f*color - 1.0f, 0.0f, 1.0f));
+		float highpassFreq = 10.f * std::pow(100.f, clamp(2.f*color - 1.f, 0.f, 1.f));
 		highpassFilter.setCutoff(highpassFreq / args.sampleRate);
 		highpassFilter.process(wet);
 		wet = highpassFilter.highpass();
 
 		lastWet = wet;
 
-		float mix = clamp(params[MIX_PARAM].getValue() + inputs[MIX_INPUT].getVoltage() / 10.0f, 0.0f, 1.0f);
+		float mix = clamp(params[MIX_PARAM].getValue() + inputs[MIX_INPUT].getVoltage() / 10.f, 0.f, 1.f);
 		float out = crossfade(in, wet, mix);
 		outputs[OUT_OUTPUT].setVoltage(out);
 	}
