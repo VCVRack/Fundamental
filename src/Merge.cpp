@@ -19,24 +19,30 @@ struct Merge : Module {
 	};
 
 	dsp::Counter lightCounter;
+	int channels;
 
 	Merge() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		lightCounter.setPeriod(512);
+		onReset();
+	}
+
+	void onReset() override {
+		channels = -1;
 	}
 
 	void process(const ProcessArgs &args) override {
 		int lastChannel = -1;
 		for (int c = 0; c < 16; c++) {
+			float v = 0.f;
 			if (inputs[MONO_INPUTS + c].isConnected()) {
 				lastChannel = c;
-				float v = inputs[MONO_INPUTS + c].getVoltage();
-				outputs[POLY_OUTPUT].setVoltage(v, c);
+				v = inputs[MONO_INPUTS + c].getVoltage();
 			}
+			outputs[POLY_OUTPUT].setVoltage(v, c);
 		}
 
-		// This also sets higher channels to 0V if the number of channels shrinks.
-		outputs[POLY_OUTPUT].setChannels(lastChannel + 1);
+		outputs[POLY_OUTPUT].setChannels((channels >= 0) ? channels : (lastChannel + 1));
 
 		// Set channel lights infrequently
 		if (lightCounter.process()) {
@@ -45,6 +51,47 @@ struct Merge : Module {
 				lights[CHANNEL_LIGHTS + c].setBrightness(active);
 			}
 		}
+	}
+
+	json_t *dataToJson() override {
+		json_t *rootJ = json_object();
+		json_object_set_new(rootJ, "channels", json_integer(channels));
+		return rootJ;
+	}
+
+	void dataFromJson(json_t *rootJ) override {
+		json_t *channelsJ = json_object_get(rootJ, "channels");
+		if (channelsJ)
+			channels = json_integer_value(channelsJ);
+	}
+};
+
+
+struct MergeChannelItem : MenuItem {
+	Merge *module;
+	int channels;
+	void onAction(const event::Action &e) override {
+		module->channels = channels;
+	}
+};
+
+
+struct MergeChannelsItem : MenuItem {
+	Merge *module;
+	Menu *createChildMenu() override {
+		Menu *menu = new Menu;
+		for (int channels = -1; channels <= 16; channels++) {
+			MergeChannelItem *item = new MergeChannelItem;
+			if (channels < 0)
+				item->text = "Automatic";
+			else
+				item->text = string::f("%d", channels);
+			item->rightText = CHECKMARK(module->channels == channels);
+			item->module = module;
+			item->channels = channels;
+			menu->addChild(item);
+		}
+		return menu;
 	}
 };
 
@@ -94,6 +141,18 @@ struct MergeWidget : ModuleWidget {
 		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(17.275, 23.775)), module, Merge::CHANNEL_LIGHTS + 13));
 		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(19.275, 23.775)), module, Merge::CHANNEL_LIGHTS + 14));
 		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(21.276, 23.775)), module, Merge::CHANNEL_LIGHTS + 15));
+	}
+
+	void appendContextMenu(Menu *menu) override {
+		Merge *module = dynamic_cast<Merge*>(this->module);
+
+		menu->addChild(new MenuEntry);
+
+		MergeChannelsItem *channelsItem = new MergeChannelsItem;
+		channelsItem->text = "Channels";
+		channelsItem->rightText = RIGHT_ARROW;
+		channelsItem->module = module;
+		menu->addChild(channelsItem);
 	}
 };
 
