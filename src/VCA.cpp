@@ -28,44 +28,72 @@ struct VCA : Module {
 		params[LEVEL2_PARAM].config(0.0, 1.0, 1.0, "Ch 2 level", "%", 0, 100);
 	}
 
-	void stepChannel(InputIds in, ParamIds level, InputIds lin, InputIds exp, OutputIds out) {
+	void processChannel(Input &in, Param &level, Input &lin, Input &exp, Output &out) {
+		if (!in.isConnected() || !out.isConnected())
+			return;
+
 		// Get input
-		int channels = inputs[in].getChannels();
-		float v[16];
-		inputs[in].getVoltages(v);
+		int channels = in.getChannels();
+		simd::f32_4 v[4];
+		for (int c = 0; c < channels; c += 4) {
+			v[c / 4] = simd::f32_4::load(&in.voltages[c]);
+		}
 
 		// Apply knob gain
-		float gain = params[level].getValue();
-		for (int c = 0; c < channels; c++) {
-			v[c] *= gain;
+		float gain = level.getValue();
+		for (int c = 0; c < channels; c += 4) {
+			v[c / 4] *= gain;
 		}
 
 		// Apply linear CV gain
-		if (inputs[lin].isConnected()) {
-			for (int c = 0; c < channels; c++) {
-				float cv = clamp(inputs[lin].getPolyVoltage(c) / 10.f, 0.f, 1.f);
-				v[c] *= cv;
+		if (lin.isConnected()) {
+			if (lin.getChannels() == 1) {
+				float cv = lin.getVoltage() / 10.f;
+				cv = clamp(cv, 0.f, 1.f);
+				for (int c = 0; c < channels; c += 4) {
+					v[c / 4] *= cv;
+				}
+			}
+			else {
+				for (int c = 0; c < channels; c += 4) {
+					simd::f32_4 cv = simd::f32_4::load(&lin.voltages[c]) / 10.f;
+					cv = clamp(cv, 0.f, 1.f);
+					v[c / 4] *= cv;
+				}
 			}
 		}
 
 		// Apply exponential CV gain
 		const float expBase = 50.f;
-		if (inputs[exp].isConnected()) {
-			for (int c = 0; c < channels; c++) {
-				float cv = clamp(inputs[exp].getPolyVoltage(c) / 10.f, 0.f, 1.f);
+		if (exp.isConnected()) {
+			if (exp.getChannels() == 1) {
+				float cv = exp.getVoltage() / 10.f;
+				cv = clamp(cv, 0.f, 1.f);
 				cv = rescale(std::pow(expBase, cv), 1.f, expBase, 0.f, 1.f);
-				v[c] *= cv;
+				for (int c = 0; c < channels; c += 4) {
+					v[c / 4] *= cv;
+				}
+			}
+			else {
+				for (int c = 0; c < channels; c += 4) {
+					simd::f32_4 cv = simd::f32_4::load(&exp.voltages[c]) / 10.f;
+					cv = clamp(cv, 0.f, 1.f);
+					cv = rescale(pow(expBase, cv), 1.f, expBase, 0.f, 1.f);
+					v[c / 4] *= cv;
+				}
 			}
 		}
 
 		// Set output
-		outputs[out].setChannels(channels);
-		outputs[out].setVoltages(v);
+		out.setChannels(channels);
+		for (int c = 0; c < channels; c += 4) {
+			v[c / 4].store(&out.voltages[c]);
+		}
 	}
 
 	void process(const ProcessArgs &args) override {
-		stepChannel(IN1_INPUT, LEVEL1_PARAM, LIN1_INPUT, EXP1_INPUT, OUT1_OUTPUT);
-		stepChannel(IN2_INPUT, LEVEL2_PARAM, LIN2_INPUT, EXP2_INPUT, OUT2_OUTPUT);
+		processChannel(inputs[IN1_INPUT], params[LEVEL1_PARAM], inputs[LIN1_INPUT], inputs[EXP1_INPUT], outputs[OUT1_OUTPUT]);
+		processChannel(inputs[IN2_INPUT], params[LEVEL2_PARAM], inputs[LIN2_INPUT], inputs[EXP2_INPUT], outputs[OUT2_OUTPUT]);
 	}
 };
 
