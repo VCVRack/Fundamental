@@ -9,94 +9,115 @@
 	"manualUrl": "https://vcvrack.com/Fundamental.html#manual",
 	"sourceUrl": "https://github.com/VCVRack/Fundamental",
 	"version": "1.0.0",
-	"modules": {
-		"VCO": {
+	"modules": [
+		{
+			"slug": "VCO",
 			"name": "VCO-1",
 			"tags": ["VCO"]
 		},
-		"VCO2": {
+		{
+			"slug": "VCO2",
 			"name": "VCO-2",
 			"tags": ["VCO"]
 		},
-		"VCF": {
+		{
+			"slug": "VCF",
 			"name": "VCF",
 			"tags": ["VCF"]
 		},
-		"VCA-1": {
+		{
+			"slug": "VCA-1",
 			"name": "VCA-1",
 			"tags": ["VCA"]
 		},
-		"VCA": {
+		{
+			"slug": "VCA",
 			"name": "VCA-2",
 			"tags": ["VCA", "Dual"]
 		},
-		"LFO": {
+		{
+			"slug": "LFO",
 			"name": "LFO-1",
 			"tags": ["LFO"]
 		},
-		"LFO2": {
+		{
+			"slug": "LFO2",
 			"name": "LFO-2",
 			"tags": ["LFO"]
 		},
-		"Delay": {
+		{
+			"slug": "Delay",
 			"name": "Delay",
 			"tags": ["Delay"]
 		},
-		"ADSR": {
+		{
+			"slug": "ADSR",
 			"name": "ADSR",
 			"tags": ["Envelope Generator"]
 		},
-		"VCMixer": {
+		{
+			"slug": "VCMixer",
 			"name": "Mixer",
 			"tags": ["Mixer", "VCA"]
 		},
-		"8vert": {
+		{
+			"slug": "8vert",
 			"name": "8vert",
 			"tags": ["Attenuator"]
 		},
-		"Unity": {
+		{
+			"slug": "Unity",
 			"name": "Unity",
 			"tags": ["Mixer", "Utility", "Dual"]
 		},
-		"Mutes": {
+		{
+			"slug": "Mutes",
 			"name": "Mutes",
 			"tags": ["Switch"]
 		},
-		"Scope": {
+		{
+			"slug": "Scope",
 			"name": "Scope",
 			"tags": ["Visual"]
 		},
-		"SEQ3": {
+		{
+			"slug": "SEQ3",
 			"name": "SEQ-3",
 			"tags": ["Sequencer"]
 		},
-		"SequentialSwitch1": {
+		{
+			"slug": "SequentialSwitch1",
 			"name": "Sequential Switch 1",
 			"tags": ["Utility"]
 		},
-		"SequentialSwitch2": {
+		{
+			"slug": "SequentialSwitch2",
 			"name": "Sequential Switch 1",
 			"tags": ["Utility"]
 		},
-		"Split": {
+		{
+			"slug": "Split",
 			"name": "Split",
 			"description": "Splits a polyphonic cable into multiple monophonic cables",
 			"tags": ["Poly", "Utility"]
 		},
-		"Merge": {
+		{
+			"slug": "Merge",
 			"name": "Merge",
 			"description": "Combines multiple monophonic cables into a polyphonic cable",
 			"tags": ["Poly", "Utility"]
 		},
-		"Sum": {
+		{
+			"slug": "Sum",
 			"name": "Sum",
 			"description": "Sums all channels in a polyphonic cable",
 			"tags": ["Poly", "Utility"]
 		},
-		"Viz": {
+		{
+			"slug": "Viz",
 			"name": "Viz",
 			"description": "Visualizes all channels of a polyphonic cable",
 			"tags": ["Poly", "Visual"]
 		}
-	}
+	]
 }
