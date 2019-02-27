@@ -70,7 +70,7 @@ struct Merge : Module {
 struct MergeChannelItem : MenuItem {
 	Merge *module;
 	int channels;
-	void onAction(const event::Action &e) override {
+	void onAction(const ActionEvent &e) override {
 		module->channels = channels;
 	}
 };

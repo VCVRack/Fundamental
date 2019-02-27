@@ -100,7 +100,7 @@ struct Unity : Module {
 
 struct UnityMergeItem : MenuItem {
 	Unity *unity;
-	void onAction(const event::Action &e) override {
+	void onAction(const ActionEvent &e) override {
 		unity->merge ^= true;
 	}
 	void step() override {
