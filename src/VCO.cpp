@@ -195,13 +195,13 @@ struct VCO : Module {
 
 	VCO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[MODE_PARAM].config(0.f, 1.f, 1.f, "Analog mode");
-		params[SYNC_PARAM].config(0.f, 1.f, 1.f, "Hard sync");
-		params[FREQ_PARAM].config(-54.f, 54.f, 0.f, "Frequency", "Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
-		params[FINE_PARAM].config(-1.f, 1.f, 0.f, "Fine frequency");
-		params[FM_PARAM].config(0.f, 1.f, 0.f, "Frequency modulation");
-		params[PW_PARAM].config(0.f, 1.f, 0.5f, "Pulse width", "%", 0.f, 100.f);
-		params[PWM_PARAM].config(0.f, 1.f, 0.f, "Pulse width modulation", "%", 0.f, 100.f);
+		configParam(MODE_PARAM, 0.f, 1.f, 1.f, "Analog mode");
+		configParam(SYNC_PARAM, 0.f, 1.f, 1.f, "Hard sync");
+		configParam(FREQ_PARAM, -54.f, 54.f, 0.f, "Frequency", "Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
+		configParam(FINE_PARAM, -1.f, 1.f, 0.f, "Fine frequency");
+		configParam(FM_PARAM, 0.f, 1.f, 0.f, "Frequency modulation");
+		configParam(PW_PARAM, 0.f, 1.f, 0.5f, "Pulse width", "%", 0.f, 100.f);
+		configParam(PWM_PARAM, 0.f, 1.f, 0.f, "Pulse width modulation", "%", 0.f, 100.f);
 	}
 
 	void process(const ProcessArgs &args) override {
@@ -301,11 +301,11 @@ struct VCO2 : Module {
 
 	VCO2() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[MODE_PARAM].config(0.f, 1.f, 1.f, "Analog mode");
-		params[SYNC_PARAM].config(0.f, 1.f, 1.f, "Hard sync");
-		params[FREQ_PARAM].config(-54.f, 54.f, 0.f, "Frequency", "Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
-		params[WAVE_PARAM].config(0.f, 3.f, 1.5f, "Wave");
-		params[FM_PARAM].config(0.f, 1.f, 0.f, "Frequency modulation");
+		configParam(MODE_PARAM, 0.f, 1.f, 1.f, "Analog mode");
+		configParam(SYNC_PARAM, 0.f, 1.f, 1.f, "Hard sync");
+		configParam(FREQ_PARAM, -54.f, 54.f, 0.f, "Frequency", "Hz", std::pow(2, 1/12.f), dsp::FREQ_C4);
+		configParam(WAVE_PARAM, 0.f, 3.f, 1.5f, "Wave");
+		configParam(FM_PARAM, 0.f, 1.f, 0.f, "Frequency modulation");
 	}
 
 	void process(const ProcessArgs &args) override {

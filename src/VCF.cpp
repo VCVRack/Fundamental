@@ -80,11 +80,11 @@ struct VCF : Module {
 
 	VCF() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
-		params[FREQ_PARAM].config(0.f, 1.f, 0.5f, "Frequency");
-		params[FINE_PARAM].config(0.f, 1.f, 0.5f, "Fine frequency");
-		params[RES_PARAM].config(0.f, 1.f, 0.f, "Resonance");
-		params[FREQ_CV_PARAM].config(-1.f, 1.f, 0.f, "Frequency modulation");
-		params[DRIVE_PARAM].config(0.f, 1.f, 0.f, "Drive");
+		configParam(FREQ_PARAM, 0.f, 1.f, 0.5f, "Frequency");
+		configParam(FINE_PARAM, 0.f, 1.f, 0.5f, "Fine frequency");
+		configParam(RES_PARAM, 0.f, 1.f, 0.f, "Resonance");
+		configParam(FREQ_CV_PARAM, -1.f, 1.f, 0.f, "Frequency modulation");
+		configParam(DRIVE_PARAM, 0.f, 1.f, 0.f, "Drive");
 	}
 
 	void onReset() override {

@@ -47,14 +47,19 @@ struct Scope : Module {
 
 	Scope() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[X_SCALE_PARAM].config(-2.f, 8.f, 0.f);
-		params[X_POS_PARAM].config(-10.f, 10.f, 0.f);
-		params[Y_SCALE_PARAM].config(-2.f, 8.f, 0.f);
-		params[Y_POS_PARAM].config(-10.f, 10.f, 0.f);
-		params[TIME_PARAM].config(6.f, 16.f, 14.f);
-		params[LISSAJOUS_PARAM].config(0.f, 1.f, 0.f);
-		params[TRIG_PARAM].config(-10.f, 10.f, 0.f);
-		params[EXTERNAL_PARAM].config(0.f, 1.f, 0.f);
+		configParam(X_SCALE_PARAM, -2.f, 8.f, 0.f);
+		configParam(X_POS_PARAM, -10.f, 10.f, 0.f);
+		configParam(Y_SCALE_PARAM, -2.f, 8.f, 0.f);
+		configParam(Y_POS_PARAM, -10.f, 10.f, 0.f);
+		configParam(TIME_PARAM, 6.f, 16.f, 14.f);
+		configParam(LISSAJOUS_PARAM, 0.f, 1.f, 0.f);
+		configParam(TRIG_PARAM, -10.f, 10.f, 0.f);
+		configParam(EXTERNAL_PARAM, 0.f, 1.f, 0.f);
+	}
+
+	void onReset() override {
+		lissajous = false;
+		external = false;
 	}
 
 	void process(const ProcessArgs &args) override {
@@ -131,11 +136,6 @@ struct Scope : Module {
 		json_t *extJ = json_object_get(rootJ, "external");
 		if (extJ)
 			external = json_integer_value(extJ);
-	}
-
-	void onReset() override {
-		lissajous = false;
-		external = false;
 	}
 };
 

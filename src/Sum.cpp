@@ -26,7 +26,7 @@ struct Sum : Module {
 
 	Sum() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[LEVEL_PARAM].config(0.f, 1.f, 1.f, "Level", "%", 0.f, 100.f);
+		configParam(LEVEL_PARAM, 0.f, 1.f, 1.f, "Level", "%", 0.f, 100.f);
 
 		vuMeter.lambda = 1 / 0.1f;
 		vuCounter.setPeriod(16);

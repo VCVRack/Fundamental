@@ -49,15 +49,15 @@ struct SEQ3 : Module {
 
 	SEQ3() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[CLOCK_PARAM].config(-2.f, 6.f, 2.f);
-		params[RUN_PARAM].config(0.f, 1.f, 0.f);
-		params[RESET_PARAM].config(0.f, 1.f, 0.f);
-		params[STEPS_PARAM].config(1.f, 8.f, 8.f);
+		configParam(CLOCK_PARAM, -2.f, 6.f, 2.f);
+		configParam(RUN_PARAM, 0.f, 1.f, 0.f);
+		configParam(RESET_PARAM, 0.f, 1.f, 0.f);
+		configParam(STEPS_PARAM, 1.f, 8.f, 8.f);
 		for (int i = 0; i < 8; i++) {
-			params[ROW1_PARAM + i].config(0.f, 10.f, 0.f);
-			params[ROW2_PARAM + i].config(0.f, 10.f, 0.f);
-			params[ROW3_PARAM + i].config(0.f, 10.f, 0.f);
-			params[GATE_PARAM + i].config(0.f, 1.f, 0.f);
+			configParam(ROW1_PARAM + i, 0.f, 10.f, 0.f);
+			configParam(ROW2_PARAM + i, 0.f, 10.f, 0.f);
+			configParam(ROW3_PARAM + i, 0.f, 10.f, 0.f);
+			configParam(GATE_PARAM + i, 0.f, 1.f, 0.f);
 		}
 
 

@@ -98,13 +98,13 @@ struct LFO : Module {
 
 	LFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[OFFSET_PARAM].config(0.f, 1.f, 1.f);
-		params[INVERT_PARAM].config(0.f, 1.f, 1.f);
-		params[FREQ_PARAM].config(-8.f, 10.f, 1.f);
-		params[FM1_PARAM].config(0.f, 1.f, 0.f);
-		params[PW_PARAM].config(0.f, 1.f, 0.5f);
-		params[FM2_PARAM].config(0.f, 1.f, 0.f);
-		params[PWM_PARAM].config(0.f, 1.f, 0.f);
+		configParam(OFFSET_PARAM, 0.f, 1.f, 1.f);
+		configParam(INVERT_PARAM, 0.f, 1.f, 1.f);
+		configParam(FREQ_PARAM, -8.f, 10.f, 1.f);
+		configParam(FM1_PARAM, 0.f, 1.f, 0.f);
+		configParam(PW_PARAM, 0.f, 1.f, 0.5f);
+		configParam(FM2_PARAM, 0.f, 1.f, 0.f);
+		configParam(PWM_PARAM, 0.f, 1.f, 0.f);
 	}
 
 	void process(const ProcessArgs &args) override {
@@ -194,11 +194,11 @@ struct LFO2 : Module {
 
 	LFO2() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[OFFSET_PARAM].config(0.f, 1.f, 1.f);
-		params[INVERT_PARAM].config(0.f, 1.f, 1.f);
-		params[FREQ_PARAM].config(-8.f, 10.f, 1.f);
-		params[WAVE_PARAM].config(0.f, 3.f, 1.5f);
-		params[FM_PARAM].config(0.f, 1.f, 0.5f);
+		configParam(OFFSET_PARAM, 0.f, 1.f, 1.f);
+		configParam(INVERT_PARAM, 0.f, 1.f, 1.f);
+		configParam(FREQ_PARAM, -8.f, 10.f, 1.f);
+		configParam(WAVE_PARAM, 0.f, 3.f, 1.5f);
+		configParam(FM_PARAM, 0.f, 1.f, 0.5f);
 	}
 
 	void process(const ProcessArgs &args) override {

@@ -31,7 +31,7 @@ struct SequentialSwitch : Module {
 
 	SequentialSwitch() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[STEPS_PARAM].config(0.0, 2.0, 0.0, "Steps", "", 0, -1, 4);
+		configParam(STEPS_PARAM, 0.0, 2.0, 0.0, "Steps", "", 0, -1, 4);
 
 		for (int i = 0; i < OUTPUTS; i++) {
 			clickFilters[i].rise = 400.f; // Hz

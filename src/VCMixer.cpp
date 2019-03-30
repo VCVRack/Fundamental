@@ -22,12 +22,12 @@ struct VCMixer : Module {
 	VCMixer() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
 		// x^1 scaling up to 6 dB
-		params[MIX_LVL_PARAM].config(0.0, 2.0, 1.0, "Master level", " dB", -10, 20);
+		configParam(MIX_LVL_PARAM, 0.0, 2.0, 1.0, "Master level", " dB", -10, 20);
 		// x^2 scaling up to 6 dB
-		params[LVL_PARAM + 0].config(0.0, M_SQRT2, 1.0, "Ch 1 level", " dB", -10, 40);
-		params[LVL_PARAM + 1].config(0.0, M_SQRT2, 1.0, "Ch 2 level", " dB", -10, 40);
-		params[LVL_PARAM + 2].config(0.0, M_SQRT2, 1.0, "Ch 3 level", " dB", -10, 40);
-		params[LVL_PARAM + 3].config(0.0, M_SQRT2, 1.0, "Ch 4 level", " dB", -10, 40);
+		configParam(LVL_PARAM + 0, 0.0, M_SQRT2, 1.0, "Ch 1 level", " dB", -10, 40);
+		configParam(LVL_PARAM + 1, 0.0, M_SQRT2, 1.0, "Ch 2 level", " dB", -10, 40);
+		configParam(LVL_PARAM + 2, 0.0, M_SQRT2, 1.0, "Ch 3 level", " dB", -10, 40);
+		configParam(LVL_PARAM + 3, 0.0, M_SQRT2, 1.0, "Ch 4 level", " dB", -10, 40);
 	}
 
 	void process(const ProcessArgs &args) override {

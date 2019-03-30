@@ -24,8 +24,8 @@ struct VCA : Module {
 
 	VCA() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
-		params[LEVEL1_PARAM].config(0.0, 1.0, 1.0, "Ch 1 level", "%", 0, 100);
-		params[LEVEL2_PARAM].config(0.0, 1.0, 1.0, "Ch 2 level", "%", 0, 100);
+		configParam(LEVEL1_PARAM, 0.0, 1.0, 1.0, "Ch 1 level", "%", 0, 100);
+		configParam(LEVEL2_PARAM, 0.0, 1.0, 1.0, "Ch 2 level", "%", 0, 100);
 	}
 
 	void processChannel(Input &in, Param &level, Input &lin, Input &exp, Output &out) {
@@ -151,8 +151,8 @@ struct VCA_1 : Module {
 
 	VCA_1() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		params[LEVEL_PARAM].config(0.0, 1.0, 1.0, "Level", "%", 0, 100);
-		params[EXP_PARAM].config(0.0, 1.0, 1.0, "Response mode");
+		configParam(LEVEL_PARAM, 0.0, 1.0, 1.0, "Level", "%", 0, 100);
+		configParam(EXP_PARAM, 0.0, 1.0, 1.0, "Response mode");
 	}
 
 	void process(const ProcessArgs &args) override {
