@@ -18,12 +18,12 @@ struct Merge : Module {
 		NUM_LIGHTS
 	};
 
-	dsp::Counter lightCounter;
+	dsp::ClockDivider lightDivider;
 	int channels;
 
 	Merge() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		lightCounter.setPeriod(512);
+		lightDivider.setDivision(512);
 		onReset();
 	}
 
@@ -45,7 +45,7 @@ struct Merge : Module {
 		outputs[POLY_OUTPUT].setChannels((channels >= 0) ? channels : (lastChannel + 1));
 
 		// Set channel lights infrequently
-		if (lightCounter.process()) {
+		if (lightDivider.process()) {
 			for (int c = 0; c < 16; c++) {
 				bool active = (c < outputs[POLY_OUTPUT].getChannels());
 				lights[CHANNEL_LIGHTS + c].setBrightness(active);

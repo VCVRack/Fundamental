@@ -18,11 +18,11 @@ struct Split : Module {
 		NUM_LIGHTS
 	};
 
-	dsp::Counter lightCounter;
+	dsp::ClockDivider lightDivider;
 
 	Split() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		lightCounter.setPeriod(512);
+		lightDivider.setDivision(512);
 	}
 
 	void process(const ProcessArgs &args) override {
@@ -33,7 +33,7 @@ struct Split : Module {
 		}
 
 		// Set channel lights infrequently
-		if (lightCounter.process()) {
+		if (lightDivider.process()) {
 			for (int c = 0; c < 16; c++) {
 				bool active = (c < inputs[POLY_INPUT].getChannels());
 				lights[CHANNEL_LIGHTS + c].setBrightness(active);

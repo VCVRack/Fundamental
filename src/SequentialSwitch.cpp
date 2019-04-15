@@ -26,7 +26,7 @@ struct SequentialSwitch : Module {
 	dsp::SchmittTrigger clockTrigger;
 	dsp::SchmittTrigger resetTrigger;
 	int index = 0;
-	dsp::Counter lightCounter;
+	dsp::ClockDivider lightDivider;
 	dsp::SlewLimiter clickFilters[4];
 
 	SequentialSwitch() {
@@ -37,7 +37,7 @@ struct SequentialSwitch : Module {
 			clickFilters[i].rise = 400.f; // Hz
 			clickFilters[i].fall = 400.f; // Hz
 		}
-		lightCounter.setPeriod(512);
+		lightDivider.setDivision(512);
 	}
 
 	void process(const ProcessArgs &args) override {
@@ -102,7 +102,7 @@ struct SequentialSwitch : Module {
 		}
 
 		// Set lights
-		if (lightCounter.process()) {
+		if (lightDivider.process()) {
 			for (int i = 0; i < 4; i++) {
 				lights[CHANNEL_LIGHT + i].setBrightness(index == i);
 			}

@@ -25,14 +25,14 @@ struct Unity : Module {
 
 	bool merge = false;
 	dsp::VuMeter2 vuMeters[2];
-	dsp::Counter lightCounter;
+	dsp::ClockDivider lightDivider;
 
 	Unity() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(AVG1_PARAM, 0.0, 1.0, 0.0, "Ch 1 average mode");
 		configParam(AVG2_PARAM, 0.0, 1.0, 0.0, "Ch 2 average mode");
 
-		lightCounter.setPeriod(256);
+		lightDivider.setDivision(256);
 	}
 
 	void process(const ProcessArgs &args) override {
@@ -67,7 +67,7 @@ struct Unity : Module {
 			vuMeters[i].process(args.sampleTime, mix[i] / 10.f);
 		}
 
-		if (lightCounter.process()) {
+		if (lightDivider.process()) {
 			// Lights
 			for (int i = 0; i < 2; i++) {
 				lights[VU_LIGHTS + 5 * i + 0].setBrightness(vuMeters[i].getBrightness(0.f, 0.f));

@@ -18,17 +18,17 @@ struct Viz : Module {
 	};
 
 	int lastChannels = 0;
-	dsp::Counter lightCounter;
+	dsp::ClockDivider lightDivider;
 
 	Viz() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		lightCounter.setPeriod(16);
+		lightDivider.setDivision(16);
 	}
 
 	void process(const ProcessArgs &args) override {
-		if (lightCounter.process()) {
+		if (lightDivider.process()) {
 			lastChannels = inputs[POLY_INPUT].getChannels();
-			float deltaTime = args.sampleTime * lightCounter.period;
+			float deltaTime = args.sampleTime * lightDivider.getDivision();
 
 			for (int c = 0; c < 16; c++) {
 				float v = inputs[POLY_INPUT].getVoltage(c) / 10.f;
