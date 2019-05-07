@@ -1,6 +1,7 @@
 {
 	"slug": "Fundamental",
 	"name": "Fundamental",
+	"version": "1.0.0",
 	"author": "VCV",
 	"license": "BSD-3-Clause",
 	"authorEmail": "contact@vcvrack.com",
@@ -8,7 +9,7 @@
 	"authorUrl": "https://vcvrack.com/",
 	"manualUrl": "https://vcvrack.com/Fundamental.html#manual",
 	"sourceUrl": "https://github.com/VCVRack/Fundamental",
-	"version": "1.0.0",
+  "changelogUrl": "https://github.com/VCVRack/Fundamental/blob/v1/CHANGELOG.md",
 	"modules": [
 		{
 			"slug": "VCO",
