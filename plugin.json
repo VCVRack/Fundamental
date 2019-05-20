@@ -14,111 +14,128 @@
 		{
 			"slug": "VCO",
 			"name": "VCO-1",
+			"description": "Voltage-controlled oscillator",
 			"tags": ["VCO"]
 		},
 		{
 			"slug": "VCO2",
 			"name": "VCO-2",
+			"description": "Voltage-controlled oscillator",
 			"tags": ["VCO"]
 		},
 		{
 			"slug": "VCF",
 			"name": "VCF",
+			"description": "Voltage-controlled filtered",
 			"tags": ["VCF"]
 		},
 		{
 			"slug": "VCA-1",
 			"name": "VCA-1",
+			"description": "Voltage-controlled amplifier",
 			"tags": ["VCA"]
 		},
 		{
 			"slug": "VCA",
 			"name": "VCA-2",
+			"description": "Voltage-controlled amplifier",
 			"tags": ["VCA", "Dual"]
 		},
 		{
 			"slug": "LFO",
 			"name": "LFO-1",
+			"description": "Low-frequency oscillator",
 			"tags": ["LFO"]
 		},
 		{
 			"slug": "LFO2",
 			"name": "LFO-2",
+			"description": "Low-frequency oscillator",
 			"tags": ["LFO"]
 		},
 		{
 			"slug": "Delay",
 			"name": "Delay",
+			"description": "",
 			"tags": ["Delay"]
 		},
 		{
 			"slug": "ADSR",
 			"name": "ADSR",
+			"description": "Generates an envelope with Attack/Decay/Sustain/Release",
 			"tags": ["Envelope Generator"]
 		},
 		{
 			"slug": "VCMixer",
 			"name": "Mixer",
+			"description": "Mixes 4 signals with built-in VCAs",
 			"tags": ["Mixer", "VCA"]
 		},
 		{
 			"slug": "8vert",
 			"name": "8vert",
+			"description": "Attenuverts 8 signals or creates constant voltages",
 			"tags": ["Attenuator"]
 		},
 		{
 			"slug": "Unity",
 			"name": "Unity",
+			"description": "Mixes or averages signals with unity gain",
 			"tags": ["Mixer", "Utility", "Dual"]
 		},
 		{
 			"slug": "Mutes",
 			"name": "Mutes",
+			"description": "Toggles 10 signals on/off",
 			"tags": ["Switch"]
 		},
 		{
 			"slug": "Scope",
 			"name": "Scope",
+			"description": "Inspect waveforms with an oscilloscope",
 			"tags": ["Visual"]
 		},
 		{
 			"slug": "SEQ3",
 			"name": "SEQ-3",
+			"description": "3-channel 8-step sequencer also with gate outputs",
 			"tags": ["Sequencer"]
 		},
 		{
 			"slug": "SequentialSwitch1",
 			"name": "Sequential Switch 1",
+			"description": "Routes an input to one of to 4 outputs",
 			"tags": ["Utility"]
 		},
 		{
 			"slug": "SequentialSwitch2",
 			"name": "Sequential Switch 2",
+			"description": "Routes one of to 4 inputs to an output",
 			"tags": ["Utility"]
 		},
 		{
 			"slug": "Split",
 			"name": "Split",
 			"description": "Splits a polyphonic cable into multiple monophonic cables",
-			"tags": ["Poly", "Utility"]
+			"tags": ["Polyphonic", "Utility"]
 		},
 		{
 			"slug": "Merge",
 			"name": "Merge",
 			"description": "Combines multiple monophonic cables into a polyphonic cable",
-			"tags": ["Poly", "Utility"]
+			"tags": ["Polyphonic", "Utility"]
 		},
 		{
 			"slug": "Sum",
 			"name": "Sum",
 			"description": "Sums all channels in a polyphonic cable",
-			"tags": ["Poly", "Utility"]
+			"tags": ["Polyphonic", "Utility"]
 		},
 		{
 			"slug": "Viz",
 			"name": "Viz",
 			"description": "Visualizes all channels of a polyphonic cable",
-			"tags": ["Poly", "Visual"]
+			"tags": ["Polyphonic", "Visual"]
 		}
 	]
 }
