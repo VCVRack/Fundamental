@@ -34,9 +34,9 @@ struct VCA : Module {
 
 		// Get input
 		int channels = in.getChannels();
-		simd::float4 v[4];
+		simd::float_4 v[4];
 		for (int c = 0; c < channels; c += 4) {
-			v[c / 4] = simd::float4::load(&in.voltages[c]);
+			v[c / 4] = simd::float_4::load(&in.voltages[c]);
 		}
 
 		// Apply knob gain
@@ -56,7 +56,7 @@ struct VCA : Module {
 			}
 			else {
 				for (int c = 0; c < channels; c += 4) {
-					simd::float4 cv = simd::float4::load(&lin.voltages[c]) / 10.f;
+					simd::float_4 cv = simd::float_4::load(&lin.voltages[c]) / 10.f;
 					cv = clamp(cv, 0.f, 1.f);
 					v[c / 4] *= cv;
 				}
@@ -76,7 +76,7 @@ struct VCA : Module {
 			}
 			else {
 				for (int c = 0; c < channels; c += 4) {
-					simd::float4 cv = simd::float4::load(&exp.voltages[c]) / 10.f;
+					simd::float_4 cv = simd::float_4::load(&exp.voltages[c]) / 10.f;
 					cv = clamp(cv, 0.f, 1.f);
 					cv = rescale(pow(expBase, cv), 1.f, expBase, 0.f, 1.f);
 					v[c / 4] *= cv;
