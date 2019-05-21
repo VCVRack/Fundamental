@@ -1,9 +1,9 @@
 {
 	"slug": "Fundamental",
-	"name": "Fundamental",
 	"version": "1.0.0",
-	"author": "VCV",
 	"license": "BSD-3-Clause",
+	"name": "Fundamental",
+	"author": "VCV",
 	"authorEmail": "contact@vcvrack.com",
 	"pluginUrl": "https://vcvrack.com/Fundamental.html",
 	"authorUrl": "https://vcvrack.com/",
