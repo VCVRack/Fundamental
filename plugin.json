@@ -34,13 +34,13 @@
 			"slug": "VCA-1",
 			"name": "VCA-1",
 			"description": "Voltage-controlled amplifier",
-			"tags": ["VCA"]
+			"tags": ["VCA", "Polyphonic"]
 		},
 		{
 			"slug": "VCA",
 			"name": "VCA-2",
 			"description": "Voltage-controlled amplifier",
-			"tags": ["VCA", "Dual"]
+			"tags": ["VCA", "Dual", "Polyphonic"]
 		},
 		{
 			"slug": "LFO",
@@ -70,13 +70,13 @@
 			"slug": "VCMixer",
 			"name": "Mixer",
 			"description": "Mixes 4 signals with built-in VCAs",
-			"tags": ["Mixer", "VCA"]
+			"tags": ["Mixer", "VCA", "Polyphonic"]
 		},
 		{
 			"slug": "8vert",
 			"name": "8vert",
 			"description": "Attenuverts 8 signals or creates constant voltages",
-			"tags": ["Attenuator"]
+			"tags": ["Attenuator", "Polyphonic"]
 		},
 		{
 			"slug": "Unity",
@@ -88,7 +88,7 @@
 			"slug": "Mutes",
 			"name": "Mutes",
 			"description": "Toggles 10 signals on/off",
-			"tags": ["Switch"]
+			"tags": ["Switch", "Polyphonic"]
 		},
 		{
 			"slug": "Scope",
@@ -106,13 +106,13 @@
 			"slug": "SequentialSwitch1",
 			"name": "Sequential Switch 1",
 			"description": "Routes an input to one of to 4 outputs",
-			"tags": ["Utility"]
+			"tags": ["Utility", "Polyphonic"]
 		},
 		{
 			"slug": "SequentialSwitch2",
 			"name": "Sequential Switch 2",
 			"description": "Routes one of to 4 inputs to an output",
-			"tags": ["Utility"]
+			"tags": ["Utility", "Polyphonic"]
 		},
 		{
 			"slug": "Split",
