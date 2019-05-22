@@ -23,6 +23,7 @@ extern Model *modelScope;
 extern Model *modelSEQ3;
 extern Model *modelSequentialSwitch1;
 extern Model *modelSequentialSwitch2;
+extern Model *modelOctave;
 extern Model *modelSplit;
 extern Model *modelMerge;
 extern Model *modelSum;

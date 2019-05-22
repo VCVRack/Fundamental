@@ -160,6 +160,15 @@
       ]
     },
     {
+      "slug": "Octave",
+      "name": "Octave",
+      "description": "Shifts 1V/oct CV by octaves",
+      "tags": [
+        "Utility",
+        "Polyphonic"
+      ]
+    },
+    {
       "slug": "Split",
       "name": "Split",
       "description": "Splits a polyphonic cable into multiple monophonic cables",
