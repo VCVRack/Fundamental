@@ -34,12 +34,7 @@ struct Sum : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		int channels = inputs[POLY_INPUT].getChannels();
-		float sum = 0.f;
-		for (int c = 0; c < channels; c++) {
-			sum += inputs[POLY_INPUT].getVoltage(c);
-		}
-
+		float sum = inputs[POLY_INPUT].getVoltageSum();
 		sum *= params[LEVEL_PARAM].getValue();
 		outputs[MONO_OUTPUT].setVoltage(sum);
 

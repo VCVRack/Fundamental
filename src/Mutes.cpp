@@ -45,14 +45,14 @@ struct Mutes : Module {
 			// Get input
 			// Inputs are normalized to the input above it, so only set if connected
 			if (inputs[IN_INPUT + i].isConnected()) {
-				inputs[IN_INPUT + i].getVoltages(out);
 				channels = inputs[IN_INPUT + i].getChannels();
+				inputs[IN_INPUT + i].readVoltages(out);
 			}
 
 			// Set output
 			if (outputs[OUT_OUTPUT + i].isConnected()) {
 				outputs[OUT_OUTPUT + i].setChannels(channels);
-				outputs[OUT_OUTPUT + i].setVoltages(state[i] ? out : zero);
+				outputs[OUT_OUTPUT + i].writeVoltages(state[i] ? out : zero);
 			}
 
 			// Set light

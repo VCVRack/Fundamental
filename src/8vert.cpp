@@ -33,19 +33,20 @@ struct _8vert : Module {
 			// Get input
 			if (inputs[IN_INPUTS + i].isConnected()) {
 				channels = inputs[IN_INPUTS + i].getChannels();
-				inputs[IN_INPUTS + i].getVoltages(in);
+				inputs[IN_INPUTS + i].readVoltages(in);
 			}
 
 			if (outputs[OUT_OUTPUTS + i].isConnected()) {
 				// Apply gain
 				float out[16];
 				float gain = params[GAIN_PARAMS + i].getValue();
-				for (int c = 0; c < channels; c++)
+				for (int c = 0; c < channels; c++) {
 					out[c] = gain * in[c];
+				}
 
 				// Set output
 				outputs[OUT_OUTPUTS + i].setChannels(channels);
-				outputs[OUT_OUTPUTS + i].setVoltages(out);
+				outputs[OUT_OUTPUTS + i].writeVoltages(out);
 			}
 		}
 	}
