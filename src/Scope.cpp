@@ -34,8 +34,10 @@ struct Scope : Module {
 		NUM_LIGHTS
 	};
 
-	float bufferX[BUFFER_SIZE] = {};
-	float bufferY[BUFFER_SIZE] = {};
+	float bufferX[16][BUFFER_SIZE] = {};
+	float bufferY[16][BUFFER_SIZE] = {};
+	int channelsX = 0;
+	int channelsY = 0;
 	int bufferIndex = 0;
 	float frameIndex = 0;
 
@@ -60,6 +62,8 @@ struct Scope : Module {
 	void onReset() override {
 		lissajous = false;
 		external = false;
+		std::memset(bufferX, 0, sizeof(bufferX));
+		std::memset(bufferY, 0, sizeof(bufferY));
 	}
 
 	void process(const ProcessArgs &args) override {
@@ -67,25 +71,42 @@ struct Scope : Module {
 		if (sumTrigger.process(params[LISSAJOUS_PARAM].getValue() > 0.f)) {
 			lissajous = !lissajous;
 		}
-		lights[PLOT_LIGHT].value = lissajous ? 0.f : 1.f;
-		lights[LISSAJOUS_LIGHT].value = lissajous ? 1.f : 0.f;
+		lights[PLOT_LIGHT].setBrightness(!lissajous);
+		lights[LISSAJOUS_LIGHT].setBrightness(lissajous);
 
 		if (extTrigger.process(params[EXTERNAL_PARAM].getValue() > 0.f)) {
 			external = !external;
 		}
-		lights[INTERNAL_LIGHT].value = external ? 0.f : 1.f;
-		lights[EXTERNAL_LIGHT].value = external ? 1.f : 0.f;
+		lights[INTERNAL_LIGHT].setBrightness(!external);
+		lights[EXTERNAL_LIGHT].setBrightness(external);
 
 		// Compute time
 		float deltaTime = std::pow(2.f, -params[TIME_PARAM].getValue());
 		int frameCount = (int) std::ceil(deltaTime * args.sampleRate);
 
+		// Set channels
+		int channelsX = inputs[X_INPUT].isConnected() ? inputs[X_INPUT].getChannels() : 0;
+		if (channelsX != this->channelsX) {
+			std::memset(bufferX, 0, sizeof(bufferX));
+			this->channelsX = channelsX;
+		}
+
+		int channelsY = inputs[Y_INPUT].isConnected() ? inputs[Y_INPUT].getChannels() : 0;
+		if (channelsY != this->channelsY) {
+			std::memset(bufferY, 0, sizeof(bufferY));
+			this->channelsY = channelsY;
+		}
+
 		// Add frame to buffer
 		if (bufferIndex < BUFFER_SIZE) {
 			if (++frameIndex > frameCount) {
 				frameIndex = 0;
-				bufferX[bufferIndex] = inputs[X_INPUT].getVoltage();
-				bufferY[bufferIndex] = inputs[Y_INPUT].getVoltage();
+				for (int c = 0; c < channelsX; c++) {
+					bufferX[c][bufferIndex] = inputs[X_INPUT].getVoltage(c);
+				}
+				for (int c = 0; c < channelsY; c++) {
+					bufferY[c][bufferIndex] = inputs[Y_INPUT].getVoltage(c);
+				}
 				bufferIndex++;
 			}
 		}
@@ -105,18 +126,16 @@ struct Scope : Module {
 			}
 			frameIndex++;
 
-			// Must go below 0.1fV to trigger
+			// Must go below 0.1V to trigger
 			float gate = external ? inputs[TRIG_INPUT].getVoltage() : inputs[X_INPUT].getVoltage();
 
 			// Reset if triggered
 			float holdTime = 0.1f;
-			if (resetTrigger.process(rescale(gate, params[TRIG_PARAM].getValue() - 0.1f, params[TRIG_PARAM].getValue(), 0.f, 1.f)) || (frameIndex >= args.sampleRate * holdTime)) {
-				bufferIndex = 0; frameIndex = 0; return;
-			}
-
-			// Reset if we've waited too long
-			if (frameIndex >= args.sampleRate * holdTime) {
-				bufferIndex = 0; frameIndex = 0; return;
+			float trigValue = params[TRIG_PARAM].getValue();
+			if (resetTrigger.process(rescale(gate, trigValue - 0.1f, trigValue, 0.f, 1.f)) || (frameIndex >= args.sampleRate * holdTime)) {
+				bufferIndex = 0;
+				frameIndex = 0;
+				return;
 			}
 		}
 	}
@@ -142,55 +161,52 @@ struct Scope : Module {
 
 struct ScopeDisplay : TransparentWidget {
 	Scope *module;
-	int frame = 0;
+	int statsFrame = 0;
 	std::shared_ptr<Font> font;
 
 	struct Stats {
-		float vrms = 0.f;
+		// float vrms = 0.f;
 		float vpp = 0.f;
 		float vmin = 0.f;
 		float vmax = 0.f;
-		void calculate(float *values) {
-			vrms = 0.f;
+
+		void calculate(float *buffer, int channels) {
+			// vrms = 0.f;
 			vmax = -INFINITY;
 			vmin = INFINITY;
-			for (int i = 0; i < BUFFER_SIZE; i++) {
-				float v = values[i];
-				vrms += v*v;
+			for (int i = 0; i < BUFFER_SIZE * channels; i++) {
+				float v = buffer[i];
+				// vrms += v*v;
 				vmax = std::fmax(vmax, v);
 				vmin = std::fmin(vmin, v);
 			}
-			vrms = std::sqrt(vrms / BUFFER_SIZE);
+			// vrms = std::sqrt(vrms / BUFFER_SIZE);
 			vpp = vmax - vmin;
 		}
 	};
+
 	Stats statsX, statsY;
 
 	ScopeDisplay() {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/sudo/Sudo.ttf"));
 	}
 
-	void drawWaveform(const DrawArgs &args, float *valuesX, float *valuesY) {
-		if (!valuesX)
-			return;
+	void drawWaveform(const DrawArgs &args, float *bufferX, float offsetX, float gainX, float *bufferY, float offsetY, float gainY) {
+		assert(bufferY);
 		nvgSave(args.vg);
 		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
 		nvgScissor(args.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
 		nvgBeginPath(args.vg);
-		// Draw maximum display left to right
 		for (int i = 0; i < BUFFER_SIZE; i++) {
-			float x, y;
-			if (valuesY) {
-				x = valuesX[i] / 2.f + 0.5f;
-				y = valuesY[i] / 2.f + 0.5f;
-			}
-			else {
-				x = (float)i / (BUFFER_SIZE - 1);
-				y = valuesX[i] / 2.f + 0.5f;
-			}
+			Vec v;
+			if (bufferX)
+				v.x = (bufferX[i] + offsetX) * gainX / 2.f + 0.5f;
+			else
+				v.x = (float) i / (BUFFER_SIZE - 1);
+			v.y = (bufferY[i] + offsetY) * gainY / 2.f + 0.5f;
 			Vec p;
-			p.x = b.pos.x + b.size.x * x;
-			p.y = b.pos.y + b.size.y * (1.f - y);
+			p.x = rescale(v.x, 0.f, 1.f, b.pos.x, b.pos.x + b.size.x);
+			p.y = rescale(v.y, 0.f, 1.f, b.pos.y + b.size.y, b.pos.y);
 			if (i == 0)
 				nvgMoveTo(args.vg, p.x, p.y);
 			else
@@ -251,61 +267,61 @@ struct ScopeDisplay : TransparentWidget {
 		nvgText(args.vg, pos.x + 6, pos.y + 11, title, NULL);
 
 		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x80));
-		char text[128];
-		snprintf(text, sizeof(text), "pp % 06.2f  max % 06.2f  min % 06.2f", stats->vpp, stats->vmax, stats->vmin);
-		nvgText(args.vg, pos.x + 22, pos.y + 11, text, NULL);
+		pos = pos.plus(Vec(22, 11));
+
+		std::string text;
+		text = "pp ";
+		text += isNear(stats->vpp, 0.f, 100.f) ? string::f("% 6.2f", stats->vpp) : "  ---";
+		nvgText(args.vg, pos.x, pos.y, text.c_str(), NULL);
+		text = "max ";
+		text += isNear(stats->vmax, 0.f, 100.f) ? string::f("% 6.2f", stats->vmax) : "  ---";
+		nvgText(args.vg, pos.x + 58*1, pos.y, text.c_str(), NULL);
+		text = "min ";
+		text += isNear(stats->vmin, 0.f, 100.f) ? string::f("% 6.2f", stats->vmin) : "  ---";
+		nvgText(args.vg, pos.x + 58*2, pos.y, text.c_str(), NULL);
 	}
 
 	void draw(const DrawArgs &args) override {
 		if (!module)
 			return;
 
-		float gainX = std::pow(2.f, std::round(module->params[Scope::X_SCALE_PARAM].getValue()));
-		float gainY = std::pow(2.f, std::round(module->params[Scope::Y_SCALE_PARAM].getValue()));
+		float gainX = std::pow(2.f, std::round(module->params[Scope::X_SCALE_PARAM].getValue())) / 10.f;
+		float gainY = std::pow(2.f, std::round(module->params[Scope::Y_SCALE_PARAM].getValue())) / 10.f;
 		float offsetX = module->params[Scope::X_POS_PARAM].getValue();
 		float offsetY = module->params[Scope::Y_POS_PARAM].getValue();
-
-		float valuesX[BUFFER_SIZE];
-		float valuesY[BUFFER_SIZE];
-		for (int i = 0; i < BUFFER_SIZE; i++) {
-			int j = i;
-			// Lock display to buffer if buffer update deltaTime <= 2^-11
-			if (module->lissajous)
-				j = (i + module->bufferIndex) % BUFFER_SIZE;
-			valuesX[i] = (module->bufferX[j] + offsetX) * gainX / 10.f;
-			valuesY[i] = (module->bufferY[j] + offsetY) * gainY / 10.f;
-		}
 
 		// Draw waveforms
 		if (module->lissajous) {
 			// X x Y
-			if (module->inputs[Scope::X_INPUT].isConnected() || module->inputs[Scope::Y_INPUT].isConnected()) {
+			int lissajousChannels = std::max(module->channelsX, module->channelsY);
+			for (int c = 0; c < lissajousChannels; c++) {
 				nvgStrokeColor(args.vg, nvgRGBA(0x9f, 0xe4, 0x36, 0xc0));
-				drawWaveform(args, valuesX, valuesY);
+				drawWaveform(args, module->bufferX[c], offsetX, gainX, module->bufferY[c], offsetY, gainY);
 			}
 		}
 		else {
 			// Y
-			if (module->inputs[Scope::Y_INPUT].isConnected()) {
+			for (int c = 0; c < module->channelsY; c++) {
 				nvgStrokeColor(args.vg, nvgRGBA(0xe1, 0x02, 0x78, 0xc0));
-				drawWaveform(args, valuesY, NULL);
+				drawWaveform(args, NULL, 0, 0, module->bufferY[c], offsetY, gainY);
 			}
 
 			// X
-			if (module->inputs[Scope::X_INPUT].isConnected()) {
+			for (int c = 0; c < module->channelsX; c++) {
 				nvgStrokeColor(args.vg, nvgRGBA(0x28, 0xb0, 0xf3, 0xc0));
-				drawWaveform(args, valuesX, NULL);
+				drawWaveform(args, NULL, 0, 0, module->bufferX[c], offsetX, gainX);
 			}
 
-			float valueTrig = (module->params[Scope::TRIG_PARAM].getValue() + offsetX) * gainX / 10.f;
-			drawTrig(args, valueTrig);
+			float trigValue = module->params[Scope::TRIG_PARAM].getValue();
+			trigValue = (trigValue + offsetX) * gainX;
+			drawTrig(args, trigValue);
 		}
 
 		// Calculate and draw stats
-		if (++frame >= 4) {
-			frame = 0;
-			statsX.calculate(module->bufferX);
-			statsY.calculate(module->bufferY);
+		if (++statsFrame >= 4) {
+			statsFrame = 0;
+			statsX.calculate(module->bufferX[0], module->channelsX);
+			statsY.calculate(module->bufferY[0], module->channelsY);
 		}
 		drawStats(args, Vec(0, 0), "X", &statsX);
 		drawStats(args, Vec(0, box.size.y - 15), "Y", &statsY);
