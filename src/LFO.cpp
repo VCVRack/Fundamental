@@ -1,64 +1,69 @@
 #include "plugin.hpp"
 
 
+template <typename T>
 struct LowFrequencyOscillator {
-	float phase = 0.f;
-	float pw = 0.5f;
-	float freq = 1.f;
-	bool offset = false;
+	T phase = 0.f;
+	T pw = 0.5f;
+	T freq = 1.f;
 	bool invert = false;
-	dsp::SchmittTrigger resetTrigger;
+	bool bipolar = false;
+	T resetState = T::mask();
 
-	LowFrequencyOscillator() {}
-	void setPitch(float pitch) {
-		pitch = std::fmin(pitch, 10.f);
-		freq = std::pow(2.f, pitch);
+	void setPitch(T pitch) {
+		pitch = simd::fmin(pitch, 10.f);
+		freq = simd::pow(2.f, pitch);
 	}
-	void setPulseWidth(float pw_) {
-		const float pwMin = 0.01f;
-		pw = clamp(pw_, pwMin, 1.f - pwMin);
+	void setPulseWidth(T pw) {
+		const T pwMin = 0.01f;
+		this->pw = clamp(pw, pwMin, 1.f - pwMin);
 	}
-	void setReset(float reset) {
-		if (resetTrigger.process(reset / 0.01f)) {
-			phase = 0.f;
-		}
+	void setReset(T reset) {
+		reset = simd::rescale(reset, 0.1f, 2.f, 0.f, 1.f);
+		T on = (reset >= 1.f);
+		T off = (reset <= 0.f);
+		T triggered = ~resetState & on;
+		resetState = simd::ifelse(off, 0.f, resetState);
+		resetState = simd::ifelse(on, T::mask(), resetState);
+		phase = simd::ifelse(triggered, 0.f, phase);
 	}
 	void step(float dt) {
-		float deltaPhase = std::fmin(freq * dt, 0.5f);
+		T deltaPhase = simd::fmin(freq * dt, 0.5f);
 		phase += deltaPhase;
-		if (phase >= 1.f)
-			phase -= 1.f;
+		phase -= (phase >= 1.f) & 1.f;
 	}
-	float sin() {
-		if (offset)
-			return 1.f - std::cos(2*M_PI * phase) * (invert ? -1.f : 1.f);
-		else
-			return std::sin(2*M_PI * phase) * (invert ? -1.f : 1.f);
+	T sin() {
+		T p = phase;
+		if (!bipolar) p -= 0.25f;
+		T v = simd::sin(2*M_PI * p);
+		if (invert) v *= -1.f;
+		if (!bipolar) v += 1.f;
+		return v;
 	}
-	float tri(float x) {
-		return 4.f * std::fabs(x - std::round(x));
+	T tri() {
+		T p = phase;
+		if (bipolar) p += 0.25f;
+		T v = 4.f * simd::fabs(p - simd::round(p)) - 1.f;
+		if (invert) v *= -1.f;
+		if (!bipolar) v += 1.f;
+		return v;
 	}
-	float tri() {
-		if (offset)
-			return tri(invert ? phase - 0.5f : phase);
-		else
-			return -1.f + tri(invert ? phase - 0.25f : phase - 0.75f);
+	T saw() {
+		T p = phase;
+		if (!bipolar) p -= 0.5f;
+		T v = 2.f * (p - simd::round(p));
+		if (invert) v *= -1.f;
+		if (!bipolar) v += 1.f;
+		return v;
 	}
-	float saw(float x) {
-		return 2.f * (x - std::round(x));
+	T sqr() {
+		T v = simd::ifelse(phase < pw, 1.f, -1.f);
+		if (invert) v *= -1.f;
+		if (!bipolar) v += 1.f;
+		return v;
 	}
-	float saw() {
-		if (offset)
-			return invert ? 2.f * (1.f - phase) : 2.f * phase;
-		else
-			return saw(phase) * (invert ? -1.f : 1.f);
-	}
-	float sqr() {
-		float sqr = (phase < pw) ^ invert ? 1.f : -1.f;
-		return offset ? sqr + 1.f : sqr;
-	}
-	float light() {
-		return std::sin(2*M_PI * phase);
+	T light() {
+		return 1.f - 2.f * phase;
 	}
 };
 
@@ -89,12 +94,12 @@ struct LFO : Module {
 		NUM_OUTPUTS
 	};
 	enum LightIds {
-		PHASE_POS_LIGHT,
-		PHASE_NEG_LIGHT,
+		ENUMS(PHASE_LIGHT, 3),
 		NUM_LIGHTS
 	};
 
-	LowFrequencyOscillator oscillator;
+	LowFrequencyOscillator<simd::float_4> oscillators[4];
+	dsp::ClockDivider lightDivider;
 
 	LFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -105,25 +110,84 @@ struct LFO : Module {
 		configParam(PW_PARAM, 0.f, 1.f, 0.5f);
 		configParam(FM2_PARAM, 0.f, 1.f, 0.f);
 		configParam(PWM_PARAM, 0.f, 1.f, 0.f);
+		lightDivider.setDivision(16);
 	}
 
 	void process(const ProcessArgs &args) override {
-		oscillator.setPitch(params[FREQ_PARAM].getValue() + params[FM1_PARAM].getValue() * inputs[FM1_INPUT].getVoltage() + params[FM2_PARAM].getValue() * inputs[FM2_INPUT].getVoltage());
-		oscillator.setPulseWidth(params[PW_PARAM].getValue() + params[PWM_PARAM].getValue() * inputs[PW_INPUT].getVoltage() / 10.f);
-		oscillator.offset = (params[OFFSET_PARAM].getValue() > 0.f);
-		oscillator.invert = (params[INVERT_PARAM].getValue() <= 0.f);
-		oscillator.step(args.sampleTime);
-		oscillator.setReset(inputs[RESET_INPUT].getVoltage());
+		using simd::float_4;
 
-		outputs[SIN_OUTPUT].setVoltage(5.f * oscillator.sin());
-		outputs[TRI_OUTPUT].setVoltage(5.f * oscillator.tri());
-		outputs[SAW_OUTPUT].setVoltage(5.f * oscillator.saw());
-		outputs[SQR_OUTPUT].setVoltage(5.f * oscillator.sqr());
+		float freqParam = params[FREQ_PARAM].getValue();
+		float fm1Param = params[FM1_PARAM].getValue();
+		float fm2Param = params[FM2_PARAM].getValue();
+		float pwParam = params[PW_PARAM].getValue();
+		float pwmParam = params[PWM_PARAM].getValue();
 
-		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), args.sampleTime);
-		lights[PHASE_NEG_LIGHT].setSmoothBrightness(-oscillator.light(), args.sampleTime);
+		int channels = std::max(inputs[FM1_INPUT].getChannels(), inputs[FM2_INPUT].getChannels());
+
+		for (int c = 0; c < channels; c += 4) {
+			auto *oscillator = &oscillators[c / 4];
+			float_4 pitch = freqParam;
+			// FM1, polyphonic
+			pitch += float_4::load(inputs[FM1_INPUT].getVoltages(c)) * fm1Param;
+			// FM2, polyphonic or monophonic
+			if (inputs[FM2_INPUT].getChannels() == 1)
+				pitch += inputs[FM2_INPUT].getVoltage() * fm2Param;
+			else
+				pitch += float_4::load(inputs[FM2_INPUT].getVoltages(c)) * fm2Param;
+			oscillator->setPitch(pitch);
+
+			// Pulse width
+			float_4 pw = pwParam;
+			if (inputs[PW_INPUT].getChannels() == 1)
+				pw += inputs[PW_INPUT].getVoltage() / 10.f * pwmParam;
+			else
+				pw += float_4::load(inputs[PW_INPUT].getVoltages(c)) / 10.f * pwmParam;
+			oscillator->setPulseWidth(pw);
+
+			// Settings
+			oscillator->invert = (params[INVERT_PARAM].getValue() == 0.f);
+			oscillator->bipolar = (params[OFFSET_PARAM].getValue() == 0.f);
+			oscillator->step(args.sampleTime);
+			oscillator->setReset(inputs[RESET_INPUT].getVoltage());
+
+			// Outputs
+			if (outputs[SIN_OUTPUT].isConnected()) {
+				outputs[SIN_OUTPUT].setChannels(channels);
+				float_4 v = 5.f * oscillator->sin();
+				v.store(outputs[SIN_OUTPUT].getVoltages(c));
+			}
+			if (outputs[TRI_OUTPUT].isConnected()) {
+				outputs[TRI_OUTPUT].setChannels(channels);
+				float_4 v = 5.f * oscillator->tri();
+				v.store(outputs[TRI_OUTPUT].getVoltages(c));
+			}
+			if (outputs[SAW_OUTPUT].isConnected()) {
+				outputs[SAW_OUTPUT].setChannels(channels);
+				float_4 v = 5.f * oscillator->saw();
+				v.store(outputs[SAW_OUTPUT].getVoltages(c));
+			}
+			if (outputs[SQR_OUTPUT].isConnected()) {
+				outputs[SQR_OUTPUT].setChannels(channels);
+				float_4 v = 5.f * oscillator->sqr();
+				v.store(outputs[SQR_OUTPUT].getVoltages(c));
+			}
+		}
+
+		// Light
+		if (lightDivider.process()) {
+			if (channels == 1) {
+				float lightValue = oscillators[0].light().f[0];
+				lights[PHASE_LIGHT + 0].setSmoothBrightness(-lightValue, args.sampleTime * lightDivider.getDivision());
+				lights[PHASE_LIGHT + 1].setSmoothBrightness(lightValue, args.sampleTime * lightDivider.getDivision());
+				lights[PHASE_LIGHT + 2].setBrightness(0.f);
+			}
+			else {
+				lights[PHASE_LIGHT + 0].setBrightness(0.f);
+				lights[PHASE_LIGHT + 1].setBrightness(0.f);
+				lights[PHASE_LIGHT + 2].setBrightness(1.f);
+			}
+		}
 	}
-
 };
 
 
@@ -157,7 +221,7 @@ struct LFOWidget : ModuleWidget {
 		addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, LFO::SAW_OUTPUT));
 		addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, LFO::SQR_OUTPUT));
 
-		addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42.5f), module, LFO::PHASE_POS_LIGHT));
+		addChild(createLight<SmallLight<RedGreenBlueLight>>(Vec(99, 42.5f), module, LFO::PHASE_LIGHT));
 	}
 };
 
@@ -185,12 +249,12 @@ struct LFO2 : Module {
 		NUM_OUTPUTS
 	};
 	enum LightIds {
-		PHASE_POS_LIGHT,
-		PHASE_NEG_LIGHT,
+		ENUMS(PHASE_LIGHT, 3),
 		NUM_LIGHTS
 	};
 
-	LowFrequencyOscillator oscillator;
+	LowFrequencyOscillator<simd::float_4> oscillators[4];
+	dsp::ClockDivider lightDivider;
 
 	LFO2() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -199,29 +263,67 @@ struct LFO2 : Module {
 		configParam(FREQ_PARAM, -8.f, 10.f, 1.f);
 		configParam(WAVE_PARAM, 0.f, 3.f, 1.5f);
 		configParam(FM_PARAM, 0.f, 1.f, 0.5f);
+		lightDivider.setDivision(16);
 	}
 
 	void process(const ProcessArgs &args) override {
-		float deltaTime = args.sampleTime;
-		oscillator.setPitch(params[FREQ_PARAM].getValue() + params[FM_PARAM].getValue() * inputs[FM_INPUT].getVoltage());
-		oscillator.offset = (params[OFFSET_PARAM].getValue() > 0.f);
-		oscillator.invert = (params[INVERT_PARAM].getValue() <= 0.f);
-		oscillator.step(deltaTime);
-		oscillator.setReset(inputs[RESET_INPUT].getVoltage());
+		using simd::float_4;
 
-		float wave = params[WAVE_PARAM].getValue() + inputs[WAVE_INPUT].getVoltage();
-		wave = clamp(wave, 0.f, 3.f);
-		float interp;
-		if (wave < 1.f)
-			interp = crossfade(oscillator.sin(), oscillator.tri(), wave);
-		else if (wave < 2.f)
-			interp = crossfade(oscillator.tri(), oscillator.saw(), wave - 1.f);
-		else
-			interp = crossfade(oscillator.saw(), oscillator.sqr(), wave - 2.f);
-		outputs[INTERP_OUTPUT].setVoltage(5.f * interp);
+		float freqParam = params[FREQ_PARAM].getValue();
+		float waveParam = params[WAVE_PARAM].getValue();
+		float fmParam = params[FM_PARAM].getValue();
 
-		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), deltaTime);
-		lights[PHASE_NEG_LIGHT].setSmoothBrightness(-oscillator.light(), deltaTime);
+		int channels = inputs[FM_INPUT].getChannels();
+
+		for (int c = 0; c < channels; c += 4) {
+			auto *oscillator = &oscillators[c / 4];
+			float_4 pitch = freqParam;
+			// FM, polyphonic
+			pitch += float_4::load(inputs[FM_INPUT].getVoltages(c)) * fmParam;
+			oscillator->setPitch(pitch);
+
+			// Wave
+			float_4 wave = waveParam;
+			inputs[WAVE_INPUT].getVoltage();
+			if (inputs[WAVE_INPUT].getChannels() == 1)
+				wave += inputs[WAVE_INPUT].getVoltage() / 10.f * 3.f;
+			else
+				wave += float_4::load(inputs[WAVE_INPUT].getVoltages(c)) / 10.f * 3.f;
+			wave = clamp(wave, 0.f, 3.f);
+
+			// Settings
+			oscillator->invert = (params[INVERT_PARAM].getValue() == 0.f);
+			oscillator->bipolar = (params[OFFSET_PARAM].getValue() == 0.f);
+			oscillator->step(args.sampleTime);
+			oscillator->setReset(inputs[RESET_INPUT].getVoltage());
+
+			// Outputs
+			if (outputs[INTERP_OUTPUT].isConnected()) {
+				outputs[INTERP_OUTPUT].setChannels(channels);
+				float_4 v = 0.f;
+				v += oscillator->sin() * simd::fmax(0.f, 1.f - simd::fabs(wave - 0.f));
+				v += oscillator->tri() * simd::fmax(0.f, 1.f - simd::fabs(wave - 1.f));
+				v += oscillator->saw() * simd::fmax(0.f, 1.f - simd::fabs(wave - 2.f));
+				v += oscillator->sqr() * simd::fmax(0.f, 1.f - simd::fabs(wave - 3.f));
+				v *= 5.f;
+				v.store(outputs[INTERP_OUTPUT].getVoltages(c));
+			}
+		}
+
+		// Light
+		if (lightDivider.process()) {
+			if (channels == 1) {
+				float lightValue = oscillators[0].light().f[0];
+				lights[PHASE_LIGHT + 0].setSmoothBrightness(-lightValue, args.sampleTime * lightDivider.getDivision());
+				lights[PHASE_LIGHT + 1].setSmoothBrightness(lightValue, args.sampleTime * lightDivider.getDivision());
+				lights[PHASE_LIGHT + 2].setBrightness(0.f);
+			}
+			else {
+				lights[PHASE_LIGHT + 0].setBrightness(0.f);
+				lights[PHASE_LIGHT + 1].setBrightness(0.f);
+				lights[PHASE_LIGHT + 2].setBrightness(1.f);
+			}
+		}
 	}
 };
 
@@ -249,7 +351,7 @@ struct LFO2Widget : ModuleWidget {
 
 		addOutput(createOutput<PJ301MPort>(Vec(54, 319), module, LFO2::INTERP_OUTPUT));
 
-		addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 42.5f), module, LFO2::PHASE_POS_LIGHT));
+		addChild(createLight<SmallLight<RedGreenBlueLight>>(Vec(68, 42.5f), module, LFO2::PHASE_LIGHT));
 	}
 };
 

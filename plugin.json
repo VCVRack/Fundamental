@@ -60,7 +60,8 @@
       "name": "LFO-1",
       "description": "Low-frequency oscillator",
       "tags": [
-        "LFO"
+        "LFO",
+        "Polyphonic"
       ]
     },
     {
@@ -68,7 +69,8 @@
       "name": "LFO-2",
       "description": "Low-frequency oscillator",
       "tags": [
-        "LFO"
+        "LFO",
+        "Polyphonic"
       ]
     },
     {
@@ -130,7 +132,8 @@
       "name": "Scope",
       "description": "Inspect waveforms with an oscilloscope",
       "tags": [
-        "Visual"
+        "Visual",
+        "Polyphonic"
       ]
     },
     {
