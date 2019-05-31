@@ -176,7 +176,7 @@ struct LFO : Module {
 		// Light
 		if (lightDivider.process()) {
 			if (channels == 1) {
-				float lightValue = oscillators[0].light().f[0];
+				float lightValue = oscillators[0].light().s[0];
 				lights[PHASE_LIGHT + 0].setSmoothBrightness(-lightValue, args.sampleTime * lightDivider.getDivision());
 				lights[PHASE_LIGHT + 1].setSmoothBrightness(lightValue, args.sampleTime * lightDivider.getDivision());
 				lights[PHASE_LIGHT + 2].setBrightness(0.f);
@@ -313,7 +313,7 @@ struct LFO2 : Module {
 		// Light
 		if (lightDivider.process()) {
 			if (channels == 1) {
-				float lightValue = oscillators[0].light().f[0];
+				float lightValue = oscillators[0].light().s[0];
 				lights[PHASE_LIGHT + 0].setSmoothBrightness(-lightValue, args.sampleTime * lightDivider.getDivision());
 				lights[PHASE_LIGHT + 1].setSmoothBrightness(lightValue, args.sampleTime * lightDivider.getDivision());
 				lights[PHASE_LIGHT + 2].setBrightness(0.f);
