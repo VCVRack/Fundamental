@@ -107,8 +107,6 @@ struct VCF : Module {
 
 	void process(const ProcessArgs &args) override {
 		if (!outputs[LPF_OUTPUT].isConnected() && !outputs[HPF_OUTPUT].isConnected()) {
-			outputs[LPF_OUTPUT].setVoltage(0.f);
-			outputs[HPF_OUTPUT].setVoltage(0.f);
 			return;
 		}
 
@@ -116,6 +114,10 @@ struct VCF : Module {
 		float resParam = params[RES_PARAM].getValue();
 		float fineParam = params[FINE_PARAM].getValue();
 		fineParam = dsp::quadraticBipolar(fineParam * 2.f - 1.f) * 7.f / 12.f;
+		float freqCvParam = params[FREQ_CV_PARAM].getValue();
+		freqCvParam = dsp::quadraticBipolar(freqCvParam);
+		float freqParam = params[FREQ_PARAM].getValue();
+		freqParam = freqParam * 10.f - 5.f;
 
 		int channels = std::max(1, inputs[IN_INPUT].getChannels());
 
@@ -123,7 +125,16 @@ struct VCF : Module {
 			auto *filter = &filters[c / 4];
 
 			float_4 input = float_4::load(inputs[IN_INPUT].getVoltages(c)) / 5.f;
-			float_4 drive = clamp(driveParam + inputs[DRIVE_INPUT].getVoltage() / 10.f, 0.f, 1.f);
+
+			// Drive gain
+			float_4 drive = driveParam;
+			if (inputs[DRIVE_INPUT].isConnected()) {
+				if (inputs[DRIVE_INPUT].isMonophonic())
+					drive += inputs[DRIVE_INPUT].getVoltage() / 10.f;
+				else
+					drive += float_4::load(inputs[DRIVE_INPUT].getVoltages(c)) / 10.f;
+			}
+			drive = clamp(drive, 0.f, 1.f);
 			float_4 gain = simd::pow(1.f + drive, 5);
 			input *= gain;
 
@@ -131,19 +142,32 @@ struct VCF : Module {
 			input += 1e-6f * (2.f * random::uniform() - 1.f);
 
 			// Set resonance
-			float_4 res = clamp(resParam + inputs[RES_INPUT].getVoltage() / 10.f, 0.f, 1.f);
-			filter->resonance = simd::pow(res, 2) * 10.f;
+			float_4 resonance = resParam;
+			if (inputs[RES_INPUT].isConnected()) {
+				if (inputs[RES_INPUT].isMonophonic())
+					resonance += inputs[RES_INPUT].getVoltage() / 10.f;
+				else
+					resonance += float_4::load(inputs[RES_INPUT].getVoltages(c)) / 10.f;
+			}
+			resonance = clamp(resonance, 0.f, 1.f);
+			filter->resonance = simd::pow(resonance, 2) * 10.f;
 
-			// Set cutoff frequency
+			// Get pitch
 			float_4 pitch = 0.f;
-			if (inputs[FREQ_INPUT].isConnected())
-				pitch += inputs[FREQ_INPUT].getVoltage() * dsp::quadraticBipolar(params[FREQ_CV_PARAM].getValue());
-			pitch += params[FREQ_PARAM].getValue() * 10.f - 5.f;
+			if (inputs[FREQ_INPUT].isConnected()) {
+				if (inputs[FREQ_INPUT].isMonophonic())
+					pitch += inputs[FREQ_INPUT].getVoltage() * freqCvParam;
+				else
+					pitch += float_4::load(inputs[FREQ_INPUT].getVoltages(c)) * freqCvParam;
+			}
+			pitch += freqParam;
 			pitch += fineParam;
+			// Set cutoff
 			float_4 cutoff = dsp::FREQ_C4 * simd::pow(2.f, pitch);
 			cutoff = clamp(cutoff, 1.f, 8000.f);
 			filter->setCutoff(cutoff);
 
+			// Set outputs
 			filter->process(input, args.sampleTime);
 			float_4 lowpass = 5.f * filter->lowpass();
 			lowpass.store(outputs[LPF_OUTPUT].getVoltages(c));
@@ -153,7 +177,6 @@ struct VCF : Module {
 
 		outputs[LPF_OUTPUT].setChannels(channels);
 		outputs[HPF_OUTPUT].setChannels(channels);
-		// DEBUG("%d", channels);
 
 		/*
 		// Process sample
