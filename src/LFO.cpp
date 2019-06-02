@@ -1,6 +1,9 @@
 #include "plugin.hpp"
 
 
+using simd::float_4;
+
+
 template <typename T>
 struct LowFrequencyOscillator {
 	T phase = 0.f;
@@ -98,7 +101,7 @@ struct LFO : Module {
 		NUM_LIGHTS
 	};
 
-	LowFrequencyOscillator<simd::float_4> oscillators[4];
+	LowFrequencyOscillator<float_4> oscillators[4];
 	dsp::ClockDivider lightDivider;
 
 	LFO() {
@@ -114,15 +117,13 @@ struct LFO : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		using simd::float_4;
-
 		float freqParam = params[FREQ_PARAM].getValue();
 		float fm1Param = params[FM1_PARAM].getValue();
 		float fm2Param = params[FM2_PARAM].getValue();
 		float pwParam = params[PW_PARAM].getValue();
 		float pwmParam = params[PWM_PARAM].getValue();
 
-		int channels = std::max(inputs[FM1_INPUT].getChannels(), inputs[FM2_INPUT].getChannels());
+		int channels = std::max(1, inputs[FM1_INPUT].getChannels());
 
 		for (int c = 0; c < channels; c += 4) {
 			auto *oscillator = &oscillators[c / 4];
@@ -253,7 +254,7 @@ struct LFO2 : Module {
 		NUM_LIGHTS
 	};
 
-	LowFrequencyOscillator<simd::float_4> oscillators[4];
+	LowFrequencyOscillator<float_4> oscillators[4];
 	dsp::ClockDivider lightDivider;
 
 	LFO2() {
@@ -267,13 +268,11 @@ struct LFO2 : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		using simd::float_4;
-
 		float freqParam = params[FREQ_PARAM].getValue();
 		float waveParam = params[WAVE_PARAM].getValue();
 		float fmParam = params[FM_PARAM].getValue();
 
-		int channels = inputs[FM_INPUT].getChannels();
+		int channels = std::max(1, inputs[FM_INPUT].getChannels());
 
 		for (int c = 0; c < channels; c += 4) {
 			auto *oscillator = &oscillators[c / 4];
