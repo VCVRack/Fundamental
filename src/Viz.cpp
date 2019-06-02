@@ -17,7 +17,7 @@ struct Viz : Module {
 		NUM_LIGHTS
 	};
 
-	int lastChannels = 0;
+	int lastChannel = 0;
 	dsp::ClockDivider lightDivider;
 
 	Viz() {
@@ -27,7 +27,7 @@ struct Viz : Module {
 
 	void process(const ProcessArgs &args) override {
 		if (lightDivider.process()) {
-			lastChannels = inputs[POLY_INPUT].getChannels();
+			lastChannel = inputs[POLY_INPUT].getChannels();
 			float deltaTime = args.sampleTime * lightDivider.getDivision();
 
 			for (int c = 0; c < 16; c++) {
@@ -58,7 +58,7 @@ struct VizDisplay : Widget {
 			nvgFontSize(args.vg, 11);
 			nvgTextLetterSpacing(args.vg, 0.0);
 			nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
-			if (module && c < module->lastChannels)
+			if (module && c < module->lastChannel)
 				nvgFillColor(args.vg, nvgRGB(255, 255, 255));
 			else
 				nvgFillColor(args.vg, nvgRGB(99, 99, 99));

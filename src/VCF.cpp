@@ -128,12 +128,10 @@ struct VCF : Module {
 
 			// Drive gain
 			float_4 drive = driveParam;
-			if (inputs[DRIVE_INPUT].isConnected()) {
-				if (inputs[DRIVE_INPUT].isMonophonic())
-					drive += inputs[DRIVE_INPUT].getVoltage() / 10.f;
-				else
-					drive += float_4::load(inputs[DRIVE_INPUT].getVoltages(c)) / 10.f;
-			}
+			if (inputs[DRIVE_INPUT].isPolyphonic())
+				drive += float_4::load(inputs[DRIVE_INPUT].getVoltages(c)) / 10.f;
+			else
+				drive += inputs[DRIVE_INPUT].getVoltage() / 10.f;
 			drive = clamp(drive, 0.f, 1.f);
 			float_4 gain = simd::pow(1.f + drive, 5);
 			input *= gain;
@@ -143,23 +141,19 @@ struct VCF : Module {
 
 			// Set resonance
 			float_4 resonance = resParam;
-			if (inputs[RES_INPUT].isConnected()) {
-				if (inputs[RES_INPUT].isMonophonic())
-					resonance += inputs[RES_INPUT].getVoltage() / 10.f;
-				else
-					resonance += float_4::load(inputs[RES_INPUT].getVoltages(c)) / 10.f;
-			}
+			if (inputs[RES_INPUT].isPolyphonic())
+				resonance += float_4::load(inputs[RES_INPUT].getVoltages(c)) / 10.f;
+			else
+				resonance += inputs[RES_INPUT].getVoltage() / 10.f;
 			resonance = clamp(resonance, 0.f, 1.f);
 			filter->resonance = simd::pow(resonance, 2) * 10.f;
 
 			// Get pitch
 			float_4 pitch = 0.f;
-			if (inputs[FREQ_INPUT].isConnected()) {
-				if (inputs[FREQ_INPUT].isMonophonic())
-					pitch += inputs[FREQ_INPUT].getVoltage() * freqCvParam;
-				else
-					pitch += float_4::load(inputs[FREQ_INPUT].getVoltages(c)) * freqCvParam;
-			}
+			if (inputs[FREQ_INPUT].isPolyphonic())
+				pitch += float_4::load(inputs[FREQ_INPUT].getVoltages(c)) * freqCvParam;
+			else
+				pitch += inputs[FREQ_INPUT].getVoltage() * freqCvParam;
 			pitch += freqParam;
 			pitch += fineParam;
 			// Set cutoff

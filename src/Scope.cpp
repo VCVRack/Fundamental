@@ -85,13 +85,13 @@ struct Scope : Module {
 		int frameCount = (int) std::ceil(deltaTime * args.sampleRate);
 
 		// Set channels
-		int channelsX = inputs[X_INPUT].isConnected() ? inputs[X_INPUT].getChannels() : 0;
+		int channelsX = inputs[X_INPUT].getChannels();
 		if (channelsX != this->channelsX) {
 			std::memset(bufferX, 0, sizeof(bufferX));
 			this->channelsX = channelsX;
 		}
 
-		int channelsY = inputs[Y_INPUT].isConnected() ? inputs[Y_INPUT].getChannels() : 0;
+		int channelsY = inputs[Y_INPUT].getChannels();
 		if (channelsY != this->channelsY) {
 			std::memset(bufferY, 0, sizeof(bufferY));
 			this->channelsY = channelsY;

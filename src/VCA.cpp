@@ -29,9 +29,6 @@ struct VCA : Module {
 	}
 
 	void processChannel(Input &in, Param &level, Input &lin, Input &exp, Output &out) {
-		if (!in.isConnected() || !out.isConnected())
-			return;
-
 		// Get input
 		int channels = in.getChannels();
 		simd::float_4 v[4];
@@ -47,17 +44,17 @@ struct VCA : Module {
 
 		// Apply linear CV gain
 		if (lin.isConnected()) {
-			if (lin.getChannels() == 1) {
-				float cv = lin.getVoltage() / 10.f;
-				cv = clamp(cv, 0.f, 1.f);
+			if (lin.isPolyphonic()) {
 				for (int c = 0; c < channels; c += 4) {
+					simd::float_4 cv = simd::float_4::load(lin.getVoltages(c)) / 10.f;
+					cv = clamp(cv, 0.f, 1.f);
 					v[c / 4] *= cv;
 				}
 			}
 			else {
+				float cv = lin.getVoltage() / 10.f;
+				cv = clamp(cv, 0.f, 1.f);
 				for (int c = 0; c < channels; c += 4) {
-					simd::float_4 cv = simd::float_4::load(lin.getVoltages(c)) / 10.f;
-					cv = clamp(cv, 0.f, 1.f);
 					v[c / 4] *= cv;
 				}
 			}
@@ -66,19 +63,19 @@ struct VCA : Module {
 		// Apply exponential CV gain
 		const float expBase = 50.f;
 		if (exp.isConnected()) {
-			if (exp.getChannels() == 1) {
-				float cv = exp.getVoltage() / 10.f;
-				cv = clamp(cv, 0.f, 1.f);
-				cv = rescale(std::pow(expBase, cv), 1.f, expBase, 0.f, 1.f);
-				for (int c = 0; c < channels; c += 4) {
-					v[c / 4] *= cv;
-				}
-			}
-			else {
+			if (exp.isPolyphonic()) {
 				for (int c = 0; c < channels; c += 4) {
 					simd::float_4 cv = simd::float_4::load(exp.getVoltages(c)) / 10.f;
 					cv = clamp(cv, 0.f, 1.f);
 					cv = rescale(pow(expBase, cv), 1.f, expBase, 0.f, 1.f);
+					v[c / 4] *= cv;
+				}
+			}
+			else {
+				float cv = exp.getVoltage() / 10.f;
+				cv = clamp(cv, 0.f, 1.f);
+				cv = rescale(std::pow(expBase, cv), 1.f, expBase, 0.f, 1.f);
+				for (int c = 0; c < channels; c += 4) {
 					v[c / 4] *= cv;
 				}
 			}

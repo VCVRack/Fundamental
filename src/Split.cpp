@@ -28,7 +28,7 @@ struct Split : Module {
 	void process(const ProcessArgs &args) override {
 		for (int c = 0; c < 16; c++) {
 			float v = inputs[POLY_INPUT].getVoltage(c);
-			// To allow users to debug buggy modules, don't assume that undefined channels are 0V.
+			// To allow users to debug buggy modules, don't assume that undefined channel voltages are 0V.
 			outputs[MONO_OUTPUTS + c].setVoltage(v);
 		}
 

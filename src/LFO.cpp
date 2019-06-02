@@ -131,18 +131,18 @@ struct LFO : Module {
 			// FM1, polyphonic
 			pitch += float_4::load(inputs[FM1_INPUT].getVoltages(c)) * fm1Param;
 			// FM2, polyphonic or monophonic
-			if (inputs[FM2_INPUT].getChannels() == 1)
-				pitch += inputs[FM2_INPUT].getVoltage() * fm2Param;
-			else
+			if (inputs[FM2_INPUT].isPolyphonic())
 				pitch += float_4::load(inputs[FM2_INPUT].getVoltages(c)) * fm2Param;
+			else
+				pitch += inputs[FM2_INPUT].getVoltage() * fm2Param;
 			oscillator->setPitch(pitch);
 
 			// Pulse width
 			float_4 pw = pwParam;
-			if (inputs[PW_INPUT].getChannels() == 1)
-				pw += inputs[PW_INPUT].getVoltage() / 10.f * pwmParam;
-			else
+			if (inputs[PW_INPUT].isPolyphonic())
 				pw += float_4::load(inputs[PW_INPUT].getVoltages(c)) / 10.f * pwmParam;
+			else
+				pw += inputs[PW_INPUT].getVoltage() / 10.f * pwmParam;
 			oscillator->setPulseWidth(pw);
 
 			// Settings
@@ -284,10 +284,10 @@ struct LFO2 : Module {
 			// Wave
 			float_4 wave = waveParam;
 			inputs[WAVE_INPUT].getVoltage();
-			if (inputs[WAVE_INPUT].getChannels() == 1)
-				wave += inputs[WAVE_INPUT].getVoltage() / 10.f * 3.f;
-			else
+			if (inputs[WAVE_INPUT].isPolyphonic())
 				wave += float_4::load(inputs[WAVE_INPUT].getVoltages(c)) / 10.f * 3.f;
+			else
+				wave += inputs[WAVE_INPUT].getVoltage() / 10.f * 3.f;
 			wave = clamp(wave, 0.f, 3.f);
 
 			// Settings

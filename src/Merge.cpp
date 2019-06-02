@@ -42,7 +42,8 @@ struct Merge : Module {
 			outputs[POLY_OUTPUT].setVoltage(v, c);
 		}
 
-		outputs[POLY_OUTPUT].setChannels((channels >= 0) ? channels : (lastChannel + 1));
+		// In order to allow 0 channels, modify channels directly instead of using `setChannels()`
+		outputs[POLY_OUTPUT].channels = (channels >= 0) ? channels : (lastChannel + 1);
 
 		// Set channel lights infrequently
 		if (lightDivider.process()) {
