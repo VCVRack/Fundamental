@@ -106,13 +106,13 @@ struct LFO : Module {
 
 	LFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(OFFSET_PARAM, 0.f, 1.f, 1.f);
-		configParam(INVERT_PARAM, 0.f, 1.f, 1.f);
-		configParam(FREQ_PARAM, -8.f, 10.f, 1.f);
-		configParam(FM1_PARAM, 0.f, 1.f, 0.f);
-		configParam(PW_PARAM, 0.f, 1.f, 0.5f);
-		configParam(FM2_PARAM, 0.f, 1.f, 0.f);
-		configParam(PWM_PARAM, 0.f, 1.f, 0.f);
+		configParam(OFFSET_PARAM, 0.f, 1.f, 1.f, "Offset");
+		configParam(INVERT_PARAM, 0.f, 1.f, 1.f, "Invert");
+		configParam(FREQ_PARAM, -8.f, 10.f, 1.f, "Frequency", " Hz", 2, 1);
+		configParam(FM1_PARAM, 0.f, 1.f, 0.f, "Frequency modulation 1", "%", 0.f, 100.f);
+		configParam(PW_PARAM, 0.f, 1.f, 0.5f, "Pulse width", "%", 0.f, 100.f);
+		configParam(FM2_PARAM, 0.f, 1.f, 0.f, "Frequency modulation 2", "%", 0.f, 100.f);
+		configParam(PWM_PARAM, 0.f, 1.f, 0.f, "Pulse width modulation", "%", 0.f, 100.f);
 		lightDivider.setDivision(16);
 	}
 
@@ -259,11 +259,11 @@ struct LFO2 : Module {
 
 	LFO2() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(OFFSET_PARAM, 0.f, 1.f, 1.f);
-		configParam(INVERT_PARAM, 0.f, 1.f, 1.f);
-		configParam(FREQ_PARAM, -8.f, 10.f, 1.f);
-		configParam(WAVE_PARAM, 0.f, 3.f, 1.5f);
-		configParam(FM_PARAM, 0.f, 1.f, 0.5f);
+		configParam(OFFSET_PARAM, 0.f, 1.f, 1.f, "Offset");
+		configParam(INVERT_PARAM, 0.f, 1.f, 1.f, "Invert");
+		configParam(FREQ_PARAM, -8.f, 10.f, 1.f, "Frequency", " Hz", 2, 1);
+		configParam(WAVE_PARAM, 0.f, 3.f, 1.5f, "Wave");
+		configParam(FM_PARAM, 0.f, 1.f, 0.5f, "Frequency modulation", "%", 0.f, 100.f);
 		lightDivider.setDivision(16);
 	}
 

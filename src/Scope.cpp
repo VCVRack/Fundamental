@@ -49,13 +49,14 @@ struct Scope : Module {
 
 	Scope() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(X_SCALE_PARAM, -2.f, 8.f, 0.f);
-		configParam(X_POS_PARAM, -10.f, 10.f, 0.f);
-		configParam(Y_SCALE_PARAM, -2.f, 8.f, 0.f);
-		configParam(Y_POS_PARAM, -10.f, 10.f, 0.f);
-		configParam(TIME_PARAM, 6.f, 16.f, 14.f);
+		configParam(X_SCALE_PARAM, -2.f, 8.f, 0.f, "X scale", " V/div", 1/2.f, 5);
+		configParam(X_POS_PARAM, -10.f, 10.f, 0.f, "X position", " V");
+		configParam(Y_SCALE_PARAM, -2.f, 8.f, 0.f, "Y scale", " V/div", 1/2.f, 5);
+		configParam(Y_POS_PARAM, -10.f, 10.f, 0.f, "Y position", " V");
+		const float timeBase = (float) BUFFER_SIZE / 6;
+		configParam(TIME_PARAM, 6.f, 16.f, 14.f, "Time", " ms/div", 1/2.f, 1000 * timeBase);
 		configParam(LISSAJOUS_PARAM, 0.f, 1.f, 0.f);
-		configParam(TRIG_PARAM, -10.f, 10.f, 0.f);
+		configParam(TRIG_PARAM, -10.f, 10.f, 0.f, "Trigger position", " V");
 		configParam(EXTERNAL_PARAM, 0.f, 1.f, 0.f);
 	}
 

@@ -32,7 +32,7 @@ struct LadderFilter {
 	}
 
 	void setCutoff(T cutoff) {
-		omega0 = 2*M_PI * cutoff;
+		omega0 = 2 * T(M_PI) * cutoff;
 	}
 
 	void process(T input, T dt) {
@@ -93,11 +93,12 @@ struct VCF : Module {
 
 	VCF() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
-		configParam(FREQ_PARAM, 0.f, 1.f, 0.5f, "Frequency");
+		// Multiply and offset for backward patch compatibility
+		configParam(FREQ_PARAM, 0.f, 1.f, 0.5f, "Frequency", " Hz", std::pow(2, 10.f), dsp::FREQ_C4 / std::pow(2, 5.f));
 		configParam(FINE_PARAM, 0.f, 1.f, 0.5f, "Fine frequency");
-		configParam(RES_PARAM, 0.f, 1.f, 0.f, "Resonance");
-		configParam(FREQ_CV_PARAM, -1.f, 1.f, 0.f, "Frequency modulation");
-		configParam(DRIVE_PARAM, 0.f, 1.f, 0.f, "Drive");
+		configParam(RES_PARAM, 0.f, 1.f, 0.f, "Resonance", "%", 0.f, 100.f);
+		configParam(FREQ_CV_PARAM, -1.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
+		configParam(DRIVE_PARAM, 0.f, 1.f, 0.f, "Drive", "", 0, 11);
 	}
 
 	void onReset() override {
@@ -127,11 +128,7 @@ struct VCF : Module {
 			float_4 input = float_4::load(inputs[IN_INPUT].getVoltages(c)) / 5.f;
 
 			// Drive gain
-			float_4 drive = driveParam;
-			if (inputs[DRIVE_INPUT].isPolyphonic())
-				drive += float_4::load(inputs[DRIVE_INPUT].getVoltages(c)) / 10.f;
-			else
-				drive += inputs[DRIVE_INPUT].getVoltage() / 10.f;
+			float_4 drive = driveParam + inputs[DRIVE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f;
 			drive = clamp(drive, 0.f, 1.f);
 			float_4 gain = simd::pow(1.f + drive, 5);
 			input *= gain;
@@ -140,22 +137,12 @@ struct VCF : Module {
 			input += 1e-6f * (2.f * random::uniform() - 1.f);
 
 			// Set resonance
-			float_4 resonance = resParam;
-			if (inputs[RES_INPUT].isPolyphonic())
-				resonance += float_4::load(inputs[RES_INPUT].getVoltages(c)) / 10.f;
-			else
-				resonance += inputs[RES_INPUT].getVoltage() / 10.f;
+			float_4 resonance = resParam + inputs[RES_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f;
 			resonance = clamp(resonance, 0.f, 1.f);
 			filter->resonance = simd::pow(resonance, 2) * 10.f;
 
 			// Get pitch
-			float_4 pitch = 0.f;
-			if (inputs[FREQ_INPUT].isPolyphonic())
-				pitch += float_4::load(inputs[FREQ_INPUT].getVoltages(c)) * freqCvParam;
-			else
-				pitch += inputs[FREQ_INPUT].getVoltage() * freqCvParam;
-			pitch += freqParam;
-			pitch += fineParam;
+			float_4 pitch = freqParam + fineParam + inputs[FREQ_INPUT].getPolyVoltageSimd<float_4>(c) * freqCvParam;
 			// Set cutoff
 			float_4 cutoff = dsp::FREQ_C4 * simd::pow(2.f, pitch);
 			cutoff = clamp(cutoff, 1.f, 8000.f);
