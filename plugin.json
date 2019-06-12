@@ -87,7 +87,8 @@
       "name": "ADSR",
       "description": "Generates an envelope with Attack/Decay/Sustain/Release",
       "tags": [
-        "Envelope Generator"
+        "Envelope Generator",
+        "Polyphonic"
       ]
     },
     {
