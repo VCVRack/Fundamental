@@ -32,7 +32,7 @@ struct Octave : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		int channels = inputs[CV_INPUT].getChannels();
+		int channels = std::max(inputs[CV_INPUT].getChannels(), 1);
 		for (int c = 0; c < channels; c++) {
 			float cv = inputs[CV_INPUT].getVoltage(c);
 			cv += octave;
