@@ -66,7 +66,7 @@ struct LowFrequencyOscillator {
 		return v;
 	}
 	T light() {
-		return 1.f - 2.f * phase;
+		return simd::sin(2 * T(M_PI) * phase);
 	}
 };
 
@@ -127,52 +127,38 @@ struct LFO : Module {
 
 		for (int c = 0; c < channels; c += 4) {
 			auto *oscillator = &oscillators[c / 4];
+			oscillator->invert = (params[INVERT_PARAM].getValue() == 0.f);
+			oscillator->bipolar = (params[OFFSET_PARAM].getValue() == 0.f);
+
 			float_4 pitch = freqParam;
 			// FM1, polyphonic
-			pitch += float_4::load(inputs[FM1_INPUT].getVoltages(c)) * fm1Param;
+			pitch += inputs[FM1_INPUT].getVoltageSimd<float_4>(c) * fm1Param;
 			// FM2, polyphonic or monophonic
-			if (inputs[FM2_INPUT].isPolyphonic())
-				pitch += float_4::load(inputs[FM2_INPUT].getVoltages(c)) * fm2Param;
-			else
-				pitch += inputs[FM2_INPUT].getVoltage() * fm2Param;
+			pitch += inputs[FM2_INPUT].getPolyVoltageSimd<float_4>(c) * fm2Param;
 			oscillator->setPitch(pitch);
 
 			// Pulse width
-			float_4 pw = pwParam;
-			if (inputs[PW_INPUT].isPolyphonic())
-				pw += float_4::load(inputs[PW_INPUT].getVoltages(c)) / 10.f * pwmParam;
-			else
-				pw += inputs[PW_INPUT].getVoltage() / 10.f * pwmParam;
+			float_4 pw = pwParam + inputs[PW_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * pwmParam;
 			oscillator->setPulseWidth(pw);
 
-			// Settings
-			oscillator->invert = (params[INVERT_PARAM].getValue() == 0.f);
-			oscillator->bipolar = (params[OFFSET_PARAM].getValue() == 0.f);
 			oscillator->step(args.sampleTime);
-			oscillator->setReset(inputs[RESET_INPUT].getVoltage());
+			oscillator->setReset(inputs[RESET_INPUT].getPolyVoltageSimd<float_4>(c));
 
 			// Outputs
-			if (outputs[SIN_OUTPUT].isConnected()) {
-				outputs[SIN_OUTPUT].setChannels(channels);
-				float_4 v = 5.f * oscillator->sin();
-				v.store(outputs[SIN_OUTPUT].getVoltages(c));
-			}
-			if (outputs[TRI_OUTPUT].isConnected()) {
-				outputs[TRI_OUTPUT].setChannels(channels);
-				float_4 v = 5.f * oscillator->tri();
-				v.store(outputs[TRI_OUTPUT].getVoltages(c));
-			}
-			if (outputs[SAW_OUTPUT].isConnected()) {
-				outputs[SAW_OUTPUT].setChannels(channels);
-				float_4 v = 5.f * oscillator->saw();
-				v.store(outputs[SAW_OUTPUT].getVoltages(c));
-			}
-			if (outputs[SQR_OUTPUT].isConnected()) {
-				outputs[SQR_OUTPUT].setChannels(channels);
-				float_4 v = 5.f * oscillator->sqr();
-				v.store(outputs[SQR_OUTPUT].getVoltages(c));
-			}
+			if (outputs[SIN_OUTPUT].isConnected())
+				outputs[SIN_OUTPUT].setVoltageSimd(5.f * oscillator->sin(), c);
+			if (outputs[TRI_OUTPUT].isConnected())
+				outputs[TRI_OUTPUT].setVoltageSimd(5.f * oscillator->tri(), c);
+			if (outputs[SAW_OUTPUT].isConnected())
+				outputs[SAW_OUTPUT].setVoltageSimd(5.f * oscillator->saw(), c);
+			if (outputs[SQR_OUTPUT].isConnected())
+				outputs[SQR_OUTPUT].setVoltageSimd(5.f * oscillator->sqr(), c);
 		}
+
+		outputs[SIN_OUTPUT].setChannels(channels);
+		outputs[TRI_OUTPUT].setChannels(channels);
+		outputs[SAW_OUTPUT].setChannels(channels);
+		outputs[SQR_OUTPUT].setChannels(channels);
 
 		// Light
 		if (lightDivider.process()) {
@@ -269,45 +255,35 @@ struct LFO2 : Module {
 
 	void process(const ProcessArgs &args) override {
 		float freqParam = params[FREQ_PARAM].getValue();
-		float waveParam = params[WAVE_PARAM].getValue();
 		float fmParam = params[FM_PARAM].getValue();
+		float waveParam = params[WAVE_PARAM].getValue();
 
 		int channels = std::max(1, inputs[FM_INPUT].getChannels());
 
 		for (int c = 0; c < channels; c += 4) {
 			auto *oscillator = &oscillators[c / 4];
-			float_4 pitch = freqParam;
-			// FM, polyphonic
-			pitch += float_4::load(inputs[FM_INPUT].getVoltages(c)) * fmParam;
-			oscillator->setPitch(pitch);
-
-			// Wave
-			float_4 wave = waveParam;
-			inputs[WAVE_INPUT].getVoltage();
-			if (inputs[WAVE_INPUT].isPolyphonic())
-				wave += float_4::load(inputs[WAVE_INPUT].getVoltages(c)) / 10.f * 3.f;
-			else
-				wave += inputs[WAVE_INPUT].getVoltage() / 10.f * 3.f;
-			wave = clamp(wave, 0.f, 3.f);
-
-			// Settings
 			oscillator->invert = (params[INVERT_PARAM].getValue() == 0.f);
 			oscillator->bipolar = (params[OFFSET_PARAM].getValue() == 0.f);
+
+			float_4 pitch = freqParam + inputs[FM_INPUT].getVoltageSimd<float_4>(c) * fmParam;
+			oscillator->setPitch(pitch);
+
 			oscillator->step(args.sampleTime);
-			oscillator->setReset(inputs[RESET_INPUT].getVoltage());
+			oscillator->setReset(inputs[RESET_INPUT].getPolyVoltageSimd<float_4>(c));
 
 			// Outputs
 			if (outputs[INTERP_OUTPUT].isConnected()) {
-				outputs[INTERP_OUTPUT].setChannels(channels);
+				float_4 wave = simd::clamp(waveParam + inputs[WAVE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * 3.f, 0.f, 3.f);
 				float_4 v = 0.f;
 				v += oscillator->sin() * simd::fmax(0.f, 1.f - simd::fabs(wave - 0.f));
 				v += oscillator->tri() * simd::fmax(0.f, 1.f - simd::fabs(wave - 1.f));
 				v += oscillator->saw() * simd::fmax(0.f, 1.f - simd::fabs(wave - 2.f));
 				v += oscillator->sqr() * simd::fmax(0.f, 1.f - simd::fabs(wave - 3.f));
-				v *= 5.f;
-				v.store(outputs[INTERP_OUTPUT].getVoltages(c));
+				outputs[INTERP_OUTPUT].setVoltageSimd(5.f * v, c);
 			}
 		}
+
+		outputs[INTERP_OUTPUT].setChannels(channels);
 
 		// Light
 		if (lightDivider.process()) {

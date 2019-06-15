@@ -1,157 +1,195 @@
 #include "plugin.hpp"
 
 
+using simd::float_4;
+
+
 BINARY(src_sawTable_bin);
 BINARY(src_triTable_bin);
 
 
-template <int OVERSAMPLE, int QUALITY>
+// Accurate only on [0, 1]
+template <typename T>
+T sin2pi_pade_05_7_6(T x) {
+	x -= 0.5f;
+	return (T(-6.28319) * x + T(35.353) * simd::pow(x, 3) - T(44.9043) * simd::pow(x, 5) + T(16.0951) * simd::pow(x, 7))
+		/ (1 + T(0.953136) * simd::pow(x, 2) + T(0.430238) * simd::pow(x, 4) + T(0.0981408) * simd::pow(x, 6));
+}
+
+template <typename T>
+T sin2pi_pade_05_5_4(T x) {
+	x -= 0.5f;
+	return (T(-6.283185307) * x + T(33.19863968) * simd::pow(x, 3) - T(32.44191367) * simd::pow(x, 5))
+		/ (1 + T(1.296008659) * simd::pow(x, 2) + T(0.7028072946) * simd::pow(x, 4));
+}
+
+
+template <int OVERSAMPLE, int QUALITY, typename T>
 struct VoltageControlledOscillator {
 	bool analog = false;
 	bool soft = false;
-	float lastSyncValue = 0.f;
-	float phase = 0.f;
-	float freq;
-	float pw = 0.5f;
-	float pitch;
+	T lastSyncValue = 0.f;
+	T phase = 0.f;
+	T freq;
+	T pw = 0.5f;
 	bool syncEnabled = false;
-	bool syncDirection = false;
+	T syncDirection = T::zero();
 
-	dsp::Decimator<OVERSAMPLE, QUALITY> sinDecimator;
-	dsp::Decimator<OVERSAMPLE, QUALITY> triDecimator;
-	dsp::Decimator<OVERSAMPLE, QUALITY> sawDecimator;
-	dsp::Decimator<OVERSAMPLE, QUALITY> sqrDecimator;
-	dsp::RCFilter sqrFilter;
+	dsp::Decimator<OVERSAMPLE, QUALITY, T> sinDecimator;
+	dsp::Decimator<OVERSAMPLE, QUALITY, T> triDecimator;
+	dsp::Decimator<OVERSAMPLE, QUALITY, T> sawDecimator;
+	dsp::Decimator<OVERSAMPLE, QUALITY, T> sqrDecimator;
+	dsp::TRCFilter<T> sqrFilter;
 
 	// For analog detuning effect
-	float pitchSlew = 0.f;
+	T pitchSlew = 0.f;
 	int pitchSlewIndex = 0;
 
-	float sinBuffer[OVERSAMPLE] = {};
-	float triBuffer[OVERSAMPLE] = {};
-	float sawBuffer[OVERSAMPLE] = {};
-	float sqrBuffer[OVERSAMPLE] = {};
+	T sinBuffer[OVERSAMPLE];
+	T triBuffer[OVERSAMPLE];
+	T sawBuffer[OVERSAMPLE];
+	T sqrBuffer[OVERSAMPLE];
 
-	void setPitch(float pitchKnob, float pitchCv) {
+	void setPitch(T pitchKnob, T pitchCv) {
 		// Compute frequency
-		pitch = pitchKnob;
+		T pitch = pitchKnob + pitchCv;
 		if (analog) {
 			// Apply pitch slew
 			const float pitchSlewAmount = 3.f;
 			pitch += pitchSlew * pitchSlewAmount;
 		}
-		pitch += pitchCv;
-		// Note C4
-		freq = dsp::FREQ_C4 * std::pow(2.f, pitch / 12.f);
+		freq = dsp::FREQ_C4 * simd::pow(2.f, pitch / 12.f);
 	}
-	void setPulseWidth(float pulseWidth) {
+	void setPulseWidth(T pulseWidth) {
 		const float pwMin = 0.01f;
-		pw = clamp(pulseWidth, pwMin, 1.f - pwMin);
+		pw = simd::clamp(pulseWidth, pwMin, 1.f - pwMin);
 	}
 
-	void process(float deltaTime, float syncValue) {
+	void process(float deltaTime, T syncValue) {
 		if (analog) {
 			// Adjust pitch slew
 			if (++pitchSlewIndex > 32) {
 				const float pitchSlewTau = 100.f; // Time constant for leaky integrator in seconds
-				pitchSlew += ((2.f * random::uniform() - 1.f) - pitchSlew / pitchSlewTau) * deltaTime;
+				T r;
+				for (int i = 0; i < T::size; i++) {
+					r.s[i] = random::uniform();
+				}
+				pitchSlew += ((2.f * r - 1.f) - pitchSlew / pitchSlewTau) * deltaTime;
 				pitchSlewIndex = 0;
 			}
 		}
 
 		// Advance phase
-		float deltaPhase = clamp(freq * deltaTime, 1e-6f, 0.5f);
-
-		// Detect sync
-		int syncIndex = -1; // Index in the oversample loop where sync occurs [0, OVERSAMPLE)
-		float syncCrossing = 0.f; // Offset that sync occurs [0.f, 1.f)
-		if (syncEnabled) {
-			syncValue -= 0.01f;
-			if (syncValue > 0.f && lastSyncValue <= 0.f) {
-				float deltaSync = syncValue - lastSyncValue;
-				syncCrossing = 1.f - syncValue / deltaSync;
-				syncCrossing *= OVERSAMPLE;
-				syncIndex = (int)syncCrossing;
-				syncCrossing -= syncIndex;
-			}
-			lastSyncValue = syncValue;
+		T deltaPhase = simd::clamp(freq * deltaTime, 1e-6f, 0.5f);
+		if (!soft) {
+			syncDirection = T::zero();
 		}
 
-		if (syncDirection)
-			deltaPhase *= -1.f;
+		// Detect sync
+		// Might be NAN or outside of [0, 1) range
+		T syncCrossing = lastSyncValue / (lastSyncValue - syncValue);
+		lastSyncValue = syncValue;
 
-		sqrFilter.setCutoff(40.f * deltaTime);
 
 		for (int i = 0; i < OVERSAMPLE; i++) {
-			if (syncIndex == i) {
+			// Reset if synced in this time interval
+			T reset = (T(i) / OVERSAMPLE <= syncCrossing) & (syncCrossing < T(i + 1) / OVERSAMPLE);
+			if (simd::movemask(reset)) {
 				if (soft) {
-					syncDirection = !syncDirection;
-					deltaPhase *= -1.f;
+					syncDirection = simd::ifelse(reset, ~syncDirection, syncDirection);
 				}
 				else {
-					// phase = syncCrossing * deltaPhase / OVERSAMPLE;
-					phase = 0.f;
+					phase = simd::ifelse(reset, (syncCrossing - T(i) / OVERSAMPLE) * deltaPhase, phase);
+					// This also works as a good approximation.
+					// phase = 0.f;
 				}
 			}
 
+			// Sin
 			if (analog) {
 				// Quadratic approximation of sine, slightly richer harmonics
-				if (phase < 0.5f)
-					sinBuffer[i] = 1.f - 16.f * std::pow(phase - 0.25f, 2);
-				else
-					sinBuffer[i] = -1.f + 16.f * std::pow(phase - 0.75f, 2);
-				sinBuffer[i] *= 1.08f;
+				T halfPhase = (phase < 0.5f);
+				T x = phase - simd::ifelse(halfPhase, 0.25f, 0.75f);
+				sinBuffer[i] = 1.f - 16.f * simd::pow(x, 2);
+				sinBuffer[i] *= simd::ifelse(halfPhase, 1.f, -1.f);
+				// sinBuffer[i] *= 1.08f;
 			}
 			else {
-				sinBuffer[i] = std::sin(2.f*M_PI * phase);
+				sinBuffer[i] = sin2pi_pade_05_5_4(phase);
+				// sinBuffer[i] = sin2pi_pade_05_7_6(phase);
+				// sinBuffer[i] = simd::sin(2 * T(M_PI) * phase);
 			}
+
+			// Tri
 			if (analog) {
-				triBuffer[i] = 1.25f * interpolateLinear((const float*) BINARY_START(src_triTable_bin), phase * 2047.f);
+				const float *triTable = (const float*) BINARY_START(src_triTable_bin);
+				T p = phase * (BINARY_SIZE(src_triTable_bin) / sizeof(float) - 1);
+				simd::Vector<int32_t, T::size> index = p;
+				p -= index;
+
+				T v0, v1;
+				for (int i = 0; i < T::size; i++) {
+					v0.s[i] = triTable[index.s[i]];
+					v1.s[i] = triTable[index.s[i] + 1];
+				}
+				triBuffer[i] = 1.129f * simd::crossfade(v0, v1, p);
 			}
 			else {
-				if (phase < 0.25f)
-					triBuffer[i] = 4.f * phase;
-				else if (phase < 0.75f)
-					triBuffer[i] = 2.f - 4.f * phase;
-				else
-					triBuffer[i] = -4.f + 4.f * phase;
+				triBuffer[i] = 1 - 4 * simd::fmin(simd::fabs(phase - 0.25f), simd::fabs(phase - 1.25f));
 			}
+
+			// Saw
 			if (analog) {
-				sawBuffer[i] = 1.66f * interpolateLinear((const float*) BINARY_START(src_sawTable_bin), phase * 2047.f);
+				const float *sawTable = (const float*) BINARY_START(src_sawTable_bin);
+				T p = phase * (BINARY_SIZE(src_sawTable_bin) / sizeof(float) - 1);
+				simd::Vector<int32_t, T::size> index = p;
+				p -= index;
+
+				T v0, v1;
+				for (int i = 0; i < T::size; i++) {
+					v0.s[i] = sawTable[index.s[i]];
+					v1.s[i] = sawTable[index.s[i] + 1];
+				}
+				sawBuffer[i] = 1.376f * simd::crossfade(v0, v1, p);
 			}
 			else {
-				if (phase < 0.5f)
-					sawBuffer[i] = 2.f * phase;
-				else
-					sawBuffer[i] = -2.f + 2.f * phase;
+				sawBuffer[i] = simd::ifelse(phase < 0.5f, 0.f, -2.f) + 2.f * phase;
 			}
-			sqrBuffer[i] = (phase < pw) ? 1.f : -1.f;
+
+			// Sqr
+			sqrBuffer[i] = simd::ifelse(phase < pw, 1.f, -1.f);
 			if (analog) {
-				// Simply filter here
+				// Add a highpass filter here
+				sqrFilter.setCutoff(10.f * deltaTime);
 				sqrFilter.process(sqrBuffer[i]);
-				sqrBuffer[i] = 0.71f * sqrFilter.highpass();
+				sqrBuffer[i] = 0.771f * sqrFilter.highpass();
 			}
 
 			// Advance phase
-			phase += deltaPhase / OVERSAMPLE;
-			phase = eucMod(phase, 1.f);
+			phase += simd::ifelse(syncDirection, -1.f, 1.f) * deltaPhase / OVERSAMPLE;
+			// Wrap phase to [0, 1)
+			phase -= simd::floor(phase);
 		}
 	}
 
-	float sin() {
+	T sin() {
 		return sinDecimator.process(sinBuffer);
+		// sinBuffer[0];
 	}
-	float tri() {
+	T tri() {
 		return triDecimator.process(triBuffer);
+		// triBuffer[0];
 	}
-	float saw() {
+	T saw() {
 		return sawDecimator.process(sawBuffer);
+		// sawBuffer[0];
 	}
-	float sqr() {
+	T sqr() {
 		return sqrDecimator.process(sqrBuffer);
+		// sqrBuffer[0];
 	}
-	float light() {
-		return std::sin(2*M_PI * phase);
+	T light() {
+		return simd::sin(2 * T(M_PI) * phase);
 	}
 };
 
@@ -182,12 +220,12 @@ struct VCO : Module {
 		NUM_OUTPUTS
 	};
 	enum LightIds {
-		PHASE_POS_LIGHT,
-		PHASE_NEG_LIGHT,
+		ENUMS(PHASE_LIGHT, 3),
 		NUM_LIGHTS
 	};
 
-	VoltageControlledOscillator<16, 16> oscillator;
+	VoltageControlledOscillator<16, 16, float_4> oscillators[4];
+	dsp::ClockDivider lightDivider;
 
 	VCO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -198,35 +236,58 @@ struct VCO : Module {
 		configParam(FM_PARAM, 0.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
 		configParam(PW_PARAM, 0.f, 1.f, 0.5f, "Pulse width", "%", 0.f, 100.f);
 		configParam(PWM_PARAM, 0.f, 1.f, 0.f, "Pulse width modulation", "%", 0.f, 100.f);
+		lightDivider.setDivision(16);
 	}
 
 	void process(const ProcessArgs &args) override {
-		oscillator.analog = params[MODE_PARAM].getValue() > 0.f;
-		oscillator.soft = params[SYNC_PARAM].getValue() <= 0.f;
+		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
 
-		float pitchFine = 3.f * dsp::quadraticBipolar(params[FINE_PARAM].getValue());
-		float pitchCv = 12.f * inputs[PITCH_INPUT].getVoltage();
-		if (inputs[FM_INPUT].isConnected()) {
-			pitchCv += dsp::quadraticBipolar(params[FM_PARAM].getValue()) * 12.f * inputs[FM_INPUT].getVoltage();
+		for (int c = 0; c < channels; c += 4) {
+			auto *oscillator = &oscillators[c / 4];
+			oscillator->analog = params[MODE_PARAM].getValue() > 0.f;
+			oscillator->soft = params[SYNC_PARAM].getValue() <= 0.f;
+
+			float pitchFine = 3.f * dsp::quadraticBipolar(params[FINE_PARAM].getValue());
+			float_4 pitchCv = 12.f * inputs[PITCH_INPUT].getVoltageSimd<float_4>(c);
+			if (inputs[FM_INPUT].isConnected()) {
+				pitchCv += dsp::quadraticBipolar(params[FM_PARAM].getValue()) * 12.f * inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c);
+			}
+			oscillator->setPitch(params[FREQ_PARAM].getValue(), pitchFine + pitchCv);
+			oscillator->setPulseWidth(params[PW_PARAM].getValue() + params[PWM_PARAM].getValue() * inputs[PW_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f);
+
+			oscillator->syncEnabled = inputs[SYNC_INPUT].isConnected();
+			oscillator->process(args.sampleTime, inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c));
+
+			// Set output
+			if (outputs[SIN_OUTPUT].isConnected())
+				outputs[SIN_OUTPUT].setVoltageSimd(5.f * oscillator->sin(), c);
+			if (outputs[TRI_OUTPUT].isConnected())
+				outputs[TRI_OUTPUT].setVoltageSimd(5.f * oscillator->tri(), c);
+			if (outputs[SAW_OUTPUT].isConnected())
+				outputs[SAW_OUTPUT].setVoltageSimd(5.f * oscillator->saw(), c);
+			if (outputs[SQR_OUTPUT].isConnected())
+				outputs[SQR_OUTPUT].setVoltageSimd(5.f * oscillator->sqr(), c);
 		}
-		oscillator.setPitch(params[FREQ_PARAM].getValue(), pitchFine + pitchCv);
-		oscillator.setPulseWidth(params[PW_PARAM].getValue() + params[PWM_PARAM].getValue() * inputs[PW_INPUT].getVoltage() / 10.f);
-		oscillator.syncEnabled = inputs[SYNC_INPUT].isConnected();
 
-		oscillator.process(args.sampleTime, inputs[SYNC_INPUT].getVoltage());
+		outputs[SIN_OUTPUT].setChannels(channels);
+		outputs[TRI_OUTPUT].setChannels(channels);
+		outputs[SAW_OUTPUT].setChannels(channels);
+		outputs[SQR_OUTPUT].setChannels(channels);
 
-		// Set output
-		if (outputs[SIN_OUTPUT].isConnected())
-			outputs[SIN_OUTPUT].setVoltage(5.f * oscillator.sin());
-		if (outputs[TRI_OUTPUT].isConnected())
-			outputs[TRI_OUTPUT].setVoltage(5.f * oscillator.tri());
-		if (outputs[SAW_OUTPUT].isConnected())
-			outputs[SAW_OUTPUT].setVoltage(5.f * oscillator.saw());
-		if (outputs[SQR_OUTPUT].isConnected())
-			outputs[SQR_OUTPUT].setVoltage(5.f * oscillator.sqr());
-
-		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), args.sampleTime);
-		lights[PHASE_NEG_LIGHT].setSmoothBrightness(-oscillator.light(), args.sampleTime);
+		// Light
+		if (lightDivider.process()) {
+			if (channels == 1) {
+				float lightValue = oscillators[0].light().s[0];
+				lights[PHASE_LIGHT + 0].setSmoothBrightness(-lightValue, args.sampleTime * lightDivider.getDivision());
+				lights[PHASE_LIGHT + 1].setSmoothBrightness(lightValue, args.sampleTime * lightDivider.getDivision());
+				lights[PHASE_LIGHT + 2].setBrightness(0.f);
+			}
+			else {
+				lights[PHASE_LIGHT + 0].setBrightness(0.f);
+				lights[PHASE_LIGHT + 1].setBrightness(0.f);
+				lights[PHASE_LIGHT + 2].setBrightness(1.f);
+			}
+		}
 	}
 };
 
@@ -237,9 +298,9 @@ struct VCOWidget : ModuleWidget {
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/VCO-1.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
 
 		addParam(createParam<CKSS>(Vec(15, 77), module, VCO::MODE_PARAM));
 		addParam(createParam<CKSS>(Vec(119, 77), module, VCO::SYNC_PARAM));
@@ -260,7 +321,7 @@ struct VCOWidget : ModuleWidget {
 		addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, VCO::SAW_OUTPUT));
 		addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, VCO::SQR_OUTPUT));
 
-		addChild(createLight<SmallLight<GreenRedLight>>(Vec(99, 42.5f), module, VCO::PHASE_POS_LIGHT));
+		addChild(createLight<SmallLight<RedGreenBlueLight>>(Vec(99, 42.5f), module, VCO::PHASE_LIGHT));
 	}
 };
 
@@ -288,12 +349,12 @@ struct VCO2 : Module {
 		NUM_OUTPUTS
 	};
 	enum LightIds {
-		PHASE_POS_LIGHT,
-		PHASE_NEG_LIGHT,
+		ENUMS(PHASE_LIGHT, 3),
 		NUM_LIGHTS
 	};
 
-	VoltageControlledOscillator<8, 8> oscillator;
+	VoltageControlledOscillator<8, 8, float_4> oscillators[4];
+	dsp::ClockDivider lightDivider;
 
 	VCO2() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -302,32 +363,55 @@ struct VCO2 : Module {
 		configParam(FREQ_PARAM, -54.f, 54.f, 0.f, "Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
 		configParam(WAVE_PARAM, 0.f, 3.f, 1.5f, "Wave");
 		configParam(FM_PARAM, 0.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
+		lightDivider.setDivision(16);
 	}
 
 	void process(const ProcessArgs &args) override {
-		float deltaTime = args.sampleTime;
-		oscillator.analog = params[MODE_PARAM].getValue() > 0.f;
-		oscillator.soft = params[SYNC_PARAM].getValue() <= 0.f;
+		float freqParam = params[FREQ_PARAM].getValue();
+		float fmParam = params[FM_PARAM].getValue();
+		float waveParam = params[WAVE_PARAM].getValue();
 
-		float pitchCv = params[FREQ_PARAM].getValue() + dsp::quadraticBipolar(params[FM_PARAM].getValue()) * 12.f * inputs[FM_INPUT].getVoltage();
-		oscillator.setPitch(0.f, pitchCv);
-		oscillator.syncEnabled = inputs[SYNC_INPUT].isConnected();
+		int channels = std::max(inputs[FM_INPUT].getChannels(), 1);
 
-		oscillator.process(deltaTime, inputs[SYNC_INPUT].getVoltage());
+		for (int c = 0; c < channels; c += 4) {
+			auto *oscillator = &oscillators[c / 4];
+			oscillator->analog = (params[MODE_PARAM].getValue() > 0.f);
+			oscillator->soft = (params[SYNC_PARAM].getValue() <= 0.f);
 
-		// Set output
-		float wave = clamp(params[WAVE_PARAM].getValue() + inputs[WAVE_INPUT].getVoltage(), 0.f, 3.f);
-		float out;
-		if (wave < 1.f)
-			out = crossfade(oscillator.sin(), oscillator.tri(), wave);
-		else if (wave < 2.f)
-			out = crossfade(oscillator.tri(), oscillator.saw(), wave - 1.f);
-		else
-			out = crossfade(oscillator.saw(), oscillator.sqr(), wave - 2.f);
-		outputs[OUT_OUTPUT].setVoltage(5.f * out);
+			float_4 pitch = freqParam + dsp::quadraticBipolar(fmParam) * 12.f * inputs[FM_INPUT].getVoltageSimd<float_4>(c);
+			oscillator->setPitch(0.f, pitch);
 
-		lights[PHASE_POS_LIGHT].setSmoothBrightness(oscillator.light(), deltaTime);
-		lights[PHASE_NEG_LIGHT].setSmoothBrightness(-oscillator.light(), deltaTime);
+			oscillator->syncEnabled = inputs[SYNC_INPUT].isConnected();
+			oscillator->process(args.sampleTime, inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c));
+
+			// Outputs
+			if (outputs[OUT_OUTPUT].isConnected()) {
+				float_4 wave = simd::clamp(waveParam + inputs[WAVE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * 3.f, 0.f, 3.f);
+				float_4 v = 0.f;
+				v += oscillator->sin() * simd::fmax(0.f, 1.f - simd::fabs(wave - 0.f));
+				v += oscillator->tri() * simd::fmax(0.f, 1.f - simd::fabs(wave - 1.f));
+				v += oscillator->saw() * simd::fmax(0.f, 1.f - simd::fabs(wave - 2.f));
+				v += oscillator->sqr() * simd::fmax(0.f, 1.f - simd::fabs(wave - 3.f));
+				outputs[OUT_OUTPUT].setVoltageSimd(5.f * v, c);
+			}
+		}
+
+		outputs[OUT_OUTPUT].setChannels(channels);
+
+		// Light
+		if (lightDivider.process()) {
+			if (channels == 1) {
+				float lightValue = oscillators[0].light().s[0];
+				lights[PHASE_LIGHT + 0].setSmoothBrightness(-lightValue, args.sampleTime * lightDivider.getDivision());
+				lights[PHASE_LIGHT + 1].setSmoothBrightness(lightValue, args.sampleTime * lightDivider.getDivision());
+				lights[PHASE_LIGHT + 2].setBrightness(0.f);
+			}
+			else {
+				lights[PHASE_LIGHT + 0].setBrightness(0.f);
+				lights[PHASE_LIGHT + 1].setBrightness(0.f);
+				lights[PHASE_LIGHT + 2].setBrightness(1.f);
+			}
+		}
 	}
 };
 
@@ -340,9 +424,9 @@ struct VCO2Widget : ModuleWidget {
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/VCO-2.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
 
 		addParam(createParam<CKSS>(Vec(62, 150), module, VCO2::MODE_PARAM));
 		addParam(createParam<CKSS>(Vec(62, 215), module, VCO2::SYNC_PARAM));
@@ -357,7 +441,7 @@ struct VCO2Widget : ModuleWidget {
 
 		addOutput(createOutput<PJ301MPort>(Vec(54, 320), module, VCO2::OUT_OUTPUT));
 
-		addChild(createLight<SmallLight<GreenRedLight>>(Vec(68, 42.5f), module, VCO2::PHASE_POS_LIGHT));
+		addChild(createLight<SmallLight<RedGreenBlueLight>>(Vec(68, 42.5f), module, VCO2::PHASE_LIGHT));
 	}
 };
 
