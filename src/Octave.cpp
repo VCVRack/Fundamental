@@ -105,9 +105,11 @@ struct OctaveButton : OpaqueWidget {
 	}
 
 	void onDragEnter(const event::DragEnter &e) override {
-		OctaveButton *w = dynamic_cast<OctaveButton*>(e.origin);
-		if (w) {
-			module->octave = octave;
+		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
+			OctaveButton *w = dynamic_cast<OctaveButton*>(e.origin);
+			if (w) {
+				module->octave = octave;
+			}
 		}
 	}
 };
