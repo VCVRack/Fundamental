@@ -4,8 +4,10 @@
 using simd::float_4;
 
 
-BINARY(src_sawTable_bin);
 BINARY(src_triTable_bin);
+const float *triTable = (const float*) BINARY_START(src_triTable_bin);
+BINARY(src_sawTable_bin);
+const float *sawTable = (const float*) BINARY_START(src_sawTable_bin);
 
 
 // Accurate only on [0, 1]
@@ -31,163 +33,178 @@ struct VoltageControlledOscillator {
 	T lastSyncValue = 0.f;
 	T phase = 0.f;
 	T freq;
-	T pw = 0.5f;
+	T pulseWidth = 0.5f;
 	bool syncEnabled = false;
 	T syncDirection = T::zero();
 
-	dsp::Decimator<OVERSAMPLE, QUALITY, T> sinDecimator;
-	dsp::Decimator<OVERSAMPLE, QUALITY, T> triDecimator;
-	dsp::Decimator<OVERSAMPLE, QUALITY, T> sawDecimator;
-	dsp::Decimator<OVERSAMPLE, QUALITY, T> sqrDecimator;
 	dsp::TRCFilter<T> sqrFilter;
+	dsp::MinBlepGenerator<QUALITY, OVERSAMPLE, T> sinMinBlep;
+	dsp::MinBlepGenerator<QUALITY, OVERSAMPLE, T> triMinBlep;
+	dsp::MinBlepGenerator<QUALITY, OVERSAMPLE, T> sawMinBlep;
+	dsp::MinBlepGenerator<QUALITY, OVERSAMPLE, T> sqrMinBlep;
 
 	// For analog detuning effect
-	T pitchSlew = 0.f;
+	T pitchDrift = 0.f;
 	int pitchSlewIndex = 0;
 
-	T sinBuffer[OVERSAMPLE];
-	T triBuffer[OVERSAMPLE];
-	T sawBuffer[OVERSAMPLE];
-	T sqrBuffer[OVERSAMPLE];
-
-	void setPitch(T pitchKnob, T pitchCv) {
-		// Compute frequency
-		T pitch = pitchKnob + pitchCv;
+	void setPitch(T pitch) {
 		if (analog) {
-			// Apply pitch slew
-			const float pitchSlewAmount = 3.f;
-			pitch += pitchSlew * pitchSlewAmount;
+			// Apply pitch drift
+			const float pitchDriftAmount = 0.25f;
+			pitch += pitchDrift * pitchDriftAmount;
 		}
-		freq = dsp::FREQ_C4 * simd::pow(2.f, pitch / 12.f);
+		freq = dsp::FREQ_C4 * simd::pow(2.f, pitch);
 	}
+
 	void setPulseWidth(T pulseWidth) {
 		const float pwMin = 0.01f;
-		pw = simd::clamp(pulseWidth, pwMin, 1.f - pwMin);
+		this->pulseWidth = simd::clamp(pulseWidth, pwMin, 1.f - pwMin);
 	}
 
 	void process(float deltaTime, T syncValue) {
 		if (analog) {
-			// Adjust pitch slew
 			if (++pitchSlewIndex > 32) {
+				// Advance pitch drift
 				const float pitchSlewTau = 100.f; // Time constant for leaky integrator in seconds
 				T r;
 				for (int i = 0; i < T::size; i++) {
 					r.s[i] = random::uniform();
 				}
-				pitchSlew += ((2.f * r - 1.f) - pitchSlew / pitchSlewTau) * deltaTime;
+				pitchDrift += ((2.f * r - 1.f) - pitchDrift / pitchSlewTau) * deltaTime;
 				pitchSlewIndex = 0;
 			}
 		}
 
 		// Advance phase
 		T deltaPhase = simd::clamp(freq * deltaTime, 1e-6f, 0.5f);
-		if (!soft) {
+		if (soft) {
+			// Reverse direction
+			deltaPhase = simd::ifelse(syncDirection, -deltaPhase, deltaPhase);
+		}
+		else {
+			// Reset back to forward
 			syncDirection = T::zero();
 		}
+		phase += deltaPhase;
 
+		// Wrap phase to [0, 1)
+		T phaseFloor = simd::floor(phase);
+		phase -= phaseFloor;
+
+		T oldPhase = phase;
 		// Detect sync
 		// Might be NAN or outside of [0, 1) range
 		T syncCrossing = lastSyncValue / (lastSyncValue - syncValue);
 		lastSyncValue = syncValue;
 
-
-		for (int i = 0; i < OVERSAMPLE; i++) {
-			// Reset if synced in this time interval
-			T reset = (T(i) / OVERSAMPLE <= syncCrossing) & (syncCrossing < T(i + 1) / OVERSAMPLE);
-			if (simd::movemask(reset)) {
-				if (soft) {
-					syncDirection = simd::ifelse(reset, ~syncDirection, syncDirection);
-				}
-				else {
-					phase = simd::ifelse(reset, (syncCrossing - T(i) / OVERSAMPLE) * deltaPhase, phase);
-					// This also works as a good approximation.
-					// phase = 0.f;
-				}
-			}
-
-			// Sin
-			if (analog) {
-				// Quadratic approximation of sine, slightly richer harmonics
-				T halfPhase = (phase < 0.5f);
-				T x = phase - simd::ifelse(halfPhase, 0.25f, 0.75f);
-				sinBuffer[i] = 1.f - 16.f * simd::pow(x, 2);
-				sinBuffer[i] *= simd::ifelse(halfPhase, 1.f, -1.f);
-				// sinBuffer[i] *= 1.08f;
+		T reset = (0.f <= syncCrossing) & (syncCrossing < 1.f);
+		int resetMask = simd::movemask(reset);
+		if (resetMask) {
+			if (soft) {
+				syncDirection = simd::ifelse(reset, ~syncDirection, syncDirection);
 			}
 			else {
-				sinBuffer[i] = sin2pi_pade_05_5_4(phase);
-				// sinBuffer[i] = sin2pi_pade_05_7_6(phase);
-				// sinBuffer[i] = simd::sin(2 * T(M_PI) * phase);
+				phase = simd::ifelse(reset, syncCrossing * deltaPhase, phase);
+				// // Insert minBLEP for sync
+				// typename T::type phases[T::size];
+				// phase.store(phases);
+				// for (int i = 0; i < T::size; i++) {
+				// 	if (resetMask & (1 << i)) {
+				// 		// Inverse of movemask
+				// 		typename T::type resets1[T::size] = {};
+				// 		resets1[i] = 1.f;
+				// 		T reset1 = (T::load(resets1) != 0.f);
+				// 		// Discontinuity position
+				// 		typename T::type p = phases[i] - 1.f;
+				// 		// Discontinuity amplitude
+				// 		T x = reset1 & (sin(phase) - sin(oldPhase));
+				// 		sinMinBlep.insertDiscontinuity(p, x);
+				// 	}
+				// }
 			}
-
-			// Tri
-			if (analog) {
-				const float *triTable = (const float*) BINARY_START(src_triTable_bin);
-				T p = phase * (BINARY_SIZE(src_triTable_bin) / sizeof(float) - 1);
-				simd::Vector<int32_t, T::size> index = p;
-				p -= index;
-
-				T v0, v1;
-				for (int i = 0; i < T::size; i++) {
-					v0.s[i] = triTable[index.s[i]];
-					v1.s[i] = triTable[index.s[i] + 1];
-				}
-				triBuffer[i] = 1.129f * simd::crossfade(v0, v1, p);
-			}
-			else {
-				triBuffer[i] = 1 - 4 * simd::fmin(simd::fabs(phase - 0.25f), simd::fabs(phase - 1.25f));
-			}
-
-			// Saw
-			if (analog) {
-				const float *sawTable = (const float*) BINARY_START(src_sawTable_bin);
-				T p = phase * (BINARY_SIZE(src_sawTable_bin) / sizeof(float) - 1);
-				simd::Vector<int32_t, T::size> index = p;
-				p -= index;
-
-				T v0, v1;
-				for (int i = 0; i < T::size; i++) {
-					v0.s[i] = sawTable[index.s[i]];
-					v1.s[i] = sawTable[index.s[i] + 1];
-				}
-				sawBuffer[i] = 1.376f * simd::crossfade(v0, v1, p);
-			}
-			else {
-				sawBuffer[i] = simd::ifelse(phase < 0.5f, 0.f, -2.f) + 2.f * phase;
-			}
-
-			// Sqr
-			sqrBuffer[i] = simd::ifelse(phase < pw, 1.f, -1.f);
-			if (analog) {
-				// Add a highpass filter here
-				sqrFilter.setCutoff(10.f * deltaTime);
-				sqrFilter.process(sqrBuffer[i]);
-				sqrBuffer[i] = 0.771f * sqrFilter.highpass();
-			}
-
-			// Advance phase
-			phase += simd::ifelse(syncDirection, -1.f, 1.f) * deltaPhase / OVERSAMPLE;
-			// Wrap phase to [0, 1)
-			phase -= simd::floor(phase);
 		}
 	}
 
-	T sin() {
-		return sinDecimator.process(sinBuffer);
-		// sinBuffer[0];
+	T sin(T phase) {
+		T v;
+		if (analog) {
+			// Quadratic approximation of sine, slightly richer harmonics
+			T halfPhase = (phase < 0.5f);
+			T x = phase - simd::ifelse(halfPhase, 0.25f, 0.75f);
+			v = 1.f - 16.f * simd::pow(x, 2);
+			v *= simd::ifelse(halfPhase, 1.f, -1.f);
+		}
+		else {
+			v = sin2pi_pade_05_5_4(phase);
+			// v = sin2pi_pade_05_7_6(phase);
+			// v = simd::sin(2 * T(M_PI) * phase);
+		}
+		return v;
 	}
-	T tri() {
-		return triDecimator.process(triBuffer);
-		// triBuffer[0];
+	T processSin() {
+		return sin(phase) + sinMinBlep.process();
 	}
-	T saw() {
-		return sawDecimator.process(sawBuffer);
-		// sawBuffer[0];
+
+	T tri(T phase) {
+		T v;
+		if (analog) {
+			T p = phase * (BINARY_SIZE(src_triTable_bin) / sizeof(float) - 1);
+			simd::Vector<int32_t, T::size> index = p;
+			p -= index;
+
+			T v0, v1;
+			for (int i = 0; i < T::size; i++) {
+				v0.s[i] = triTable[index.s[i]];
+				v1.s[i] = triTable[index.s[i] + 1];
+			}
+			v = 1.129f * simd::crossfade(v0, v1, p);
+		}
+		else {
+			v = 1 - 4 * simd::fmin(simd::fabs(phase - 0.25f), simd::fabs(phase - 1.25f));
+		}
+		return v;
 	}
-	T sqr() {
-		return sqrDecimator.process(sqrBuffer);
-		// sqrBuffer[0];
+	T processTri() {
+		return tri(phase) + triMinBlep.process();
 	}
+
+	T saw(T phase) {
+		T v;
+		if (analog) {
+			T p = phase * (BINARY_SIZE(src_sawTable_bin) / sizeof(float) - 1);
+			simd::Vector<int32_t, T::size> index = p;
+			p -= index;
+
+			T v0, v1;
+			for (int i = 0; i < T::size; i++) {
+				v0.s[i] = sawTable[index.s[i]];
+				v1.s[i] = sawTable[index.s[i] + 1];
+			}
+			v = 1.376f * simd::crossfade(v0, v1, p);
+		}
+		else {
+			v = simd::ifelse(phase < 0.5f, 0.f, -2.f) + 2.f * phase;
+		}
+		return v;
+	}
+	T processSaw() {
+		return saw(phase) + sawMinBlep.process();
+	}
+
+	T sqr(T phase) {
+		T v = simd::ifelse(phase < pulseWidth, 1.f, -1.f);
+		// if (analog) {
+		// 	// Add a highpass filter here
+		// 	sqrFilter.setCutoff(10.f * deltaTime);
+		// 	sqrFilter.process(v);
+		// 	v = 0.771f * sqrFilter.highpass();
+		// }
+		return v;
+	}
+	T processSqr() {
+		return sqr(phase) + sqrMinBlep.process();
+	}
+
 	T light() {
 		return simd::sin(2 * T(M_PI) * phase);
 	}
@@ -240,6 +257,10 @@ struct VCO : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
+		float freqParam = params[FREQ_PARAM].getValue() / 12.f;
+		freqParam += dsp::quadraticBipolar(params[FINE_PARAM].getValue()) * 3.f / 12.f;
+		float fmParam = dsp::quadraticBipolar(params[FM_PARAM].getValue());
+
 		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
 
 		for (int c = 0; c < channels; c += 4) {
@@ -247,12 +268,12 @@ struct VCO : Module {
 			oscillator->analog = params[MODE_PARAM].getValue() > 0.f;
 			oscillator->soft = params[SYNC_PARAM].getValue() <= 0.f;
 
-			float pitchFine = 3.f * dsp::quadraticBipolar(params[FINE_PARAM].getValue());
-			float_4 pitchCv = 12.f * inputs[PITCH_INPUT].getVoltageSimd<float_4>(c);
+			float_4 pitch = freqParam;
+			pitch += inputs[PITCH_INPUT].getVoltageSimd<float_4>(c);
 			if (inputs[FM_INPUT].isConnected()) {
-				pitchCv += dsp::quadraticBipolar(params[FM_PARAM].getValue()) * 12.f * inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c);
+				pitch += fmParam * inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c);
 			}
-			oscillator->setPitch(params[FREQ_PARAM].getValue(), pitchFine + pitchCv);
+			oscillator->setPitch(pitch);
 			oscillator->setPulseWidth(params[PW_PARAM].getValue() + params[PWM_PARAM].getValue() * inputs[PW_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f);
 
 			oscillator->syncEnabled = inputs[SYNC_INPUT].isConnected();
@@ -260,13 +281,13 @@ struct VCO : Module {
 
 			// Set output
 			if (outputs[SIN_OUTPUT].isConnected())
-				outputs[SIN_OUTPUT].setVoltageSimd(5.f * oscillator->sin(), c);
+				outputs[SIN_OUTPUT].setVoltageSimd(5.f * oscillator->processSin(), c);
 			if (outputs[TRI_OUTPUT].isConnected())
-				outputs[TRI_OUTPUT].setVoltageSimd(5.f * oscillator->tri(), c);
+				outputs[TRI_OUTPUT].setVoltageSimd(5.f * oscillator->processTri(), c);
 			if (outputs[SAW_OUTPUT].isConnected())
-				outputs[SAW_OUTPUT].setVoltageSimd(5.f * oscillator->saw(), c);
+				outputs[SAW_OUTPUT].setVoltageSimd(5.f * oscillator->processSaw(), c);
 			if (outputs[SQR_OUTPUT].isConnected())
-				outputs[SQR_OUTPUT].setVoltageSimd(5.f * oscillator->sqr(), c);
+				outputs[SQR_OUTPUT].setVoltageSimd(5.f * oscillator->processSqr(), c);
 		}
 
 		outputs[SIN_OUTPUT].setChannels(channels);
@@ -367,8 +388,8 @@ struct VCO2 : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		float freqParam = params[FREQ_PARAM].getValue();
-		float fmParam = params[FM_PARAM].getValue();
+		float freqParam = params[FREQ_PARAM].getValue() / 12.f;
+		float fmParam = dsp::quadraticBipolar(params[FM_PARAM].getValue());
 		float waveParam = params[WAVE_PARAM].getValue();
 
 		int channels = std::max(inputs[FM_INPUT].getChannels(), 1);
@@ -378,8 +399,9 @@ struct VCO2 : Module {
 			oscillator->analog = (params[MODE_PARAM].getValue() > 0.f);
 			oscillator->soft = (params[SYNC_PARAM].getValue() <= 0.f);
 
-			float_4 pitch = freqParam + dsp::quadraticBipolar(fmParam) * 12.f * inputs[FM_INPUT].getVoltageSimd<float_4>(c);
-			oscillator->setPitch(0.f, pitch);
+			float_4 pitch = freqParam;
+			pitch += fmParam * inputs[FM_INPUT].getVoltageSimd<float_4>(c);
+			oscillator->setPitch(pitch);
 
 			oscillator->syncEnabled = inputs[SYNC_INPUT].isConnected();
 			oscillator->process(args.sampleTime, inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c));
@@ -388,10 +410,10 @@ struct VCO2 : Module {
 			if (outputs[OUT_OUTPUT].isConnected()) {
 				float_4 wave = simd::clamp(waveParam + inputs[WAVE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * 3.f, 0.f, 3.f);
 				float_4 v = 0.f;
-				v += oscillator->sin() * simd::fmax(0.f, 1.f - simd::fabs(wave - 0.f));
-				v += oscillator->tri() * simd::fmax(0.f, 1.f - simd::fabs(wave - 1.f));
-				v += oscillator->saw() * simd::fmax(0.f, 1.f - simd::fabs(wave - 2.f));
-				v += oscillator->sqr() * simd::fmax(0.f, 1.f - simd::fabs(wave - 3.f));
+				v += oscillator->processSin() * simd::fmax(0.f, 1.f - simd::fabs(wave - 0.f));
+				v += oscillator->processTri() * simd::fmax(0.f, 1.f - simd::fabs(wave - 1.f));
+				v += oscillator->processSaw() * simd::fmax(0.f, 1.f - simd::fabs(wave - 2.f));
+				v += oscillator->processSqr() * simd::fmax(0.f, 1.f - simd::fabs(wave - 3.f));
 				outputs[OUT_OUTPUT].setVoltageSimd(5.f * v, c);
 			}
 		}

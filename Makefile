@@ -10,7 +10,6 @@ libsamplerate := dep/lib/libsamplerate.a
 OBJECTS += $(libsamplerate)
 
 # Dependencies
-DEP_LOCAL := dep
 DEPS += $(libsamplerate)
 
 $(libsamplerate):
