@@ -45,7 +45,7 @@ struct Scope : Module {
 	dsp::BooleanTrigger extTrigger;
 	bool lissajous = false;
 	bool external = false;
-	dsp::SchmittTrigger resetTrigger;
+	dsp::SchmittTrigger triggers[16];
 
 	Scope() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -112,35 +112,47 @@ struct Scope : Module {
 			}
 		}
 
-		// Are we waiting on the next trigger?
-		if (bufferIndex >= BUFFER_SIZE) {
-			// Trigger immediately if external but nothing plugged in, or in Lissajous mode
-			if (lissajous || (external && !inputs[TRIG_INPUT].isConnected())) {
-				bufferIndex = 0;
-				frameIndex = 0;
-				return;
-			}
+		// Don't wait for trigger if still filling buffer
+		if (bufferIndex < BUFFER_SIZE) {
+			return;
+		}
 
-			frameIndex++;
+		// Trigger immediately if external but nothing plugged in, or in Lissajous mode
+		if (lissajous || (external && !inputs[TRIG_INPUT].isConnected())) {
+			trigger();
+			return;
+		}
 
-			// Reset if triggered
-			float trigValue = params[TRIG_PARAM].getValue();
-			float gate = external ? inputs[TRIG_INPUT].getVoltage() : inputs[X_INPUT].getVoltage();
+		frameIndex++;
 
-			if (resetTrigger.process(rescale(gate, trigValue, trigValue + 0.001f, 0.f, 1.f))) {
-				bufferIndex = 0;
-				frameIndex = 0;
-				return;
-			}
+		// Reset if triggered
+		float trigThreshold = params[TRIG_PARAM].getValue();
+		Input &trigInput = external ? inputs[TRIG_INPUT] : inputs[X_INPUT];
 
-			// Reset if we've been waiting for `holdTime`
-			const float holdTime = 0.5f;
-			if (frameIndex * args.sampleTime >= holdTime) {
-				bufferIndex = 0;
-				frameIndex = 0;
+		// This may be 0
+		int trigChannels = trigInput.getChannels();
+		for (int c = 0; c < trigChannels; c++) {
+			float trigVoltage = trigInput.getVoltage(c);
+			if (triggers[c].process(rescale(trigVoltage, trigThreshold, trigThreshold + 0.001f, 0.f, 1.f))) {
+				trigger();
 				return;
 			}
 		}
+
+		// Reset if we've been waiting for `holdTime`
+		const float holdTime = 0.5f;
+		if (frameIndex * args.sampleTime >= holdTime) {
+			trigger();
+			return;
+		}
+	}
+
+	void trigger() {
+		for (int c = 0; c < 16; c++) {
+			triggers[c].reset();
+		}
+		bufferIndex = 0;
+		frameIndex = 0;
 	}
 
 	json_t *dataToJson() override {
@@ -311,9 +323,9 @@ struct ScopeDisplay : TransparentWidget {
 				drawWaveform(args, NULL, 0, 0, module->bufferX[c], offsetX, gainX);
 			}
 
-			float trigValue = module->params[Scope::TRIG_PARAM].getValue();
-			trigValue = (trigValue + offsetX) * gainX;
-			drawTrig(args, trigValue);
+			float trigThreshold = module->params[Scope::TRIG_PARAM].getValue();
+			trigThreshold = (trigThreshold + offsetX) * gainX;
+			drawTrig(args, trigThreshold);
 		}
 
 		// Calculate and draw stats
