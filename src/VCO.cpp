@@ -121,9 +121,10 @@ struct VoltageControlledOscillator {
 		// Detect sync
 		// Might be NAN or outside of [0, 1) range
 		if (syncEnabled) {
-			T syncCrossing = -lastSyncValue / (syncValue - lastSyncValue);
+			T deltaSync = syncValue - lastSyncValue;
+			T syncCrossing = -lastSyncValue / deltaSync;
 			lastSyncValue = syncValue;
-			T sync = (0.f < syncCrossing) & (syncCrossing <= 1.f);
+			T sync = (0.f < syncCrossing) & (syncCrossing <= 1.f) & (syncValue >= 0.f);
 			int syncMask = simd::movemask(sync);
 			if (syncMask) {
 				if (soft) {
