@@ -110,7 +110,7 @@ struct LFO : Module {
 		configParam(INVERT_PARAM, 0.f, 1.f, 1.f, "Invert");
 		configParam(FREQ_PARAM, -8.f, 10.f, 1.f, "Frequency", " Hz", 2, 1);
 		configParam(FM1_PARAM, 0.f, 1.f, 0.f, "Frequency modulation 1", "%", 0.f, 100.f);
-		configParam(PW_PARAM, 0.f, 1.f, 0.5f, "Pulse width", "%", 0.f, 100.f);
+		configParam(PW_PARAM, 0.01f, 0.99f, 0.5f, "Pulse width", "%", 0.f, 100.f);
 		configParam(FM2_PARAM, 0.f, 1.f, 0.f, "Frequency modulation 2", "%", 0.f, 100.f);
 		configParam(PWM_PARAM, 0.f, 1.f, 0.f, "Pulse width modulation", "%", 0.f, 100.f);
 		lightDivider.setDivision(16);
