@@ -20,3 +20,10 @@ $(libsamplerate):
 
 
 include $(RACK_DIR)/plugin.mk
+
+# Only Fundamental needs this because it's bundled with Rack
+sign-dist:
+ifdef ARCH_MAC
+	codesign --verbose --sign "Developer ID Application: Andrew Belt (VRF26934X5)" --deep dist/$(SLUG)/$(TARGET)
+	cd dist && zip -q -9 -r $(SLUG)-$(VERSION)-$(ARCH).zip $(SLUG)
+endif
