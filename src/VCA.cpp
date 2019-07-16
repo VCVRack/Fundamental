@@ -30,7 +30,7 @@ struct VCA : Module {
 
 	void processChannel(Input &in, Param &level, Input &lin, Input &exp, Output &out) {
 		// Get input
-		int channels = in.getChannels();
+		int channels = std::max(in.getChannels(), 1);
 		simd::float_4 v[4];
 		for (int c = 0; c < channels; c += 4) {
 			v[c / 4] = simd::float_4::load(in.getVoltages(c));
@@ -153,7 +153,7 @@ struct VCA_1 : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		int channels = inputs[IN_INPUT].getChannels();
+		int channels = std::max(inputs[IN_INPUT].getChannels(), 1);
 		float amplitudeSum = 0.f;
 		float level = params[LEVEL_PARAM].getValue();
 
