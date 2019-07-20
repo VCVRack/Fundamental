@@ -201,8 +201,9 @@ struct VoltageControlledOscillator {
 		if (analog) {
 			T x = phase + 0.25f;
 			x -= simd::trunc(x);
-			T halfX = (x < 0.5f);
-			x = 2 * x - simd::ifelse(halfX, 0.f, 1.f);
+			T halfX = (x >= 0.5f);
+			x *= 2;
+			x -= simd::trunc(x);
 			v = expCurve(x) * simd::ifelse(halfX, 1.f, -1.f);
 		}
 		else {
