@@ -1,4 +1,7 @@
 
+### 1.1.0 (2019-07-22)
+- Add Mid/Side.
+
 ### 1.0.1 (2019-06-27)
 - Fix VCO-1/2 sync being triggered with a negative slope.
 
