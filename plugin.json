@@ -210,6 +210,15 @@
         "Polyphonic",
         "Visual"
       ]
+    },
+    {
+      "slug": "MidSide",
+      "name": "Mid/Side",
+      "description": "Mid/side stereo encoder/decoder",
+      "tags": [
+        "Utility",
+        "Polyphonic"
+      ]
     }
   ]
 }

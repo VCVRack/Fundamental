@@ -28,4 +28,5 @@ void init(rack::Plugin *p) {
 	p->addModel(modelMerge);
 	p->addModel(modelSum);
 	p->addModel(modelViz);
+	p->addModel(modelMidSide);
 }
