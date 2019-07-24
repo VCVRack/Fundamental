@@ -1,4 +1,7 @@
 
+### 1.1.1 (2019-07-24)
+- Mid/Side: fix scaling of decoder.
+
 ### 1.1.0 (2019-07-22)
 - Add Mid/Side.
 
