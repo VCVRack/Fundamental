@@ -67,8 +67,8 @@ struct MidSide : Module {
 				width = simd::fmax(width, 0.f);
 				float_4 mid = inputs[DEC_MID_INPUT].getVoltageSimd<float_4>(c);
 				float_4 sides = inputs[DEC_SIDES_INPUT].getVoltageSimd<float_4>(c);
-				float_4 left = (mid + sides * width) / 2;
-				float_4 right = (mid - sides * width) / 2;
+				float_4 left = mid + sides * width;
+				float_4 right = mid - sides * width;
 				outputs[DEC_LEFT_OUTPUT].setVoltageSimd(left, c);
 				outputs[DEC_RIGHT_OUTPUT].setVoltageSimd(right, c);
 			}
