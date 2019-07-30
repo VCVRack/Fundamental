@@ -34,6 +34,13 @@ struct Quantizer : Module {
 		updateRanges();
 	}
 
+	void onRandomize() override {
+		for (int i = 0; i < 12; i++) {
+			enabledNotes[i] = (random::uniform() < 0.5f);
+		}
+		updateRanges();
+	}
+
 	void process(const ProcessArgs &args) override {
 		bool playingNotes[12] = {};
 		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
