@@ -3,66 +3,64 @@
 
 struct Octave : Module {
 	enum ParamIds {
+		OCTAVE_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
-		CV_INPUT,
+		PITCH_INPUT,
+		OCTAVE_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
-		CV_OUTPUT,
+		PITCH_OUTPUT,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
 		NUM_LIGHTS
 	};
 
-	int octave = 0;
-
 	Octave() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-	}
-
-	void onReset() override {
-		octave = 0;
-	}
-
-	void onRandomize() override {
-		octave = (random::u32() % 9) - 4;
+		configParam(OCTAVE_PARAM, -4.f, 4.f, 0.f, "Octave shift");
 	}
 
 	void process(const ProcessArgs &args) override {
-		int channels = std::max(inputs[CV_INPUT].getChannels(), 1);
-		for (int c = 0; c < channels; c++) {
-			float cv = inputs[CV_INPUT].getVoltage(c);
-			cv += octave;
-			outputs[CV_OUTPUT].setVoltage(cv, c);
-		}
-		outputs[CV_OUTPUT].setChannels(channels);
-	}
+		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
+		float octaveParam = params[OCTAVE_PARAM].getValue();
 
-	json_t *dataToJson() override {
-		json_t *rootJ = json_object();
-		json_object_set_new(rootJ, "octave", json_integer(octave));
-		return rootJ;
+		for (int c = 0; c < channels; c++) {
+			float octave = octaveParam + inputs[OCTAVE_INPUT].getPolyVoltage(c);
+			octave = std::round(octave);
+			float cv = inputs[PITCH_INPUT].getVoltage(c);
+			cv += octave;
+			outputs[PITCH_OUTPUT].setVoltage(cv, c);
+		}
+		outputs[PITCH_OUTPUT].setChannels(channels);
 	}
 
 	void dataFromJson(json_t *rootJ) override {
+		// In Fundamental 1.1.1 and earlier, the octave param was internal data.
 		json_t *octaveJ = json_object_get(rootJ, "octave");
-		if (octaveJ)
-			octave = json_integer_value(octaveJ);
+		if (octaveJ) {
+			params[OCTAVE_PARAM].setValue(json_integer_value(octaveJ));
+		}
 	}
 };
 
 
-struct OctaveButton : OpaqueWidget {
-	Octave *module;
+struct OctaveButton : Widget {
 	int octave;
 
 	void draw(const DrawArgs &args) override {
 		Vec c = box.size.div(2);
 
-		if ((module && module->octave == octave) || octave == 0) {
+		int activeOctave = 0;
+		ParamWidget *paramWidget = getAncestorOfType<ParamWidget>();
+		if (paramWidget && paramWidget->paramQuantity) {
+			activeOctave = std::round(paramWidget->paramQuantity->getValue());
+		}
+
+		if (activeOctave == octave) {
 			// Enabled
 			nvgBeginPath(args.vg);
 			nvgCircle(args.vg, c.x, c.y, mm2px(4.0/2));
@@ -95,34 +93,20 @@ struct OctaveButton : OpaqueWidget {
 		}
 	}
 
-	void onButton(const event::Button &e) override {
-		if (e.button == GLFW_MOUSE_BUTTON_RIGHT && e.action == GLFW_PRESS) {
-			module->octave = 0;
+	void onDragHover(const event::DragHover &e) override {
+		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
 			e.consume(this);
-			return;
 		}
-		OpaqueWidget::onButton(e);
+		Widget::onDragHover(e);
 	}
 
-	void onDragEnter(const event::DragEnter &e) override {
-		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
-			OctaveButton *w = dynamic_cast<OctaveButton*>(e.origin);
-			if (w) {
-				module->octave = octave;
-			}
-		}
-	}
+	void onDragEnter(const event::DragEnter &e) override;
 };
 
 
-struct OctaveDisplay : OpaqueWidget {
-	OctaveDisplay() {
-		box.size = mm2px(Vec(15.240, 72.000));
-	}
-
-	void setModule(Octave *module) {
-		clearChildren();
-
+struct OctaveParam : ParamWidget {
+	OctaveParam() {
+		box.size = mm2px(Vec(15.24, 63.0));
 		const int octaves = 9;
 		const float margin = mm2px(2.0);
 		float height = box.size.y - 2*margin;
@@ -130,7 +114,6 @@ struct OctaveDisplay : OpaqueWidget {
 			OctaveButton *octaveButton = new OctaveButton();
 			octaveButton->box.pos = Vec(0, height / octaves * i + margin);
 			octaveButton->box.size = Vec(box.size.x, height / octaves);
-			octaveButton->module = module;
 			octaveButton->octave = 4 - i;
 			addChild(octaveButton);
 		}
@@ -143,9 +126,24 @@ struct OctaveDisplay : OpaqueWidget {
 		nvgFillColor(args.vg, nvgRGB(0, 0, 0));
 		nvgFill(args.vg);
 
-		Widget::draw(args);
+		ParamWidget::draw(args);
 	}
 };
+
+
+inline void OctaveButton::onDragEnter(const event::DragEnter &e) {
+	if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
+		OctaveParam *origin = dynamic_cast<OctaveParam*>(e.origin);
+		if (origin) {
+			ParamWidget *paramWidget = getAncestorOfType<ParamWidget>();
+			if (paramWidget && paramWidget->paramQuantity) {
+				paramWidget->paramQuantity->setValue(octave);
+			}
+		}
+	}
+	Widget::onDragEnter(e);
+}
+
 
 
 struct OctaveWidget : ModuleWidget {
@@ -154,18 +152,14 @@ struct OctaveWidget : ModuleWidget {
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Octave.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 97.253)), module, Octave::CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 82.753)), module, Octave::OCTAVE_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 97.253)), module, Octave::PITCH_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 112.253)), module, Octave::CV_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 112.253)), module, Octave::PITCH_OUTPUT));
 
-		OctaveDisplay *octaveDisplay = new OctaveDisplay();
-		octaveDisplay->box.pos = mm2px(Vec(0.0, 14.584));
-		octaveDisplay->setModule(module);
-		addChild(octaveDisplay);
+		addParam(createParam<OctaveParam>(mm2px(Vec(0.0, 12.817)), module, Octave::OCTAVE_PARAM));
 	}
 };
 
