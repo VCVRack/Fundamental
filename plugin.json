@@ -219,6 +219,15 @@
         "Utility",
         "Polyphonic"
       ]
+    },
+    {
+      "slug": "Quantizer",
+      "name": "Quantizer",
+      "description": "12-note quantizer and scale selector",
+      "tags": [
+        "Quantizer",
+        "Polyphonic"
+      ]
     }
   ]
 }

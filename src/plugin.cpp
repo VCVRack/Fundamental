@@ -24,6 +24,7 @@ void init(rack::Plugin *p) {
 	p->addModel(modelSequentialSwitch1);
 	p->addModel(modelSequentialSwitch2);
 	p->addModel(modelOctave);
+	p->addModel(modelQuantizer);
 	p->addModel(modelSplit);
 	p->addModel(modelMerge);
 	p->addModel(modelSum);

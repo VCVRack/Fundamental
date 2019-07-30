@@ -31,9 +31,9 @@ struct Octave : Module {
 		for (int c = 0; c < channels; c++) {
 			float octave = octaveParam + inputs[OCTAVE_INPUT].getPolyVoltage(c);
 			octave = std::round(octave);
-			float cv = inputs[PITCH_INPUT].getVoltage(c);
-			cv += octave;
-			outputs[PITCH_OUTPUT].setVoltage(cv, c);
+			float pitch = inputs[PITCH_INPUT].getVoltage(c);
+			pitch += octave;
+			outputs[PITCH_OUTPUT].setVoltage(pitch, c);
 		}
 		outputs[PITCH_OUTPUT].setChannels(channels);
 	}

@@ -24,9 +24,9 @@ extern Model *modelSEQ3;
 extern Model *modelSequentialSwitch1;
 extern Model *modelSequentialSwitch2;
 extern Model *modelOctave;
+extern Model *modelQuantizer;
 extern Model *modelSplit;
 extern Model *modelMerge;
 extern Model *modelSum;
 extern Model *modelViz;
 extern Model *modelMidSide;
-
