@@ -1,4 +1,8 @@
 
+### 1.2.0 (2019-07-30)
+- Add Quantizer
+- Add CV input to Octave
+
 ### 1.1.1 (2019-07-24)
 - Mid/Side: fix scaling of decoder.
 
