@@ -131,7 +131,7 @@ struct VoltageControlledOscillator {
 					syncDirection = simd::ifelse(sync, -syncDirection, syncDirection);
 				}
 				else {
-					T newPhase = simd::ifelse(sync, syncCrossing * deltaPhase, phase);
+					T newPhase = simd::ifelse(sync, (1.f - syncCrossing) * deltaPhase, phase);
 					// Insert minBLEP for sync
 					for (int i = 0; i < channels; i++) {
 						if (syncMask & (1 << i)) {
