@@ -15,7 +15,7 @@ struct LowFrequencyOscillator {
 
 	void setPitch(T pitch) {
 		pitch = simd::fmin(pitch, 10.f);
-		freq = simd::pow(2.f, pitch);
+		freq = dsp::approxExp2_taylor5(pitch + 30) / 1073741824;
 	}
 	void setPulseWidth(T pw) {
 		const T pwMin = 0.01f;

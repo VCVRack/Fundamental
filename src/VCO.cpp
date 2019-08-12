@@ -52,7 +52,7 @@ struct VoltageControlledOscillator {
 	T sinValue = 0.f;
 
 	void setPitch(T pitch) {
-		freq = dsp::FREQ_C4 * simd::pow(2.f, pitch);
+		freq = dsp::FREQ_C4 * dsp::approxExp2_taylor5(pitch + 30) / 1073741824;
 	}
 
 	void setPulseWidth(T pulseWidth) {
