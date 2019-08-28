@@ -31,48 +31,67 @@ struct VCMixer : Module {
 	}
 
 	void process(const ProcessArgs &args) override {
-		float mix = 0.f;
+		float mix[16] = {};
+		int maxChannels = 1;
 
 		// Channels
 		for (int i = 0; i < 4; i++) {
-			float in = 0.f;
+			int channels = 1;
+			float in[16] = {};
 
 			if (inputs[CH_INPUT + i].isConnected()) {
+				channels = inputs[CH_INPUT + i].getChannels();
+				maxChannels = std::max(maxChannels, channels);
+
 				// Get input
-				in = inputs[CH_INPUT + i].getVoltageSum();
+				inputs[CH_INPUT + i].readVoltages(in);
 
 				// Apply fader gain
 				float gain = std::pow(params[LVL_PARAM + i].getValue(), 2.f);
-				in *= gain;
+				for (int c = 0; c < channels; c++) {
+					in[c] *= gain;
+				}
 
 				// Apply CV gain
 				if (inputs[CV_INPUT + i].isConnected()) {
-					float cv = clamp(inputs[CV_INPUT + i].getVoltage() / 10.f, 0.f, 1.f);
-					in *= cv;
+					for (int c = 0; c < channels; c++) {
+						float cv = clamp(inputs[CV_INPUT + i].getPolyVoltage(c) / 10.f, 0.f, 1.f);
+						in[c] *= cv;
+					}
 				}
 
 				// Add to mix
-				mix += in;
+				for (int c = 0; c < channels; c++) {
+					mix[c] += in[c];
+				}
 			}
 
 			// Set channel output
-			outputs[CH_OUTPUT + i].setVoltage(in);
+			if (outputs[CH_OUTPUT + i].isConnected()) {
+				outputs[CH_OUTPUT + i].setChannels(channels);
+				outputs[CH_OUTPUT + i].writeVoltages(in);
+			}
 		}
 
 		// Mix output
 		if (outputs[MIX_OUTPUT].isConnected()) {
 			// Apply mix knob gain
 			float gain = params[MIX_LVL_PARAM].getValue();
-			mix *= gain;
+			for (int c = 0; c < maxChannels; c++) {
+				mix[c] *= gain;
+			}
 
 			// Apply mix CV gain
 			if (inputs[MIX_CV_INPUT].isConnected()) {
-				float cv = clamp(inputs[MIX_CV_INPUT].getVoltage() / 10.f, 0.f, 1.f);
-				mix *= cv;
+				for (int c = 0; c < maxChannels; c++) {
+					float cv = clamp(inputs[MIX_CV_INPUT].getPolyVoltage(c) / 10.f, 0.f, 1.f);
+					mix[c] *= cv;
+				}
 			}
 
 			// Set mix output
-			outputs[MIX_OUTPUT].setVoltage(mix);
+			outputs[MIX_OUTPUT].setChannels(maxChannels);
+			outputs[MIX_OUTPUT].writeVoltages(mix);
 		}
 	}
 };

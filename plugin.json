@@ -99,7 +99,8 @@
       "description": "Mixes 4 signals with built-in VCAs",
       "tags": [
         "Mixer",
-        "VCA"
+        "VCA",
+        "Polyphonic"
       ]
     },
     {
