@@ -144,7 +144,8 @@ struct VCA_1 : Module {
 		NUM_LIGHTS
 	};
 
-	float amplitude = 0.f;
+	int lastChannels = 1;
+	float lastGains[16] = {};
 
 	VCA_1() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -154,7 +155,6 @@ struct VCA_1 : Module {
 
 	void process(const ProcessArgs &args) override {
 		int channels = std::max(inputs[IN_INPUT].getChannels(), 1);
-		float amplitudeSum = 0.f;
 		float level = params[LEVEL_PARAM].getValue();
 
 		for (int c = 0; c < channels; c++) {
@@ -165,21 +165,21 @@ struct VCA_1 : Module {
 			float gain = level;
 			if (inputs[CV_INPUT].isConnected()) {
 				float cv = clamp(inputs[CV_INPUT].getPolyVoltage(c) / 10.f, 0.f, 1.f);
-				if ((int) std::round(params[EXP_PARAM].getValue()) == 0)
+				if (int(params[EXP_PARAM].getValue()) == 0)
 					cv = std::pow(cv, 4.f);
 				gain *= cv;
 			}
 
 			// Apply gain
 			in *= gain;
-			amplitudeSum += gain;
+			lastGains[c] = gain;
 
 			// Set output
 			outputs[OUT_OUTPUT].setVoltage(in, c);
 		}
 
 		outputs[OUT_OUTPUT].setChannels(channels);
-		amplitude = (channels > 0) ? (amplitudeSum / channels) : 0.f;
+		lastChannels = channels;
 	}
 };
 
@@ -192,33 +192,54 @@ struct VCA_1VUKnob : SliderKnob {
 	}
 
 	void draw(const DrawArgs &args) override {
-		float amplitude = module ? module->amplitude : 1.f;
-
 		nvgBeginPath(args.vg);
 		nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, 2.0);
 		nvgFillColor(args.vg, nvgRGB(0, 0, 0));
 		nvgFill(args.vg);
 
-		const int segs = 25;
 		const Vec margin = Vec(3, 3);
 		Rect r = box.zeroPos().grow(margin.neg());
 
-		for (int i = 0; i < segs; i++) {
-			float value = paramQuantity ? paramQuantity->getValue() : 1.f;
-			float segValue = clamp(value * segs - (segs - i - 1), 0.f, 1.f);
-			float segAmplitude = clamp(amplitude * segs - (segs - i - 1), 0.f, 1.f);
-			nvgBeginPath(args.vg);
-			nvgRect(args.vg, r.pos.x, r.pos.y + r.size.y / segs * i + 0.5,
-				r.size.x, r.size.y / segs - 1.0);
-			if (segValue > 0.f) {
-				nvgFillColor(args.vg, color::alpha(nvgRGBf(0.33, 0.33, 0.33), segValue));
-				nvgFill(args.vg);
-			}
-			if (segAmplitude > 0.f) {
-				nvgFillColor(args.vg, color::alpha(SCHEME_GREEN, segAmplitude));
-				nvgFill(args.vg);
+		int channels = module ? module->lastChannels : 1;
+		float value = paramQuantity ? paramQuantity->getValue() : 1.f;
+
+		// Segment value
+		nvgBeginPath(args.vg);
+		nvgRect(args.vg,
+			r.pos.x,
+			r.pos.y + r.size.y * (1 - value),
+			r.size.x,
+			r.size.y * value);
+		nvgFillColor(args.vg, color::mult(color::WHITE, 0.33));
+		nvgFill(args.vg);
+
+		// Segment gain
+		nvgBeginPath(args.vg);
+		for (int c = 0; c < channels; c++) {
+			float gain = module ? module->lastGains[c] : 1.f;
+			if (gain >= 0.005f) {
+				nvgRect(args.vg,
+					r.pos.x + r.size.x * c / channels,
+					r.pos.y + r.size.y * (1 - gain),
+					r.size.x / channels,
+					r.size.y * gain);
 			}
 		}
+		nvgFillColor(args.vg, SCHEME_GREEN);
+		nvgFill(args.vg);
+
+		// Invisible separators
+		const int segs = 25;
+		nvgBeginPath(args.vg);
+		for (int i = 1; i <= segs; i++) {
+			nvgRect(args.vg,
+				r.pos.x - 1.0,
+				r.pos.y + r.size.y * i / segs,
+				r.size.x + 2.0,
+				1.0);
+		}
+		nvgFillColor(args.vg, color::BLACK);
+		nvgFill(args.vg);
 	}
 };
 
