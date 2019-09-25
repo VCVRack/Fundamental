@@ -53,15 +53,12 @@ struct SequentialSwitch : Module {
 			index = 0;
 
 		// Use first input to get number of channels
-		int channels = inputs[IN_INPUTS + 0].getChannels();
+		int channels = std::max(inputs[IN_INPUTS + 0].getChannels(), 1);
 
 		if (INPUTS == 1) {
 			// <1, 4>
 			// Get input
-			float in[16];
-			for (int c = 0; c < channels; c++) {
-				in[c] = inputs[IN_INPUTS].getVoltage(c);
-			}
+			float* in = inputs[IN_INPUTS + 0].getVoltages();
 
 			// Set output
 			for (int i = 0; i < OUTPUTS; i++) {
@@ -70,13 +67,11 @@ struct SequentialSwitch : Module {
 				if (gain != 0.f) {
 					for (int c = 0; c < channels; c++) {
 						float out = in[c] * gain;
-						outputs[OUT_OUTPUTS + i].setVoltage(out);
+						outputs[OUT_OUTPUTS + i].setVoltage(out, c);
 					}
 				}
 				else {
-					for (int c = 0; c < channels; c++) {
-						outputs[OUT_OUTPUTS + i].setVoltage(0.f);
-					}
+					outputs[OUT_OUTPUTS + i].clearVoltages();
 				}
 			}
 		}
@@ -95,10 +90,8 @@ struct SequentialSwitch : Module {
 			}
 
 			// Set output
-			for (int c = 0; c < channels; c++) {
-				outputs[OUT_OUTPUTS].setVoltage(out[c], c);
-			}
-			outputs[OUT_OUTPUTS].setChannels(channels);
+			outputs[OUT_OUTPUTS + 0].setChannels(channels);
+			outputs[OUT_OUTPUTS + 0].writeVoltages(out);
 		}
 
 		// Set lights
