@@ -35,7 +35,7 @@ struct Unity : Module {
 		lightDivider.setDivision(256);
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		float mix[2] = {};
 		int count[2] = {};
 
@@ -82,16 +82,16 @@ struct Unity : Module {
 		merge = false;
 	}
 
-	json_t *dataToJson() override {
-		json_t *rootJ = json_object();
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
 		// merge
 		json_object_set_new(rootJ, "merge", json_boolean(merge));
 		return rootJ;
 	}
 
-	void dataFromJson(json_t *rootJ) override {
+	void dataFromJson(json_t* rootJ) override {
 		// merge
-		json_t *mergeJ = json_object_get(rootJ, "merge");
+		json_t* mergeJ = json_object_get(rootJ, "merge");
 		if (mergeJ)
 			merge = json_boolean_value(mergeJ);
 	}
@@ -99,8 +99,8 @@ struct Unity : Module {
 
 
 struct UnityMergeItem : MenuItem {
-	Unity *unity;
-	void onAction(const event::Action &e) override {
+	Unity* unity;
+	void onAction(const event::Action& e) override {
 		unity->merge ^= true;
 	}
 	void step() override {
@@ -110,7 +110,7 @@ struct UnityMergeItem : MenuItem {
 
 
 struct UnityWidget : ModuleWidget {
-	UnityWidget(Unity *module) {
+	UnityWidget(Unity* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Unity.svg")));
 
@@ -152,17 +152,17 @@ struct UnityWidget : ModuleWidget {
 		addChild(createLight<MediumLight<GreenLight>>(mm2px(Vec(13.652, 95.662)), module, Unity::VU_LIGHTS + 1 * 5 + 4));
 	}
 
-	void appendContextMenu(Menu *menu) override {
+	void appendContextMenu(Menu* menu) override {
 		menu->addChild(new MenuEntry);
 
-		Unity *unity = dynamic_cast<Unity*>(module);
+		Unity* unity = dynamic_cast<Unity*>(module);
 		assert(unity);
 
-		UnityMergeItem *mergeItem = createMenuItem<UnityMergeItem>("Merge channels 1 & 2");
+		UnityMergeItem* mergeItem = createMenuItem<UnityMergeItem>("Merge channels 1 & 2");
 		mergeItem->unity = unity;
 		menu->addChild(mergeItem);
 	}
 };
 
 
-Model *modelUnity = createModel<Unity, UnityWidget>("Unity");
+Model* modelUnity = createModel<Unity, UnityWidget>("Unity");

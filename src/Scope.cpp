@@ -49,12 +49,12 @@ struct Scope : Module {
 
 	Scope() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(X_SCALE_PARAM, -2.f, 8.f, 0.f, "X scale", " V/div", 1/2.f, 5);
+		configParam(X_SCALE_PARAM, -2.f, 8.f, 0.f, "X scale", " V/div", 1 / 2.f, 5);
 		configParam(X_POS_PARAM, -10.f, 10.f, 0.f, "X position", " V");
-		configParam(Y_SCALE_PARAM, -2.f, 8.f, 0.f, "Y scale", " V/div", 1/2.f, 5);
+		configParam(Y_SCALE_PARAM, -2.f, 8.f, 0.f, "Y scale", " V/div", 1 / 2.f, 5);
 		configParam(Y_POS_PARAM, -10.f, 10.f, 0.f, "Y position", " V");
 		const float timeBase = (float) BUFFER_SIZE / 6;
-		configParam(TIME_PARAM, 6.f, 16.f, 14.f, "Time", " ms/div", 1/2.f, 1000 * timeBase);
+		configParam(TIME_PARAM, 6.f, 16.f, 14.f, "Time", " ms/div", 1 / 2.f, 1000 * timeBase);
 		configParam(LISSAJOUS_PARAM, 0.f, 1.f, 0.f);
 		configParam(TRIG_PARAM, -10.f, 10.f, 0.f, "Trigger position", " V");
 		configParam(EXTERNAL_PARAM, 0.f, 1.f, 0.f);
@@ -67,7 +67,7 @@ struct Scope : Module {
 		std::memset(bufferY, 0, sizeof(bufferY));
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		// Modes
 		if (sumTrigger.process(params[LISSAJOUS_PARAM].getValue() > 0.f)) {
 			lissajous = !lissajous;
@@ -127,7 +127,7 @@ struct Scope : Module {
 
 		// Reset if triggered
 		float trigThreshold = params[TRIG_PARAM].getValue();
-		Input &trigInput = external ? inputs[TRIG_INPUT] : inputs[X_INPUT];
+		Input& trigInput = external ? inputs[TRIG_INPUT] : inputs[X_INPUT];
 
 		// This may be 0
 		int trigChannels = trigInput.getChannels();
@@ -155,19 +155,19 @@ struct Scope : Module {
 		frameIndex = 0;
 	}
 
-	json_t *dataToJson() override {
-		json_t *rootJ = json_object();
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
 		json_object_set_new(rootJ, "lissajous", json_integer((int) lissajous));
 		json_object_set_new(rootJ, "external", json_integer((int) external));
 		return rootJ;
 	}
 
-	void dataFromJson(json_t *rootJ) override {
-		json_t *sumJ = json_object_get(rootJ, "lissajous");
+	void dataFromJson(json_t* rootJ) override {
+		json_t* sumJ = json_object_get(rootJ, "lissajous");
 		if (sumJ)
 			lissajous = json_integer_value(sumJ);
 
-		json_t *extJ = json_object_get(rootJ, "external");
+		json_t* extJ = json_object_get(rootJ, "external");
 		if (extJ)
 			external = json_integer_value(extJ);
 	}
@@ -175,7 +175,7 @@ struct Scope : Module {
 
 
 struct ScopeDisplay : TransparentWidget {
-	Scope *module;
+	Scope* module;
 	int statsFrame = 0;
 	std::shared_ptr<Font> font;
 
@@ -184,7 +184,7 @@ struct ScopeDisplay : TransparentWidget {
 		float vmin = 0.f;
 		float vmax = 0.f;
 
-		void calculate(float *buffer, int channels) {
+		void calculate(float* buffer, int channels) {
 			vmax = -INFINITY;
 			vmin = INFINITY;
 			for (int i = 0; i < BUFFER_SIZE * channels; i++) {
@@ -202,10 +202,10 @@ struct ScopeDisplay : TransparentWidget {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/sudo/Sudo.ttf"));
 	}
 
-	void drawWaveform(const DrawArgs &args, float *bufferX, float offsetX, float gainX, float *bufferY, float offsetY, float gainY) {
+	void drawWaveform(const DrawArgs& args, float* bufferX, float offsetX, float gainX, float* bufferY, float offsetY, float gainY) {
 		assert(bufferY);
 		nvgSave(args.vg);
-		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
+		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15 * 2)));
 		nvgScissor(args.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
 		nvgBeginPath(args.vg);
 		for (int i = 0; i < BUFFER_SIZE; i++) {
@@ -232,8 +232,8 @@ struct ScopeDisplay : TransparentWidget {
 		nvgRestore(args.vg);
 	}
 
-	void drawTrig(const DrawArgs &args, float value) {
-		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15*2)));
+	void drawTrig(const DrawArgs& args, float value) {
+		Rect b = Rect(Vec(0, 15), box.size.minus(Vec(0, 15 * 2)));
 		nvgScissor(args.vg, b.pos.x, b.pos.y, b.size.x, b.size.y);
 
 		value = value / 2.f + 0.5f;
@@ -269,7 +269,7 @@ struct ScopeDisplay : TransparentWidget {
 		nvgResetScissor(args.vg);
 	}
 
-	void drawStats(const DrawArgs &args, Vec pos, const char *title, Stats *stats) {
+	void drawStats(const DrawArgs& args, Vec pos, const char* title, Stats* stats) {
 		nvgFontSize(args.vg, 13);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, -2);
@@ -286,13 +286,13 @@ struct ScopeDisplay : TransparentWidget {
 		nvgText(args.vg, pos.x, pos.y, text.c_str(), NULL);
 		text = "max ";
 		text += isNear(stats->vmax, 0.f, 100.f) ? string::f("% 6.2f", stats->vmax) : "  ---";
-		nvgText(args.vg, pos.x + 58*1, pos.y, text.c_str(), NULL);
+		nvgText(args.vg, pos.x + 58 * 1, pos.y, text.c_str(), NULL);
 		text = "min ";
 		text += isNear(stats->vmin, 0.f, 100.f) ? string::f("% 6.2f", stats->vmin) : "  ---";
-		nvgText(args.vg, pos.x + 58*2, pos.y, text.c_str(), NULL);
+		nvgText(args.vg, pos.x + 58 * 2, pos.y, text.c_str(), NULL);
 	}
 
-	void draw(const DrawArgs &args) override {
+	void draw(const DrawArgs& args) override {
 		if (!module)
 			return;
 
@@ -341,17 +341,17 @@ struct ScopeDisplay : TransparentWidget {
 
 
 struct ScopeWidget : ModuleWidget {
-	ScopeWidget(Scope *module) {
+	ScopeWidget(Scope* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Scope.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
 
 		{
-			ScopeDisplay *display = new ScopeDisplay();
+			ScopeDisplay* display = new ScopeDisplay();
 			display->module = module;
 			display->box.pos = Vec(0, 44);
 			display->box.size = Vec(box.size.x, 140);
@@ -379,4 +379,4 @@ struct ScopeWidget : ModuleWidget {
 };
 
 
-Model *modelScope = createModel<Scope, ScopeWidget>("Scope");
+Model* modelScope = createModel<Scope, ScopeWidget>("Scope");

@@ -28,7 +28,7 @@ struct VCA : Module {
 		configParam(LEVEL2_PARAM, 0.0, 1.0, 1.0, "Ch 2 level", "%", 0, 100);
 	}
 
-	void processChannel(Input &in, Param &level, Input &lin, Input &exp, Output &out) {
+	void processChannel(Input& in, Param& level, Input& lin, Input& exp, Output& out) {
 		// Get input
 		int channels = std::max(in.getChannels(), 1);
 		simd::float_4 v[4];
@@ -88,7 +88,7 @@ struct VCA : Module {
 		}
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		processChannel(inputs[IN1_INPUT], params[LEVEL1_PARAM], inputs[LIN1_INPUT], inputs[EXP1_INPUT], outputs[OUT1_OUTPUT]);
 		processChannel(inputs[IN2_INPUT], params[LEVEL2_PARAM], inputs[LIN2_INPUT], inputs[EXP2_INPUT], outputs[OUT2_OUTPUT]);
 	}
@@ -97,7 +97,7 @@ struct VCA : Module {
 
 
 struct VCAWidget : ModuleWidget {
-	VCAWidget(VCA *module) {
+	VCAWidget(VCA* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/VCA.svg")));
 
@@ -122,7 +122,7 @@ struct VCAWidget : ModuleWidget {
 };
 
 
-Model *modelVCA = createModel<VCA, VCAWidget>("VCA");
+Model* modelVCA = createModel<VCA, VCAWidget>("VCA");
 
 
 struct VCA_1 : Module {
@@ -153,7 +153,7 @@ struct VCA_1 : Module {
 		configParam(EXP_PARAM, 0.0, 1.0, 1.0, "Response mode");
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		int channels = std::max(inputs[IN_INPUT].getChannels(), 1);
 		float level = params[LEVEL_PARAM].getValue();
 
@@ -185,13 +185,13 @@ struct VCA_1 : Module {
 
 
 struct VCA_1VUKnob : SliderKnob {
-	VCA_1 *module = NULL;
+	VCA_1* module = NULL;
 
 	VCA_1VUKnob() {
 		box.size = mm2px(Vec(10, 46));
 	}
 
-	void draw(const DrawArgs &args) override {
+	void draw(const DrawArgs& args) override {
 		nvgBeginPath(args.vg);
 		nvgRoundedRect(args.vg, 0, 0, box.size.x, box.size.y, 2.0);
 		nvgFillColor(args.vg, nvgRGB(0, 0, 0));
@@ -206,10 +206,10 @@ struct VCA_1VUKnob : SliderKnob {
 		// Segment value
 		nvgBeginPath(args.vg);
 		nvgRect(args.vg,
-			r.pos.x,
-			r.pos.y + r.size.y * (1 - value),
-			r.size.x,
-			r.size.y * value);
+		        r.pos.x,
+		        r.pos.y + r.size.y * (1 - value),
+		        r.size.x,
+		        r.size.y * value);
 		nvgFillColor(args.vg, color::mult(color::WHITE, 0.33));
 		nvgFill(args.vg);
 
@@ -219,10 +219,10 @@ struct VCA_1VUKnob : SliderKnob {
 			float gain = module ? module->lastGains[c] : 1.f;
 			if (gain >= 0.005f) {
 				nvgRect(args.vg,
-					r.pos.x + r.size.x * c / channels,
-					r.pos.y + r.size.y * (1 - gain),
-					r.size.x / channels,
-					r.size.y * gain);
+				        r.pos.x + r.size.x * c / channels,
+				        r.pos.y + r.size.y * (1 - gain),
+				        r.size.x / channels,
+				        r.size.y * gain);
 			}
 		}
 		nvgFillColor(args.vg, SCHEME_GREEN);
@@ -233,10 +233,10 @@ struct VCA_1VUKnob : SliderKnob {
 		nvgBeginPath(args.vg);
 		for (int i = 1; i <= segs; i++) {
 			nvgRect(args.vg,
-				r.pos.x - 1.0,
-				r.pos.y + r.size.y * i / segs,
-				r.size.x + 2.0,
-				1.0);
+			        r.pos.x - 1.0,
+			        r.pos.y + r.size.y * i / segs,
+			        r.size.x + 2.0,
+			        1.0);
 		}
 		nvgFillColor(args.vg, color::BLACK);
 		nvgFill(args.vg);
@@ -245,7 +245,7 @@ struct VCA_1VUKnob : SliderKnob {
 
 
 struct VCA_1Widget : ModuleWidget {
-	VCA_1Widget(VCA_1 *module) {
+	VCA_1Widget(VCA_1* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/VCA-1.svg")));
 
@@ -254,7 +254,7 @@ struct VCA_1Widget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		VCA_1VUKnob *levelParam = createParam<VCA_1VUKnob>(mm2px(Vec(2.62103, 12.31692)), module, VCA_1::LEVEL_PARAM);
+		VCA_1VUKnob* levelParam = createParam<VCA_1VUKnob>(mm2px(Vec(2.62103, 12.31692)), module, VCA_1::LEVEL_PARAM);
 		levelParam->module = module;
 		addParam(levelParam);
 		addParam(createParam<CKSS>(mm2px(Vec(5.24619, 79.9593)), module, VCA_1::EXP_PARAM));
@@ -267,4 +267,4 @@ struct VCA_1Widget : ModuleWidget {
 };
 
 
-Model *modelVCA_1 = createModel<VCA_1, VCA_1Widget>("VCA-1");
+Model* modelVCA_1 = createModel<VCA_1, VCA_1Widget>("VCA-1");

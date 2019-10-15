@@ -25,7 +25,7 @@ struct _8vert : Module {
 		}
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		float in[16] = {10.f};
 		int channels = 1;
 
@@ -54,7 +54,7 @@ struct _8vert : Module {
 
 
 struct _8vertWidget : ModuleWidget {
-	_8vertWidget(_8vert *module) {
+	_8vertWidget(_8vert* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/8vert.svg")));
 
@@ -93,4 +93,4 @@ struct _8vertWidget : ModuleWidget {
 };
 
 
-Model *model_8vert = createModel<_8vert, _8vertWidget>("8vert");
+Model* model_8vert = createModel<_8vert, _8vertWidget>("8vert");

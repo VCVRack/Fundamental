@@ -39,7 +39,7 @@ struct VCMixer : Module {
 		lightDivider.setDivision(512);
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		float mix[16] = {};
 		int maxChannels = 1;
 
@@ -123,7 +123,7 @@ struct VCMixer : Module {
 
 
 struct VCMixerWidget : ModuleWidget {
-	VCMixerWidget(VCMixer *module) {
+	VCMixerWidget(VCMixer* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/VCMixer.svg")));
 
@@ -158,4 +158,4 @@ struct VCMixerWidget : ModuleWidget {
 };
 
 
-Model *modelVCMixer = createModel<VCMixer, VCMixerWidget>("VCMixer");
+Model* modelVCMixer = createModel<VCMixer, VCMixerWidget>("VCMixer");

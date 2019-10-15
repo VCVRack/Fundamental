@@ -33,7 +33,7 @@ struct Sum : Module {
 		lightDivider.setDivision(256);
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		float sum = inputs[POLY_INPUT].getVoltageSum();
 		sum *= params[LEVEL_PARAM].getValue();
 		outputs[MONO_OUTPUT].setVoltage(sum);
@@ -59,7 +59,7 @@ struct Sum : Module {
 
 
 struct SumWidget : ModuleWidget {
-	SumWidget(Sum *module) {
+	SumWidget(Sum* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Sum.svg")));
 
@@ -101,4 +101,4 @@ struct SumWidget : ModuleWidget {
 };
 
 
-Model *modelSum = createModel<Sum, SumWidget>("Sum");
+Model* modelSum = createModel<Sum, SumWidget>("Sum");

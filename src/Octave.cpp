@@ -24,7 +24,7 @@ struct Octave : Module {
 		configParam(OCTAVE_PARAM, -4.f, 4.f, 0.f, "Octave shift");
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
 		float octaveParam = params[OCTAVE_PARAM].getValue();
 
@@ -38,9 +38,9 @@ struct Octave : Module {
 		outputs[PITCH_OUTPUT].setChannels(channels);
 	}
 
-	void dataFromJson(json_t *rootJ) override {
+	void dataFromJson(json_t* rootJ) override {
 		// In Fundamental 1.1.1 and earlier, the octave param was internal data.
-		json_t *octaveJ = json_object_get(rootJ, "octave");
+		json_t* octaveJ = json_object_get(rootJ, "octave");
 		if (octaveJ) {
 			params[OCTAVE_PARAM].setValue(json_integer_value(octaveJ));
 		}
@@ -51,11 +51,11 @@ struct Octave : Module {
 struct OctaveButton : Widget {
 	int octave;
 
-	void draw(const DrawArgs &args) override {
+	void draw(const DrawArgs& args) override {
 		Vec c = box.size.div(2);
 
 		int activeOctave = 0;
-		ParamWidget *paramWidget = getAncestorOfType<ParamWidget>();
+		ParamWidget* paramWidget = getAncestorOfType<ParamWidget>();
 		if (paramWidget && paramWidget->paramQuantity) {
 			activeOctave = std::round(paramWidget->paramQuantity->getValue());
 		}
@@ -63,7 +63,7 @@ struct OctaveButton : Widget {
 		if (activeOctave == octave) {
 			// Enabled
 			nvgBeginPath(args.vg);
-			nvgCircle(args.vg, c.x, c.y, mm2px(4.0/2));
+			nvgCircle(args.vg, c.x, c.y, mm2px(4.0 / 2));
 			if (octave < 0)
 				nvgFillColor(args.vg, color::RED);
 			else if (octave > 0)
@@ -75,32 +75,32 @@ struct OctaveButton : Widget {
 		else {
 			// Disabled
 			nvgBeginPath(args.vg);
-			nvgCircle(args.vg, c.x, c.y, mm2px(4.0/2));
+			nvgCircle(args.vg, c.x, c.y, mm2px(4.0 / 2));
 			nvgFillColor(args.vg, color::alpha(color::WHITE, 0.33));
 			nvgFill(args.vg);
 
 			nvgBeginPath(args.vg);
-			nvgCircle(args.vg, c.x, c.y, mm2px(3.0/2));
+			nvgCircle(args.vg, c.x, c.y, mm2px(3.0 / 2));
 			nvgFillColor(args.vg, color::BLACK);
 			nvgFill(args.vg);
 
 			if (octave == 0) {
 				nvgBeginPath(args.vg);
-				nvgCircle(args.vg, c.x, c.y, mm2px(1.0/2));
+				nvgCircle(args.vg, c.x, c.y, mm2px(1.0 / 2));
 				nvgFillColor(args.vg, color::alpha(color::WHITE, 0.33));
 				nvgFill(args.vg);
 			}
 		}
 	}
 
-	void onDragHover(const event::DragHover &e) override {
+	void onDragHover(const event::DragHover& e) override {
 		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
 			e.consume(this);
 		}
 		Widget::onDragHover(e);
 	}
 
-	void onDragEnter(const event::DragEnter &e) override;
+	void onDragEnter(const event::DragEnter& e) override;
 };
 
 
@@ -109,9 +109,9 @@ struct OctaveParam : ParamWidget {
 		box.size = mm2px(Vec(15.24, 63.0));
 		const int octaves = 9;
 		const float margin = mm2px(2.0);
-		float height = box.size.y - 2*margin;
+		float height = box.size.y - 2 * margin;
 		for (int i = 0; i < octaves; i++) {
-			OctaveButton *octaveButton = new OctaveButton();
+			OctaveButton* octaveButton = new OctaveButton();
 			octaveButton->box.pos = Vec(0, height / octaves * i + margin);
 			octaveButton->box.size = Vec(box.size.x, height / octaves);
 			octaveButton->octave = 4 - i;
@@ -119,7 +119,7 @@ struct OctaveParam : ParamWidget {
 		}
 	}
 
-	void draw(const DrawArgs &args) override {
+	void draw(const DrawArgs& args) override {
 		// Background
 		nvgBeginPath(args.vg);
 		nvgRect(args.vg, 0, 0, box.size.x, box.size.y);
@@ -131,11 +131,11 @@ struct OctaveParam : ParamWidget {
 };
 
 
-inline void OctaveButton::onDragEnter(const event::DragEnter &e) {
+inline void OctaveButton::onDragEnter(const event::DragEnter& e) {
 	if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
-		OctaveParam *origin = dynamic_cast<OctaveParam*>(e.origin);
+		OctaveParam* origin = dynamic_cast<OctaveParam*>(e.origin);
 		if (origin) {
-			ParamWidget *paramWidget = getAncestorOfType<ParamWidget>();
+			ParamWidget* paramWidget = getAncestorOfType<ParamWidget>();
 			if (paramWidget && paramWidget->paramQuantity) {
 				paramWidget->paramQuantity->setValue(octave);
 			}
@@ -147,7 +147,7 @@ inline void OctaveButton::onDragEnter(const event::DragEnter &e) {
 
 
 struct OctaveWidget : ModuleWidget {
-	OctaveWidget(Octave *module) {
+	OctaveWidget(Octave* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Octave.svg")));
 
@@ -164,4 +164,4 @@ struct OctaveWidget : ModuleWidget {
 };
 
 
-Model *modelOctave = createModel<Octave, OctaveWidget>("Octave");
+Model* modelOctave = createModel<Octave, OctaveWidget>("Octave");

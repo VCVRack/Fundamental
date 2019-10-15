@@ -25,7 +25,7 @@ struct Split : Module {
 		lightDivider.setDivision(512);
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		for (int c = 0; c < 16; c++) {
 			float v = inputs[POLY_INPUT].getVoltage(c);
 			// To allow users to debug buggy modules, don't assume that undefined channel voltages are 0V.
@@ -44,7 +44,7 @@ struct Split : Module {
 
 
 struct SplitWidget : ModuleWidget {
-	SplitWidget(Split *module) {
+	SplitWidget(Split* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Split.svg")));
 
@@ -92,4 +92,4 @@ struct SplitWidget : ModuleWidget {
 };
 
 
-Model *modelSplit = createModel<Split, SplitWidget>("Split");
+Model* modelSplit = createModel<Split, SplitWidget>("Split");

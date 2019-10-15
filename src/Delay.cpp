@@ -27,7 +27,7 @@ struct Delay : Module {
 
 	dsp::DoubleRingBuffer<float, HISTORY_SIZE> historyBuffer;
 	dsp::DoubleRingBuffer<float, 16> outBuffer;
-	SRC_STATE *src;
+	SRC_STATE* src;
 	float lastWet = 0.f;
 	dsp::RCFilter lowpassFilter;
 	dsp::RCFilter highpassFilter;
@@ -47,7 +47,7 @@ struct Delay : Module {
 		src_delete(src);
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		// Get input to delay block
 		float in = inputs[IN_INPUT].getVoltage();
 		float feedback = params[FEEDBACK_PARAM].getValue() + inputs[FEEDBACK_INPUT].getVoltage() / 10.f;
@@ -119,14 +119,14 @@ struct Delay : Module {
 
 
 struct DelayWidget : ModuleWidget {
-	DelayWidget(Delay *module) {
+	DelayWidget(Delay* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Delay.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
 
 		addParam(createParam<RoundLargeBlackKnob>(Vec(67, 57), module, Delay::TIME_PARAM));
 		addParam(createParam<RoundLargeBlackKnob>(Vec(67, 123), module, Delay::FEEDBACK_PARAM));
@@ -143,4 +143,4 @@ struct DelayWidget : ModuleWidget {
 };
 
 
-Model *modelDelay = createModel<Delay, DelayWidget>("Delay");
+Model* modelDelay = createModel<Delay, DelayWidget>("Delay");

@@ -31,7 +31,7 @@ struct Merge : Module {
 		channels = -1;
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		int lastChannel = -1;
 		for (int c = 0; c < 16; c++) {
 			float v = 0.f;
@@ -54,14 +54,14 @@ struct Merge : Module {
 		}
 	}
 
-	json_t *dataToJson() override {
-		json_t *rootJ = json_object();
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
 		json_object_set_new(rootJ, "channels", json_integer(channels));
 		return rootJ;
 	}
 
-	void dataFromJson(json_t *rootJ) override {
-		json_t *channelsJ = json_object_get(rootJ, "channels");
+	void dataFromJson(json_t* rootJ) override {
+		json_t* channelsJ = json_object_get(rootJ, "channels");
 		if (channelsJ)
 			channels = json_integer_value(channelsJ);
 	}
@@ -69,20 +69,20 @@ struct Merge : Module {
 
 
 struct MergeChannelItem : MenuItem {
-	Merge *module;
+	Merge* module;
 	int channels;
-	void onAction(const event::Action &e) override {
+	void onAction(const event::Action& e) override {
 		module->channels = channels;
 	}
 };
 
 
 struct MergeChannelsItem : MenuItem {
-	Merge *module;
-	Menu *createChildMenu() override {
-		Menu *menu = new Menu;
+	Merge* module;
+	Menu* createChildMenu() override {
+		Menu* menu = new Menu;
 		for (int channels = -1; channels <= 16; channels++) {
-			MergeChannelItem *item = new MergeChannelItem;
+			MergeChannelItem* item = new MergeChannelItem;
 			if (channels < 0)
 				item->text = "Automatic";
 			else
@@ -98,7 +98,7 @@ struct MergeChannelsItem : MenuItem {
 
 
 struct MergeWidget : ModuleWidget {
-	MergeWidget(Merge *module) {
+	MergeWidget(Merge* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Merge.svg")));
 
@@ -144,12 +144,12 @@ struct MergeWidget : ModuleWidget {
 		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(21.276, 23.775)), module, Merge::CHANNEL_LIGHTS + 15));
 	}
 
-	void appendContextMenu(Menu *menu) override {
-		Merge *module = dynamic_cast<Merge*>(this->module);
+	void appendContextMenu(Menu* menu) override {
+		Merge* module = dynamic_cast<Merge*>(this->module);
 
 		menu->addChild(new MenuEntry);
 
-		MergeChannelsItem *channelsItem = new MergeChannelsItem;
+		MergeChannelsItem* channelsItem = new MergeChannelsItem;
 		channelsItem->text = "Channels";
 		channelsItem->rightText = RIGHT_ARROW;
 		channelsItem->module = module;
@@ -158,4 +158,4 @@ struct MergeWidget : ModuleWidget {
 };
 
 
-Model *modelMerge = createModel<Merge, MergeWidget>("Merge");
+Model* modelMerge = createModel<Merge, MergeWidget>("Merge");

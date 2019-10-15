@@ -37,32 +37,43 @@ struct LowFrequencyOscillator {
 	}
 	T sin() {
 		T p = phase;
-		if (!bipolar) p -= 0.25f;
-		T v = simd::sin(2*M_PI * p);
-		if (invert) v *= -1.f;
-		if (!bipolar) v += 1.f;
+		if (!bipolar)
+			p -= 0.25f;
+		T v = simd::sin(2 * M_PI * p);
+		if (invert)
+			v *= -1.f;
+		if (!bipolar)
+			v += 1.f;
 		return v;
 	}
 	T tri() {
 		T p = phase;
-		if (bipolar) p += 0.25f;
+		if (bipolar)
+			p += 0.25f;
 		T v = 4.f * simd::fabs(p - simd::round(p)) - 1.f;
-		if (invert) v *= -1.f;
-		if (!bipolar) v += 1.f;
+		if (invert)
+			v *= -1.f;
+		if (!bipolar)
+			v += 1.f;
 		return v;
 	}
 	T saw() {
 		T p = phase;
-		if (!bipolar) p -= 0.5f;
+		if (!bipolar)
+			p -= 0.5f;
 		T v = 2.f * (p - simd::round(p));
-		if (invert) v *= -1.f;
-		if (!bipolar) v += 1.f;
+		if (invert)
+			v *= -1.f;
+		if (!bipolar)
+			v += 1.f;
 		return v;
 	}
 	T sqr() {
 		T v = simd::ifelse(phase < pw, 1.f, -1.f);
-		if (invert) v *= -1.f;
-		if (!bipolar) v += 1.f;
+		if (invert)
+			v *= -1.f;
+		if (!bipolar)
+			v += 1.f;
 		return v;
 	}
 	T light() {
@@ -116,7 +127,7 @@ struct LFO : Module {
 		lightDivider.setDivision(16);
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		float freqParam = params[FREQ_PARAM].getValue();
 		float fm1Param = params[FM1_PARAM].getValue();
 		float fm2Param = params[FM2_PARAM].getValue();
@@ -126,7 +137,7 @@ struct LFO : Module {
 		int channels = std::max(1, inputs[FM1_INPUT].getChannels());
 
 		for (int c = 0; c < channels; c += 4) {
-			auto *oscillator = &oscillators[c / 4];
+			auto* oscillator = &oscillators[c / 4];
 			oscillator->invert = (params[INVERT_PARAM].getValue() == 0.f);
 			oscillator->bipolar = (params[OFFSET_PARAM].getValue() == 0.f);
 
@@ -180,14 +191,14 @@ struct LFO : Module {
 
 
 struct LFOWidget : ModuleWidget {
-	LFOWidget(LFO *module) {
+	LFOWidget(LFO* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/LFO-1.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
 
 		addParam(createParam<CKSS>(Vec(15, 77), module, LFO::OFFSET_PARAM));
 		addParam(createParam<CKSS>(Vec(119, 77), module, LFO::INVERT_PARAM));
@@ -213,7 +224,7 @@ struct LFOWidget : ModuleWidget {
 };
 
 
-Model *modelLFO = createModel<LFO, LFOWidget>("LFO");
+Model* modelLFO = createModel<LFO, LFOWidget>("LFO");
 
 
 struct LFO2 : Module {
@@ -253,7 +264,7 @@ struct LFO2 : Module {
 		lightDivider.setDivision(16);
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		float freqParam = params[FREQ_PARAM].getValue();
 		float fmParam = params[FM_PARAM].getValue();
 		float waveParam = params[WAVE_PARAM].getValue();
@@ -261,7 +272,7 @@ struct LFO2 : Module {
 		int channels = std::max(1, inputs[FM_INPUT].getChannels());
 
 		for (int c = 0; c < channels; c += 4) {
-			auto *oscillator = &oscillators[c / 4];
+			auto* oscillator = &oscillators[c / 4];
 			oscillator->invert = (params[INVERT_PARAM].getValue() == 0.f);
 			oscillator->bipolar = (params[OFFSET_PARAM].getValue() == 0.f);
 
@@ -304,14 +315,14 @@ struct LFO2 : Module {
 
 
 struct LFO2Widget : ModuleWidget {
-	LFO2Widget(LFO2 *module) {
+	LFO2Widget(LFO2* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/LFO-2.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x-30, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
 
 		addParam(createParam<CKSS>(Vec(62, 150), module, LFO2::OFFSET_PARAM));
 		addParam(createParam<CKSS>(Vec(62, 215), module, LFO2::INVERT_PARAM));
@@ -331,4 +342,4 @@ struct LFO2Widget : ModuleWidget {
 };
 
 
-Model *modelLFO2 = createModel<LFO2, LFO2Widget>("LFO2");
+Model* modelLFO2 = createModel<LFO2, LFO2Widget>("LFO2");

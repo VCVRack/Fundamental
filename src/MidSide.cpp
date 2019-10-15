@@ -33,7 +33,7 @@ struct MidSide : Module {
 		configParam(DEC_WIDTH_PARAM, 0.f, 2.f, 1.f, "Decoder width", "%", 0, 100);
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		using simd::float_4;
 
 		// Encoder
@@ -78,7 +78,7 @@ struct MidSide : Module {
 
 
 struct MidSideWidget : ModuleWidget {
-	MidSideWidget(MidSide *module) {
+	MidSideWidget(MidSide* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/MidSide.svg")));
 
@@ -105,4 +105,4 @@ struct MidSideWidget : ModuleWidget {
 };
 
 
-Model *modelMidSide = createModel<MidSide, MidSideWidget>("MidSide");
+Model* modelMidSide = createModel<MidSide, MidSideWidget>("MidSide");

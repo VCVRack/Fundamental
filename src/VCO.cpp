@@ -9,14 +9,14 @@ template <typename T>
 T sin2pi_pade_05_7_6(T x) {
 	x -= 0.5f;
 	return (T(-6.28319) * x + T(35.353) * simd::pow(x, 3) - T(44.9043) * simd::pow(x, 5) + T(16.0951) * simd::pow(x, 7))
-		/ (1 + T(0.953136) * simd::pow(x, 2) + T(0.430238) * simd::pow(x, 4) + T(0.0981408) * simd::pow(x, 6));
+	       / (1 + T(0.953136) * simd::pow(x, 2) + T(0.430238) * simd::pow(x, 4) + T(0.0981408) * simd::pow(x, 6));
 }
 
 template <typename T>
 T sin2pi_pade_05_5_4(T x) {
 	x -= 0.5f;
 	return (T(-6.283185307) * x + T(33.19863968) * simd::pow(x, 3) - T(32.44191367) * simd::pow(x, 5))
-		/ (1 + T(1.296008659) * simd::pow(x, 2) + T(0.7028072946) * simd::pow(x, 4));
+	       / (1 + T(1.296008659) * simd::pow(x, 2) + T(0.7028072946) * simd::pow(x, 4));
 }
 
 template <typename T>
@@ -290,7 +290,7 @@ struct VCO : Module {
 		lightDivider.setDivision(16);
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		float freqParam = params[FREQ_PARAM].getValue() / 12.f;
 		freqParam += dsp::quadraticBipolar(params[FINE_PARAM].getValue()) * 3.f / 12.f;
 		float fmParam = dsp::quadraticBipolar(params[FM_PARAM].getValue());
@@ -298,7 +298,7 @@ struct VCO : Module {
 		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
 
 		for (int c = 0; c < channels; c += 4) {
-			auto *oscillator = &oscillators[c / 4];
+			auto* oscillator = &oscillators[c / 4];
 			oscillator->channels = std::min(channels - c, 4);
 			oscillator->analog = params[MODE_PARAM].getValue() > 0.f;
 			oscillator->soft = params[SYNC_PARAM].getValue() <= 0.f;
@@ -349,7 +349,7 @@ struct VCO : Module {
 
 
 struct VCOWidget : ModuleWidget {
-	VCOWidget(VCO *module) {
+	VCOWidget(VCO* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/VCO-1.svg")));
 
@@ -382,7 +382,7 @@ struct VCOWidget : ModuleWidget {
 };
 
 
-Model *modelVCO = createModel<VCO, VCOWidget>("VCO");
+Model* modelVCO = createModel<VCO, VCOWidget>("VCO");
 
 
 struct VCO2 : Module {
@@ -422,7 +422,7 @@ struct VCO2 : Module {
 		lightDivider.setDivision(16);
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		float freqParam = params[FREQ_PARAM].getValue() / 12.f;
 		float fmParam = dsp::quadraticBipolar(params[FM_PARAM].getValue());
 		float waveParam = params[WAVE_PARAM].getValue();
@@ -430,7 +430,7 @@ struct VCO2 : Module {
 		int channels = std::max(inputs[FM_INPUT].getChannels(), 1);
 
 		for (int c = 0; c < channels; c += 4) {
-			auto *oscillator = &oscillators[c / 4];
+			auto* oscillator = &oscillators[c / 4];
 			oscillator->channels = std::min(channels - c, 4);
 			oscillator->analog = (params[MODE_PARAM].getValue() > 0.f);
 			oscillator->soft = (params[SYNC_PARAM].getValue() <= 0.f);
@@ -477,7 +477,7 @@ struct VCO2 : Module {
 
 
 struct VCO2Widget : ModuleWidget {
-	VCO2Widget(VCO2 *module) {
+	VCO2Widget(VCO2* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/VCO-2.svg")));
 
@@ -504,4 +504,4 @@ struct VCO2Widget : ModuleWidget {
 };
 
 
-Model *modelVCO2 = createModel<VCO2, VCO2Widget>("VCO2");
+Model* modelVCO2 = createModel<VCO2, VCO2Widget>("VCO2");

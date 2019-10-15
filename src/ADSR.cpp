@@ -59,7 +59,7 @@ struct ADSR : Module {
 		lightDivider.setDivision(128);
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		// 0.16-0.19 us serial
 		// 0.23 us serial with all lambdas computed
 		// 0.15-0.18 us serial with all lambdas computed with SSE
@@ -149,7 +149,7 @@ struct ADSR : Module {
 
 
 struct ADSRWidget : ModuleWidget {
-	ADSRWidget(ADSR *module) {
+	ADSRWidget(ADSR* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/ADSR.svg")));
 
@@ -180,4 +180,4 @@ struct ADSRWidget : ModuleWidget {
 };
 
 
-Model *modelADSR = createModel<ADSR, ADSRWidget>("ADSR");
+Model* modelADSR = createModel<ADSR, ADSRWidget>("ADSR");

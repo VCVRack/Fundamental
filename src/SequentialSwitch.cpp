@@ -40,7 +40,7 @@ struct SequentialSwitch : Module {
 		lightDivider.setDivision(512);
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		// Determine current index
 		if (clockTrigger.process(rescale(inputs[CLOCK_INPUT].getVoltage(), 0.1f, 2.f, 0.f, 1.f))) {
 			index++;
@@ -107,7 +107,7 @@ struct SequentialSwitch : Module {
 struct SequentialSwitch1Widget : ModuleWidget {
 	typedef SequentialSwitch<1, 4> TSequentialSwitch;
 
-	SequentialSwitch1Widget(TSequentialSwitch *module) {
+	SequentialSwitch1Widget(TSequentialSwitch* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SequentialSwitch1.svg")));
 
@@ -133,13 +133,13 @@ struct SequentialSwitch1Widget : ModuleWidget {
 };
 
 
-Model *modelSequentialSwitch1 = createModel<SequentialSwitch<1, 4>, SequentialSwitch1Widget>("SequentialSwitch1");
+Model* modelSequentialSwitch1 = createModel<SequentialSwitch<1, 4>, SequentialSwitch1Widget>("SequentialSwitch1");
 
 
 struct SequentialSwitch2Widget : ModuleWidget {
 	typedef SequentialSwitch<4, 1> TSequentialSwitch;
 
-	SequentialSwitch2Widget(TSequentialSwitch *module) {
+	SequentialSwitch2Widget(TSequentialSwitch* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SequentialSwitch2.svg")));
 
@@ -165,4 +165,4 @@ struct SequentialSwitch2Widget : ModuleWidget {
 };
 
 
-Model *modelSequentialSwitch2 = createModel<SequentialSwitch<4, 1>, SequentialSwitch2Widget>("SequentialSwitch2");
+Model* modelSequentialSwitch2 = createModel<SequentialSwitch<4, 1>, SequentialSwitch2Widget>("SequentialSwitch2");

@@ -25,13 +25,13 @@ struct Mutes : Module {
 	Mutes() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		for (int i = 0; i < 10; i++) {
-			configParam(MUTE_PARAM + i, 0.0, 1.0, 0.0, string::f("Ch %d mute", i+1));
+			configParam(MUTE_PARAM + i, 0.0, 1.0, 0.0, string::f("Ch %d mute", i + 1));
 		}
 
 		onReset();
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		const float zero[16] = {};
 		float out[16] = {};
 		int channels = 1;
@@ -71,13 +71,13 @@ struct Mutes : Module {
 		}
 	}
 
-	json_t *dataToJson() override {
-		json_t *rootJ = json_object();
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
 
 		// states
-		json_t *statesJ = json_array();
+		json_t* statesJ = json_array();
 		for (int i = 0; i < 10; i++) {
-			json_t *stateJ = json_boolean(state[i]);
+			json_t* stateJ = json_boolean(state[i]);
 			json_array_append_new(statesJ, stateJ);
 		}
 		json_object_set_new(rootJ, "states", statesJ);
@@ -85,12 +85,12 @@ struct Mutes : Module {
 		return rootJ;
 	}
 
-	void dataFromJson(json_t *rootJ) override {
+	void dataFromJson(json_t* rootJ) override {
 		// states
-		json_t *statesJ = json_object_get(rootJ, "states");
+		json_t* statesJ = json_object_get(rootJ, "states");
 		if (statesJ) {
 			for (int i = 0; i < 10; i++) {
-				json_t *stateJ = json_array_get(statesJ, i);
+				json_t* stateJ = json_array_get(statesJ, i);
 				if (stateJ)
 					state[i] = json_boolean_value(stateJ);
 			}
@@ -108,7 +108,7 @@ struct MuteLight : BASE {
 
 
 struct MutesWidget : ModuleWidget {
-	MutesWidget(Mutes *module) {
+	MutesWidget(Mutes* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Mutes.svg")));
 
@@ -164,4 +164,4 @@ struct MutesWidget : ModuleWidget {
 };
 
 
-Model *modelMutes = createModel<Mutes, MutesWidget>("Mutes");
+Model* modelMutes = createModel<Mutes, MutesWidget>("Mutes");

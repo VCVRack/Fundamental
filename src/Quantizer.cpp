@@ -41,7 +41,7 @@ struct Quantizer : Module {
 		updateRanges();
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		bool playingNotes[12] = {};
 		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
 
@@ -91,10 +91,10 @@ struct Quantizer : Module {
 		}
 	}
 
-	json_t *dataToJson() override {
-		json_t *rootJ = json_object();
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
 
-		json_t *enabledNotesJ = json_array();
+		json_t* enabledNotesJ = json_array();
 		for (int i = 0; i < 12; i++) {
 			json_array_insert_new(enabledNotesJ, i, json_boolean(enabledNotes[i]));
 		}
@@ -103,11 +103,11 @@ struct Quantizer : Module {
 		return rootJ;
 	}
 
-	void dataFromJson(json_t *rootJ) override {
-		json_t *enabledNotesJ = json_object_get(rootJ, "enabledNotes");
+	void dataFromJson(json_t* rootJ) override {
+		json_t* enabledNotesJ = json_object_get(rootJ, "enabledNotes");
 		if (enabledNotesJ) {
 			for (int i = 0; i < 12; i++) {
-				json_t *enabledNoteJ = json_array_get(enabledNotesJ, i);
+				json_t* enabledNoteJ = json_array_get(enabledNotesJ, i);
 				if (enabledNoteJ)
 					enabledNotes[i] = json_boolean_value(enabledNoteJ);
 			}
@@ -119,9 +119,9 @@ struct Quantizer : Module {
 
 struct QuantizerButton : OpaqueWidget {
 	int note;
-	Quantizer *module;
+	Quantizer* module;
 
-	void draw(const DrawArgs &args) override {
+	void draw(const DrawArgs& args) override {
 		const float margin = mm2px(1.5);
 		Rect r = box.zeroPos().grow(Vec(margin, margin / 2).neg());
 		nvgBeginPath(args.vg);
@@ -138,7 +138,7 @@ struct QuantizerButton : OpaqueWidget {
 		nvgFill(args.vg);
 	}
 
-	void onDragStart(const event::DragStart &e) override {
+	void onDragStart(const event::DragStart& e) override {
 		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
 			module->enabledNotes[note] ^= true;
 			module->updateRanges();
@@ -146,9 +146,9 @@ struct QuantizerButton : OpaqueWidget {
 		OpaqueWidget::onDragStart(e);
 	}
 
-	void onDragEnter(const event::DragEnter &e) override {
+	void onDragEnter(const event::DragEnter& e) override {
 		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
-			QuantizerButton *origin = dynamic_cast<QuantizerButton*>(e.origin);
+			QuantizerButton* origin = dynamic_cast<QuantizerButton*>(e.origin);
 			if (origin) {
 				module->enabledNotes[note] = module->enabledNotes[origin->note];;
 				module->updateRanges();
@@ -160,13 +160,13 @@ struct QuantizerButton : OpaqueWidget {
 
 
 struct QuantizerDisplay : OpaqueWidget {
-	void setModule(Quantizer *module) {
+	void setModule(Quantizer* module) {
 		const float margin = mm2px(1.5) / 2;
 		box.size = mm2px(Vec(15.24, 72.0));
 		const int notes = 12;
 		const float height = box.size.y - 2 * margin;
 		for (int note = 0; note < notes; note++) {
-			QuantizerButton *quantizerButton = new QuantizerButton();
+			QuantizerButton* quantizerButton = new QuantizerButton();
 			quantizerButton->box.pos = Vec(0, margin + height / notes * note);
 			quantizerButton->box.size = Vec(box.size.x, height / notes);
 			quantizerButton->module = module;
@@ -175,7 +175,7 @@ struct QuantizerDisplay : OpaqueWidget {
 		}
 	}
 
-	void draw(const DrawArgs &args) override {
+	void draw(const DrawArgs& args) override {
 		// Background
 		nvgBeginPath(args.vg);
 		nvgRect(args.vg, 0, 0, box.size.x, box.size.y);
@@ -188,7 +188,7 @@ struct QuantizerDisplay : OpaqueWidget {
 
 
 struct QuantizerWidget : ModuleWidget {
-	QuantizerWidget(Quantizer *module) {
+	QuantizerWidget(Quantizer* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Quantizer.svg")));
 
@@ -199,11 +199,11 @@ struct QuantizerWidget : ModuleWidget {
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 112.253)), module, Quantizer::PITCH_OUTPUT));
 
-		QuantizerDisplay *quantizerDisplay = createWidget<QuantizerDisplay>(mm2px(Vec(0.0, 14.585)));
+		QuantizerDisplay* quantizerDisplay = createWidget<QuantizerDisplay>(mm2px(Vec(0.0, 14.585)));
 		quantizerDisplay->setModule(module);
 		addChild(quantizerDisplay);
 	}
 };
 
 
-Model *modelQuantizer = createModel<Quantizer, QuantizerWidget>("Quantizer");
+Model* modelQuantizer = createModel<Quantizer, QuantizerWidget>("Quantizer");

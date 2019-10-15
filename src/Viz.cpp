@@ -25,7 +25,7 @@ struct Viz : Module {
 		lightDivider.setDivision(16);
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		if (lightDivider.process()) {
 			lastChannel = inputs[POLY_INPUT].getChannels();
 			float deltaTime = args.sampleTime * lightDivider.getDivision();
@@ -41,7 +41,7 @@ struct Viz : Module {
 
 
 struct VizDisplay : Widget {
-	Viz *module;
+	Viz* module;
 	std::shared_ptr<Font> font;
 
 	VizDisplay() {
@@ -49,7 +49,7 @@ struct VizDisplay : Widget {
 		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/nunito/Nunito-Bold.ttf"));
 	}
 
-	void draw(const DrawArgs &args) override {
+	void draw(const DrawArgs& args) override {
 		for (int c = 0; c < 16; c++) {
 			Vec p = Vec(15, 16 + (float) c / 16 * (box.size.y - 10));
 			std::string text = string::f("%d", c + 1);
@@ -69,7 +69,7 @@ struct VizDisplay : Widget {
 
 
 struct VizWidget : ModuleWidget {
-	VizWidget(Viz *module) {
+	VizWidget(Viz* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Viz.svg")));
 
@@ -97,11 +97,11 @@ struct VizWidget : ModuleWidget {
 		addChild(createLightCentered<SmallLight<GreenRedLight>>(mm2px(Vec(10.854, 107.681)), module, Viz::VU_LIGHTS + 14 * 2));
 		addChild(createLightCentered<SmallLight<GreenRedLight>>(mm2px(Vec(10.854, 112.971)), module, Viz::VU_LIGHTS + 15 * 2));
 
-		VizDisplay *vizDisplay = createWidget<VizDisplay>(mm2px(Vec(0.0, 29.235)));
+		VizDisplay* vizDisplay = createWidget<VizDisplay>(mm2px(Vec(0.0, 29.235)));
 		vizDisplay->module = module;
 		addChild(vizDisplay);
 	}
 };
 
 
-Model *modelViz = createModel<Viz, VizWidget>("Viz");
+Model* modelViz = createModel<Viz, VizWidget>("Viz");

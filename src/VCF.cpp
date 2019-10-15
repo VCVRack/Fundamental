@@ -57,7 +57,7 @@ struct LadderFilter {
 	}
 	T highpass() {
 		// TODO This is incorrect when `resonance > 0`. Is the math wrong?
-		return clip((input - resonance*state[3]) - 4 * state[0] + 6*state[1] - 4*state[2] + state[3]);
+		return clip((input - resonance * state[3]) - 4 * state[0] + 6 * state[1] - 4 * state[2] + state[3]);
 	}
 };
 
@@ -106,7 +106,7 @@ struct VCF : Module {
 			filters[i].reset();
 	}
 
-	void process(const ProcessArgs &args) override {
+	void process(const ProcessArgs& args) override {
 		if (!outputs[LPF_OUTPUT].isConnected() && !outputs[HPF_OUTPUT].isConnected()) {
 			return;
 		}
@@ -123,7 +123,7 @@ struct VCF : Module {
 		int channels = std::max(1, inputs[IN_INPUT].getChannels());
 
 		for (int c = 0; c < channels; c += 4) {
-			auto *filter = &filters[c / 4];
+			auto* filter = &filters[c / 4];
 
 			float_4 input = float_4::load(inputs[IN_INPUT].getVoltages(c)) / 5.f;
 
@@ -186,7 +186,7 @@ struct VCF : Module {
 
 
 struct VCFWidget : ModuleWidget {
-	VCFWidget(VCF *module) {
+	VCFWidget(VCF* module) {
 		setModule(module);
 		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/VCF.svg")));
 
@@ -212,4 +212,4 @@ struct VCFWidget : ModuleWidget {
 };
 
 
-Model *modelVCF = createModel<VCF, VCFWidget>("VCF");
+Model* modelVCF = createModel<VCF, VCFWidget>("VCF");
