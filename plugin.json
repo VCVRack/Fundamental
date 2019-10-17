@@ -228,6 +228,22 @@
         "Quantizer",
         "Polyphonic"
       ]
+    },
+    {
+      "slug": "Random",
+      "name": "Random",
+      "description": "Random CV generator",
+      "tags": [
+        "Random"
+      ]
+    },
+    {
+      "slug": "Noise",
+      "name": "Noise",
+      "description": "Multicolored noise generator",
+      "tags": [
+        "Noise"
+      ]
     }
   ]
 }

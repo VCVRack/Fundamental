@@ -1,5 +1,7 @@
-### ??? (in development)
+### 1.3.0 (in development)
+- Add Random and Noise modules.
 - Make VCA-1 display polyphonic CV.
+- Add VU meters to level sliders in Mixer.
 
 ### 1.2.1 (2019-08-10)
 - Fix VCO hard sync bug, resulting in aliasing.
