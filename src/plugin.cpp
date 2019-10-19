@@ -25,11 +25,11 @@ void init(rack::Plugin* p) {
 	p->addModel(modelSequentialSwitch2);
 	p->addModel(modelOctave);
 	p->addModel(modelQuantizer);
-	p->addModel(modelRandom);
-	p->addModel(modelNoise);
 	p->addModel(modelSplit);
 	p->addModel(modelMerge);
 	p->addModel(modelSum);
 	p->addModel(modelViz);
 	p->addModel(modelMidSide);
+	p->addModel(modelNoise);
+	p->addModel(modelRandom);
 }
