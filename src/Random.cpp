@@ -184,8 +184,8 @@ struct RandomWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createLightParamCentered<LEDLightSlider<GreenLight>>(mm2px(Vec(7.215, 30.858)), module, Random::RATE_PARAM, Random::RATE_LIGHT));
-		addParam(createLightParamCentered<LEDLightSlider<GreenLight>>(mm2px(Vec(18.214, 30.858)), module, Random::SHAPE_PARAM, Random::SHAPE_LIGHT));
+		addParam(createLightParamCentered<LEDLightSliderFixed<GreenLight>>(mm2px(Vec(7.215, 30.858)), module, Random::RATE_PARAM, Random::RATE_LIGHT));
+		addParam(createLightParamCentered<LEDLightSliderFixed<GreenLight>>(mm2px(Vec(18.214, 30.858)), module, Random::SHAPE_PARAM, Random::SHAPE_LIGHT));
 		addParam(createParamCentered<CKSS>(mm2px(Vec(7.214, 78.259)), module, Random::OFFSET_PARAM));
 		addParam(createParamCentered<CKSS>(mm2px(Vec(18.214, 78.259)), module, Random::MODE_PARAM));
 

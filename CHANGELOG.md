@@ -1,4 +1,7 @@
-### 1.3.0 (in development)
+### 1.3.1 (2019-10-19)
+- Added missing LEDSliderHandle.svg from future version of Rack.
+
+### 1.3.0 (2019-10-19)
 - Add Random and Noise modules.
 - Make VCA-1 display polyphonic CV.
 - Add VU meters to level sliders in Mixer.
