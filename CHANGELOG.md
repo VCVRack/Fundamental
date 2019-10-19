@@ -1,5 +1,5 @@
 ### 1.3.1 (2019-10-19)
-- Added missing LEDSliderHandle.svg from future version of Rack.
+- Include LEDSliderHandle.svg from Rack v1.1.5 so older versions correctly render panels.
 
 ### 1.3.0 (2019-10-19)
 - Add Random and Noise modules.
