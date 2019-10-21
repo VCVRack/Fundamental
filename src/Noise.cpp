@@ -28,51 +28,6 @@ struct PinkNoiseGenerator {
 };
 
 
-/**
-a_0 is normalized to 1 and omitted from the `a` array, so its indices are shifted down by 1.
-*/
-template <int B_ORDER, int A_ORDER>
-struct IIRFilter {
-	float b[B_ORDER] = {};
-	float a[A_ORDER - 1] = {};
-	float xState[B_ORDER] = {};
-	float yState[A_ORDER - 1] = {};
-
-	void setCoefficients(const float* b, const float* a) {
-		for (int i = 0; i < B_ORDER; i++) {
-			this->b[i] = b[i];
-		}
-		for (int i = 1; i < A_ORDER; i++) {
-			this->a[i - 1] = a[i - 1];
-		}
-	}
-
-	float process(float x) {
-		// Shift x state
-		for (int i = B_ORDER - 1; i >= 1; i--) {
-			xState[i] = xState[i - 1];
-		}
-		xState[0] = x;
-
-		float y = 0.f;
-		// Add x state
-		for (int i = 0; i < B_ORDER; i++) {
-			y += b[i] * xState[i];
-		}
-		// Subtract y state
-		for (int i = 1; i < A_ORDER; i++) {
-			y -= a[i - 1] * yState[i - 1];
-		}
-		// Shift y state
-		for (int i = A_ORDER - 1; i >= 2; i--) {
-			yState[i - 1] = yState[i - 2];
-		}
-		yState[0] = y;
-		return y;
-	}
-};
-
-
 struct InverseAWeightingFFTFilter {
 	static constexpr int BUFFER_LEN = 1024;
 
@@ -134,7 +89,7 @@ struct Noise : Module {
 
 	dsp::ClockDivider blackDivider;
 	PinkNoiseGenerator<8> pinkNoiseGenerator;
-	IIRFilter<2, 2> redFilter;
+	dsp::IIRFilter<2, 2> redFilter;
 	float lastWhite = 0.f;
 	float lastPink = 0.f;
 	InverseAWeightingFFTFilter grayFilter;
