@@ -56,9 +56,10 @@ struct OctaveButton : Widget {
 
 		int activeOctave = 0;
 		ParamWidget* paramWidget = getAncestorOfType<ParamWidget>();
-		if (paramWidget && paramWidget->paramQuantity) {
-			activeOctave = std::round(paramWidget->paramQuantity->getValue());
-		}
+		assert(paramWidget);
+		engine::ParamQuantity* pq = paramWidget->getParamQuantity();
+		if (pq)
+			activeOctave = std::round(pq->getValue());
 
 		if (activeOctave == octave) {
 			// Enabled
@@ -136,8 +137,10 @@ inline void OctaveButton::onDragEnter(const event::DragEnter& e) {
 		OctaveParam* origin = dynamic_cast<OctaveParam*>(e.origin);
 		if (origin) {
 			ParamWidget* paramWidget = getAncestorOfType<ParamWidget>();
-			if (paramWidget && paramWidget->paramQuantity) {
-				paramWidget->paramQuantity->setValue(octave);
+			assert(paramWidget);
+			engine::ParamQuantity* pq = paramWidget->getParamQuantity();
+			if (pq) {
+				pq->setValue(octave);
 			}
 		}
 	}

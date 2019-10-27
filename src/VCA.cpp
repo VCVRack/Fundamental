@@ -201,7 +201,8 @@ struct VCA_1VUKnob : SliderKnob {
 		Rect r = box.zeroPos().grow(margin.neg());
 
 		int channels = module ? module->lastChannels : 1;
-		float value = paramQuantity ? paramQuantity->getValue() : 1.f;
+		engine::ParamQuantity* pq = getParamQuantity();
+		float value = pq ? pq->getValue() : 1.f;
 
 		// Segment value
 		nvgBeginPath(args.vg);
