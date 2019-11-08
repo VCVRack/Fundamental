@@ -1,3 +1,6 @@
+### 1.4.0 (2019-11-08)
+- Add Pulses.
+
 ### 1.3.1 (2019-10-19)
 - Include LEDSliderHandle.svg from Rack v1.1.5 so older versions correctly render panels.
 

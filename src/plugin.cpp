@@ -19,6 +19,7 @@ void init(rack::Plugin* p) {
 	p->addModel(model_8vert);
 	p->addModel(modelUnity);
 	p->addModel(modelMutes);
+	p->addModel(modelPulses);
 	p->addModel(modelScope);
 	p->addModel(modelSEQ3);
 	p->addModel(modelSequentialSwitch1);

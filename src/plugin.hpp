@@ -19,6 +19,7 @@ extern Model* modelVCMixer;
 extern Model* model_8vert;
 extern Model* modelUnity;
 extern Model* modelMutes;
+extern Model* modelPulses;
 extern Model* modelScope;
 extern Model* modelSEQ3;
 extern Model* modelSequentialSwitch1;
