@@ -54,6 +54,13 @@ struct ADSR : Module {
 		configParam(DECAY_PARAM, 0.f, 1.f, 0.5f, "Decay", " ms", LAMBDA_BASE, MIN_TIME * 1000);
 		configParam(SUSTAIN_PARAM, 0.f, 1.f, 0.5f, "Sustain", "%", 0, 100);
 		configParam(RELEASE_PARAM, 0.f, 1.f, 0.5f, "Release", " ms", LAMBDA_BASE, MIN_TIME * 1000);
+		configInput(ATTACK_INPUT, "Attack");
+		configInput(DECAY_INPUT, "Decay");
+		configInput(SUSTAIN_INPUT, "Sustain");
+		configInput(RELEASE_INPUT, "Release");
+		configInput(GATE_INPUT, "Gate");
+		configInput(TRIG_INPUT, "Retrigger");
+		configOutput(ENVELOPE_OUTPUT, "Envelope");
 
 		cvDivider.setDivision(16);
 		lightDivider.setDivision(128);

@@ -35,6 +35,14 @@ struct VCMixer : Module {
 		configParam(LVL_PARAMS + 1, 0.0, M_SQRT2, 1.0, "Ch 2 level", " dB", -10, 40);
 		configParam(LVL_PARAMS + 2, 0.0, M_SQRT2, 1.0, "Ch 3 level", " dB", -10, 40);
 		configParam(LVL_PARAMS + 3, 0.0, M_SQRT2, 1.0, "Ch 4 level", " dB", -10, 40);
+		configInput(MIX_CV_INPUT, "Mix CV");
+		for (int i = 0; i < 4; i++)
+			configInput(CH_INPUTS + i, string::f("Channel %d", i + 1));
+		for (int i = 0; i < 4; i++)
+			configInput(CV_INPUTS + i, string::f("Channel %d CV", i + 1));
+		configOutput(MIX_OUTPUT, "Mix");
+		for (int i = 0; i < 4; i++)
+			configOutput(CH_OUTPUTS + i, string::f("Channel %d", i + 1));
 
 		lightDivider.setDivision(512);
 	}
