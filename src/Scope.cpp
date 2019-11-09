@@ -58,6 +58,9 @@ struct Scope : Module {
 		configParam(LISSAJOUS_PARAM, 0.f, 1.f, 0.f);
 		configParam(TRIG_PARAM, -10.f, 10.f, 0.f, "Trigger position", " V");
 		configParam(EXTERNAL_PARAM, 0.f, 1.f, 0.f);
+		configInput(X_INPUT, "X");
+		configInput(Y_INPUT, "Y");
+		configInput(TRIG_INPUT, "External trigger");
 	}
 
 	void onReset() override {

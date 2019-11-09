@@ -24,6 +24,9 @@ struct Quantizer : Module {
 
 	Quantizer() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+		configInput(PITCH_INPUT, "Pitch");
+		configOutput(PITCH_OUTPUT, "Pitch");
+
 		onReset();
 	}
 

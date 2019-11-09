@@ -31,6 +31,15 @@ struct Unity : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(AVG1_PARAM, 0.0, 1.0, 0.0, "Ch 1 average mode");
 		configParam(AVG2_PARAM, 0.0, 1.0, 0.0, "Ch 2 average mode");
+		for (int i = 0; i < 2; i++) {
+			for (int j = 0; j < 6; j++) {
+				configInput(IN_INPUTS + i * 6 + j, string::f("In %d ch %d", i + 1, j + 1));
+			}
+		}
+		configOutput(MIX1_OUTPUT, "Mix 1");
+		configOutput(INV1_OUTPUT, "Inverse mix 1");
+		configOutput(MIX2_OUTPUT, "Mix 2");
+		configOutput(INV2_OUTPUT, "Inverse mix 2");
 
 		lightDivider.setDivision(256);
 	}

@@ -23,6 +23,10 @@ struct Merge : Module {
 
 	Merge() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+		for (int i = 0; i < 16; i++)
+			configInput(MONO_INPUTS + i, string::f("Channel %d", i + 1));
+		configOutput(POLY_OUTPUT, "Polyphonic");
+
 		lightDivider.setDivision(512);
 		onReset();
 	}

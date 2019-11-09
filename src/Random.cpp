@@ -42,6 +42,14 @@ struct Random : Module {
 		configParam(SHAPE_PARAM, 0.f, 1.f, 0.5f, "Shape", "%", 0, 100);
 		configParam(OFFSET_PARAM, 0.f, 1.f, 1.f, "Bipolar/unipolar");
 		configParam(MODE_PARAM, 0.f, 1.f, 1.f, "Relative/absolute randomness");
+		configInput(RATE_INPUT, "Rate");
+		configInput(SHAPE_INPUT, "Shape");
+		configInput(TRIGGER_INPUT, "Trigger");
+		configInput(EXTERNAL_INPUT, "External");
+		configOutput(STEPPED_OUTPUT, "Stepped");
+		configOutput(LINEAR_OUTPUT, "Linear");
+		configOutput(SMOOTH_OUTPUT, "Smooth");
+		configOutput(EXPONENTIAL_OUTPUT, "Exponential");
 	}
 
 	void trigger() {

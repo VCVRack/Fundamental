@@ -287,6 +287,15 @@ struct VCO : Module {
 		configParam(FM_PARAM, 0.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
 		configParam(PW_PARAM, 0.01f, 0.99f, 0.5f, "Pulse width", "%", 0.f, 100.f);
 		configParam(PWM_PARAM, 0.f, 1.f, 0.f, "Pulse width modulation", "%", 0.f, 100.f);
+		configInput(PITCH_INPUT, "1V/oct pitch");
+		configInput(FM_INPUT, "Frequency modulation");
+		configInput(SYNC_INPUT, "Sync");
+		configInput(PW_INPUT, "Pulse width modulation");
+		configOutput(SIN_OUTPUT, "Sine");
+		configOutput(TRI_OUTPUT, "Triangle");
+		configOutput(SAW_OUTPUT, "Sawtooth");
+		configOutput(SQR_OUTPUT, "Square");
+
 		lightDivider.setDivision(16);
 	}
 
@@ -419,6 +428,11 @@ struct VCO2 : Module {
 		configParam(FREQ_PARAM, -54.f, 54.f, 0.f, "Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
 		configParam(WAVE_PARAM, 0.f, 3.f, 1.5f, "Wave");
 		configParam(FM_PARAM, 0.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
+		configInput(FM_INPUT, "Frequency modulation");
+		configInput(SYNC_INPUT, "Sync");
+		configInput(WAVE_INPUT, "Wave");
+		configOutput(OUT_OUTPUT, "Out");
+
 		lightDivider.setDivision(16);
 	}
 

@@ -124,6 +124,15 @@ struct LFO : Module {
 		configParam(PW_PARAM, 0.01f, 0.99f, 0.5f, "Pulse width", "%", 0.f, 100.f);
 		configParam(FM2_PARAM, 0.f, 1.f, 0.f, "Frequency modulation 2", "%", 0.f, 100.f);
 		configParam(PWM_PARAM, 0.f, 1.f, 0.f, "Pulse width modulation", "%", 0.f, 100.f);
+		configInput(FM1_INPUT, "Frequency modulation 1");
+		configInput(FM2_INPUT, "Frequency modulation 2");
+		configInput(RESET_INPUT, "Reset");
+		configInput(PW_INPUT, "Pulse width modulation");
+		configOutput(SIN_OUTPUT, "Sine");
+		configOutput(TRI_OUTPUT, "Triangle");
+		configOutput(SAW_OUTPUT, "Sawtooth");
+		configOutput(SQR_OUTPUT, "Square");
+
 		lightDivider.setDivision(16);
 	}
 
@@ -261,6 +270,11 @@ struct LFO2 : Module {
 		configParam(FREQ_PARAM, -8.f, 10.f, 1.f, "Frequency", " Hz", 2, 1);
 		configParam(WAVE_PARAM, 0.f, 3.f, 1.5f, "Wave");
 		configParam(FM_PARAM, 0.f, 1.f, 0.5f, "Frequency modulation", "%", 0.f, 100.f);
+		configInput(FM_INPUT, "Frequency modulation");
+		configInput(RESET_INPUT, "Reset");
+		configInput(WAVE_INPUT, "Wave");
+		configOutput(INTERP_OUTPUT, "Out");
+
 		lightDivider.setDivision(16);
 	}
 

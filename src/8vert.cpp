@@ -21,7 +21,9 @@ struct _8vert : Module {
 	_8vert() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		for (int i = 0; i < 8; i++) {
-			configParam(GAIN_PARAMS + i, -1.f, 1.f, 0.f, string::f("Ch %d gain", i + 1), "%", 0, 100);
+			configParam(GAIN_PARAMS + i, -1.f, 1.f, 0.f, string::f("Row %d gain", i + 1), "%", 0, 100);
+			configInput(IN_INPUTS + i, string::f("Row %d", i + 1));
+			configOutput(OUT_OUTPUTS + i, string::f("Row %d", i + 1));
 		}
 	}
 

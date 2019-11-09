@@ -22,6 +22,9 @@ struct Octave : Module {
 	Octave() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(OCTAVE_PARAM, -4.f, 4.f, 0.f, "Octave shift");
+		configInput(PITCH_INPUT, "Pitch");
+		configInput(OCTAVE_INPUT, "Octave shift");
+		configOutput(PITCH_OUTPUT, "Octave-shifted pitch");
 	}
 
 	void process(const ProcessArgs& args) override {

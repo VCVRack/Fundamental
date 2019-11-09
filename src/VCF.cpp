@@ -99,6 +99,12 @@ struct VCF : Module {
 		configParam(RES_PARAM, 0.f, 1.f, 0.f, "Resonance", "%", 0.f, 100.f);
 		configParam(FREQ_CV_PARAM, -1.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
 		configParam(DRIVE_PARAM, 0.f, 1.f, 0.f, "Drive", "", 0, 11);
+		configInput(FREQ_INPUT, "Frequency");
+		configInput(RES_INPUT, "Resonance");
+		configInput(DRIVE_INPUT, "Drive");
+		configInput(IN_INPUT, "In");
+		configOutput(LPF_OUTPUT, "Lowpass filter");
+		configOutput(HPF_OUTPUT, "Highpass filter");
 	}
 
 	void onReset() override {

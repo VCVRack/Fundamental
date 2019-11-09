@@ -7,10 +7,10 @@ struct SEQ3 : Module {
 		RUN_PARAM,
 		RESET_PARAM,
 		STEPS_PARAM,
-		ENUMS(ROW1_PARAM, 8),
-		ENUMS(ROW2_PARAM, 8),
-		ENUMS(ROW3_PARAM, 8),
-		ENUMS(GATE_PARAM, 8),
+		ENUMS(ROW1_PARAMS, 8),
+		ENUMS(ROW2_PARAMS, 8),
+		ENUMS(ROW3_PARAMS, 8),
+		ENUMS(GATE_PARAMS, 8),
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -25,7 +25,7 @@ struct SEQ3 : Module {
 		ROW1_OUTPUT,
 		ROW2_OUTPUT,
 		ROW3_OUTPUT,
-		ENUMS(GATE_OUTPUT, 8),
+		ENUMS(GATE_OUTPUTS, 8),
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -54,12 +54,21 @@ struct SEQ3 : Module {
 		configParam(RESET_PARAM, 0.f, 1.f, 0.f);
 		configParam(STEPS_PARAM, 1.f, 8.f, 8.f);
 		for (int i = 0; i < 8; i++) {
-			configParam(ROW1_PARAM + i, 0.f, 10.f, 0.f);
-			configParam(ROW2_PARAM + i, 0.f, 10.f, 0.f);
-			configParam(ROW3_PARAM + i, 0.f, 10.f, 0.f);
-			configParam(GATE_PARAM + i, 0.f, 1.f, 0.f);
+			configParam(ROW1_PARAMS + i, 0.f, 10.f, 0.f);
+			configParam(ROW2_PARAMS + i, 0.f, 10.f, 0.f);
+			configParam(ROW3_PARAMS + i, 0.f, 10.f, 0.f);
+			configParam(GATE_PARAMS + i, 0.f, 1.f, 0.f);
 		}
-
+		configInput(CLOCK_INPUT, "Clock rate");
+		configInput(EXT_CLOCK_INPUT, "External clock");
+		configInput(RESET_INPUT, "Reset");
+		configInput(STEPS_INPUT, "Steps");
+		configOutput(GATES_OUTPUT, "Gate");
+		configOutput(ROW1_OUTPUT, "Row 1");
+		configOutput(ROW2_OUTPUT, "Row 2");
+		configOutput(ROW3_OUTPUT, "Row 3");
+		for (int i = 0; i < 8; i++)
+			configOutput(GATE_OUTPUTS + i, string::f("Gate %d", i + 1));
 
 		onReset();
 	}
@@ -150,17 +159,17 @@ struct SEQ3 : Module {
 
 		// Gate buttons
 		for (int i = 0; i < 8; i++) {
-			if (gateTriggers[i].process(params[GATE_PARAM + i].getValue())) {
+			if (gateTriggers[i].process(params[GATE_PARAMS + i].getValue())) {
 				gates[i] = !gates[i];
 			}
-			outputs[GATE_OUTPUT + i].setVoltage((running && gateIn && i == index && gates[i]) ? 10.f : 0.f);
+			outputs[GATE_OUTPUTS + i].setVoltage((running && gateIn && i == index && gates[i]) ? 10.f : 0.f);
 			lights[GATE_LIGHTS + i].setSmoothBrightness((gateIn && i == index) ? (gates[i] ? 1.f : 0.33) : (gates[i] ? 0.66 : 0.0), args.sampleTime);
 		}
 
 		// Outputs
-		outputs[ROW1_OUTPUT].setVoltage(params[ROW1_PARAM + index].getValue());
-		outputs[ROW2_OUTPUT].setVoltage(params[ROW2_PARAM + index].getValue());
-		outputs[ROW3_OUTPUT].setVoltage(params[ROW3_PARAM + index].getValue());
+		outputs[ROW1_OUTPUT].setVoltage(params[ROW1_PARAMS + index].getValue());
+		outputs[ROW2_OUTPUT].setVoltage(params[ROW2_PARAMS + index].getValue());
+		outputs[ROW3_OUTPUT].setVoltage(params[ROW3_PARAMS + index].getValue());
 		outputs[GATES_OUTPUT].setVoltage((gateIn && gates[index]) ? 10.f : 0.f);
 		lights[RUNNING_LIGHT].value = (running);
 		lights[RESET_LIGHT].setSmoothBrightness(resetTrigger.isHigh(), args.sampleTime);
@@ -204,12 +213,12 @@ struct SEQ3Widget : ModuleWidget {
 		addOutput(createOutput<PJ301MPort>(Vec(portX[7] - 1, 98), module, SEQ3::ROW3_OUTPUT));
 
 		for (int i = 0; i < 8; i++) {
-			addParam(createParam<RoundBlackKnob>(Vec(portX[i] - 2, 157), module, SEQ3::ROW1_PARAM + i));
-			addParam(createParam<RoundBlackKnob>(Vec(portX[i] - 2, 198), module, SEQ3::ROW2_PARAM + i));
-			addParam(createParam<RoundBlackKnob>(Vec(portX[i] - 2, 240), module, SEQ3::ROW3_PARAM + i));
-			addParam(createParam<LEDButton>(Vec(portX[i] + 2, 278 - 1), module, SEQ3::GATE_PARAM + i));
+			addParam(createParam<RoundBlackKnob>(Vec(portX[i] - 2, 157), module, SEQ3::ROW1_PARAMS + i));
+			addParam(createParam<RoundBlackKnob>(Vec(portX[i] - 2, 198), module, SEQ3::ROW2_PARAMS + i));
+			addParam(createParam<RoundBlackKnob>(Vec(portX[i] - 2, 240), module, SEQ3::ROW3_PARAMS + i));
+			addParam(createParam<LEDButton>(Vec(portX[i] + 2, 278 - 1), module, SEQ3::GATE_PARAMS + i));
 			addChild(createLight<MediumLight<GreenLight>>(Vec(portX[i] + 6.4f, 281.4f), module, SEQ3::GATE_LIGHTS + i));
-			addOutput(createOutput<PJ301MPort>(Vec(portX[i] - 1, 307), module, SEQ3::GATE_OUTPUT + i));
+			addOutput(createOutput<PJ301MPort>(Vec(portX[i] - 1, 307), module, SEQ3::GATE_OUTPUTS + i));
 		}
 	}
 };

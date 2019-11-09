@@ -26,6 +26,14 @@ struct VCA : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
 		configParam(LEVEL1_PARAM, 0.0, 1.0, 1.0, "Ch 1 level", "%", 0, 100);
 		configParam(LEVEL2_PARAM, 0.0, 1.0, 1.0, "Ch 2 level", "%", 0, 100);
+		configInput(EXP1_INPUT, "Exponential CV 1");
+		configInput(LIN1_INPUT, "Linear CV 1");
+		configInput(IN1_INPUT, "In 1");
+		configInput(EXP2_INPUT, "Exponential CV 2");
+		configInput(LIN2_INPUT, "Linear CV 2");
+		configInput(IN2_INPUT, "In 2");
+		configOutput(OUT1_OUTPUT, "Out 1");
+		configOutput(OUT2_OUTPUT, "Out 2");
 	}
 
 	void processChannel(Input& in, Param& level, Input& lin, Input& exp, Output& out) {

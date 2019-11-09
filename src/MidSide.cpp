@@ -31,6 +31,16 @@ struct MidSide : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(ENC_WIDTH_PARAM, 0.f, 2.f, 1.f, "Encoder width", "%", 0, 100);
 		configParam(DEC_WIDTH_PARAM, 0.f, 2.f, 1.f, "Decoder width", "%", 0, 100);
+		configInput(ENC_WIDTH_INPUT, "Encoder width");
+		configInput(ENC_LEFT_INPUT, "Encoder left");
+		configInput(ENC_RIGHT_INPUT, "Encoder right");
+		configInput(DEC_WIDTH_INPUT, "Decoder width");
+		configInput(DEC_MID_INPUT, "Decoder mid");
+		configInput(DEC_SIDES_INPUT, "Decoder sides");
+		configOutput(ENC_MID_OUTPUT, "Encoder mid");
+		configOutput(ENC_SIDES_OUTPUT, "Encoder sides");
+		configOutput(DEC_LEFT_OUTPUT, "Decoder left");
+		configOutput(DEC_RIGHT_OUTPUT, "Decoder right");
 	}
 
 	void process(const ProcessArgs& args) override {

@@ -38,6 +38,12 @@ struct Delay : Module {
 		configParam(FEEDBACK_PARAM, 0.f, 1.f, 0.5f, "Feedback", "%", 0, 100);
 		configParam(COLOR_PARAM, 0.f, 1.f, 0.5f, "Color", "%", 0, 100);
 		configParam(MIX_PARAM, 0.f, 1.f, 0.5f, "Mix", "%", 0, 100);
+		configInput(TIME_INPUT, "Time");
+		configInput(FEEDBACK_INPUT, "Feedback");
+		configInput(COLOR_INPUT, "Color");
+		configInput(MIX_INPUT, "Mix");
+		configInput(IN_INPUT, "Audio");
+		configOutput(OUT_OUTPUT, "Audio");
 
 		src = src_new(SRC_SINC_FASTEST, 1, NULL);
 		assert(src);

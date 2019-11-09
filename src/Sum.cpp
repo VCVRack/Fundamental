@@ -27,6 +27,8 @@ struct Sum : Module {
 	Sum() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(LEVEL_PARAM, 0.f, 1.f, 1.f, "Level", "%", 0.f, 100.f);
+		configInput(POLY_INPUT, "Polyphonic");
+		configOutput(MONO_OUTPUT, "Monophonic");
 
 		vuMeter.lambda = 1 / 0.1f;
 		vuDivider.setDivision(16);

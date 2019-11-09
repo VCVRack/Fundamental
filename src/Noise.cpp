@@ -99,6 +99,20 @@ struct Noise : Module {
 
 	Noise() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+		configOutput(WHITE_OUTPUT, "White noise");
+		outputInfos[WHITE_OUTPUT]->description = "0 dB/octave power density";
+		configOutput(PINK_OUTPUT, "Pink noise");
+		outputInfos[PINK_OUTPUT]->description = "-3 dB/octave power density";
+		configOutput(RED_OUTPUT, "Red noise");
+		outputInfos[RED_OUTPUT]->description = "-6 dB/octave power density";
+		configOutput(VIOLET_OUTPUT, "Violet noise");
+		outputInfos[VIOLET_OUTPUT]->description = "+6 dB/octave power density";
+		configOutput(BLUE_OUTPUT, "Blue noise");
+		outputInfos[BLUE_OUTPUT]->description = "+3 dB/octave power density";
+		configOutput(GRAY_OUTPUT, "Gray noise");
+		outputInfos[GRAY_OUTPUT]->description = "Psychoacoustic equal loudness";
+		configOutput(BLACK_OUTPUT, "Black noise");
+		outputInfos[BLACK_OUTPUT]->description = "Uniform random numbers";
 
 		// Hard-code coefficients for Butterworth lowpass with cutoff 20 Hz @ 44.1kHz.
 		const float b[] = {0.00425611, 0.00425611};
