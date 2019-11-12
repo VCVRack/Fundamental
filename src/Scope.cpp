@@ -55,9 +55,9 @@ struct Scope : Module {
 		configParam(Y_POS_PARAM, -10.f, 10.f, 0.f, "Y position", " V");
 		const float timeBase = (float) BUFFER_SIZE / 6;
 		configParam(TIME_PARAM, 6.f, 16.f, 14.f, "Time", " ms/div", 1 / 2.f, 1000 * timeBase);
-		configParam(LISSAJOUS_PARAM, 0.f, 1.f, 0.f);
+		configParam(LISSAJOUS_PARAM, 0.f, 1.f, 0.f, "Separate/Lissajous mode");
 		configParam(TRIG_PARAM, -10.f, 10.f, 0.f, "Trigger position", " V");
-		configParam(EXTERNAL_PARAM, 0.f, 1.f, 0.f);
+		configParam(EXTERNAL_PARAM, 0.f, 1.f, 0.f, "Internal/external trigger mode");
 		configInput(X_INPUT, "X");
 		configInput(Y_INPUT, "Y");
 		configInput(TRIG_INPUT, "External trigger");
