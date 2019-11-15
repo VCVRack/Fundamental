@@ -105,6 +105,8 @@ struct VCF : Module {
 		configInput(IN_INPUT, "In");
 		configOutput(LPF_OUTPUT, "Lowpass filter");
 		configOutput(HPF_OUTPUT, "Highpass filter");
+		configBypass(IN_INPUT, LPF_OUTPUT);
+		configBypass(IN_INPUT, HPF_OUTPUT);
 	}
 
 	void onReset() override {
