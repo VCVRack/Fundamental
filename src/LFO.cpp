@@ -269,7 +269,7 @@ struct LFO2 : Module {
 		configParam(INVERT_PARAM, 0.f, 1.f, 1.f, "Invert");
 		configParam(FREQ_PARAM, -8.f, 10.f, 1.f, "Frequency", " Hz", 2, 1);
 		configParam(WAVE_PARAM, 0.f, 3.f, 1.5f, "Wave");
-		configParam(FM_PARAM, 0.f, 1.f, 0.5f, "Frequency modulation", "%", 0.f, 100.f);
+		configParam(FM_PARAM, 0.f, 1.f, 1.f, "Frequency modulation", "%", 0.f, 100.f);
 		configInput(FM_INPUT, "Frequency modulation");
 		configInput(RESET_INPUT, "Reset");
 		configInput(WAVE_INPUT, "Wave");

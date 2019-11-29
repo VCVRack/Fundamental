@@ -427,7 +427,7 @@ struct VCO2 : Module {
 		configParam(SYNC_PARAM, 0.f, 1.f, 1.f, "Hard sync");
 		configParam(FREQ_PARAM, -54.f, 54.f, 0.f, "Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
 		configParam(WAVE_PARAM, 0.f, 3.f, 1.5f, "Wave");
-		configParam(FM_PARAM, 0.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
+		configParam(FM_PARAM, 0.f, 1.f, 1.f, "Frequency modulation", "%", 0.f, 100.f);
 		configInput(FM_INPUT, "Frequency modulation");
 		configInput(SYNC_INPUT, "Sync");
 		configInput(WAVE_INPUT, "Wave");
