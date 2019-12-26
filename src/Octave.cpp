@@ -155,7 +155,7 @@ inline void OctaveButton::onDragEnter(const event::DragEnter& e) {
 struct OctaveWidget : ModuleWidget {
 	OctaveWidget(Octave* module) {
 		setModule(module);
-		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Octave.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Octave.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));

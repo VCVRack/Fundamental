@@ -107,7 +107,7 @@ struct VCA : Module {
 struct VCAWidget : ModuleWidget {
 	VCAWidget(VCA* module) {
 		setModule(module);
-		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/VCA.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/VCA.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -256,7 +256,7 @@ struct VCA_1VUKnob : SliderKnob {
 struct VCA_1Widget : ModuleWidget {
 	VCA_1Widget(VCA_1* module) {
 		setModule(module);
-		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/VCA-1.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/VCA-1.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));

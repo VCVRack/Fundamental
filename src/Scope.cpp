@@ -346,7 +346,7 @@ struct ScopeDisplay : TransparentWidget {
 struct ScopeWidget : ModuleWidget {
 	ScopeWidget(Scope* module) {
 		setModule(module);
-		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/Scope.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Scope.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));

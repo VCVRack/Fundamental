@@ -90,7 +90,7 @@ struct MidSide : Module {
 struct MidSideWidget : ModuleWidget {
 	MidSideWidget(MidSide* module) {
 		setModule(module);
-		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/MidSide.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/MidSide.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));

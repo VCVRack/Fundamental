@@ -133,7 +133,7 @@ struct VCMixer : Module {
 struct VCMixerWidget : ModuleWidget {
 	VCMixerWidget(VCMixer* module) {
 		setModule(module);
-		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/VCMixer.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/VCMixer.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));

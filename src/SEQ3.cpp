@@ -184,7 +184,7 @@ struct SEQ3 : Module {
 struct SEQ3Widget : ModuleWidget {
 	SEQ3Widget(SEQ3* module) {
 		setModule(module);
-		setPanel(APP->window->loadSvg(asset::plugin(pluginInstance, "res/SEQ3.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/SEQ3.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
