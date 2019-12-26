@@ -3,37 +3,39 @@
 
 struct SEQ3 : Module {
 	enum ParamIds {
-		CLOCK_PARAM,
-		RUN_PARAM,
-		RESET_PARAM,
-		STEPS_PARAM,
-		ENUMS(ROW1_PARAMS, 8),
-		ENUMS(ROW2_PARAMS, 8),
-		ENUMS(ROW3_PARAMS, 8),
-		ENUMS(GATE_PARAMS, 8),
+		PARAM_CLOCK,
+		PARAM_RUN,
+		PARAM_RESET,
+		PARAM_STEPS,
+		ENUMS(PARAM_ROW1, 8),
+		ENUMS(PARAM_ROW2, 8),
+		ENUMS(PARAM_ROW3, 8),
+		ENUMS(PARAM_GATE, 8),
 		NUM_PARAMS
 	};
 	enum InputIds {
-		CLOCK_INPUT,
-		EXT_CLOCK_INPUT,
-		RESET_INPUT,
-		STEPS_INPUT,
+		INPUT_CLOCK,
+		INPUT_EXT_CLOCK,
+		INPUT_RESET,
+		INPUT_STEPS,
 		NUM_INPUTS
 	};
 	enum OutputIds {
-		GATES_OUTPUT,
-		ROW1_OUTPUT,
-		ROW2_OUTPUT,
-		ROW3_OUTPUT,
-		ENUMS(GATE_OUTPUTS, 8),
+		OUTPUT_GATES,
+		OUTPUT_ROW1,
+		OUTPUT_ROW2,
+		OUTPUT_ROW3,
+		ENUMS(OUTPUT_GATE, 8),
 		NUM_OUTPUTS
 	};
 	enum LightIds {
-		RUNNING_LIGHT,
-		RESET_LIGHT,
-		GATES_LIGHT,
-		ENUMS(ROW_LIGHTS, 3),
-		ENUMS(GATE_LIGHTS, 8),
+		LIGHT_RUN,
+		LIGHT_RESET,
+		LIGHT_GATES,
+		LIGHT_ROW1,
+		LIGHT_ROW2,
+		LIGHT_ROW3,
+		ENUMS(LIGHT_GATE, 8),
 		NUM_LIGHTS
 	};
 
@@ -49,26 +51,29 @@ struct SEQ3 : Module {
 
 	SEQ3() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(CLOCK_PARAM, -2.f, 6.f, 2.f, "Clock tempo", " bpm", 2.f, 60.f);
-		configParam(RUN_PARAM, 0.f, 1.f, 0.f);
-		configParam(RESET_PARAM, 0.f, 1.f, 0.f);
-		configParam(STEPS_PARAM, 1.f, 8.f, 8.f);
-		for (int i = 0; i < 8; i++) {
-			configParam(ROW1_PARAMS + i, 0.f, 10.f, 0.f);
-			configParam(ROW2_PARAMS + i, 0.f, 10.f, 0.f);
-			configParam(ROW3_PARAMS + i, 0.f, 10.f, 0.f);
-			configParam(GATE_PARAMS + i, 0.f, 1.f, 0.f);
-		}
-		configInput(CLOCK_INPUT, "Clock rate");
-		configInput(EXT_CLOCK_INPUT, "External clock");
-		configInput(RESET_INPUT, "Reset");
-		configInput(STEPS_INPUT, "Steps");
-		configOutput(GATES_OUTPUT, "Gate");
-		configOutput(ROW1_OUTPUT, "Row 1");
-		configOutput(ROW2_OUTPUT, "Row 2");
-		configOutput(ROW3_OUTPUT, "Row 3");
+		configParam(PARAM_CLOCK, -2.f, 6.f, 2.f, "Clock tempo", " bpm", 2.f, 60.f);
+		configParam(PARAM_RUN, 0.f, 1.f, 0.f, "Run");
+		configParam(PARAM_RESET, 0.f, 1.f, 0.f, "Reset");
+		configParam(PARAM_STEPS, 1.f, 8.f, 8.f, "Steps");
+		paramQuantities[PARAM_STEPS]->snapEnabled = true;
 		for (int i = 0; i < 8; i++)
-			configOutput(GATE_OUTPUTS + i, string::f("Gate %d", i + 1));
+			configParam(PARAM_ROW1 + i, 0.f, 10.f, 0.f, string::f("Row 1 step %d", i + 1));
+		for (int i = 0; i < 8; i++)
+			configParam(PARAM_ROW2 + i, 0.f, 10.f, 0.f, string::f("Row 2 step %d", i + 1));
+		for (int i = 0; i < 8; i++)
+			configParam(PARAM_ROW3 + i, 0.f, 10.f, 0.f, string::f("Row 3 step %d", i + 1));
+		for (int i = 0; i < 8; i++)
+			configParam(PARAM_GATE + i, 0.f, 1.f, 0.f, string::f("Gate step %d", i + 1));
+		configInput(INPUT_CLOCK, "Clock rate");
+		configInput(INPUT_EXT_CLOCK, "External clock");
+		configInput(INPUT_RESET, "Reset");
+		configInput(INPUT_STEPS, "Steps");
+		configOutput(OUTPUT_GATES, "Gate");
+		configOutput(OUTPUT_ROW1, "Row 1");
+		configOutput(OUTPUT_ROW2, "Row 2");
+		configOutput(OUTPUT_ROW3, "Row 3");
+		for (int i = 0; i < 8; i++)
+			configOutput(OUTPUT_GATE + i, string::f("Gate %d", i + 1));
 
 		onReset();
 	}
@@ -119,7 +124,7 @@ struct SEQ3 : Module {
 	}
 
 	void setIndex(int index) {
-		int numSteps = (int) clamp(std::round(params[STEPS_PARAM].getValue() + inputs[STEPS_INPUT].getVoltage()), 1.f, 8.f);
+		int numSteps = (int) clamp(std::round(params[PARAM_STEPS].getValue() + inputs[INPUT_STEPS].getVoltage()), 1.f, 8.f);
 		phase = 0.f;
 		this->index = index;
 		if (this->index >= numSteps)
@@ -128,22 +133,22 @@ struct SEQ3 : Module {
 
 	void process(const ProcessArgs& args) override {
 		// Run
-		if (runningTrigger.process(params[RUN_PARAM].getValue())) {
+		if (runningTrigger.process(params[PARAM_RUN].getValue())) {
 			running = !running;
 		}
 
 		bool gateIn = false;
 		if (running) {
-			if (inputs[EXT_CLOCK_INPUT].isConnected()) {
+			if (inputs[INPUT_EXT_CLOCK].isConnected()) {
 				// External clock
-				if (clockTrigger.process(inputs[EXT_CLOCK_INPUT].getVoltage())) {
+				if (clockTrigger.process(inputs[INPUT_EXT_CLOCK].getVoltage())) {
 					setIndex(index + 1);
 				}
 				gateIn = clockTrigger.isHigh();
 			}
 			else {
 				// Internal clock
-				float clockTime = std::pow(2.f, params[CLOCK_PARAM].getValue() + inputs[CLOCK_INPUT].getVoltage());
+				float clockTime = std::pow(2.f, params[PARAM_CLOCK].getValue() + inputs[INPUT_CLOCK].getVoltage());
 				phase += clockTime * args.sampleTime;
 				if (phase >= 1.f) {
 					setIndex(index + 1);
@@ -153,30 +158,30 @@ struct SEQ3 : Module {
 		}
 
 		// Reset
-		if (resetTrigger.process(params[RESET_PARAM].getValue() + inputs[RESET_INPUT].getVoltage())) {
+		if (resetTrigger.process(params[PARAM_RESET].getValue() + inputs[INPUT_RESET].getVoltage())) {
 			setIndex(0);
 		}
 
 		// Gate buttons
 		for (int i = 0; i < 8; i++) {
-			if (gateTriggers[i].process(params[GATE_PARAMS + i].getValue())) {
+			if (gateTriggers[i].process(params[PARAM_GATE + i].getValue())) {
 				gates[i] = !gates[i];
 			}
-			outputs[GATE_OUTPUTS + i].setVoltage((running && gateIn && i == index && gates[i]) ? 10.f : 0.f);
-			lights[GATE_LIGHTS + i].setSmoothBrightness((gateIn && i == index) ? (gates[i] ? 1.f : 0.33) : (gates[i] ? 0.66 : 0.0), args.sampleTime);
+			outputs[OUTPUT_GATE + i].setVoltage((running && gateIn && i == index && gates[i]) ? 10.f : 0.f);
+			lights[LIGHT_GATE + i].setSmoothBrightness((gateIn && i == index) ? (gates[i] ? 1.f : 0.33) : (gates[i] ? 0.66 : 0.0), args.sampleTime);
 		}
 
 		// Outputs
-		outputs[ROW1_OUTPUT].setVoltage(params[ROW1_PARAMS + index].getValue());
-		outputs[ROW2_OUTPUT].setVoltage(params[ROW2_PARAMS + index].getValue());
-		outputs[ROW3_OUTPUT].setVoltage(params[ROW3_PARAMS + index].getValue());
-		outputs[GATES_OUTPUT].setVoltage((gateIn && gates[index]) ? 10.f : 0.f);
-		lights[RUNNING_LIGHT].value = (running);
-		lights[RESET_LIGHT].setSmoothBrightness(resetTrigger.isHigh(), args.sampleTime);
-		lights[GATES_LIGHT].setSmoothBrightness(gateIn, args.sampleTime);
-		lights[ROW_LIGHTS].value = outputs[ROW1_OUTPUT].value / 10.f;
-		lights[ROW_LIGHTS + 1].value = outputs[ROW2_OUTPUT].value / 10.f;
-		lights[ROW_LIGHTS + 2].value = outputs[ROW3_OUTPUT].value / 10.f;
+		outputs[OUTPUT_ROW1].setVoltage(params[PARAM_ROW1 + index].getValue());
+		outputs[OUTPUT_ROW2].setVoltage(params[PARAM_ROW2 + index].getValue());
+		outputs[OUTPUT_ROW3].setVoltage(params[PARAM_ROW3 + index].getValue());
+		outputs[OUTPUT_GATES].setVoltage((gateIn && gates[index]) ? 10.f : 0.f);
+		lights[LIGHT_RUN].setBrightness(running);
+		lights[LIGHT_RESET].setSmoothBrightness(resetTrigger.isHigh(), args.sampleTime);
+		lights[LIGHT_GATES].setSmoothBrightness(gateIn, args.sampleTime);
+		lights[LIGHT_ROW1].setBrightness(outputs[OUTPUT_ROW1].getVoltage() / 10.f);
+		lights[LIGHT_ROW2].setBrightness(outputs[OUTPUT_ROW2].getVoltage() / 10.f);
+		lights[LIGHT_ROW3].setBrightness(outputs[OUTPUT_ROW3].getVoltage() / 10.f);
 	}
 };
 
@@ -186,40 +191,86 @@ struct SEQ3Widget : ModuleWidget {
 		setModule(module);
 		setPanel(createPanel(asset::plugin(pluginInstance, "res/SEQ3.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<RoundBlackKnob>(Vec(18, 56), module, SEQ3::CLOCK_PARAM));
-		addParam(createParam<LEDButton>(Vec(60, 61 - 1), module, SEQ3::RUN_PARAM));
-		addChild(createLight<MediumLight<GreenLight>>(Vec(64.4f, 64.4f), module, SEQ3::RUNNING_LIGHT));
-		addParam(createParam<LEDButton>(Vec(99, 61 - 1), module, SEQ3::RESET_PARAM));
-		addChild(createLight<MediumLight<GreenLight>>(Vec(103.4f, 64.4f), module, SEQ3::RESET_LIGHT));
-		addParam(createParam<RoundBlackSnapKnob>(Vec(132, 56), module, SEQ3::STEPS_PARAM));
-		addChild(createLight<MediumLight<GreenLight>>(Vec(179.4f, 64.4f), module, SEQ3::GATES_LIGHT));
-		addChild(createLight<MediumLight<GreenLight>>(Vec(218.4f, 64.4f), module, SEQ3::ROW_LIGHTS));
-		addChild(createLight<MediumLight<GreenLight>>(Vec(256.4f, 64.4f), module, SEQ3::ROW_LIGHTS + 1));
-		addChild(createLight<MediumLight<GreenLight>>(Vec(295.4f, 64.4f), module, SEQ3::ROW_LIGHTS + 2));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(10.381, 23.626)), module, SEQ3::PARAM_CLOCK));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(23.38, 23.538)), module, SEQ3::PARAM_RUN));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(36.38, 23.538)), module, SEQ3::PARAM_RESET));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(49.381, 23.626)), module, SEQ3::PARAM_STEPS));
 
-		static const float portX[8] = {20, 58, 96, 135, 173, 212, 250, 289};
-		addInput(createInput<PJ301MPort>(Vec(portX[0] - 1, 98), module, SEQ3::CLOCK_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(portX[1] - 1, 98), module, SEQ3::EXT_CLOCK_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(portX[2] - 1, 98), module, SEQ3::RESET_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(portX[3] - 1, 98), module, SEQ3::STEPS_INPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(portX[4] - 1, 98), module, SEQ3::GATES_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(portX[5] - 1, 98), module, SEQ3::ROW1_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(portX[6] - 1, 98), module, SEQ3::ROW2_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(portX[7] - 1, 98), module, SEQ3::ROW3_OUTPUT));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(10.381, 57.712)), module, SEQ3::PARAM_ROW1 + 0));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(23.38, 57.712)), module, SEQ3::PARAM_ROW1 + 1));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(36.38, 57.712)), module, SEQ3::PARAM_ROW1 + 2));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(49.381, 57.712)), module, SEQ3::PARAM_ROW1 + 3));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(62.38, 57.712)), module, SEQ3::PARAM_ROW1 + 4));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(75.381, 57.712)), module, SEQ3::PARAM_ROW1 + 5));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(88.38, 57.712)), module, SEQ3::PARAM_ROW1 + 6));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(101.38, 57.712)), module, SEQ3::PARAM_ROW1 + 7));
 
-		for (int i = 0; i < 8; i++) {
-			addParam(createParam<RoundBlackKnob>(Vec(portX[i] - 2, 157), module, SEQ3::ROW1_PARAMS + i));
-			addParam(createParam<RoundBlackKnob>(Vec(portX[i] - 2, 198), module, SEQ3::ROW2_PARAMS + i));
-			addParam(createParam<RoundBlackKnob>(Vec(portX[i] - 2, 240), module, SEQ3::ROW3_PARAMS + i));
-			addParam(createParam<LEDButton>(Vec(portX[i] + 2, 278 - 1), module, SEQ3::GATE_PARAMS + i));
-			addChild(createLight<MediumLight<GreenLight>>(Vec(portX[i] + 6.4f, 281.4f), module, SEQ3::GATE_LIGHTS + i));
-			addOutput(createOutput<PJ301MPort>(Vec(portX[i] - 1, 307), module, SEQ3::GATE_OUTPUTS + i));
-		}
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(10.381, 71.734)), module, SEQ3::PARAM_ROW2 + 0));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(23.38, 71.734)), module, SEQ3::PARAM_ROW2 + 1));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(36.38, 71.734)), module, SEQ3::PARAM_ROW2 + 2));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(49.381, 71.734)), module, SEQ3::PARAM_ROW2 + 3));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(62.38, 71.734)), module, SEQ3::PARAM_ROW2 + 4));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(75.381, 71.734)), module, SEQ3::PARAM_ROW2 + 5));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(88.38, 71.734)), module, SEQ3::PARAM_ROW2 + 6));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(101.38, 71.734)), module, SEQ3::PARAM_ROW2 + 7));
+
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(10.381, 85.711)), module, SEQ3::PARAM_ROW3 + 0));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(23.38, 85.711)), module, SEQ3::PARAM_ROW3 + 1));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(36.38, 85.711)), module, SEQ3::PARAM_ROW3 + 2));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(49.381, 85.711)), module, SEQ3::PARAM_ROW3 + 3));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(62.38, 85.711)), module, SEQ3::PARAM_ROW3 + 4));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(75.381, 85.711)), module, SEQ3::PARAM_ROW3 + 5));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(88.38, 85.711)), module, SEQ3::PARAM_ROW3 + 6));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(101.38, 85.711)), module, SEQ3::PARAM_ROW3 + 7));
+
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(10.381, 96.945)), module, SEQ3::PARAM_GATE + 0));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(23.381, 96.945)), module, SEQ3::PARAM_GATE + 1));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(36.38, 96.945)), module, SEQ3::PARAM_GATE + 2));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(49.381, 96.945)), module, SEQ3::PARAM_GATE + 3));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(62.381, 96.945)), module, SEQ3::PARAM_GATE + 4));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(75.381, 96.945)), module, SEQ3::PARAM_GATE + 5));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(88.381, 96.945)), module, SEQ3::PARAM_GATE + 6));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(101.38, 96.945)), module, SEQ3::PARAM_GATE + 7));
+
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(10.381, 37.331)), module, SEQ3::INPUT_CLOCK));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(23.38, 37.331)), module, SEQ3::INPUT_EXT_CLOCK));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(36.38, 37.331)), module, SEQ3::INPUT_RESET));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(49.381, 37.331)), module, SEQ3::INPUT_STEPS));
+
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(62.38, 37.329)), module, SEQ3::OUTPUT_GATES));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(75.38, 37.329)), module, SEQ3::OUTPUT_ROW1));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(88.38, 37.329)), module, SEQ3::OUTPUT_ROW2));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(101.381, 37.329)), module, SEQ3::OUTPUT_ROW3));
+
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(10.381, 107.865)), module, SEQ3::OUTPUT_GATE + 0));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(23.38, 107.865)), module, SEQ3::OUTPUT_GATE + 1));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(36.38, 107.865)), module, SEQ3::OUTPUT_GATE + 2));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(49.381, 107.865)), module, SEQ3::OUTPUT_GATE + 3));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(62.38, 107.865)), module, SEQ3::OUTPUT_GATE + 4));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(75.38, 107.865)), module, SEQ3::OUTPUT_GATE + 5));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(88.38, 107.865)), module, SEQ3::OUTPUT_GATE + 6));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(101.381, 107.865)), module, SEQ3::OUTPUT_GATE + 7));
+
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(23.38, 23.538)), module, SEQ3::LIGHT_RUN));
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(36.38, 23.538)), module, SEQ3::LIGHT_RESET));
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(62.38, 23.538)), module, SEQ3::LIGHT_GATE));
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(75.38, 23.538)), module, SEQ3::LIGHT_ROW1));
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(88.38, 23.538)), module, SEQ3::LIGHT_ROW2));
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(101.381, 23.538)), module, SEQ3::LIGHT_ROW3));
+
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(10.381, 96.945)), module, SEQ3::LIGHT_GATE + 0));
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(23.381, 96.945)), module, SEQ3::LIGHT_GATE + 1));
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(36.38, 96.945)), module, SEQ3::LIGHT_GATE + 2));
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(49.381, 96.945)), module, SEQ3::LIGHT_GATE + 3));
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(62.381, 96.945)), module, SEQ3::LIGHT_GATE + 4));
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(75.381, 96.945)), module, SEQ3::LIGHT_GATE + 5));
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(88.381, 96.945)), module, SEQ3::LIGHT_GATE + 6));
+		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(101.38, 96.945)), module, SEQ3::LIGHT_GATE + 7));
 	}
 };
 
