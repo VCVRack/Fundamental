@@ -1,3 +1,7 @@
+### 2.0.0 (in development)
+- Mixer
+	- When polyphonic and monophonic inputs are combined, copy all mono signals to all mix output poly channels.
+
 ### 1.4.0 (2019-11-08)
 - Add Pulses.
 

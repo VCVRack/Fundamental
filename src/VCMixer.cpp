@@ -48,10 +48,15 @@ struct VCMixer : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		// Get number of poly channels for mix output
+		int mixChannels = 1;
+		for (int i = 0; i < 4; i++) {
+			int channels = inputs[CH_INPUTS + i].getChannels();
+			mixChannels = std::max(mixChannels, channels);
+		}
 		float mix[16] = {};
-		int maxChannels = 1;
 
-		// Channels
+		// Channel strips
 		for (int i = 0; i < 4; i++) {
 			int channels = 1;
 			float in[16] = {};
@@ -59,7 +64,6 @@ struct VCMixer : Module {
 
 			if (inputs[CH_INPUTS + i].isConnected()) {
 				channels = inputs[CH_INPUTS + i].getChannels();
-				maxChannels = std::max(maxChannels, channels);
 
 				// Get input
 				inputs[CH_INPUTS + i].readVoltages(in);
@@ -79,8 +83,17 @@ struct VCMixer : Module {
 				}
 
 				// Add to mix
-				for (int c = 0; c < channels; c++) {
-					mix[c] += in[c];
+				if (channels == 1) {
+					// Copy the mono signal to all mix channels
+					for (int c = 0; c < mixChannels; c++) {
+						mix[c] += in[0];
+					}
+				}
+				else {
+					// Copy each poly channel to the corresponding mix channel
+					for (int c = 0; c < channels; c++) {
+						mix[c] += in[c];
+					}
 				}
 
 				// Sum channel for VU meter
@@ -102,20 +115,20 @@ struct VCMixer : Module {
 		if (outputs[MIX_OUTPUT].isConnected()) {
 			// Apply mix knob gain
 			float gain = params[MIX_LVL_PARAM].getValue();
-			for (int c = 0; c < maxChannels; c++) {
+			for (int c = 0; c < mixChannels; c++) {
 				mix[c] *= gain;
 			}
 
 			// Apply mix CV gain
 			if (inputs[MIX_CV_INPUT].isConnected()) {
-				for (int c = 0; c < maxChannels; c++) {
+				for (int c = 0; c < mixChannels; c++) {
 					float cv = clamp(inputs[MIX_CV_INPUT].getPolyVoltage(c) / 10.f, 0.f, 1.f);
 					mix[c] *= cv;
 				}
 			}
 
 			// Set mix output
-			outputs[MIX_OUTPUT].setChannels(maxChannels);
+			outputs[MIX_OUTPUT].setChannels(mixChannels);
 			outputs[MIX_OUTPUT].writeVoltages(mix);
 		}
 
