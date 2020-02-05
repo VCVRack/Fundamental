@@ -280,8 +280,10 @@ struct VCO : Module {
 
 	VCO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(MODE_PARAM, 0.f, 1.f, 1.f, "Analog mode");
-		configParam(SYNC_PARAM, 0.f, 1.f, 1.f, "Hard sync");
+		SwitchQuantity* modeQ = configParam<SwitchQuantity>(MODE_PARAM, 0.f, 1.f, 1.f, "Engine mode");
+		modeQ->setLabels({"Digital", "Analog"});
+		SwitchQuantity* syncQ = configParam<SwitchQuantity>(SYNC_PARAM, 0.f, 1.f, 1.f, "Sync mode");
+		syncQ->setLabels({"Soft", "Hard"});
 		configParam(FREQ_PARAM, -54.f, 54.f, 0.f, "Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
 		configParam(FINE_PARAM, -1.f, 1.f, 0.f, "Fine frequency");
 		configParam(FM_PARAM, 0.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
@@ -423,8 +425,10 @@ struct VCO2 : Module {
 
 	VCO2() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(MODE_PARAM, 0.f, 1.f, 1.f, "Analog mode");
-		configParam(SYNC_PARAM, 0.f, 1.f, 1.f, "Hard sync");
+		SwitchQuantity* modeQ = configParam<SwitchQuantity>(MODE_PARAM, 0.f, 1.f, 1.f, "Engine mode");
+		modeQ->setLabels({"Digital", "Analog"});
+		SwitchQuantity* syncQ = configParam<SwitchQuantity>(SYNC_PARAM, 0.f, 1.f, 1.f, "Sync mode");
+		syncQ->setLabels({"Soft", "Hard"});
 		configParam(FREQ_PARAM, -54.f, 54.f, 0.f, "Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
 		configParam(WAVE_PARAM, 0.f, 3.f, 1.5f, "Wave");
 		configParam(FM_PARAM, 0.f, 1.f, 1.f, "Frequency modulation", "%", 0.f, 100.f);

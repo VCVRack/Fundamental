@@ -158,7 +158,9 @@ struct VCA_1 : Module {
 	VCA_1() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(LEVEL_PARAM, 0.0, 1.0, 1.0, "Level", "%", 0, 100);
-		configParam(EXP_PARAM, 0.0, 1.0, 1.0, "Response mode");
+		SwitchQuantity* expQ = configParam<SwitchQuantity>(EXP_PARAM, 0.0, 1.0, 1.0, "Response mode");
+		expQ->setLabels({"Exponential", "Linear"});
+
 	}
 
 	void process(const ProcessArgs& args) override {

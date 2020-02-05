@@ -117,8 +117,10 @@ struct LFO : Module {
 
 	LFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(OFFSET_PARAM, 0.f, 1.f, 1.f, "Offset");
-		configParam(INVERT_PARAM, 0.f, 1.f, 1.f, "Invert");
+		SwitchQuantity* offsetQ = configParam<SwitchQuantity>(OFFSET_PARAM, 0.f, 1.f, 1.f, "Offset");
+		offsetQ->setLabels({"Bipolar", "Unipolar"});
+		SwitchQuantity* invertQ = configParam<SwitchQuantity>(INVERT_PARAM, 0.f, 1.f, 1.f, "Orientation");
+		invertQ->setLabels({"Inverted", "Normal"});
 		configParam(FREQ_PARAM, -8.f, 10.f, 1.f, "Frequency", " Hz", 2, 1);
 		configParam(FM1_PARAM, 0.f, 1.f, 0.f, "Frequency modulation 1", "%", 0.f, 100.f);
 		configParam(PW_PARAM, 0.01f, 0.99f, 0.5f, "Pulse width", "%", 0.f, 100.f);
@@ -265,8 +267,10 @@ struct LFO2 : Module {
 
 	LFO2() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(OFFSET_PARAM, 0.f, 1.f, 1.f, "Offset");
-		configParam(INVERT_PARAM, 0.f, 1.f, 1.f, "Invert");
+		SwitchQuantity* offsetQ = configParam<SwitchQuantity>(OFFSET_PARAM, 0.f, 1.f, 1.f, "Offset");
+		offsetQ->setLabels({"Bipolar", "Unipolar"});
+		SwitchQuantity* invertQ = configParam<SwitchQuantity>(INVERT_PARAM, 0.f, 1.f, 1.f, "Orientation");
+		invertQ->setLabels({"Inverted", "Normal"});
 		configParam(FREQ_PARAM, -8.f, 10.f, 1.f, "Frequency", " Hz", 2, 1);
 		configParam(WAVE_PARAM, 0.f, 3.f, 1.5f, "Wave");
 		configParam(FM_PARAM, 0.f, 1.f, 1.f, "Frequency modulation", "%", 0.f, 100.f);
