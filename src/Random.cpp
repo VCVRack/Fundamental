@@ -40,10 +40,8 @@ struct Random : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(RATE_PARAM, std::log2(0.002f), std::log2(2000.f), std::log2(2.f), "Rate", " Hz", 2);
 		configParam(SHAPE_PARAM, 0.f, 1.f, 0.5f, "Shape", "%", 0, 100);
-		SwitchQuantity* offsetQ = configParam<SwitchQuantity>(OFFSET_PARAM, 0.f, 1.f, 1.f, "Offset");
-		offsetQ->setLabels({"Bipolar", "Unipolar"});
-		SwitchQuantity* modeQ = configParam<SwitchQuantity>(MODE_PARAM, 0.f, 1.f, 1.f, "Randomness mode");
-		modeQ->setLabels({"Relative", "Absolute"});
+		configSwitch(OFFSET_PARAM, 0.f, 1.f, 1.f, "Offset", {"Bipolar", "Unipolar"});
+		configSwitch(MODE_PARAM, 0.f, 1.f, 1.f, "Randomness mode", {"Relative", "Absolute"});
 		configInput(RATE_INPUT, "Rate");
 		configInput(SHAPE_INPUT, "Shape");
 		configInput(TRIGGER_INPUT, "Trigger");

@@ -29,10 +29,8 @@ struct Unity : Module {
 
 	Unity() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		SwitchQuantity* avg1Q = configParam<SwitchQuantity>(AVG1_PARAM, 0.0, 1.0, 0.0, "Ch 1 mode");
-		avg1Q->setLabels({"Sum", "Average"});
-		SwitchQuantity* avg2Q = configParam<SwitchQuantity>(AVG2_PARAM, 0.0, 1.0, 0.0, "Ch 2 mode");
-		avg2Q->setLabels({"Sum", "Average"});
+		configSwitch(AVG1_PARAM, 0.0, 1.0, 0.0, "Ch 1 mode", {"Sum", "Average"});
+		configSwitch(AVG2_PARAM, 0.0, 1.0, 0.0, "Ch 2 mode", {"Sum", "Average"});
 		for (int i = 0; i < 2; i++) {
 			for (int j = 0; j < 6; j++) {
 				configInput(IN_INPUTS + i * 6 + j, string::f("In %d ch %d", i + 1, j + 1));
