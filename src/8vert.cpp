@@ -18,6 +18,8 @@ struct _8vert : Module {
 		NUM_LIGHTS
 	};
 
+	dsp::ClockDivider paramDivider;
+
 	_8vert() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		for (int i = 0; i < 8; i++) {
@@ -25,6 +27,8 @@ struct _8vert : Module {
 			configInput(IN_INPUTS + i, string::f("Row %d", i + 1));
 			configOutput(OUT_OUTPUTS + i, string::f("Row %d", i + 1));
 		}
+
+		paramDivider.setDivision(2048);
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -49,6 +53,32 @@ struct _8vert : Module {
 				// Set output
 				outputs[OUT_OUTPUTS + i].setChannels(channels);
 				outputs[OUT_OUTPUTS + i].writeVoltages(out);
+			}
+		}
+
+		if (paramDivider.process()) {
+			refreshParamQuantities();
+		}
+	}
+
+	/** Set the gain param units to either V or %, depending on whether a cable is connected. */
+	void refreshParamQuantities() {
+		bool normalized = true;
+
+		for (int i = 0; i < 8; i++) {
+			ParamQuantity* pq = paramQuantities[GAIN_PARAMS + i];
+			if (!pq)
+				continue;
+
+			if (inputs[IN_INPUTS + i].isConnected())
+				normalized = false;
+			if (normalized) {
+				pq->unit = "V";
+				pq->displayMultiplier = 10.f;
+			}
+			else {
+				pq->unit = "%";
+				pq->displayMultiplier = 100.f;
 			}
 		}
 	}
