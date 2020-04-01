@@ -154,10 +154,10 @@ struct VCMixerWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 		addParam(createParam<RoundLargeBlackKnob>(mm2px(Vec(19.049999, 21.161154)), module, VCMixer::MIX_LVL_PARAM));
-		addParam(createLightParam<LEDLightSliderFixed<GreenLight>>(mm2px(Vec(5.8993969, 44.33149).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAMS + 0, VCMixer::LVL_LIGHTS + 0));
-		addParam(createLightParam<LEDLightSliderFixed<GreenLight>>(mm2px(Vec(17.899343, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAMS + 1, VCMixer::LVL_LIGHTS + 1));
-		addParam(createLightParam<LEDLightSliderFixed<GreenLight>>(mm2px(Vec(29.899292, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAMS + 2, VCMixer::LVL_LIGHTS + 2));
-		addParam(createLightParam<LEDLightSliderFixed<GreenLight>>(mm2px(Vec(41.90065, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAMS + 3, VCMixer::LVL_LIGHTS + 3));
+		addParam(createLightParam<LEDLightSlider<GreenLight>>(mm2px(Vec(5.8993969, 44.33149).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAMS + 0, VCMixer::LVL_LIGHTS + 0));
+		addParam(createLightParam<LEDLightSlider<GreenLight>>(mm2px(Vec(17.899343, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAMS + 1, VCMixer::LVL_LIGHTS + 1));
+		addParam(createLightParam<LEDLightSlider<GreenLight>>(mm2px(Vec(29.899292, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAMS + 2, VCMixer::LVL_LIGHTS + 2));
+		addParam(createLightParam<LEDLightSlider<GreenLight>>(mm2px(Vec(41.90065, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAMS + 3, VCMixer::LVL_LIGHTS + 3));
 
 		// Use old interleaved order for backward compatibility with <0.6
 		addInput(createInput<PJ301MPort>(mm2px(Vec(3.2935331, 23.404598)), module, VCMixer::MIX_CV_INPUT));

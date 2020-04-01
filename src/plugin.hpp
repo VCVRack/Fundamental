@@ -33,11 +33,3 @@ extern Model* modelViz;
 extern Model* modelMidSide;
 extern Model* modelNoise;
 extern Model* modelRandom;
-
-
-template <typename TLightBase = RedLight>
-struct LEDLightSliderFixed : LEDLightSlider<TLightBase> {
-	LEDLightSliderFixed() {
-		this->setHandleSvg(APP->window->loadSvg(asset::plugin(pluginInstance, "res/LEDSliderHandle.svg")));
-	}
-};
