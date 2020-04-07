@@ -52,18 +52,18 @@ struct SEQ3 : Module {
 	SEQ3() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(PARAM_CLOCK, -2.f, 6.f, 2.f, "Clock tempo", " bpm", 2.f, 60.f);
-		configParam(PARAM_RUN, 0.f, 1.f, 0.f, "Run");
-		configParam(PARAM_RESET, 0.f, 1.f, 0.f, "Reset");
+		configButton(PARAM_RUN, "Run");
+		configButton(PARAM_RESET, "Reset");
 		configParam(PARAM_STEPS, 1.f, 8.f, 8.f, "Steps");
 		paramQuantities[PARAM_STEPS]->snapEnabled = true;
 		for (int i = 0; i < 8; i++)
-			configParam(PARAM_ROW1 + i, 0.f, 10.f, 0.f, string::f("Row 1 step %d", i + 1));
+			configParam(PARAM_ROW1 + i, 0.f, 10.f, 0.f, string::f("Row 1 step %d", i + 1), " V");
 		for (int i = 0; i < 8; i++)
-			configParam(PARAM_ROW2 + i, 0.f, 10.f, 0.f, string::f("Row 2 step %d", i + 1));
+			configParam(PARAM_ROW2 + i, 0.f, 10.f, 0.f, string::f("Row 2 step %d", i + 1), " V");
 		for (int i = 0; i < 8; i++)
-			configParam(PARAM_ROW3 + i, 0.f, 10.f, 0.f, string::f("Row 3 step %d", i + 1));
+			configParam(PARAM_ROW3 + i, 0.f, 10.f, 0.f, string::f("Row 3 step %d", i + 1), " V");
 		for (int i = 0; i < 8; i++)
-			configParam(PARAM_GATE + i, 0.f, 1.f, 0.f, string::f("Gate step %d", i + 1));
+			configButton(PARAM_GATE + i, string::f("Gate step %d", i + 1));
 		configInput(INPUT_CLOCK, "Clock rate");
 		configInput(INPUT_EXT_CLOCK, "External clock");
 		configInput(INPUT_RESET, "Reset");
