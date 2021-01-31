@@ -37,7 +37,8 @@ struct LadderFilter {
 
 	void process(T input, T dt) {
 		dsp::stepRK4(T(0), dt, state, 4, [&](T t, const T x[], T dxdt[]) {
-			T inputc = clip(input - resonance * x[3]);
+			T inputt = crossfade(this->input, input, t / dt);
+			T inputc = clip(inputt - resonance * x[3]);
 			T yc0 = clip(x[0]);
 			T yc1 = clip(x[1]);
 			T yc2 = clip(x[2]);

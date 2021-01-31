@@ -2,6 +2,9 @@
 - Mixer
 	- When polyphonic and monophonic inputs are combined, copy all mono signals to all mix output poly channels.
 
+### 1.4.1 (in development)
+- Improve VCF model accuracy and stability.
+
 ### 1.4.0 (2019-11-08)
 - Add Pulses.
 
