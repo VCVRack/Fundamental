@@ -24,6 +24,13 @@ T expCurve(T x) {
 	return (3 + x * (-13 + 5 * x)) / (3 + 2 * x);
 }
 
+enum WaveIds {
+	SIN_WAVE = 1 << 0,
+	TRI_WAVE = 1 << 1,
+	SAW_WAVE = 1 << 2,
+	SQR_WAVE = 1 << 3,
+	ALL_WAVE = 0xffffffff
+};
 
 template <int OVERSAMPLE, int QUALITY, typename T>
 struct VoltageControlledOscillator {
@@ -60,7 +67,10 @@ struct VoltageControlledOscillator {
 		this->pulseWidth = simd::clamp(pulseWidth, pwMin, 1.f - pwMin);
 	}
 
-	void process(float deltaTime, T syncValue) {
+	void process(float deltaTime, T syncValue, int enabledWaves) {
+		// Do nothing if there aren't any waves to process
+		if (!enabledWaves) return;
+
 		// Advance phase
 		T deltaPhase = simd::clamp(freq * deltaTime, 1e-6f, 0.35f);
 		if (soft) {
@@ -75,45 +85,49 @@ struct VoltageControlledOscillator {
 		// Wrap phase
 		phase -= simd::floor(phase);
 
-		// Jump sqr when crossing 0, or 1 if backwards
-		T wrapPhase = (syncDirection == -1.f) & 1.f;
-		T wrapCrossing = (wrapPhase - (phase - deltaPhase)) / deltaPhase;
-		int wrapMask = simd::movemask((0 < wrapCrossing) & (wrapCrossing <= 1.f));
-		if (wrapMask) {
-			for (int i = 0; i < channels; i++) {
-				if (wrapMask & (1 << i)) {
-					T mask = simd::movemaskInverse<T>(1 << i);
-					float p = wrapCrossing[i] - 1.f;
-					T x = mask & (2.f * syncDirection);
-					sqrMinBlep.insertDiscontinuity(p, x);
+		if (enabledWaves & SQR_WAVE) {
+			// Jump sqr when crossing 0, or 1 if backwards
+			T wrapPhase = (syncDirection == -1.f) & 1.f;
+			T wrapCrossing = (wrapPhase - (phase - deltaPhase)) / deltaPhase;
+			int wrapMask = simd::movemask((0 < wrapCrossing) & (wrapCrossing <= 1.f));
+			if (wrapMask) {
+				for (int i = 0; i < channels; i++) {
+					if (wrapMask & (1 << i)) {
+						T mask = simd::movemaskInverse<T>(1 << i);
+						float p = wrapCrossing[i] - 1.f;
+						T x = mask & (2.f * syncDirection);
+						sqrMinBlep.insertDiscontinuity(p, x);
+					}
+				}
+			}
+
+			// Jump sqr when crossing `pulseWidth`
+			T pulseCrossing = (pulseWidth - (phase - deltaPhase)) / deltaPhase;
+			int pulseMask = simd::movemask((0 < pulseCrossing) & (pulseCrossing <= 1.f));
+			if (pulseMask) {
+				for (int i = 0; i < channels; i++) {
+					if (pulseMask & (1 << i)) {
+						T mask = simd::movemaskInverse<T>(1 << i);
+						float p = pulseCrossing[i] - 1.f;
+						T x = mask & (-2.f * syncDirection);
+						sqrMinBlep.insertDiscontinuity(p, x);
+					}
 				}
 			}
 		}
 
-		// Jump sqr when crossing `pulseWidth`
-		T pulseCrossing = (pulseWidth - (phase - deltaPhase)) / deltaPhase;
-		int pulseMask = simd::movemask((0 < pulseCrossing) & (pulseCrossing <= 1.f));
-		if (pulseMask) {
-			for (int i = 0; i < channels; i++) {
-				if (pulseMask & (1 << i)) {
-					T mask = simd::movemaskInverse<T>(1 << i);
-					float p = pulseCrossing[i] - 1.f;
-					T x = mask & (-2.f * syncDirection);
-					sqrMinBlep.insertDiscontinuity(p, x);
-				}
-			}
-		}
-
-		// Jump saw when crossing 0.5
-		T halfCrossing = (0.5f - (phase - deltaPhase)) / deltaPhase;
-		int halfMask = simd::movemask((0 < halfCrossing) & (halfCrossing <= 1.f));
-		if (halfMask) {
-			for (int i = 0; i < channels; i++) {
-				if (halfMask & (1 << i)) {
-					T mask = simd::movemaskInverse<T>(1 << i);
-					float p = halfCrossing[i] - 1.f;
-					T x = mask & (-2.f * syncDirection);
-					sawMinBlep.insertDiscontinuity(p, x);
+		if (enabledWaves & SAW_WAVE) {
+			// Jump saw when crossing 0.5
+			T halfCrossing = (0.5f - (phase - deltaPhase)) / deltaPhase;
+			int halfMask = simd::movemask((0 < halfCrossing) & (halfCrossing <= 1.f));
+			if (halfMask) {
+				for (int i = 0; i < channels; i++) {
+					if (halfMask & (1 << i)) {
+						T mask = simd::movemaskInverse<T>(1 << i);
+						float p = halfCrossing[i] - 1.f;
+						T x = mask & (-2.f * syncDirection);
+						sawMinBlep.insertDiscontinuity(p, x);
+					}
 				}
 			}
 		}
@@ -154,26 +168,34 @@ struct VoltageControlledOscillator {
 		}
 
 		// Square
-		sqrValue = sqr(phase);
-		sqrValue += sqrMinBlep.process();
+		if (enabledWaves & SQR_WAVE) {
+			sqrValue = sqr(phase);
+			sqrValue += sqrMinBlep.process();
 
-		if (analog) {
-			sqrFilter.setCutoffFreq(20.f * deltaTime);
-			sqrFilter.process(sqrValue);
-			sqrValue = sqrFilter.highpass() * 0.95f;
+			if (analog) {
+				sqrFilter.setCutoffFreq(20.f * deltaTime);
+				sqrFilter.process(sqrValue);
+				sqrValue = sqrFilter.highpass() * 0.95f;
+			}
 		}
 
 		// Saw
-		sawValue = saw(phase);
-		sawValue += sawMinBlep.process();
+		if (enabledWaves & SAW_WAVE) {
+			sawValue = saw(phase);
+			sawValue += sawMinBlep.process();
+		}
 
 		// Tri
-		triValue = tri(phase);
-		triValue += triMinBlep.process();
+		if (enabledWaves & TRI_WAVE) {
+			triValue = tri(phase);
+			triValue += triMinBlep.process();
+		}
 
 		// Sin
-		sinValue = sin(phase);
-		sinValue += sinMinBlep.process();
+		if (enabledWaves & SIN_WAVE) {
+			sinValue = sin(phase);
+			sinValue += sinMinBlep.process();
+		}
 	}
 
 	T sin(T phase) {
@@ -291,11 +313,24 @@ struct VCO : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		int enabledWaves = 0; // Need to use int here becuase C++
+		if (outputs[SIN_OUTPUT].isConnected())
+			enabledWaves |= SIN_WAVE;
+		if (outputs[TRI_OUTPUT].isConnected())
+			enabledWaves |= TRI_WAVE;
+		if (outputs[SAW_OUTPUT].isConnected())
+			enabledWaves |= SAW_WAVE;
+		if (outputs[SQR_OUTPUT].isConnected())
+			enabledWaves |= SQR_WAVE;
+
+		if (!enabledWaves) return;
+
 		float freqParam = params[FREQ_PARAM].getValue() / 12.f;
 		freqParam += dsp::quadraticBipolar(params[FINE_PARAM].getValue()) * 3.f / 12.f;
 		float fmParam = dsp::quadraticBipolar(params[FM_PARAM].getValue());
 
 		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
+
 
 		for (int c = 0; c < channels; c += 4) {
 			auto* oscillator = &oscillators[c / 4];
@@ -312,7 +347,7 @@ struct VCO : Module {
 			oscillator->setPulseWidth(params[PW_PARAM].getValue() + params[PWM_PARAM].getValue() * inputs[PW_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f);
 
 			oscillator->syncEnabled = inputs[SYNC_INPUT].isConnected();
-			oscillator->process(args.sampleTime, inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c));
+			oscillator->process(args.sampleTime, inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c), enabledWaves);
 
 			// Set output
 			if (outputs[SIN_OUTPUT].isConnected())
@@ -423,6 +458,8 @@ struct VCO2 : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		if (!outputs[OUT_OUTPUT].isConnected()) return;
+
 		float freqParam = params[FREQ_PARAM].getValue() / 12.f;
 		float fmParam = dsp::quadraticBipolar(params[FM_PARAM].getValue());
 		float waveParam = params[WAVE_PARAM].getValue();
@@ -440,18 +477,16 @@ struct VCO2 : Module {
 			oscillator->setPitch(pitch);
 
 			oscillator->syncEnabled = inputs[SYNC_INPUT].isConnected();
-			oscillator->process(args.sampleTime, inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c));
+			oscillator->process(args.sampleTime, inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c), ALL_WAVE);
 
 			// Outputs
-			if (outputs[OUT_OUTPUT].isConnected()) {
-				float_4 wave = simd::clamp(waveParam + inputs[WAVE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * 3.f, 0.f, 3.f);
-				float_4 v = 0.f;
-				v += oscillator->sin() * simd::fmax(0.f, 1.f - simd::fabs(wave - 0.f));
-				v += oscillator->tri() * simd::fmax(0.f, 1.f - simd::fabs(wave - 1.f));
-				v += oscillator->saw() * simd::fmax(0.f, 1.f - simd::fabs(wave - 2.f));
-				v += oscillator->sqr() * simd::fmax(0.f, 1.f - simd::fabs(wave - 3.f));
-				outputs[OUT_OUTPUT].setVoltageSimd(5.f * v, c);
-			}
+			float_4 wave = simd::clamp(waveParam + inputs[WAVE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * 3.f, 0.f, 3.f);
+			float_4 v = 0.f;
+			v += oscillator->sin() * simd::fmax(0.f, 1.f - simd::fabs(wave - 0.f));
+			v += oscillator->tri() * simd::fmax(0.f, 1.f - simd::fabs(wave - 1.f));
+			v += oscillator->saw() * simd::fmax(0.f, 1.f - simd::fabs(wave - 2.f));
+			v += oscillator->sqr() * simd::fmax(0.f, 1.f - simd::fabs(wave - 3.f));
+			outputs[OUT_OUTPUT].setVoltageSimd(5.f * v, c);
 		}
 
 		outputs[OUT_OUTPUT].setChannels(channels);
