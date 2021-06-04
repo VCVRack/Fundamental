@@ -103,7 +103,7 @@ struct VCF : Module {
 		configInput(FREQ_INPUT, "Frequency");
 		configInput(RES_INPUT, "Resonance");
 		configInput(DRIVE_INPUT, "Drive");
-		configInput(IN_INPUT, "In");
+		configInput(IN_INPUT, "Audio");
 		configOutput(LPF_OUTPUT, "Lowpass filter");
 		configOutput(HPF_OUTPUT, "Highpass filter");
 		configBypass(IN_INPUT, LPF_OUTPUT);

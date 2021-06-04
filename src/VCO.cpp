@@ -430,8 +430,8 @@ struct VCO2 : Module {
 		configParam(FM_PARAM, 0.f, 1.f, 1.f, "Frequency modulation", "%", 0.f, 100.f);
 		configInput(FM_INPUT, "Frequency modulation");
 		configInput(SYNC_INPUT, "Sync");
-		configInput(WAVE_INPUT, "Wave");
-		configOutput(OUT_OUTPUT, "Out");
+		configInput(WAVE_INPUT, "Wave type");
+		configOutput(OUT_OUTPUT, "Audio");
 
 		lightDivider.setDivision(16);
 	}

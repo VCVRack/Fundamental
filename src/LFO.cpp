@@ -132,6 +132,8 @@ struct LFO : Module {
 		configOutput(TRI_OUTPUT, "Triangle");
 		configOutput(SAW_OUTPUT, "Sawtooth");
 		configOutput(SQR_OUTPUT, "Square");
+		configLight(PHASE_LIGHT, "Phase");
+		lightInfos[PHASE_LIGHT]->description = "Tracks the sine output.\nGreen if positive, red if negative, blue if polyphonic.";
 
 		lightDivider.setDivision(16);
 	}
@@ -272,8 +274,10 @@ struct LFO2 : Module {
 		configParam(FM_PARAM, 0.f, 1.f, 1.f, "Frequency modulation", "%", 0.f, 100.f);
 		configInput(FM_INPUT, "Frequency modulation");
 		configInput(RESET_INPUT, "Reset");
-		configInput(WAVE_INPUT, "Wave");
-		configOutput(INTERP_OUTPUT, "Out");
+		configInput(WAVE_INPUT, "Wave type");
+		configOutput(INTERP_OUTPUT, "Audio");
+		configLight(PHASE_LIGHT, "Phase");
+		lightInfos[PHASE_LIGHT]->description = "Tracks the sine output.\nGreen if positive, red if negative, blue if polyphonic.";
 
 		lightDivider.setDivision(16);
 	}

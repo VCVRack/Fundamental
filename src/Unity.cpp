@@ -29,17 +29,17 @@ struct Unity : Module {
 
 	Unity() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configSwitch(AVG1_PARAM, 0.0, 1.0, 0.0, "Ch 1 mode", {"Sum", "Average"});
-		configSwitch(AVG2_PARAM, 0.0, 1.0, 0.0, "Ch 2 mode", {"Sum", "Average"});
+		configSwitch(AVG1_PARAM, 0.0, 1.0, 0.0, "Channel 1 mode", {"Sum", "Average"});
+		configSwitch(AVG2_PARAM, 0.0, 1.0, 0.0, "Channel 2 mode", {"Sum", "Average"});
 		for (int i = 0; i < 2; i++) {
 			for (int j = 0; j < 6; j++) {
-				configInput(IN_INPUTS + i * 6 + j, string::f("In %d ch %d", i + 1, j + 1));
+				configInput(IN_INPUTS + i * 6 + j, string::f("Channel %d #%d", i + 1, j + 1));
 			}
 		}
-		configOutput(MIX1_OUTPUT, "Mix 1");
-		configOutput(INV1_OUTPUT, "Inverse mix 1");
-		configOutput(MIX2_OUTPUT, "Mix 2");
-		configOutput(INV2_OUTPUT, "Inverse mix 2");
+		configOutput(MIX1_OUTPUT, "Channel 1 mix");
+		configOutput(INV1_OUTPUT, "Channel 1 inverse mix");
+		configOutput(MIX2_OUTPUT, "Channel 2 mix");
+		configOutput(INV2_OUTPUT, "Channel 2 inverse mix");
 
 		lightDivider.setDivision(256);
 	}

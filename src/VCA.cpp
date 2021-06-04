@@ -24,16 +24,16 @@ struct VCA : Module {
 
 	VCA() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
-		configParam(LEVEL1_PARAM, 0.0, 1.0, 1.0, "Ch 1 level", "%", 0, 100);
-		configParam(LEVEL2_PARAM, 0.0, 1.0, 1.0, "Ch 2 level", "%", 0, 100);
-		configInput(EXP1_INPUT, "Exponential CV 1");
-		configInput(LIN1_INPUT, "Linear CV 1");
-		configInput(IN1_INPUT, "In 1");
-		configInput(EXP2_INPUT, "Exponential CV 2");
-		configInput(LIN2_INPUT, "Linear CV 2");
-		configInput(IN2_INPUT, "In 2");
-		configOutput(OUT1_OUTPUT, "Out 1");
-		configOutput(OUT2_OUTPUT, "Out 2");
+		configParam(LEVEL1_PARAM, 0.0, 1.0, 1.0, "Channel 1 level", "%", 0, 100);
+		configParam(LEVEL2_PARAM, 0.0, 1.0, 1.0, "Channel 2 level", "%", 0, 100);
+		configInput(EXP1_INPUT, "Channel 1 exponential CV");
+		configInput(EXP2_INPUT, "Channel 2 exponential CV");
+		configInput(LIN1_INPUT, "Channel 1 linear CV");
+		configInput(LIN2_INPUT, "Channel 2 linear CV");
+		configInput(IN1_INPUT, "Channel 1");
+		configInput(IN2_INPUT, "Channel 2");
+		configOutput(OUT1_OUTPUT, "Channel 1");
+		configOutput(OUT2_OUTPUT, "Channel 2");
 	}
 
 	void processChannel(Input& in, Param& level, Input& lin, Input& exp, Output& out) {
@@ -159,7 +159,6 @@ struct VCA_1 : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(LEVEL_PARAM, 0.0, 1.0, 1.0, "Level", "%", 0, 100);
 		configSwitch(EXP_PARAM, 0.0, 1.0, 1.0, "Response mode", {"Exponential", "Linear"});
-
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -206,6 +205,9 @@ struct VCA_1VUKnob : SliderKnob {
 		nvgFillColor(args.vg, nvgRGB(0, 0, 0));
 		nvgFill(args.vg);
 
+		// Disable tinting when rack brightness is decreased
+		nvgGlobalAlpha(args.vg, 1.0);
+
 		const Vec margin = Vec(3, 3);
 		Rect r = box.zeroPos().grow(margin.neg());
 
@@ -214,14 +216,16 @@ struct VCA_1VUKnob : SliderKnob {
 		float value = pq ? pq->getValue() : 1.f;
 
 		// Segment value
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg,
-		        r.pos.x,
-		        r.pos.y + r.size.y * (1 - value),
-		        r.size.x,
-		        r.size.y * value);
-		nvgFillColor(args.vg, color::mult(color::WHITE, 0.33));
-		nvgFill(args.vg);
+		if (value >= 0.005f) {
+			nvgBeginPath(args.vg);
+			nvgRect(args.vg,
+			        r.pos.x,
+			        r.pos.y + r.size.y * (1 - value),
+			        r.size.x,
+			        r.size.y * value);
+			nvgFillColor(args.vg, color::mult(color::WHITE, 0.33));
+			nvgFill(args.vg);
+		}
 
 		// Segment gain
 		nvgBeginPath(args.vg);

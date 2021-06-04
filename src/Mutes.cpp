@@ -25,7 +25,7 @@ struct Mutes : Module {
 	Mutes() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		for (int i = 0; i < 10; i++) {
-			configParam(MUTE_PARAMS + i, 0.0, 1.0, 0.0, string::f("Row %d mute", i + 1));
+			configButton(MUTE_PARAMS + i, string::f("Row %d mute", i + 1));
 			configInput(IN_INPUTS + i, string::f("Row %d", i + 1));
 			configOutput(OUT_OUTPUTS + i, string::f("Row %d", i + 1));
 		}

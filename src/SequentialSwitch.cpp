@@ -31,22 +31,22 @@ struct SequentialSwitch : Module {
 
 	SequentialSwitch() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(STEPS_PARAM, 0.0, 2.0, 0.0, "Steps", "", 0, -1, 4);
+		configSwitch(STEPS_PARAM, 0.0, 2.0, 0.0, "Steps", {"2", "3", "4"});
 		configInput(CLOCK_INPUT, "Clock");
 		configInput(RESET_INPUT, "Reset");
 		if (INPUTS == 1) {
-			configInput(IN_INPUTS + 0, "In");
+			configInput(IN_INPUTS + 0, "Main");
 		}
 		else {
 			for (int i = 0; i < INPUTS; i++)
-				configInput(IN_INPUTS + i, string::f("Ch %d", i + 1));
+				configInput(IN_INPUTS + i, string::f("Channel %d", i + 1));
 		}
 		if (OUTPUTS == 1) {
-			configOutput(OUT_OUTPUTS + 0, "Out");
+			configOutput(OUT_OUTPUTS + 0, "Main");
 		}
 		else {
 			for (int i = 0; i < OUTPUTS; i++)
-				configOutput(OUT_OUTPUTS + i, string::f("Ch %d", i + 1));
+				configOutput(OUT_OUTPUTS + i, string::f("Channel %d", i + 1));
 		}
 
 		for (int i = 0; i < 4; i++) {

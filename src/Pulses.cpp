@@ -25,7 +25,7 @@ struct Pulses : Module {
 	Pulses() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		for (int i = 0; i < 10; i++) {
-			configParam(TAP_PARAMS + i, 0.f, 1.f, 0.f, string::f("Row %d tap", i + 1));
+			configButton(TAP_PARAMS + i, string::f("Row %d button", i + 1));
 			configOutput(TRIG_OUTPUTS + i, string::f("Row %d trigger", i + 1));
 			configOutput(GATE_OUTPUTS + i, string::f("Row %d gate", i + 1));
 		}

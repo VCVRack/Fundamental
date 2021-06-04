@@ -23,8 +23,8 @@ struct Octave : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(OCTAVE_PARAM, -4.f, 4.f, 0.f, "Octave shift");
 		configInput(PITCH_INPUT, "Pitch");
-		configInput(OCTAVE_INPUT, "Octave shift");
-		configOutput(PITCH_OUTPUT, "Octave-shifted pitch");
+		configInput(OCTAVE_INPUT, "Octave shift CV");
+		configOutput(PITCH_OUTPUT, "Pitch");
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -63,6 +63,9 @@ struct OctaveButton : Widget {
 		engine::ParamQuantity* pq = paramWidget->getParamQuantity();
 		if (pq)
 			activeOctave = std::round(pq->getValue());
+
+		// Disable tinting when rack brightness is decreased
+		nvgGlobalAlpha(args.vg, 1.0);
 
 		if (activeOctave == octave) {
 			// Enabled

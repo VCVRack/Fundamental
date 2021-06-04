@@ -31,10 +31,10 @@ struct VCMixer : Module {
 		// x^1 scaling up to 6 dB
 		configParam(MIX_LVL_PARAM, 0.0, 2.0, 1.0, "Master level", " dB", -10, 20);
 		// x^2 scaling up to 6 dB
-		configParam(LVL_PARAMS + 0, 0.0, M_SQRT2, 1.0, "Ch 1 level", " dB", -10, 40);
-		configParam(LVL_PARAMS + 1, 0.0, M_SQRT2, 1.0, "Ch 2 level", " dB", -10, 40);
-		configParam(LVL_PARAMS + 2, 0.0, M_SQRT2, 1.0, "Ch 3 level", " dB", -10, 40);
-		configParam(LVL_PARAMS + 3, 0.0, M_SQRT2, 1.0, "Ch 4 level", " dB", -10, 40);
+		configParam(LVL_PARAMS + 0, 0.0, M_SQRT2, 1.0, "Channel 1 level", " dB", -10, 40);
+		configParam(LVL_PARAMS + 1, 0.0, M_SQRT2, 1.0, "Channel 2 level", " dB", -10, 40);
+		configParam(LVL_PARAMS + 2, 0.0, M_SQRT2, 1.0, "Channel 3 level", " dB", -10, 40);
+		configParam(LVL_PARAMS + 3, 0.0, M_SQRT2, 1.0, "Channel 4 level", " dB", -10, 40);
 		configInput(MIX_CV_INPUT, "Mix CV");
 		for (int i = 0; i < 4; i++)
 			configInput(CH_INPUTS + i, string::f("Channel %d", i + 1));

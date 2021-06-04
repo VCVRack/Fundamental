@@ -22,6 +22,8 @@ struct Viz : Module {
 
 	Viz() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+		configInput(POLY_INPUT, "Polyphonic");
+
 		lightDivider.setDivision(16);
 	}
 
