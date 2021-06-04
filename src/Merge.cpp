@@ -72,35 +72,6 @@ struct Merge : Module {
 };
 
 
-struct MergeChannelItem : MenuItem {
-	Merge* module;
-	int channels;
-	void onAction(const event::Action& e) override {
-		module->channels = channels;
-	}
-};
-
-
-struct MergeChannelsItem : MenuItem {
-	Merge* module;
-	Menu* createChildMenu() override {
-		Menu* menu = new Menu;
-		for (int channels = -1; channels <= 16; channels++) {
-			MergeChannelItem* item = new MergeChannelItem;
-			if (channels < 0)
-				item->text = "Automatic";
-			else
-				item->text = string::f("%d", channels);
-			item->rightText = CHECKMARK(module->channels == channels);
-			item->module = module;
-			item->channels = channels;
-			menu->addChild(item);
-		}
-		return menu;
-	}
-};
-
-
 struct MergeWidget : ModuleWidget {
 	MergeWidget(Merge* module) {
 		setModule(module);
@@ -151,8 +122,21 @@ struct MergeWidget : ModuleWidget {
 	void appendContextMenu(Menu* menu) override {
 		Merge* module = dynamic_cast<Merge*>(this->module);
 
-		menu->addChild(new MenuEntry);
+		menu->addChild(new MenuSeparator);
 
+		struct MergeChannelsItem : MenuItem {
+			Merge* module;
+			Menu* createChildMenu() override {
+				Menu* menu = new Menu;
+				for (int c = -1; c <= 16; c++) {
+					menu->addChild(createCheckMenuItem((c < 0) ? "Automatic" : string::f("%d", c),
+						[=]() {return module->channels == c;},
+						[=]() {module->channels = c;}
+					));
+				}
+				return menu;
+			}
+		};
 		MergeChannelsItem* channelsItem = new MergeChannelsItem;
 		channelsItem->text = "Channels";
 		channelsItem->rightText = RIGHT_ARROW;

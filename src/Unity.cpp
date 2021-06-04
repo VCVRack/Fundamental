@@ -107,17 +107,6 @@ struct Unity : Module {
 };
 
 
-struct UnityMergeItem : MenuItem {
-	Unity* unity;
-	void onAction(const event::Action& e) override {
-		unity->merge ^= true;
-	}
-	void step() override {
-		rightText = CHECKMARK(unity->merge);
-	}
-};
-
-
 struct UnityWidget : ModuleWidget {
 	UnityWidget(Unity* module) {
 		setModule(module);
@@ -162,14 +151,12 @@ struct UnityWidget : ModuleWidget {
 	}
 
 	void appendContextMenu(Menu* menu) override {
-		menu->addChild(new MenuEntry);
+		Unity* module = dynamic_cast<Unity*>(this->module);
+		assert(module);
 
-		Unity* unity = dynamic_cast<Unity*>(module);
-		assert(unity);
+		menu->addChild(new MenuSeparator);
 
-		UnityMergeItem* mergeItem = createMenuItem<UnityMergeItem>("Merge channels 1 & 2");
-		mergeItem->unity = unity;
-		menu->addChild(mergeItem);
+		menu->addChild(createBoolPtrMenuItem("Merge channels 1 & 2", &module->merge));
 	}
 };
 
