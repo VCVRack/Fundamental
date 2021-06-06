@@ -180,7 +180,7 @@ struct Scope : Module {
 struct ScopeDisplay : TransparentWidget {
 	Scope* module;
 	int statsFrame = 0;
-	std::shared_ptr<Font> font;
+	std::string fontPath;
 
 	struct Stats {
 		float vpp = 0.f;
@@ -202,7 +202,7 @@ struct ScopeDisplay : TransparentWidget {
 	Stats statsX, statsY;
 
 	ScopeDisplay() {
-		font = APP->window->loadFont(asset::plugin(pluginInstance, "res/sudo/Sudo.ttf"));
+		fontPath = asset::plugin(pluginInstance, "res/sudo/Sudo.ttf");
 	}
 
 	void drawWaveform(const DrawArgs& args, float* bufferX, float offsetX, float gainX, float* bufferY, float offsetY, float gainY) {
@@ -265,6 +265,7 @@ struct ScopeDisplay : TransparentWidget {
 		}
 		nvgFill(args.vg);
 
+		std::shared_ptr<Font> font = APP->window->loadFont(fontPath);
 		nvgFontSize(args.vg, 9);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgFillColor(args.vg, nvgRGBA(0x1e, 0x28, 0x2b, 0xff));
@@ -273,6 +274,7 @@ struct ScopeDisplay : TransparentWidget {
 	}
 
 	void drawStats(const DrawArgs& args, Vec pos, const char* title, Stats* stats) {
+		std::shared_ptr<Font> font = APP->window->loadFont(fontPath);
 		nvgFontSize(args.vg, 13);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, -2);
