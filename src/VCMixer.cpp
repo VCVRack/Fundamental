@@ -29,7 +29,7 @@ struct VCMixer : Module {
 	VCMixer() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		// x^1 scaling up to 6 dB
-		configParam(MIX_LVL_PARAM, 0.0, 2.0, 1.0, "Master level", " dB", -10, 20);
+		configParam(MIX_LVL_PARAM, 0.0, 2.0, 1.0, "Mix level", " dB", -10, 20);
 		// x^2 scaling up to 6 dB
 		configParam(LVL_PARAMS + 0, 0.0, M_SQRT2, 1.0, "Channel 1 level", " dB", -10, 40);
 		configParam(LVL_PARAMS + 1, 0.0, M_SQRT2, 1.0, "Channel 2 level", " dB", -10, 40);
