@@ -111,16 +111,16 @@ struct MutesWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
 
-		addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 18.165)), module, Mutes::MUTE_PARAMS + 0));
-		addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 28.164)), module, Mutes::MUTE_PARAMS + 1));
-		addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 38.164)), module, Mutes::MUTE_PARAMS + 2));
-		addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 48.165)), module, Mutes::MUTE_PARAMS + 3));
-		addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 58.164)), module, Mutes::MUTE_PARAMS + 4));
-		addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 68.165)), module, Mutes::MUTE_PARAMS + 5));
-		addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 78.164)), module, Mutes::MUTE_PARAMS + 6));
-		addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 88.164)), module, Mutes::MUTE_PARAMS + 7));
-		addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 98.165)), module, Mutes::MUTE_PARAMS + 8));
-		addParam(createParam<LEDBezel>(mm2px(Vec(16.57, 108.166)), module, Mutes::MUTE_PARAMS + 9));
+		addParam(createLightParam<LEDLightBezel<GreenLight>>(mm2px(Vec(16.57, 18.165)), module, Mutes::MUTE_PARAMS + 0, Mutes::MUTE_LIGHTS + 0));
+		addParam(createLightParam<LEDLightBezel<GreenLight>>(mm2px(Vec(16.57, 28.164)), module, Mutes::MUTE_PARAMS + 1, Mutes::MUTE_LIGHTS + 1));
+		addParam(createLightParam<LEDLightBezel<GreenLight>>(mm2px(Vec(16.57, 38.164)), module, Mutes::MUTE_PARAMS + 2, Mutes::MUTE_LIGHTS + 2));
+		addParam(createLightParam<LEDLightBezel<GreenLight>>(mm2px(Vec(16.57, 48.165)), module, Mutes::MUTE_PARAMS + 3, Mutes::MUTE_LIGHTS + 3));
+		addParam(createLightParam<LEDLightBezel<GreenLight>>(mm2px(Vec(16.57, 58.164)), module, Mutes::MUTE_PARAMS + 4, Mutes::MUTE_LIGHTS + 4));
+		addParam(createLightParam<LEDLightBezel<GreenLight>>(mm2px(Vec(16.57, 68.165)), module, Mutes::MUTE_PARAMS + 5, Mutes::MUTE_LIGHTS + 5));
+		addParam(createLightParam<LEDLightBezel<GreenLight>>(mm2px(Vec(16.57, 78.164)), module, Mutes::MUTE_PARAMS + 6, Mutes::MUTE_LIGHTS + 6));
+		addParam(createLightParam<LEDLightBezel<GreenLight>>(mm2px(Vec(16.57, 88.164)), module, Mutes::MUTE_PARAMS + 7, Mutes::MUTE_LIGHTS + 7));
+		addParam(createLightParam<LEDLightBezel<GreenLight>>(mm2px(Vec(16.57, 98.165)), module, Mutes::MUTE_PARAMS + 8, Mutes::MUTE_LIGHTS + 8));
+		addParam(createLightParam<LEDLightBezel<GreenLight>>(mm2px(Vec(16.57, 108.166)), module, Mutes::MUTE_PARAMS + 9, Mutes::MUTE_LIGHTS + 9));
 
 		addInput(createInput<PJ301MPort>(mm2px(Vec(4.214, 17.81)), module, Mutes::IN_INPUTS + 0));
 		addInput(createInput<PJ301MPort>(mm2px(Vec(4.214, 27.809)), module, Mutes::IN_INPUTS + 1));
@@ -143,17 +143,6 @@ struct MutesWidget : ModuleWidget {
 		addOutput(createOutput<PJ301MPort>(mm2px(Vec(28.214, 87.81)), module, Mutes::OUT_OUTPUTS + 7));
 		addOutput(createOutput<PJ301MPort>(mm2px(Vec(28.214, 97.809)), module, Mutes::OUT_OUTPUTS + 8));
 		addOutput(createOutput<PJ301MPort>(mm2px(Vec(28.214, 107.809)), module, Mutes::OUT_OUTPUTS + 9));
-
-		addChild(createLight<LEDBezelLight<GreenLight>>(mm2px(Vec(17.32, 18.915)), module, Mutes::MUTE_LIGHTS + 0));
-		addChild(createLight<LEDBezelLight<GreenLight>>(mm2px(Vec(17.32, 28.916)), module, Mutes::MUTE_LIGHTS + 1));
-		addChild(createLight<LEDBezelLight<GreenLight>>(mm2px(Vec(17.32, 38.915)), module, Mutes::MUTE_LIGHTS + 2));
-		addChild(createLight<LEDBezelLight<GreenLight>>(mm2px(Vec(17.32, 48.915)), module, Mutes::MUTE_LIGHTS + 3));
-		addChild(createLight<LEDBezelLight<GreenLight>>(mm2px(Vec(17.32, 58.916)), module, Mutes::MUTE_LIGHTS + 4));
-		addChild(createLight<LEDBezelLight<GreenLight>>(mm2px(Vec(17.32, 68.916)), module, Mutes::MUTE_LIGHTS + 5));
-		addChild(createLight<LEDBezelLight<GreenLight>>(mm2px(Vec(17.32, 78.915)), module, Mutes::MUTE_LIGHTS + 6));
-		addChild(createLight<LEDBezelLight<GreenLight>>(mm2px(Vec(17.32, 88.916)), module, Mutes::MUTE_LIGHTS + 7));
-		addChild(createLight<LEDBezelLight<GreenLight>>(mm2px(Vec(17.32, 98.915)), module, Mutes::MUTE_LIGHTS + 8));
-		addChild(createLight<LEDBezelLight<GreenLight>>(mm2px(Vec(17.32, 108.915)), module, Mutes::MUTE_LIGHTS + 9));
 	}
 };
 

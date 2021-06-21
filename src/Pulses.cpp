@@ -56,16 +56,16 @@ struct PulsesWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<LEDBezel>(mm2px(Vec(8.32, 21.505)), module, Pulses::TAP_PARAMS + 0));
-		addParam(createParamCentered<LEDBezel>(mm2px(Vec(8.32, 31.504)), module, Pulses::TAP_PARAMS + 1));
-		addParam(createParamCentered<LEDBezel>(mm2px(Vec(8.32, 41.505)), module, Pulses::TAP_PARAMS + 2));
-		addParam(createParamCentered<LEDBezel>(mm2px(Vec(8.32, 51.505)), module, Pulses::TAP_PARAMS + 3));
-		addParam(createParamCentered<LEDBezel>(mm2px(Vec(8.32, 61.505)), module, Pulses::TAP_PARAMS + 4));
-		addParam(createParamCentered<LEDBezel>(mm2px(Vec(8.32, 71.505)), module, Pulses::TAP_PARAMS + 5));
-		addParam(createParamCentered<LEDBezel>(mm2px(Vec(8.32, 81.505)), module, Pulses::TAP_PARAMS + 6));
-		addParam(createParamCentered<LEDBezel>(mm2px(Vec(8.32, 91.504)), module, Pulses::TAP_PARAMS + 7));
-		addParam(createParamCentered<LEDBezel>(mm2px(Vec(8.32, 101.505)), module, Pulses::TAP_PARAMS + 8));
-		addParam(createParamCentered<LEDBezel>(mm2px(Vec(8.32, 111.505)), module, Pulses::TAP_PARAMS + 9));
+		addParam(createLightParamCentered<LEDLightBezel<GreenLight>>(mm2px(Vec(8.32, 21.505)), module, Pulses::TAP_PARAMS + 0, Pulses::TAP_LIGHTS + 0));
+		addParam(createLightParamCentered<LEDLightBezel<GreenLight>>(mm2px(Vec(8.32, 31.504)), module, Pulses::TAP_PARAMS + 1, Pulses::TAP_LIGHTS + 1));
+		addParam(createLightParamCentered<LEDLightBezel<GreenLight>>(mm2px(Vec(8.32, 41.505)), module, Pulses::TAP_PARAMS + 2, Pulses::TAP_LIGHTS + 2));
+		addParam(createLightParamCentered<LEDLightBezel<GreenLight>>(mm2px(Vec(8.32, 51.505)), module, Pulses::TAP_PARAMS + 3, Pulses::TAP_LIGHTS + 3));
+		addParam(createLightParamCentered<LEDLightBezel<GreenLight>>(mm2px(Vec(8.32, 61.505)), module, Pulses::TAP_PARAMS + 4, Pulses::TAP_LIGHTS + 4));
+		addParam(createLightParamCentered<LEDLightBezel<GreenLight>>(mm2px(Vec(8.32, 71.505)), module, Pulses::TAP_PARAMS + 5, Pulses::TAP_LIGHTS + 5));
+		addParam(createLightParamCentered<LEDLightBezel<GreenLight>>(mm2px(Vec(8.32, 81.505)), module, Pulses::TAP_PARAMS + 6, Pulses::TAP_LIGHTS + 6));
+		addParam(createLightParamCentered<LEDLightBezel<GreenLight>>(mm2px(Vec(8.32, 91.504)), module, Pulses::TAP_PARAMS + 7, Pulses::TAP_LIGHTS + 7));
+		addParam(createLightParamCentered<LEDLightBezel<GreenLight>>(mm2px(Vec(8.32, 101.505)), module, Pulses::TAP_PARAMS + 8, Pulses::TAP_LIGHTS + 8));
+		addParam(createLightParamCentered<LEDLightBezel<GreenLight>>(mm2px(Vec(8.32, 111.505)), module, Pulses::TAP_PARAMS + 9, Pulses::TAP_LIGHTS + 9));
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.319, 21.504)), module, Pulses::TRIG_OUTPUTS + 0));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(32.319, 21.504)), module, Pulses::GATE_OUTPUTS + 0));
@@ -87,17 +87,6 @@ struct PulsesWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(32.319, 101.504)), module, Pulses::GATE_OUTPUTS + 8));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.319, 111.504)), module, Pulses::TRIG_OUTPUTS + 9));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(32.319, 111.504)), module, Pulses::GATE_OUTPUTS + 9));
-
-		addChild(createLightCentered<LEDBezelLight<GreenLight>>(mm2px(Vec(8.32, 21.505)), module, Pulses::TAP_LIGHTS + 0));
-		addChild(createLightCentered<LEDBezelLight<GreenLight>>(mm2px(Vec(8.32, 31.504)), module, Pulses::TAP_LIGHTS + 1));
-		addChild(createLightCentered<LEDBezelLight<GreenLight>>(mm2px(Vec(8.32, 41.505)), module, Pulses::TAP_LIGHTS + 2));
-		addChild(createLightCentered<LEDBezelLight<GreenLight>>(mm2px(Vec(8.32, 51.505)), module, Pulses::TAP_LIGHTS + 3));
-		addChild(createLightCentered<LEDBezelLight<GreenLight>>(mm2px(Vec(8.32, 61.505)), module, Pulses::TAP_LIGHTS + 4));
-		addChild(createLightCentered<LEDBezelLight<GreenLight>>(mm2px(Vec(8.32, 71.505)), module, Pulses::TAP_LIGHTS + 5));
-		addChild(createLightCentered<LEDBezelLight<GreenLight>>(mm2px(Vec(8.32, 81.505)), module, Pulses::TAP_LIGHTS + 6));
-		addChild(createLightCentered<LEDBezelLight<GreenLight>>(mm2px(Vec(8.32, 91.504)), module, Pulses::TAP_LIGHTS + 7));
-		addChild(createLightCentered<LEDBezelLight<GreenLight>>(mm2px(Vec(8.32, 101.505)), module, Pulses::TAP_LIGHTS + 8));
-		addChild(createLightCentered<LEDBezelLight<GreenLight>>(mm2px(Vec(8.32, 111.505)), module, Pulses::TAP_LIGHTS + 9));
 	}
 };
 
