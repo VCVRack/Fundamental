@@ -2,6 +2,8 @@ RACK_DIR ?= ../..
 
 FLAGS += -Idep/include
 SOURCES += $(wildcard src/*.cpp)
-DISTRIBUTABLES += $(wildcard LICENSE*) res
+DISTRIBUTABLES += res
+DISTRIBUTABLES += $(wildcard LICENSE*)
+DISTRIBUTABLES += $(wildcard presets)
 
 include $(RACK_DIR)/plugin.mk
