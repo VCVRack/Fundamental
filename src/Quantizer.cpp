@@ -129,7 +129,7 @@ struct QuantizerButton : OpaqueWidget {
 		Rect r = box.zeroPos().grow(Vec(margin, margin / 2).neg());
 
 		// Disable tinting when rack brightness is decreased
-		nvgGlobalAlpha(args.vg, 1.0);
+		nvgGlobalTint(args.vg, color::WHITE);
 
 		nvgBeginPath(args.vg);
 		nvgRect(args.vg, RECT_ARGS(r));

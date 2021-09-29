@@ -66,7 +66,7 @@ struct OctaveButton : Widget {
 			activeOctave = std::round(pq->getValue());
 
 		// Disable tinting when rack brightness is decreased
-		nvgGlobalAlpha(args.vg, 1.0);
+		nvgGlobalTint(args.vg, color::WHITE);
 
 		if (activeOctave == octave) {
 			// Enabled

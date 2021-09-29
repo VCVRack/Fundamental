@@ -206,7 +206,7 @@ struct VCA_1VUKnob : SliderKnob {
 		nvgFill(args.vg);
 
 		// Disable tinting when rack brightness is decreased
-		nvgGlobalAlpha(args.vg, 1.0);
+		nvgGlobalTint(args.vg, color::WHITE);
 
 		const Vec margin = Vec(3, 3);
 		Rect r = box.zeroPos().grow(margin.neg());
