@@ -34,6 +34,8 @@ struct VCA : Module {
 		configInput(IN2_INPUT, "Channel 2");
 		configOutput(OUT1_OUTPUT, "Channel 1");
 		configOutput(OUT2_OUTPUT, "Channel 2");
+		configBypass(IN1_INPUT, OUT1_OUTPUT);
+		configBypass(IN2_INPUT, OUT2_OUTPUT);
 	}
 
 	void processChannel(Input& in, Param& level, Input& lin, Input& exp, Output& out) {
@@ -159,6 +161,10 @@ struct VCA_1 : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(LEVEL_PARAM, 0.0, 1.0, 1.0, "Level", "%", 0, 100);
 		configSwitch(EXP_PARAM, 0.0, 1.0, 1.0, "Response mode", {"Exponential", "Linear"});
+		configInput(CV_INPUT, "CV");
+		configInput(IN_INPUT, "Channel");
+		configOutput(OUT_OUTPUT, "Channel");
+		configBypass(IN_INPUT, OUT_OUTPUT);
 	}
 
 	void process(const ProcessArgs& args) override {
