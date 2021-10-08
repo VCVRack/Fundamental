@@ -124,12 +124,12 @@ struct QuantizerButton : OpaqueWidget {
 	int note;
 	Quantizer* module;
 
-	void draw(const DrawArgs& args) override {
+	void drawLayer(const DrawArgs& args, int layer) override {
+		if (layer != 1)
+			return;
+
 		const float margin = mm2px(1.5);
 		Rect r = box.zeroPos().grow(Vec(margin, margin / 2).neg());
-
-		// Disable tinting when rack brightness is decreased
-		nvgGlobalTint(args.vg, color::WHITE);
 
 		nvgBeginPath(args.vg);
 		nvgRect(args.vg, RECT_ARGS(r));

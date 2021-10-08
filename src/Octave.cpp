@@ -55,7 +55,10 @@ struct Octave : Module {
 struct OctaveButton : Widget {
 	int octave;
 
-	void draw(const DrawArgs& args) override {
+	void drawLayer(const DrawArgs& args, int layer) override {
+		if (layer != 1)
+			return;
+
 		Vec c = box.size.div(2);
 
 		int activeOctave = 0;
@@ -64,9 +67,6 @@ struct OctaveButton : Widget {
 		engine::ParamQuantity* pq = paramWidget->getParamQuantity();
 		if (pq)
 			activeOctave = std::round(pq->getValue());
-
-		// Disable tinting when rack brightness is decreased
-		nvgGlobalTint(args.vg, color::WHITE);
 
 		if (activeOctave == octave) {
 			// Enabled

@@ -297,12 +297,12 @@ struct ScopeDisplay : TransparentWidget {
 		nvgText(args.vg, pos.x + 58 * 2, pos.y, text.c_str(), NULL);
 	}
 
-	void draw(const DrawArgs& args) override {
-		if (!module)
+	void drawLayer(const DrawArgs& args, int layer) override {
+		if (layer != 1)
 			return;
 
-		// Disable tinting when rack brightness is decreased
-		nvgGlobalTint(args.vg, color::WHITE);
+		if (!module)
+			return;
 
 		float gainX = std::pow(2.f, std::round(module->params[Scope::X_SCALE_PARAM].getValue())) / 10.f;
 		float gainY = std::pow(2.f, std::round(module->params[Scope::Y_SCALE_PARAM].getValue())) / 10.f;
