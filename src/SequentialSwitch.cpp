@@ -31,7 +31,7 @@ struct SequentialSwitch : Module {
 
 	SequentialSwitch() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configSwitch(STEPS_PARAM, 0.0, 2.0, 0.0, "Steps", {"2", "3", "4"});
+		configSwitch(STEPS_PARAM, 0.0, 2.0, 0.0, "Steps", {"4", "3", "2"});
 		configInput(CLOCK_INPUT, "Clock");
 		configInput(RESET_INPUT, "Reset");
 		if (INPUTS == 1) {
