@@ -129,7 +129,7 @@ struct MergeWidget : ModuleWidget {
 			Menu* createChildMenu() override {
 				Menu* menu = new Menu;
 				for (int c = -1; c <= 16; c++) {
-					menu->addChild(createCheckMenuItem((c < 0) ? "Automatic" : string::f("%d", c),
+					menu->addChild(createCheckMenuItem((c < 0) ? "Automatic" : string::f("%d", c), "",
 						[=]() {return module->channels == c;},
 						[=]() {module->channels = c;}
 					));

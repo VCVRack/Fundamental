@@ -156,7 +156,7 @@ struct UnityWidget : ModuleWidget {
 
 		menu->addChild(new MenuSeparator);
 
-		menu->addChild(createBoolPtrMenuItem("Merge channels 1 & 2", &module->merge));
+		menu->addChild(createBoolPtrMenuItem("Merge channels 1 & 2", "", &module->merge));
 	}
 };
 
