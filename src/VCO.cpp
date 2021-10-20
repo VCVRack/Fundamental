@@ -250,10 +250,11 @@ struct VCO : Module {
 		MODE_PARAM,
 		SYNC_PARAM,
 		FREQ_PARAM,
-		FINE_PARAM,
+		FINE_PARAM, // removed
 		FM_PARAM,
 		PW_PARAM,
 		PWM_PARAM,
+		LINEAR_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -360,40 +361,38 @@ struct VCO : Module {
 struct VCOWidget : ModuleWidget {
 	VCOWidget(VCO* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/VCO-1.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/VCO.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<CKSS>(Vec(15, 77), module, VCO::MODE_PARAM));
-		addParam(createParam<CKSS>(Vec(119, 77), module, VCO::SYNC_PARAM));
+		addParam(createParamCentered<RoundHugeBlackKnob>(mm2px(Vec(22.905, 29.808)), module, VCO::FREQ_PARAM));
+		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(22.862, 56.388)), module, VCO::PW_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(6.607, 80.603)), module, VCO::FM_PARAM));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(17.444, 80.603)), module, VCO::LINEAR_PARAM));
+		addParam(createParamCentered<LEDButton>(mm2px(Vec(28.282, 80.603)), module, VCO::SYNC_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(39.118, 80.603)), module, VCO::PWM_PARAM));
 
-		addParam(createParam<RoundHugeBlackKnob>(Vec(47, 61), module, VCO::FREQ_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(23, 143), module, VCO::FINE_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(91, 143), module, VCO::PW_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(23, 208), module, VCO::FM_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(91, 208), module, VCO::PWM_PARAM));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.607, 96.859)), module, VCO::FM_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.444, 96.859)), module, VCO::PITCH_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.282, 96.859)), module, VCO::SYNC_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(39.15, 96.859)), module, VCO::PW_INPUT));
 
-		addInput(createInput<PJ301MPort>(Vec(11, 276), module, VCO::PITCH_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(45, 276), module, VCO::FM_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(80, 276), module, VCO::SYNC_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(114, 276), module, VCO::PW_INPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.607, 113.115)), module, VCO::SIN_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(17.444, 113.115)), module, VCO::TRI_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.282, 113.115)), module, VCO::SAW_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.119, 113.115)), module, VCO::SQR_OUTPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(11, 320), module, VCO::SIN_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(45, 320), module, VCO::TRI_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, VCO::SAW_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, VCO::SQR_OUTPUT));
-
-		addChild(createLight<SmallLight<RedGreenBlueLight>>(Vec(99, 42.5f), module, VCO::PHASE_LIGHT));
+		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(31.089, 16.428)), module, VCO::PHASE_LIGHT));
 	}
 };
 
 
 Model* modelVCO = createModel<VCO, VCOWidget>("VCO");
 
-
+#if 0
 struct VCO2 : Module {
 	enum ParamIds {
 		MODE_PARAM,
@@ -493,7 +492,7 @@ struct VCO2 : Module {
 struct VCO2Widget : ModuleWidget {
 	VCO2Widget(VCO2* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/VCO-2.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/WTVCO.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
@@ -519,3 +518,4 @@ struct VCO2Widget : ModuleWidget {
 
 
 Model* modelVCO2 = createModel<VCO2, VCO2Widget>("VCO2");
+#endif

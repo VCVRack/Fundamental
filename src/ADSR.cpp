@@ -160,29 +160,32 @@ struct ADSRWidget : ModuleWidget {
 		setModule(module);
 		setPanel(createPanel(asset::plugin(pluginInstance, "res/ADSR.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<RoundLargeBlackKnob>(Vec(62, 57), module, ADSR::ATTACK_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(62, 124), module, ADSR::DECAY_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(62, 191), module, ADSR::SUSTAIN_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(62, 257), module, ADSR::RELEASE_PARAM));
+		addParam(createParamCentered<LEDSlider>(mm2px(Vec(6.604, 55.454)), module, ADSR::ATTACK_PARAM));
+		addParam(createParamCentered<LEDSlider>(mm2px(Vec(17.441, 55.454)), module, ADSR::DECAY_PARAM));
+		addParam(createParamCentered<LEDSlider>(mm2px(Vec(28.279, 55.454)), module, ADSR::SUSTAIN_PARAM));
+		addParam(createParamCentered<LEDSlider>(mm2px(Vec(39.116, 55.454)), module, ADSR::RELEASE_PARAM));
+		// addParam(createParamCentered<Trimpot>(mm2px(Vec(6.604, 80.603)), module, ADSR::ATTCV_PARAM));
+		// addParam(createParamCentered<Trimpot>(mm2px(Vec(17.441, 80.63)), module, ADSR::DECCV_PARAM));
+		// addParam(createParamCentered<Trimpot>(mm2px(Vec(28.279, 80.603)), module, ADSR::SUSCV_PARAM));
+		// addParam(createParamCentered<Trimpot>(mm2px(Vec(39.119, 80.603)), module, ADSR::RELCV_PARAM));
+		// addParam(createParamCentered<LEDLightBezel>(mm2px(Vec(6.604, 113.115)), module, ADSR::PUSH_PARAM));
 
-		addInput(createInput<PJ301MPort>(Vec(9, 63), module, ADSR::ATTACK_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(9, 129), module, ADSR::DECAY_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(9, 196), module, ADSR::SUSTAIN_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(9, 263), module, ADSR::RELEASE_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.604, 96.882)), module, ADSR::ATTACK_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.441, 96.859)), module, ADSR::DECAY_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.279, 96.886)), module, ADSR::SUSTAIN_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(39.119, 96.89)), module, ADSR::RELEASE_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.441, 113.115)), module, ADSR::GATE_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.279, 113.115)), module, ADSR::TRIG_INPUT));
 
-		addInput(createInput<PJ301MPort>(Vec(9, 320), module, ADSR::GATE_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(48, 320), module, ADSR::TRIG_INPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(87, 320), module, ADSR::ENVELOPE_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.119, 113.115)), module, ADSR::ENVELOPE_OUTPUT));
 
-		addChild(createLight<SmallLight<RedLight>>(Vec(94, 41), module, ADSR::ATTACK_LIGHT));
-		addChild(createLight<SmallLight<RedLight>>(Vec(94, 109), module, ADSR::DECAY_LIGHT));
-		addChild(createLight<SmallLight<RedLight>>(Vec(94, 175), module, ADSR::SUSTAIN_LIGHT));
-		addChild(createLight<SmallLight<RedLight>>(Vec(94, 242), module, ADSR::RELEASE_LIGHT));
+		// mm2px(Vec(45.72, 21.219))
+		// addChild(createWidget<Widget>(mm2px(Vec(0.0, 13.039))));
 	}
 };
 

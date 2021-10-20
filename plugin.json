@@ -75,8 +75,8 @@
     },
     {
       "slug": "LFO2",
-      "name": "LFO-2",
-      "description": "Low-frequency oscillator",
+      "name": "Wavetable LFO",
+      "description": "Low-frequency wavetable oscillator",
       "manualUrl": "https://vcvrack.com/Fundamental#LFO",
       "tags": [
         "LFO",

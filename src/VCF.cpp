@@ -68,7 +68,7 @@ static const int UPSAMPLE = 2;
 struct VCF : Module {
 	enum ParamIds {
 		FREQ_PARAM,
-		FINE_PARAM,
+		FINE_PARAM, // removed
 		RES_PARAM,
 		FREQ_CV_PARAM,
 		DRIVE_PARAM,
@@ -199,24 +199,25 @@ struct VCFWidget : ModuleWidget {
 		setModule(module);
 		setPanel(createPanel(asset::plugin(pluginInstance, "res/VCF.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<RoundHugeBlackKnob>(Vec(33, 61), module, VCF::FREQ_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(12, 143), module, VCF::FINE_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(71, 143), module, VCF::RES_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(12, 208), module, VCF::FREQ_CV_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(71, 208), module, VCF::DRIVE_PARAM));
+		addParam(createParamCentered<RoundHugeBlackKnob>(mm2px(Vec(17.587, 29.808)), module, VCF::FREQ_PARAM));
+		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(8.895, 56.388)), module, VCF::RES_PARAM));
+		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(26.665, 56.388)), module, VCF::DRIVE_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(6.996, 80.603)), module, VCF::FREQ_CV_PARAM));
+		// addParam(createParamCentered<Trimpot>(mm2px(Vec(17.833, 80.603)), module, VCF::RESCV_PARAM));
+		// addParam(createParamCentered<Trimpot>(mm2px(Vec(28.67, 80.603)), module, VCF::DRIVE_CV_PARAM));
 
-		addInput(createInput<PJ301MPort>(Vec(10, 276), module, VCF::FREQ_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(48, 276), module, VCF::RES_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(85, 276), module, VCF::DRIVE_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(10, 320), module, VCF::IN_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.996, 96.813)), module, VCF::FREQ_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.833, 96.813)), module, VCF::RES_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.67, 96.813)), module, VCF::DRIVE_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.996, 113.115)), module, VCF::IN_INPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(48, 320), module, VCF::LPF_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(85, 320), module, VCF::HPF_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(17.833, 113.115)), module, VCF::LPF_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.67, 113.115)), module, VCF::HPF_OUTPUT));
 	}
 };
 

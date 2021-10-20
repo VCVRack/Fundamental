@@ -88,14 +88,14 @@ struct LFO : Module {
 		INVERT_PARAM,
 		FREQ_PARAM,
 		FM1_PARAM,
-		FM2_PARAM,
+		FM2_PARAM, // removed
 		PW_PARAM,
 		PWM_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
 		FM1_INPUT,
-		FM2_INPUT,
+		FM2_INPUT, // removed
 		RESET_INPUT,
 		PW_INPUT,
 		NUM_INPUTS
@@ -200,37 +200,34 @@ struct LFO : Module {
 };
 
 
-
 struct LFOWidget : ModuleWidget {
 	LFOWidget(LFO* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/LFO-1.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/LFO.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<CKSS>(Vec(15, 77), module, LFO::OFFSET_PARAM));
-		addParam(createParam<CKSS>(Vec(119, 77), module, LFO::INVERT_PARAM));
+		addParam(createParamCentered<RoundHugeBlackKnob>(mm2px(Vec(22.902, 29.803)), module, LFO::FREQ_PARAM));
+		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(22.861, 56.388)), module, LFO::PW_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(6.604, 80.603)), module, LFO::FM1_PARAM));
+		// addParam(createParamCentered<LEDButton>(mm2px(Vec(17.441, 80.603)), module, LFO::INV_PARAM));
+		// addParam(createParamCentered<LEDButton>(mm2px(Vec(28.279, 80.603)), module, LFO::OFST_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(39.116, 80.603)), module, LFO::PWM_PARAM));
 
-		addParam(createParam<RoundHugeBlackKnob>(Vec(47, 61), module, LFO::FREQ_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(23, 143), module, LFO::FM1_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(91, 143), module, LFO::PW_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(23, 208), module, LFO::FM2_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(91, 208), module, LFO::PWM_PARAM));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.604, 96.859)), module, LFO::FM1_INPUT));
+		// addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.441, 96.859)), module, LFO::CLK_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.279, 96.819)), module, LFO::RESET_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(39.116, 96.819)), module, LFO::PW_INPUT));
 
-		addInput(createInput<PJ301MPort>(Vec(11, 276), module, LFO::FM1_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(45, 276), module, LFO::FM2_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(80, 276), module, LFO::RESET_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(114, 276), module, LFO::PW_INPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.604, 113.115)), module, LFO::SIN_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(17.441, 113.115)), module, LFO::TRI_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.279, 113.115)), module, LFO::SAW_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.116, 113.115)), module, LFO::SQR_OUTPUT));
 
-		addOutput(createOutput<PJ301MPort>(Vec(11, 320), module, LFO::SIN_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(45, 320), module, LFO::TRI_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(80, 320), module, LFO::SAW_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(114, 320), module, LFO::SQR_OUTPUT));
-
-		addChild(createLight<SmallLight<RedGreenBlueLight>>(Vec(99, 42.5f), module, LFO::PHASE_LIGHT));
+		addChild(createLightCentered<SmallLight<RedGreenBlueLight>>(mm2px(Vec(31.085, 16.428)), module, LFO::PHASE_LIGHT));
 	}
 };
 
@@ -238,6 +235,7 @@ struct LFOWidget : ModuleWidget {
 Model* modelLFO = createModel<LFO, LFOWidget>("LFO");
 
 
+#if 0
 struct LFO2 : Module {
 	enum ParamIds {
 		OFFSET_PARAM,
@@ -335,7 +333,7 @@ struct LFO2 : Module {
 struct LFO2Widget : ModuleWidget {
 	LFO2Widget(LFO2* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/LFO-2.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/WTLFO.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
@@ -361,3 +359,4 @@ struct LFO2Widget : ModuleWidget {
 
 
 Model* modelLFO2 = createModel<LFO2, LFO2Widget>("LFO2");
+#endif
