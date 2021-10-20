@@ -1,4 +1,5 @@
 #include "plugin.hpp"
+#include <osdialog.h>
 
 
 using simd::float_4;
@@ -34,15 +35,18 @@ struct WTLFO : Module {
 		NUM_LIGHTS
 	};
 
-	dsp::ClockDivider lightDivider;
 	// All waves concatenated
 	std::vector<float> wavetable;
 	// Number of points in each wave
 	size_t waveLen = 0;
 	bool offset = false;
 	bool invert = false;
+	std::string filename;
 
 	float_4 phases[4] = {};
+	float lastPos = 0.f;
+
+	dsp::ClockDivider lightDivider;
 	dsp::BooleanTrigger offsetTrigger;
 	dsp::BooleanTrigger invertTrigger;
 
@@ -70,6 +74,7 @@ struct WTLFO : Module {
 		Module::onReset(e);
 
 		// Build geometric waveforms
+		filename = "Basic.wav";
 		wavetable.clear();
 		waveLen = 1024;
 		wavetable.resize(waveLen * 4);
@@ -118,8 +123,8 @@ struct WTLFO : Module {
 			clearOutput();
 			return;
 		}
-		int wavetableNum = wavetable.size() / waveLen;
-		if (wavetableNum < 1) {
+		int wavetableLen = wavetable.size() / waveLen;
+		if (wavetableLen < 1) {
 			clearOutput();
 			return;
 		}
@@ -138,10 +143,13 @@ struct WTLFO : Module {
 			// Scale phase from 0 to waveLen
 			phase *= waveLen;
 
-			// Get wavetable position, scaled from 0 to (wavetableNum - 1)
+			// Get wavetable position, scaled from 0 to (wavetableLen - 1)
 			float_4 pos = posParam + inputs[POS_INPUT].getPolyVoltageSimd<float_4>(c) * posCvParam / 10.f;
 			pos = simd::clamp(pos);
-			pos *= (wavetableNum - 1);
+			pos *= (wavetableLen - 1);
+
+			if (c == 0)
+				lastPos = pos[0];
 
 			// Get wavetable points
 			float_4 out = 0.f;
@@ -191,12 +199,114 @@ struct WTLFO : Module {
 			}
 		}
 	}
+
+	void loadWavetable(std::string path) {
+		// TODO
+	}
+
+	void loadWavetableDialog() {
+		static const char WAVETABLE_FILTERS[] = "WAV (.wav):wav";
+		osdialog_filters* filters = osdialog_filters_parse(WAVETABLE_FILTERS);
+		DEFER({osdialog_filters_free(filters);});
+
+		char* pathC = osdialog_file(OSDIALOG_OPEN, NULL, NULL, filters);
+		if (!pathC) {
+			// Fail silently
+			return;
+		}
+		std::string path = pathC;
+		std::free(pathC);
+
+		loadWavetable(path);
+	}
 };
 
 
-struct WTLFODisplay : LedDisplay {
-	WTLFODisplay() {
-		box.size = mm2px(Vec(35.56, 29.224));
+template <class TModule>
+struct WTDisplay : LedDisplay {
+	TModule* module;
+
+	void drawLayer(const DrawArgs& args, int layer) override {
+		if (layer == 1) {
+			if (!module)
+				return;
+
+			// Draw filename text
+			std::shared_ptr<Font> font = APP->window->loadFont(asset::system("res/fonts/ShareTechMono-Regular.ttf"));
+			nvgFontSize(args.vg, 13);
+			nvgFontFaceId(args.vg, font->handle);
+			nvgTextLetterSpacing(args.vg, -2);
+			nvgFillColor(args.vg, SCHEME_YELLOW);
+			nvgText(args.vg, 4.0, 13.0, module->filename.c_str(), NULL);
+
+			// Get wavetable metadata
+			size_t waveLen = module->waveLen;
+			if (waveLen < 2)
+				return;
+
+			size_t wavetableLen = module->wavetable.size() / waveLen;
+			if (module->lastPos > wavetableLen - 1)
+				return;
+			float posF = module->lastPos - std::trunc(module->lastPos);
+			size_t pos0 = std::trunc(module->lastPos);
+
+			// Draw scope
+			nvgScissor(args.vg, RECT_ARGS(args.clipBox));
+			nvgBeginPath(args.vg);
+			Vec scopePos = Vec(0.0, 13.0);
+			Rect scopeRect = Rect(scopePos, box.size - scopePos);
+			scopeRect = scopeRect.shrink(Vec(4, 5));
+
+			for (size_t i = 0; i <= waveLen; i++) {
+				// Get wave value
+				float wave;
+				float wave0 = module->wavetable[(i % waveLen) + waveLen * pos0];
+				if (posF > 0.f) {
+					float wave1 = module->wavetable[(i % waveLen) + waveLen * (pos0 + 1)];
+					wave = crossfade(wave0, wave1, posF);
+				}
+				else {
+					wave = wave0;
+				}
+
+				// Add point to line
+				Vec p;
+				p.x = float(i) / waveLen;
+				p.y = 0.5f - 0.5f * wave;
+				p = scopeRect.pos + scopeRect.size * p;
+				if (i == 0)
+					nvgMoveTo(args.vg, VEC_ARGS(p));
+				else
+					nvgLineTo(args.vg, VEC_ARGS(p));
+			}
+			nvgLineCap(args.vg, NVG_ROUND);
+			nvgMiterLimit(args.vg, 2.f);
+			nvgStrokeWidth(args.vg, 1.5f);
+			nvgStrokeColor(args.vg, SCHEME_YELLOW);
+			nvgStroke(args.vg);
+		}
+		LedDisplay::drawLayer(args, layer);
+	}
+
+	void onButton(const ButtonEvent& e) override {
+		if (e.action == GLFW_PRESS && e.button == GLFW_MOUSE_BUTTON_LEFT) {
+			if (module)
+				module->loadWavetableDialog();
+			e.consume(this);
+		}
+		LedDisplay::onButton(e);
+	}
+
+	void onPathDrop(const PathDropEvent& e) override {
+		if (!module)
+			return;
+		if (e.paths.empty())
+			return;
+		std::string path = e.paths[0];
+		if (system::getExtension(path) != ".wav")
+			return;
+		module->loadWavetable(path);
+		e.consume(this);
 	}
 };
 
@@ -227,7 +337,21 @@ struct WTLFOWidget : ModuleWidget {
 
 		addChild(createLightCentered<SmallLight<RedGreenBlueLight>>(mm2px(Vec(17.731, 49.409)), module, WTLFO::PHASE_LIGHT));
 
-		addChild(createWidget<WTLFODisplay>(mm2px(Vec(0.004, 13.04))));
+		WTDisplay<WTLFO>* display = createWidget<WTDisplay<WTLFO>>(mm2px(Vec(0.004, 13.04)));
+		display->box.size = mm2px(Vec(35.56, 29.224));
+		display->module = module;
+		addChild(display);
+	}
+
+	void appendContextMenu(Menu* menu) override {
+		WTLFO* module = dynamic_cast<WTLFO*>(this->module);
+		assert(module);
+
+		menu->addChild(new MenuSeparator);
+
+		menu->addChild(createMenuItem("Load wavetable...", "",
+			[=]() {module->loadWavetableDialog();}
+		));
 	}
 };
 
