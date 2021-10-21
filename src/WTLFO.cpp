@@ -1,5 +1,9 @@
 #include "plugin.hpp"
 #include <osdialog.h>
+#include "dr_wav.h"
+
+
+static const char WAVETABLE_FILTERS[] = "WAV (.wav):wav,WAV";
 
 
 using simd::float_4;
@@ -45,17 +49,37 @@ struct WTLFO : Module {
 
 	float_4 phases[4] = {};
 	float lastPos = 0.f;
+	float clockFreq = 1.f;
+	dsp::Timer clockTimer;
+	bool clockEnabled = false;
 
 	dsp::ClockDivider lightDivider;
 	dsp::BooleanTrigger offsetTrigger;
 	dsp::BooleanTrigger invertTrigger;
+	dsp::SchmittTrigger clockTrigger;
+	dsp::TSchmittTrigger<float_4> resetTriggers[4];
 
 	WTLFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		// TODO Change to momentary with backward compatibility in fromJson()
 		configButton(OFFSET_PARAM, "Offset 0-10V");
 		configButton(INVERT_PARAM, "Invert wave");
-		configParam(FREQ_PARAM, -8.f, 10.f, 1.f, "Frequency", " Hz", 2, 1);
+
+		struct FrequencyQuantity : ParamQuantity {
+			float getDisplayValue() override {
+				WTLFO* module = reinterpret_cast<WTLFO*>(this->module);
+				if (module->clockFreq == 2.f) {
+					unit = " Hz";
+					displayMultiplier = 1.f;
+				}
+				else {
+					unit = "x";
+					displayMultiplier = 1 / 2.f;
+				}
+				return ParamQuantity::getDisplayValue();
+			}
+		};
+		configParam<FrequencyQuantity>(FREQ_PARAM, -8.f, 10.f, 1.f, "Frequency", " Hz", 2, 1);
 		configParam(POS_PARAM, 0.f, 1.f, 0.f, "Wavetable position", "%", 0.f, 100.f);
 		configParam(FM_PARAM, -1.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
 		configParam(POS_CV_PARAM, -1.f, 1.f, 0.f, "Wavetable position CV", "%", 0.f, 100.f);
@@ -129,16 +153,38 @@ struct WTLFO : Module {
 			return;
 		}
 
+		// Clock
+		if (inputs[CLOCK_INPUT].isConnected()) {
+			clockTimer.process(args.sampleTime);
+
+			if (clockTrigger.process(rescale(inputs[CLOCK_INPUT].getVoltage(), 0.1f, 2.f, 0.f, 1.f))) {
+				float clockFreq = 1.f / clockTimer.getTime();
+				clockTimer.reset();
+				if (0.001f <= clockFreq && clockFreq <= 1000.f) {
+					this->clockFreq = clockFreq;
+				}
+			}
+		}
+		else {
+			// Default frequency when clock is unpatched
+			clockFreq = 2.f;
+		}
+
+		// Iterate channels
 		for (int c = 0; c < channels; c += 4) {
 			// Calculate frequency in Hz
 			float_4 pitch = freqParam + inputs[FM_INPUT].getVoltageSimd<float_4>(c) * fmParam;
-			float_4 freq = simd::pow(2.f, pitch);
+			float_4 freq = clockFreq / 2.f * simd::pow(2.f, pitch);
+			freq = simd::fmin(freq, 1024.f);
 
 			// Accumulate phase
 			float_4 phase = phases[c / 4];
 			phase += freq * args.sampleTime;
 			// Wrap phase
 			phase -= simd::trunc(phase);
+			// Reset phase
+			float_4 reset = resetTriggers[c / 4].process(simd::rescale(inputs[RESET_INPUT].getPolyVoltageSimd<float_4>(c), 0.1f, 2.f, 0.f, 1.f));
+			phase = simd::ifelse(reset, 0.f, phase);
 			phases[c / 4] = phase;
 			// Scale phase from 0 to waveLen
 			phase *= waveLen;
@@ -197,15 +243,29 @@ struct WTLFO : Module {
 				lights[PHASE_LIGHT + 1].setBrightness(0.f);
 				lights[PHASE_LIGHT + 2].setBrightness(1.f);
 			}
+			lights[OFFSET_LIGHT].setBrightness(offset);
+			lights[INVERT_LIGHT].setBrightness(invert);
 		}
 	}
 
 	void loadWavetable(std::string path) {
-		// TODO
+		drwav wav;
+		// TODO Unicode on Windows
+		if (!drwav_init_file(&wav, path.c_str(), NULL))
+			return;
+
+		waveLen = 0;
+		wavetable.clear();
+		wavetable.resize(wav.totalPCMFrameCount * wav.channels);
+		waveLen = 256;
+		filename = system::getFilename(path);
+
+		drwav_read_pcm_frames_f32(&wav, wav.totalPCMFrameCount, wavetable.data());
+
+		drwav_uninit(&wav);
 	}
 
 	void loadWavetableDialog() {
-		static const char WAVETABLE_FILTERS[] = "WAV (.wav):wav";
 		osdialog_filters* filters = osdialog_filters_parse(WAVETABLE_FILTERS);
 		DEFER({osdialog_filters_free(filters);});
 
@@ -219,7 +279,61 @@ struct WTLFO : Module {
 
 		loadWavetable(path);
 	}
+
+	void saveWavetable(std::string path) {
+		drwav_data_format format;
+		format.container = drwav_container_riff;
+		format.format = DR_WAVE_FORMAT_PCM;
+		format.channels = 1;
+		format.sampleRate = 44100;
+		format.bitsPerSample = 16;
+
+		drwav wav;
+		if (!drwav_init_file_write(&wav, path.c_str(), &format, NULL))
+			return;
+
+		size_t len = wavetable.size();
+		int16_t* buf = new int16_t[len];
+		drwav_f32_to_s16(buf, wavetable.data(), len);
+		drwav_write_pcm_frames(&wav, len, buf);
+		delete[] buf;
+
+		drwav_uninit(&wav);
+	}
+
+	void saveWavetableDialog() {
+		osdialog_filters* filters = osdialog_filters_parse(WAVETABLE_FILTERS);
+		DEFER({osdialog_filters_free(filters);});
+
+		char* pathC = osdialog_file(OSDIALOG_SAVE, NULL, filename.c_str(), filters);
+		if (!pathC) {
+			// Cancel silently
+			return;
+		}
+		DEFER({std::free(pathC);});
+
+		// Automatically append .wav extension
+		std::string path = pathC;
+		if (system::getExtension(path) != ".wav") {
+			path += ".wav";
+		}
+
+		saveWavetable(path);
+	}
 };
+
+
+static std::vector<float> sineWavetable;
+
+static void sineWavetableInit() {
+	sineWavetable.clear();
+	size_t len = 128;
+	sineWavetable.resize(len);
+	for (size_t i = 0; i < len; i++) {
+		float p = float(i) / len;
+		sineWavetable[i] = std::sin(2 * float(M_PI) * p);
+	}
+}
 
 
 template <class TModule>
@@ -228,8 +342,15 @@ struct WTDisplay : LedDisplay {
 
 	void drawLayer(const DrawArgs& args, int layer) override {
 		if (layer == 1) {
-			if (!module)
-				return;
+			// Lazily initialize default wavetable for display
+			if (sineWavetable.empty())
+				sineWavetableInit();
+
+			// Get module data or defaults
+			const std::vector<float>& wavetable = module ? module->wavetable : sineWavetable;
+			size_t waveLen = module ? module->waveLen : sineWavetable.size();
+			float lastPos = module ? module->lastPos : 0.f;
+			std::string filename = module ? module->filename : "Basic.wav";
 
 			// Draw filename text
 			std::shared_ptr<Font> font = APP->window->loadFont(asset::system("res/fonts/ShareTechMono-Regular.ttf"));
@@ -237,18 +358,19 @@ struct WTDisplay : LedDisplay {
 			nvgFontFaceId(args.vg, font->handle);
 			nvgTextLetterSpacing(args.vg, -2);
 			nvgFillColor(args.vg, SCHEME_YELLOW);
-			nvgText(args.vg, 4.0, 13.0, module->filename.c_str(), NULL);
+			nvgText(args.vg, 4.0, 13.0, filename.c_str(), NULL);
 
 			// Get wavetable metadata
-			size_t waveLen = module->waveLen;
 			if (waveLen < 2)
 				return;
 
-			size_t wavetableLen = module->wavetable.size() / waveLen;
-			if (module->lastPos > wavetableLen - 1)
+			size_t wavetableLen = wavetable.size() / waveLen;
+			if (wavetableLen < 1)
 				return;
-			float posF = module->lastPos - std::trunc(module->lastPos);
-			size_t pos0 = std::trunc(module->lastPos);
+			if (lastPos > wavetableLen - 1)
+				return;
+			float posF = lastPos - std::trunc(lastPos);
+			size_t pos0 = std::trunc(lastPos);
 
 			// Draw scope
 			nvgScissor(args.vg, RECT_ARGS(args.clipBox));
@@ -256,13 +378,14 @@ struct WTDisplay : LedDisplay {
 			Vec scopePos = Vec(0.0, 13.0);
 			Rect scopeRect = Rect(scopePos, box.size - scopePos);
 			scopeRect = scopeRect.shrink(Vec(4, 5));
+			size_t iSkip = waveLen / 128 + 1;
 
-			for (size_t i = 0; i <= waveLen; i++) {
+			for (size_t i = 0; i <= waveLen; i += iSkip) {
 				// Get wave value
 				float wave;
-				float wave0 = module->wavetable[(i % waveLen) + waveLen * pos0];
+				float wave0 = wavetable[(i % waveLen) + waveLen * pos0];
 				if (posF > 0.f) {
-					float wave1 = module->wavetable[(i % waveLen) + waveLen * (pos0 + 1)];
+					float wave1 = wavetable[(i % waveLen) + waveLen * (pos0 + 1)];
 					wave = crossfade(wave0, wave1, posF);
 				}
 				else {
@@ -349,8 +472,22 @@ struct WTLFOWidget : ModuleWidget {
 
 		menu->addChild(new MenuSeparator);
 
-		menu->addChild(createMenuItem("Load wavetable...", "",
+		menu->addChild(createMenuItem("Load wavetable", "",
 			[=]() {module->loadWavetableDialog();}
+		));
+
+		menu->addChild(createMenuItem("Save wavetable", "",
+			[=]() {module->saveWavetableDialog();}
+		));
+
+		int sizeOffset = 4;
+		std::vector<std::string> sizeLabels;
+		for (int i = sizeOffset; i <= 14; i++) {
+			sizeLabels.push_back(string::f("%d", 1 << i));
+		}
+		menu->addChild(createIndexSubmenuItem("Wave points", sizeLabels,
+			[=]() {return math::log2(module->waveLen) - sizeOffset;},
+			[=](int i) {module->waveLen = 1 << (i + sizeOffset);}
 		));
 	}
 };
