@@ -34,12 +34,12 @@ struct VCA_1 : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		int channels = std::max(inputs[IN_INPUT].getChannels(), 1);
+		int channels = std::max({1, inputs[IN_INPUT].getChannels(), inputs[CV_INPUT].getChannels()});
 		float level = params[LEVEL_PARAM].getValue();
 
 		for (int c = 0; c < channels; c++) {
 			// Get input
-			float in = inputs[IN_INPUT].getVoltage(c);
+			float in = inputs[IN_INPUT].getPolyVoltage(c);
 
 			// Get gain
 			float gain = level;

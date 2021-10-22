@@ -5,24 +5,37 @@
 #define HISTORY_SIZE (1<<21)
 
 struct Delay : Module {
-	enum ParamIds {
+	enum ParamId {
 		TIME_PARAM,
 		FEEDBACK_PARAM,
-		COLOR_PARAM,
+		TONE_PARAM,
 		MIX_PARAM,
+		// new in 2.0
+		TIME_CV_PARAM,
+		FEEDBACK_CV_PARAM,
+		TONE_CV_PARAM,
+		MIX_CV_PARAM,
 		NUM_PARAMS
 	};
-	enum InputIds {
+	enum InputId {
 		TIME_INPUT,
 		FEEDBACK_INPUT,
-		COLOR_INPUT,
+		TONE_INPUT,
 		MIX_INPUT,
 		IN_INPUT,
+		// new in 2.0
+		CLOCK_INPUT,
 		NUM_INPUTS
 	};
-	enum OutputIds {
-		OUT_OUTPUT,
+	enum OutputId {
+		MIX_OUTPUT,
+		// new in 2.0
+		WET_OUTPUT,
 		NUM_OUTPUTS
+	};
+	enum LightId {
+		PERIOD_LIGHT,
+		NUM_LIGHTS
 	};
 
 	dsp::DoubleRingBuffer<float, HISTORY_SIZE> historyBuffer;
@@ -33,17 +46,29 @@ struct Delay : Module {
 	dsp::RCFilter highpassFilter;
 
 	Delay() {
-		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
+		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(TIME_PARAM, 0.f, 1.f, 0.5f, "Time", " s", 10.f / 1e-3, 1e-3);
 		configParam(FEEDBACK_PARAM, 0.f, 1.f, 0.5f, "Feedback", "%", 0, 100);
-		configParam(COLOR_PARAM, 0.f, 1.f, 0.5f, "Color", "%", 0, 100);
+		configParam(TONE_PARAM, 0.f, 1.f, 0.5f, "Tone", "%", 0, 200, -100);
 		configParam(MIX_PARAM, 0.f, 1.f, 0.5f, "Mix", "%", 0, 100);
+		configParam(TIME_CV_PARAM, -1.f, 1.f, 0.f, "Time CV", "%", 0, 100);
+		getParamQuantity(TIME_CV_PARAM)->randomizeEnabled = false;
+		configParam(FEEDBACK_CV_PARAM, -1.f, 1.f, 0.f, "Feedback CV", "%", 0, 100);
+		getParamQuantity(FEEDBACK_CV_PARAM)->randomizeEnabled = false;
+		configParam(TONE_CV_PARAM, -1.f, 1.f, 0.f, "Tone CV", "%", 0, 100);
+		getParamQuantity(TONE_CV_PARAM)->randomizeEnabled = false;
+		configParam(MIX_CV_PARAM, -1.f, 1.f, 0.f, "Mix CV", "%", 0, 100);
+		getParamQuantity(MIX_CV_PARAM)->randomizeEnabled = false;
+
 		configInput(TIME_INPUT, "Time");
 		configInput(FEEDBACK_INPUT, "Feedback");
-		configInput(COLOR_INPUT, "Color");
+		configInput(TONE_INPUT, "Tone");
 		configInput(MIX_INPUT, "Mix");
 		configInput(IN_INPUT, "Audio");
-		configOutput(OUT_OUTPUT, "Audio");
+		configInput(CLOCK_INPUT, "Clock");
+
+		configOutput(MIX_OUTPUT, "Mix");
+		configOutput(WET_OUTPUT, "Wet");
 
 		src = src_new(SRC_SINC_FASTEST, 1, NULL);
 		assert(src);
@@ -55,13 +80,13 @@ struct Delay : Module {
 
 	void process(const ProcessArgs& args) override {
 		// Get input to delay block
-		float in = inputs[IN_INPUT].getVoltage();
-		float feedback = params[FEEDBACK_PARAM].getValue() + inputs[FEEDBACK_INPUT].getVoltage() / 10.f;
+		float in = inputs[IN_INPUT].getVoltageSum();
+		float feedback = params[FEEDBACK_PARAM].getValue() + inputs[FEEDBACK_INPUT].getVoltage() / 10.f * params[FEEDBACK_CV_PARAM].getValue();
 		feedback = clamp(feedback, 0.f, 1.f);
 		float dry = in + lastWet * feedback;
 
 		// Compute delay time in seconds
-		float delay = params[TIME_PARAM].getValue() + inputs[TIME_INPUT].getVoltage() / 10.f;
+		float delay = params[TIME_PARAM].getValue() + inputs[TIME_INPUT].getVoltage() / 10.f * params[TIME_CV_PARAM].getValue();
 		delay = clamp(delay, 0.f, 1.f);
 		delay = 1e-3 * std::pow(10.f / 1e-3, delay);
 		// Number of delay samples
@@ -100,7 +125,7 @@ struct Delay : Module {
 		}
 
 		// Apply color to delay wet output
-		float color = params[COLOR_PARAM].getValue() + inputs[COLOR_INPUT].getVoltage() / 10.f;
+		float color = params[TONE_PARAM].getValue() + inputs[TONE_INPUT].getVoltage() / 10.f * params[TONE_CV_PARAM].getValue();
 		color = clamp(color, 0.f, 1.f);
 		float colorFreq = std::pow(100.f, 2.f * color - 1.f);
 
@@ -116,10 +141,20 @@ struct Delay : Module {
 
 		lastWet = wet;
 
-		float mix = params[MIX_PARAM].getValue() + inputs[MIX_INPUT].getVoltage() / 10.f;
+		float mix = params[MIX_PARAM].getValue() + inputs[MIX_INPUT].getVoltage() / 10.f * params[MIX_CV_PARAM].getValue();
 		mix = clamp(mix, 0.f, 1.f);
 		float out = crossfade(in, wet, mix);
-		outputs[OUT_OUTPUT].setVoltage(out);
+		outputs[MIX_OUTPUT].setVoltage(out);
+	}
+
+	void fromJson(json_t* rootJ) override {
+		// These attenuators didn't exist in version <2.0, so set to 1 for default compatibility.
+		params[TIME_CV_PARAM].setValue(1.f);
+		params[FEEDBACK_CV_PARAM].setValue(1.f);
+		params[TONE_CV_PARAM].setValue(1.f);
+		params[MIX_CV_PARAM].setValue(1.f);
+
+		Module::fromJson(rootJ);
 	}
 };
 
@@ -129,22 +164,31 @@ struct DelayWidget : ModuleWidget {
 		setModule(module);
 		setPanel(createPanel(asset::plugin(pluginInstance, "res/Delay.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<RoundLargeBlackKnob>(Vec(67, 57), module, Delay::TIME_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(67, 123), module, Delay::FEEDBACK_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(67, 190), module, Delay::COLOR_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(67, 257), module, Delay::MIX_PARAM));
+		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(12.579, 26.747)), module, Delay::TIME_PARAM));
+		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(32.899, 26.747)), module, Delay::FEEDBACK_PARAM));
+		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(12.579, 56.388)), module, Delay::TONE_PARAM));
+		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(32.899, 56.388)), module, Delay::MIX_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(6.605, 80.561)), module, Delay::TIME_CV_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(17.442, 80.561)), module, Delay::FEEDBACK_CV_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(28.278, 80.561)), module, Delay::TONE_CV_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(39.115, 80.561)), module, Delay::MIX_CV_PARAM));
 
-		addInput(createInput<PJ301MPort>(Vec(14, 63), module, Delay::TIME_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(14, 129), module, Delay::FEEDBACK_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(14, 196), module, Delay::COLOR_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(14, 263), module, Delay::MIX_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(14, 320), module, Delay::IN_INPUT));
-		addOutput(createOutput<PJ301MPort>(Vec(73, 320), module, Delay::OUT_OUTPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.605, 96.859)), module, Delay::TIME_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.442, 96.859)), module, Delay::FEEDBACK_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.278, 96.819)), module, Delay::TONE_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(39.115, 96.819)), module, Delay::MIX_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.605, 113.115)), module, Delay::IN_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.442, 113.115)), module, Delay::CLOCK_INPUT));
+
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.278, 113.115)), module, Delay::WET_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.115, 113.115)), module, Delay::MIX_OUTPUT));
+
+		addChild(createLightCentered<SmallLight<YellowLight>>(mm2px(Vec(22.738, 16.428)), module, Delay::PERIOD_LIGHT));
 	}
 };
 

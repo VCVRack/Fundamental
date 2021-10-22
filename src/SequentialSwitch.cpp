@@ -121,7 +121,7 @@ struct SequentialSwitch : Module {
 	void fromJson(json_t* rootJ) override {
 		Module::fromJson(rootJ);
 
-		// Get version to check if we should transform STEPS_PARAM
+		// If version <2.0 we should transform STEPS_PARAM
 		json_t* versionJ = json_object_get(rootJ, "version");
 		if (versionJ) {
 			std::string version = json_string_value(versionJ);
