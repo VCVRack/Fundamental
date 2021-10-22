@@ -90,37 +90,37 @@ struct _8vertWidget : ModuleWidget {
 		setModule(module);
 		setPanel(createPanel(asset::plugin(pluginInstance, "res/8vert.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<RoundBlackKnob>(Vec(45.308, 47.753), module, _8vert::GAIN_PARAMS + 0));
-		addParam(createParam<RoundBlackKnob>(Vec(45.308, 86.198), module, _8vert::GAIN_PARAMS + 1));
-		addParam(createParam<RoundBlackKnob>(Vec(45.308, 124.639), module, _8vert::GAIN_PARAMS + 2));
-		addParam(createParam<RoundBlackKnob>(Vec(45.308, 163.084), module, _8vert::GAIN_PARAMS + 3));
-		addParam(createParam<RoundBlackKnob>(Vec(45.308, 201.529), module, _8vert::GAIN_PARAMS + 4));
-		addParam(createParam<RoundBlackKnob>(Vec(45.308, 239.974), module, _8vert::GAIN_PARAMS + 5));
-		addParam(createParam<RoundBlackKnob>(Vec(45.308, 278.415), module, _8vert::GAIN_PARAMS + 6));
-		addParam(createParam<RoundBlackKnob>(Vec(45.308, 316.86), module, _8vert::GAIN_PARAMS + 7));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(20.351, 21.968)), module, _8vert::GAIN_PARAMS + 0));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(20.351, 34.982)), module, _8vert::GAIN_PARAMS + 1));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(20.351, 48.004)), module, _8vert::GAIN_PARAMS + 2));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(20.351, 61.026)), module, _8vert::GAIN_PARAMS + 3));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(20.351, 74.048)), module, _8vert::GAIN_PARAMS + 4));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(20.351, 87.07)), module, _8vert::GAIN_PARAMS + 5));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(20.351, 100.093)), module, _8vert::GAIN_PARAMS + 6));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(20.351, 113.115)), module, _8vert::GAIN_PARAMS + 7));
 
-		addInput(createInput<PJ301MPort>(Vec(9.507, 50.397), module, _8vert::IN_INPUTS + 0));
-		addInput(createInput<PJ301MPort>(Vec(9.507, 88.842), module, _8vert::IN_INPUTS + 1));
-		addInput(createInput<PJ301MPort>(Vec(9.507, 127.283), module, _8vert::IN_INPUTS + 2));
-		addInput(createInput<PJ301MPort>(Vec(9.507, 165.728), module, _8vert::IN_INPUTS + 3));
-		addInput(createInput<PJ301MPort>(Vec(9.507, 204.173), module, _8vert::IN_INPUTS + 4));
-		addInput(createInput<PJ301MPort>(Vec(9.507, 242.614), module, _8vert::IN_INPUTS + 5));
-		addInput(createInput<PJ301MPort>(Vec(9.507, 281.059), module, _8vert::IN_INPUTS + 6));
-		addInput(createInput<PJ301MPort>(Vec(9.507, 319.504), module, _8vert::IN_INPUTS + 7));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 21.968)), module, _8vert::IN_INPUTS + 0));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 34.982)), module, _8vert::IN_INPUTS + 1));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 48.004)), module, _8vert::IN_INPUTS + 2));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 61.026)), module, _8vert::IN_INPUTS + 3));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 74.048)), module, _8vert::IN_INPUTS + 4));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 87.07)), module, _8vert::IN_INPUTS + 5));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 100.093)), module, _8vert::IN_INPUTS + 6));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 113.115)), module, _8vert::IN_INPUTS + 7));
 
-		addOutput(createOutput<PJ301MPort>(Vec(86.393, 50.397), module, _8vert::OUT_OUTPUTS + 0));
-		addOutput(createOutput<PJ301MPort>(Vec(86.393, 88.842), module, _8vert::OUT_OUTPUTS + 1));
-		addOutput(createOutput<PJ301MPort>(Vec(86.393, 127.283), module, _8vert::OUT_OUTPUTS + 2));
-		addOutput(createOutput<PJ301MPort>(Vec(86.393, 165.728), module, _8vert::OUT_OUTPUTS + 3));
-		addOutput(createOutput<PJ301MPort>(Vec(86.393, 204.173), module, _8vert::OUT_OUTPUTS + 4));
-		addOutput(createOutput<PJ301MPort>(Vec(86.393, 242.614), module, _8vert::OUT_OUTPUTS + 5));
-		addOutput(createOutput<PJ301MPort>(Vec(86.393, 281.059), module, _8vert::OUT_OUTPUTS + 6));
-		addOutput(createOutput<PJ301MPort>(Vec(86.393, 319.504), module, _8vert::OUT_OUTPUTS + 7));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 21.968)), module, _8vert::OUT_OUTPUTS + 0));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 34.982)), module, _8vert::OUT_OUTPUTS + 1));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 48.004)), module, _8vert::OUT_OUTPUTS + 2));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 61.026)), module, _8vert::OUT_OUTPUTS + 3));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 74.048)), module, _8vert::OUT_OUTPUTS + 4));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 87.07)), module, _8vert::OUT_OUTPUTS + 5));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 100.093)), module, _8vert::OUT_OUTPUTS + 6));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 113.115)), module, _8vert::OUT_OUTPUTS + 7));
 	}
 };
 

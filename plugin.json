@@ -24,7 +24,7 @@
     },
     {
       "slug": "VCO2",
-      "name": "Wavetable VCO (beta)",
+      "name": "Wavetable VCO",
       "description": "Voltage-controlled wavetable oscillator",
       "manualUrl": "https://vcvrack.com/Fundamental#VCO",
       "tags": [

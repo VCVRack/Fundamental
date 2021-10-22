@@ -3,6 +3,7 @@
 
 struct Quantizer : Module {
 	enum ParamIds {
+		OFFSET_PARAM, // TODO
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -24,6 +25,7 @@ struct Quantizer : Module {
 
 	Quantizer() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
+		configParam(OFFSET_PARAM, -1.f, 1.f, 0.f, "Offset", " semitones", 0.f, 12.f);
 		configInput(PITCH_INPUT, "Pitch");
 		configOutput(PITCH_OUTPUT, "Pitch");
 
@@ -47,6 +49,7 @@ struct Quantizer : Module {
 	void process(const ProcessArgs& args) override {
 		bool playingNotes[12] = {};
 		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
+		float offsetParam = params[OFFSET_PARAM].getValue() / 12.f;
 
 		for (int c = 0; c < channels; c++) {
 			float pitch = inputs[PITCH_INPUT].getVoltage(c);
@@ -56,6 +59,7 @@ struct Quantizer : Module {
 			int note = ranges[range] + octave * 12;
 			playingNotes[eucMod(note, 12)] = true;
 			pitch = float(note) / 12;
+			pitch += offsetParam;
 			outputs[PITCH_OUTPUT].setVoltage(pitch, c);
 		}
 		outputs[PITCH_OUTPUT].setChannels(channels);
@@ -166,10 +170,9 @@ struct QuantizerButton : OpaqueWidget {
 };
 
 
-struct QuantizerDisplay : OpaqueWidget {
+struct QuantizerDisplay : LedDisplay {
 	void setModule(Quantizer* module) {
 		const float margin = mm2px(1.5) / 2;
-		box.size = mm2px(Vec(15.24, 72.0));
 		const int notes = 12;
 		const float height = box.size.y - 2 * margin;
 		for (int note = 0; note < notes; note++) {
@@ -181,16 +184,6 @@ struct QuantizerDisplay : OpaqueWidget {
 			addChild(quantizerButton);
 		}
 	}
-
-	void draw(const DrawArgs& args) override {
-		// Background
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg, 0, 0, box.size.x, box.size.y);
-		nvgFillColor(args.vg, nvgRGB(0, 0, 0));
-		nvgFill(args.vg);
-
-		OpaqueWidget::draw(args);
-	}
 };
 
 
@@ -200,13 +193,18 @@ struct QuantizerWidget : ModuleWidget {
 		setPanel(createPanel(asset::plugin(pluginInstance, "res/Quantizer.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 97.253)), module, Quantizer::PITCH_INPUT));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.62, 80.551)), module, Quantizer::OFFSET_PARAM));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 112.253)), module, Quantizer::PITCH_OUTPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 96.859)), module, Quantizer::PITCH_INPUT));
 
-		QuantizerDisplay* quantizerDisplay = createWidget<QuantizerDisplay>(mm2px(Vec(0.0, 14.585)));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Quantizer::PITCH_OUTPUT));
+
+		QuantizerDisplay* quantizerDisplay = createWidget<QuantizerDisplay>(mm2px(Vec(0.0, 13.039)));
+		quantizerDisplay->box.size = mm2px(Vec(15.24, 55.88));
 		quantizerDisplay->setModule(module);
 		addChild(quantizerDisplay);
 	}

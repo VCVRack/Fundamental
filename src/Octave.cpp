@@ -114,7 +114,7 @@ struct OctaveButton : Widget {
 
 struct OctaveParam : ParamWidget {
 	OctaveParam() {
-		box.size = mm2px(Vec(15.24, 63.0));
+		box.size = mm2px(Vec(15.263, 55.88));
 		const int octaves = 9;
 		const float margin = mm2px(2.0);
 		float height = box.size.y - 2 * margin;
@@ -125,16 +125,6 @@ struct OctaveParam : ParamWidget {
 			octaveButton->octave = 4 - i;
 			addChild(octaveButton);
 		}
-	}
-
-	void draw(const DrawArgs& args) override {
-		// Background
-		nvgBeginPath(args.vg);
-		nvgRect(args.vg, 0, 0, box.size.x, box.size.y);
-		nvgFillColor(args.vg, nvgRGB(0, 0, 0));
-		nvgFill(args.vg);
-
-		ParamWidget::draw(args);
 	}
 };
 
@@ -155,6 +145,12 @@ inline void OctaveButton::onDragEnter(const event::DragEnter& e) {
 }
 
 
+struct OctaveDisplay : LedDisplay {
+	void setModule(Octave* module) {
+		addChild(createParam<OctaveParam>(mm2px(Vec(0.0, 0.0)), module, Octave::OCTAVE_PARAM));
+	}
+};
+
 
 struct OctaveWidget : ModuleWidget {
 	OctaveWidget(Octave* module) {
@@ -162,14 +158,19 @@ struct OctaveWidget : ModuleWidget {
 		setPanel(createPanel(asset::plugin(pluginInstance, "res/Octave.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 82.753)), module, Octave::OCTAVE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 97.253)), module, Octave::PITCH_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 80.573)), module, Octave::OCTAVE_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 96.859)), module, Octave::PITCH_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 112.253)), module, Octave::PITCH_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Octave::PITCH_OUTPUT));
 
-		addParam(createParam<OctaveParam>(mm2px(Vec(0.0, 12.817)), module, Octave::OCTAVE_PARAM));
+		OctaveDisplay* display = createWidget<OctaveDisplay>(mm2px(Vec(-0.011, 13.039)));
+		display->box.size = mm2px(Vec(15.263, 55.88));
+		display->setModule(module);
+		addChild(display);
 	}
 };
 
