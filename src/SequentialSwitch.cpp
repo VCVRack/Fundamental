@@ -31,7 +31,7 @@ struct SequentialSwitch : Module {
 
 	SequentialSwitch() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configSwitch(STEPS_PARAM, 0.0, 2.0, 0.0, "Steps", {"4", "3", "2"});
+		configSwitch(STEPS_PARAM, 0.0, 2.0, 2.0, "Steps", {"2", "3", "4"});
 		configInput(CLOCK_INPUT, "Clock");
 		configInput(RESET_INPUT, "Reset");
 		if (INPUTS == 1) {
@@ -64,7 +64,7 @@ struct SequentialSwitch : Module {
 		if (resetTrigger.process(rescale(inputs[RESET_INPUT].getVoltage(), 0.1f, 2.f, 0.f, 1.f))) {
 			index = 0;
 		}
-		int length = 4 - (int) std::round(params[STEPS_PARAM].getValue());
+		int length = 2 + (int) std::round(params[STEPS_PARAM].getValue());
 		if (index >= length)
 			index = 0;
 
@@ -117,6 +117,20 @@ struct SequentialSwitch : Module {
 			}
 		}
 	}
+
+	void fromJson(json_t* rootJ) override {
+		Module::fromJson(rootJ);
+
+		// Get version to check if we should transform STEPS_PARAM
+		json_t* versionJ = json_object_get(rootJ, "version");
+		if (versionJ) {
+			std::string version = json_string_value(versionJ);
+			if (string::startsWith(version, "0.") || string::startsWith(version, "1.")) {
+				DEBUG("steps %f", params[STEPS_PARAM].getValue());
+				params[STEPS_PARAM].setValue(2 - params[STEPS_PARAM].getValue());
+			}
+		}
+	}
 };
 
 
@@ -132,7 +146,7 @@ struct SequentialSwitch1Widget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<CKSSThree>(mm2px(Vec(7.555, 20.942)), module, TSequentialSwitch::STEPS_PARAM));
+		addParam(createParamCentered<CKSSThreeHorizontal>(mm2px(Vec(7.555, 20.942)), module, TSequentialSwitch::STEPS_PARAM));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.555, 33.831)), module, TSequentialSwitch::CLOCK_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.555, 50.126)), module, TSequentialSwitch::RESET_INPUT));
@@ -143,10 +157,10 @@ struct SequentialSwitch1Widget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.555, 102.927)), module, TSequentialSwitch::OUT_OUTPUTS + 2));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.555, 113.087)), module, TSequentialSwitch::OUT_OUTPUTS + 3));
 
-		addChild(createLightCentered<TinyLight<RedLight>>(mm2px(Vec(11.28, 78.863)), module, TSequentialSwitch::CHANNEL_LIGHTS + 0));
-		addChild(createLightCentered<TinyLight<RedLight>>(mm2px(Vec(11.28, 89.023)), module, TSequentialSwitch::CHANNEL_LIGHTS + 1));
-		addChild(createLightCentered<TinyLight<RedLight>>(mm2px(Vec(11.28, 99.183)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2));
-		addChild(createLightCentered<TinyLight<RedLight>>(mm2px(Vec(11.28, 109.343)), module, TSequentialSwitch::CHANNEL_LIGHTS + 3));
+		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.28, 78.863)), module, TSequentialSwitch::CHANNEL_LIGHTS + 0));
+		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.28, 89.023)), module, TSequentialSwitch::CHANNEL_LIGHTS + 1));
+		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.28, 99.183)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2));
+		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.28, 109.343)), module, TSequentialSwitch::CHANNEL_LIGHTS + 3));
 	}
 };
 
@@ -166,7 +180,7 @@ struct SequentialSwitch2Widget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<CKSSThree>(mm2px(Vec(7.8, 20.942)), module, TSequentialSwitch::STEPS_PARAM));
+		addParam(createParamCentered<CKSSThreeHorizontal>(mm2px(Vec(7.8, 20.942)), module, TSequentialSwitch::STEPS_PARAM));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.8, 33.831)), module, TSequentialSwitch::CLOCK_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.8, 50.126)), module, TSequentialSwitch::RESET_INPUT));
@@ -177,10 +191,10 @@ struct SequentialSwitch2Widget : ModuleWidget {
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.8, 113.115)), module, TSequentialSwitch::OUT_OUTPUTS + 0));
 
-		addChild(createLightCentered<TinyLight<RedLight>>(mm2px(Vec(11.526, 63.259)), module, TSequentialSwitch::CHANNEL_LIGHTS + 0));
-		addChild(createLightCentered<TinyLight<RedLight>>(mm2px(Vec(11.526, 72.795)), module, TSequentialSwitch::CHANNEL_LIGHTS + 1));
-		addChild(createLightCentered<TinyLight<RedLight>>(mm2px(Vec(11.526, 82.955)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2));
-		addChild(createLightCentered<TinyLight<RedLight>>(mm2px(Vec(11.526, 93.115)), module, TSequentialSwitch::CHANNEL_LIGHTS + 3));
+		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.526, 63.259)), module, TSequentialSwitch::CHANNEL_LIGHTS + 0));
+		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.526, 72.795)), module, TSequentialSwitch::CHANNEL_LIGHTS + 1));
+		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.526, 82.955)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2));
+		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.526, 93.115)), module, TSequentialSwitch::CHANNEL_LIGHTS + 3));
 	}
 };
 

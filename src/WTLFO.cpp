@@ -232,7 +232,7 @@ struct WTLFO : Module {
 			if (channels == 1) {
 				float b = 1.f - phases[0][0];
 				lights[PHASE_LIGHT + 0].setSmoothBrightness(b, args.sampleTime * lightDivider.getDivision());
-				lights[PHASE_LIGHT + 1].setBrightness(0.f);
+				lights[PHASE_LIGHT + 1].setSmoothBrightness(b, args.sampleTime * lightDivider.getDivision());
 				lights[PHASE_LIGHT + 2].setBrightness(0.f);
 			}
 			else {

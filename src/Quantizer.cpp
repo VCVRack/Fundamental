@@ -133,8 +133,13 @@ struct QuantizerButton : OpaqueWidget {
 			return;
 
 		const float margin = mm2px(1.5);
-		Rect r = box.zeroPos().grow(Vec(margin, margin / 2).neg());
+		Rect r = box.zeroPos();
+		nvgBeginPath(args.vg);
+		nvgRect(args.vg, RECT_ARGS(r));
+		nvgFillColor(args.vg, nvgRGB(0x12, 0x12, 0x12));
+		nvgFill(args.vg);
 
+		r = r.shrink(Vec(margin, margin / 2));
 		nvgBeginPath(args.vg);
 		nvgRect(args.vg, RECT_ARGS(r));
 		if (module ? module->playingNotes[note] : (note == 0)) {
@@ -172,13 +177,28 @@ struct QuantizerButton : OpaqueWidget {
 
 struct QuantizerDisplay : LedDisplay {
 	void setModule(Quantizer* module) {
-		const float margin = mm2px(1.5) / 2;
-		const int notes = 12;
-		const float height = box.size.y - 2 * margin;
-		for (int note = 0; note < notes; note++) {
+		// White notes
+		static const std::vector<int> whiteNotes = {0, 2, 4, 5, 7, 9, 11};
+		for (size_t i = 0; i < whiteNotes.size(); i++) {
+			int note = whiteNotes[i];
 			QuantizerButton* quantizerButton = new QuantizerButton();
-			quantizerButton->box.pos = Vec(0, margin + height / notes * note);
-			quantizerButton->box.size = Vec(box.size.x, height / notes);
+			quantizerButton->box.pos = Vec(0, i * box.size.y / 7);
+			quantizerButton->box.size = Vec(box.size.x, box.size.y / 7);
+			quantizerButton->module = module;
+			quantizerButton->note = note;
+			addChild(quantizerButton);
+		}
+		// Black notes
+		static const std::vector<int> blackNotes = {1, 3, 6, 8, 10};
+		static const std::vector<float> blackPos = {1, 2, 4, 5, 6};
+		for (size_t i = 0; i < blackNotes.size(); i++) {
+			int note = blackNotes[i];
+			float height = box.size.y * 0.1f;
+			float width = box.size.x * 0.6f;
+			float pos = blackPos[i] / 7.f * box.size.y - height / 2;
+			QuantizerButton* quantizerButton = new QuantizerButton();
+			quantizerButton->box.pos = Vec(0, pos);
+			quantizerButton->box.size = Vec(width, height);
 			quantizerButton->module = module;
 			quantizerButton->note = note;
 			addChild(quantizerButton);

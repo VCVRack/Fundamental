@@ -167,7 +167,7 @@ struct OctaveWidget : ModuleWidget {
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Octave::PITCH_OUTPUT));
 
-		OctaveDisplay* display = createWidget<OctaveDisplay>(mm2px(Vec(-0.011, 13.039)));
+		OctaveDisplay* display = createWidget<OctaveDisplay>(mm2px(Vec(0.0, 13.039)));
 		display->box.size = mm2px(Vec(15.263, 55.88));
 		display->setModule(module);
 		addChild(display);
