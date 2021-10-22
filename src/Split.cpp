@@ -18,12 +18,13 @@ struct Split : Module {
 		NUM_LIGHTS
 	};
 
+	int lastChannels = 0;
 	dsp::ClockDivider lightDivider;
 
 	Split() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configInput(POLY_INPUT, "Polyphonic");
-		for (int i = 0; i < 8; i++)
+		for (int i = 0; i < 16; i++)
 			configOutput(MONO_OUTPUTS + i, string::f("Channel %d", i + 1));
 
 		lightDivider.setDivision(512);
@@ -36,13 +37,16 @@ struct Split : Module {
 			outputs[MONO_OUTPUTS + c].setVoltage(v);
 		}
 
-		// Set channel lights infrequently
-		if (lightDivider.process()) {
-			for (int c = 0; c < 16; c++) {
-				bool active = (c < inputs[POLY_INPUT].getChannels());
-				lights[CHANNEL_LIGHTS + c].setBrightness(active);
-			}
-		}
+		lastChannels = inputs[POLY_INPUT].getChannels();
+	}
+};
+
+
+struct SplitChannelDisplay : ChannelDisplay {
+	Split* module;
+	void step() override {
+		int channels = module ? module->lastChannels : 16;
+		text = string::f("%d", channels);
 	}
 };
 
@@ -57,41 +61,29 @@ struct SplitWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.77, 21.347)), module, Split::POLY_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 21.967)), module, Split::POLY_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.771, 37.02)), module, Split::MONO_OUTPUTS + 0));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.771, 48.02)), module, Split::MONO_OUTPUTS + 1));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.77, 59.02)), module, Split::MONO_OUTPUTS + 2));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.77, 70.02)), module, Split::MONO_OUTPUTS + 3));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.77, 81.02)), module, Split::MONO_OUTPUTS + 4));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.77, 92.02)), module, Split::MONO_OUTPUTS + 5));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.771, 103.02)), module, Split::MONO_OUTPUTS + 6));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.771, 114.02)), module, Split::MONO_OUTPUTS + 7));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.275, 37.02)), module, Split::MONO_OUTPUTS + 8));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.275, 48.02)), module, Split::MONO_OUTPUTS + 9));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.274, 59.02)), module, Split::MONO_OUTPUTS + 10));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.274, 70.02)), module, Split::MONO_OUTPUTS + 11));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.274, 81.02)), module, Split::MONO_OUTPUTS + 12));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.274, 92.02)), module, Split::MONO_OUTPUTS + 13));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.275, 103.02)), module, Split::MONO_OUTPUTS + 14));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.275, 114.02)), module, Split::MONO_OUTPUTS + 15));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 41.995)), module, Split::MONO_OUTPUTS + 0));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 52.155)), module, Split::MONO_OUTPUTS + 1));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 62.315)), module, Split::MONO_OUTPUTS + 2));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 72.475)), module, Split::MONO_OUTPUTS + 3));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 82.635)), module, Split::MONO_OUTPUTS + 4));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 92.795)), module, Split::MONO_OUTPUTS + 5));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 102.955)), module, Split::MONO_OUTPUTS + 6));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 113.115)), module, Split::MONO_OUTPUTS + 7));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 41.995)), module, Split::MONO_OUTPUTS + 8));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 52.155)), module, Split::MONO_OUTPUTS + 9));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 62.315)), module, Split::MONO_OUTPUTS + 10));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 72.475)), module, Split::MONO_OUTPUTS + 11));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 82.635)), module, Split::MONO_OUTPUTS + 12));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 92.795)), module, Split::MONO_OUTPUTS + 13));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 102.955)), module, Split::MONO_OUTPUTS + 14));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 113.115)), module, Split::MONO_OUTPUTS + 15));
 
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(15.276, 17.775)), module, Split::CHANNEL_LIGHTS + 0));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(17.275, 17.775)), module, Split::CHANNEL_LIGHTS + 1));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(19.275, 17.775)), module, Split::CHANNEL_LIGHTS + 2));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(21.275, 17.775)), module, Split::CHANNEL_LIGHTS + 3));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(15.276, 19.775)), module, Split::CHANNEL_LIGHTS + 4));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(17.275, 19.775)), module, Split::CHANNEL_LIGHTS + 5));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(19.275, 19.775)), module, Split::CHANNEL_LIGHTS + 6));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(21.275, 19.775)), module, Split::CHANNEL_LIGHTS + 7));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(15.276, 21.775)), module, Split::CHANNEL_LIGHTS + 8));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(17.275, 21.775)), module, Split::CHANNEL_LIGHTS + 9));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(19.275, 21.775)), module, Split::CHANNEL_LIGHTS + 10));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(21.276, 21.775)), module, Split::CHANNEL_LIGHTS + 11));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(15.276, 23.775)), module, Split::CHANNEL_LIGHTS + 12));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(17.275, 23.775)), module, Split::CHANNEL_LIGHTS + 13));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(19.275, 23.775)), module, Split::CHANNEL_LIGHTS + 14));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(21.276, 23.775)), module, Split::CHANNEL_LIGHTS + 15));
+		SplitChannelDisplay* display = createWidget<SplitChannelDisplay>(mm2px(Vec(14.02, 18.611)));
+		display->box.size = mm2px(Vec(8.197, 8.197));
+		display->module = module;
+		addChild(display);
 	}
 };
 

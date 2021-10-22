@@ -19,7 +19,8 @@ struct Merge : Module {
 	};
 
 	dsp::ClockDivider lightDivider;
-	int channels;
+	int channels = -1;
+	int automaticChannels = 0;
 
 	Merge() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -45,17 +46,10 @@ struct Merge : Module {
 			}
 			outputs[POLY_OUTPUT].setVoltage(v, c);
 		}
+		automaticChannels = lastChannel + 1;
 
-		// In order to allow 0 channels, modify channels directly instead of using `setChannels()`
-		outputs[POLY_OUTPUT].channels = (channels >= 0) ? channels : (lastChannel + 1);
-
-		// Set channel lights infrequently
-		if (lightDivider.process()) {
-			for (int c = 0; c < 16; c++) {
-				bool active = (c < outputs[POLY_OUTPUT].getChannels());
-				lights[CHANNEL_LIGHTS + c].setBrightness(active);
-			}
-		}
+		// In order to allow 0 channels, modify `channels` directly instead of using `setChannels()`
+		outputs[POLY_OUTPUT].channels = (channels >= 0) ? channels : automaticChannels;
 	}
 
 	json_t* dataToJson() override {
@@ -72,6 +66,21 @@ struct Merge : Module {
 };
 
 
+struct MergeChannelDisplay : ChannelDisplay {
+	Merge* module;
+	void step() override {
+		int channels = 16;
+		if (module) {
+			channels = module->channels;
+			if (channels < 0)
+				channels = module->automaticChannels;
+		}
+
+		text = string::f("%d", channels);
+	}
+};
+
+
 struct MergeWidget : ModuleWidget {
 	MergeWidget(Merge* module) {
 		setModule(module);
@@ -82,41 +91,29 @@ struct MergeWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.771, 37.02)), module, Merge::MONO_INPUTS + 0));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.771, 48.02)), module, Merge::MONO_INPUTS + 1));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.77, 59.02)), module, Merge::MONO_INPUTS + 2));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.77, 70.02)), module, Merge::MONO_INPUTS + 3));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.77, 81.02)), module, Merge::MONO_INPUTS + 4));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.77, 92.02)), module, Merge::MONO_INPUTS + 5));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.771, 103.02)), module, Merge::MONO_INPUTS + 6));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.771, 114.02)), module, Merge::MONO_INPUTS + 7));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.275, 37.02)), module, Merge::MONO_INPUTS + 8));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.275, 48.02)), module, Merge::MONO_INPUTS + 9));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.274, 59.02)), module, Merge::MONO_INPUTS + 10));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.274, 70.02)), module, Merge::MONO_INPUTS + 11));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.274, 81.02)), module, Merge::MONO_INPUTS + 12));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.274, 92.02)), module, Merge::MONO_INPUTS + 13));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.275, 103.02)), module, Merge::MONO_INPUTS + 14));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.275, 114.02)), module, Merge::MONO_INPUTS + 15));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 41.995)), module, Merge::MONO_INPUTS + 0));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 52.155)), module, Merge::MONO_INPUTS + 1));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 62.315)), module, Merge::MONO_INPUTS + 2));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 72.475)), module, Merge::MONO_INPUTS + 3));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 82.635)), module, Merge::MONO_INPUTS + 4));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 92.795)), module, Merge::MONO_INPUTS + 5));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 102.955)), module, Merge::MONO_INPUTS + 6));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 113.115)), module, Merge::MONO_INPUTS + 7));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 41.995)), module, Merge::MONO_INPUTS + 8));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 52.155)), module, Merge::MONO_INPUTS + 9));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 62.315)), module, Merge::MONO_INPUTS + 10));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 72.475)), module, Merge::MONO_INPUTS + 11));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 82.635)), module, Merge::MONO_INPUTS + 12));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 92.795)), module, Merge::MONO_INPUTS + 13));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 102.955)), module, Merge::MONO_INPUTS + 14));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 113.115)), module, Merge::MONO_INPUTS + 15));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.77, 21.347)), module, Merge::POLY_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 21.967)), module, Merge::POLY_OUTPUT));
 
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(15.276, 17.775)), module, Merge::CHANNEL_LIGHTS + 0));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(17.275, 17.775)), module, Merge::CHANNEL_LIGHTS + 1));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(19.275, 17.775)), module, Merge::CHANNEL_LIGHTS + 2));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(21.275, 17.775)), module, Merge::CHANNEL_LIGHTS + 3));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(15.276, 19.775)), module, Merge::CHANNEL_LIGHTS + 4));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(17.275, 19.775)), module, Merge::CHANNEL_LIGHTS + 5));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(19.275, 19.775)), module, Merge::CHANNEL_LIGHTS + 6));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(21.275, 19.775)), module, Merge::CHANNEL_LIGHTS + 7));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(15.276, 21.775)), module, Merge::CHANNEL_LIGHTS + 8));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(17.275, 21.775)), module, Merge::CHANNEL_LIGHTS + 9));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(19.275, 21.775)), module, Merge::CHANNEL_LIGHTS + 10));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(21.276, 21.775)), module, Merge::CHANNEL_LIGHTS + 11));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(15.276, 23.775)), module, Merge::CHANNEL_LIGHTS + 12));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(17.275, 23.775)), module, Merge::CHANNEL_LIGHTS + 13));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(19.275, 23.775)), module, Merge::CHANNEL_LIGHTS + 14));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(21.276, 23.775)), module, Merge::CHANNEL_LIGHTS + 15));
+		MergeChannelDisplay* display = createWidget<MergeChannelDisplay>(mm2px(Vec(14.02, 18.611)));
+		display->box.size = mm2px(Vec(8.197, 8.197));
+		display->module = module;
+		addChild(display);
 	}
 
 	void appendContextMenu(Menu* menu) override {
@@ -124,24 +121,15 @@ struct MergeWidget : ModuleWidget {
 
 		menu->addChild(new MenuSeparator);
 
-		struct MergeChannelsItem : MenuItem {
-			Merge* module;
-			Menu* createChildMenu() override {
-				Menu* menu = new Menu;
-				for (int c = -1; c <= 16; c++) {
-					menu->addChild(createCheckMenuItem((c < 0) ? "Automatic" : string::f("%d", c), "",
-						[=]() {return module->channels == c;},
-						[=]() {module->channels = c;}
-					));
-				}
-				return menu;
-			}
-		};
-		MergeChannelsItem* channelsItem = new MergeChannelsItem;
-		channelsItem->text = "Channels";
-		channelsItem->rightText = RIGHT_ARROW;
-		channelsItem->module = module;
-		menu->addChild(channelsItem);
+		std::vector<std::string> channelLabels;
+		channelLabels.push_back(string::f("Automatic (%d)", module->automaticChannels));
+		for (int i = 0; i <= 16; i++) {
+			channelLabels.push_back(string::f("%d", i));
+		}
+		menu->addChild(createIndexSubmenuItem("Channels", channelLabels,
+			[=]() {return module->channels + 1;},
+			[=](int i) {module->channels = i - 1;}
+		));
 	}
 };
 
