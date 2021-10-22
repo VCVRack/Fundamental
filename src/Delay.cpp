@@ -1,5 +1,5 @@
 #include "plugin.hpp"
-#include "samplerate.h"
+#include <samplerate.h>
 
 
 #define HISTORY_SIZE (1<<21)

@@ -24,8 +24,8 @@
     },
     {
       "slug": "VCO2",
-      "name": "VCO-2",
-      "description": "Voltage-controlled oscillator with output morphing",
+      "name": "Wavetable VCO (beta)",
+      "description": "Voltage-controlled wavetable oscillator",
       "manualUrl": "https://vcvrack.com/Fundamental#VCO",
       "tags": [
         "VCO",
@@ -65,7 +65,7 @@
     },
     {
       "slug": "LFO",
-      "name": "LFO-1",
+      "name": "LFO",
       "description": "Low-frequency oscillator",
       "manualUrl": "https://vcvrack.com/Fundamental#LFO",
       "tags": [
