@@ -15,6 +15,7 @@ extern Model* modelLFO;
 extern Model* modelLFO2;
 extern Model* modelDelay;
 extern Model* modelADSR;
+extern Model* modelMixer;
 extern Model* modelVCMixer;
 extern Model* model_8vert;
 extern Model* modelUnity;

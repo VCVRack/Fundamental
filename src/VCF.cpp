@@ -68,10 +68,13 @@ static const int UPSAMPLE = 2;
 struct VCF : Module {
 	enum ParamIds {
 		FREQ_PARAM,
-		FINE_PARAM, // removed
+		FINE_PARAM, // removed in 2.0
 		RES_PARAM,
 		FREQ_CV_PARAM,
 		DRIVE_PARAM,
+		// Added in 2.0
+		RES_CV_PARAM,
+		DRIVE_CV_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -95,11 +98,13 @@ struct VCF : Module {
 	VCF() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
 		// Multiply and offset for backward patch compatibility
-		configParam(FREQ_PARAM, 0.f, 1.f, 0.5f, "Frequency", " Hz", std::pow(2, 10.f), dsp::FREQ_C4 / std::pow(2, 5.f));
+		configParam(FREQ_PARAM, 0.f, 1.f, 0.5f, "Cutoff frequency", " Hz", std::pow(2, 10.f), dsp::FREQ_C4 / std::pow(2, 5.f));
 		configParam(FINE_PARAM, 0.f, 1.f, 0.5f, "Fine frequency");
 		configParam(RES_PARAM, 0.f, 1.f, 0.f, "Resonance", "%", 0.f, 100.f);
-		configParam(FREQ_CV_PARAM, -1.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
+		configParam(RES_CV_PARAM, -1.f, 1.f, 0.f, "Resonance CV", "%", 0.f, 100.f);
+		configParam(FREQ_CV_PARAM, -1.f, 1.f, 0.f, "Cutoff frequency CV", "%", 0.f, 100.f);
 		configParam(DRIVE_PARAM, 0.f, 1.f, 0.f, "Drive", "", 0, 11);
+		configParam(DRIVE_CV_PARAM, -1.f, 1.f, 0.f, "Drive CV", "%", 0, 100);
 		configInput(FREQ_INPUT, "Frequency");
 		configInput(RES_INPUT, "Resonance");
 		configInput(DRIVE_INPUT, "Drive");
@@ -121,7 +126,9 @@ struct VCF : Module {
 		}
 
 		float driveParam = params[DRIVE_PARAM].getValue();
+		float driveCvParam = params[DRIVE_CV_PARAM].getValue();
 		float resParam = params[RES_PARAM].getValue();
+		float resCvParam = params[RES_CV_PARAM].getValue();
 		float fineParam = params[FINE_PARAM].getValue();
 		fineParam = dsp::quadraticBipolar(fineParam * 2.f - 1.f) * 7.f / 12.f;
 		float freqCvParam = params[FREQ_CV_PARAM].getValue();
@@ -137,7 +144,8 @@ struct VCF : Module {
 			float_4 input = float_4::load(inputs[IN_INPUT].getVoltages(c)) / 5.f;
 
 			// Drive gain
-			float_4 drive = driveParam + inputs[DRIVE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f;
+			// TODO Make center of knob unity gain, 0 is off like a VCA
+			float_4 drive = driveParam + inputs[DRIVE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * driveCvParam;
 			drive = clamp(drive, 0.f, 1.f);
 			float_4 gain = simd::pow(1.f + drive, 5);
 			input *= gain;
@@ -146,7 +154,7 @@ struct VCF : Module {
 			input += 1e-6f * (2.f * random::uniform() - 1.f);
 
 			// Set resonance
-			float_4 resonance = resParam + inputs[RES_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f;
+			float_4 resonance = resParam + inputs[RES_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * resCvParam;
 			resonance = clamp(resonance, 0.f, 1.f);
 			filter->resonance = simd::pow(resonance, 2) * 10.f;
 
@@ -208,8 +216,8 @@ struct VCFWidget : ModuleWidget {
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(8.895, 56.388)), module, VCF::RES_PARAM));
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(26.665, 56.388)), module, VCF::DRIVE_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(6.996, 80.603)), module, VCF::FREQ_CV_PARAM));
-		// addParam(createParamCentered<Trimpot>(mm2px(Vec(17.833, 80.603)), module, VCF::RESCV_PARAM));
-		// addParam(createParamCentered<Trimpot>(mm2px(Vec(28.67, 80.603)), module, VCF::DRIVE_CV_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(17.833, 80.603)), module, VCF::RES_CV_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(28.67, 80.603)), module, VCF::DRIVE_CV_PARAM));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.996, 96.813)), module, VCF::FREQ_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.833, 96.813)), module, VCF::RES_INPUT));

@@ -15,6 +15,7 @@ void init(Plugin* p) {
 	p->addModel(modelLFO2);
 	p->addModel(modelDelay);
 	p->addModel(modelADSR);
+	p->addModel(modelMixer);
 	p->addModel(modelVCMixer);
 	p->addModel(model_8vert);
 	p->addModel(modelUnity);

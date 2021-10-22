@@ -104,6 +104,15 @@
       ]
     },
     {
+      "slug": "Mixer",
+      "name": "Mixer",
+      "description": "Mixes 6 signals",
+      "tags": [
+        "Mixer",
+        "Polyphonic"
+      ]
+    },
+    {
       "slug": "VCMixer",
       "name": "Mixer",
       "description": "Mixes 4 signals with built-in VCAs",
@@ -133,7 +142,8 @@
         "Mixer",
         "Utility",
         "Dual"
-      ]
+      ],
+      "hidden": true
     },
     {
       "slug": "Mutes",
