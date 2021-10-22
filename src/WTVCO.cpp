@@ -1,6 +1,5 @@
 #include "plugin.hpp"
 #include "Wavetable.hpp"
-#include <samplerate.h>
 
 
 using simd::float_4;
@@ -41,14 +40,8 @@ struct WTVCO : Module {
 	bool soft = false;
 	bool linear = false;
 
+	float_4 phases[4] = {};
 	float lastPos = 0.f;
-	SRC_STATE* src[16];
-	// callback state
-	uint8_t callbackChannel = 0;
-	float callbackPos = 0.f;
-	uint32_t callbackIndexes[16] = {};
-	static constexpr int CALLBACK_BUFFER_LEN = 16;
-	float callbackBuffers[16][CALLBACK_BUFFER_LEN] = {};
 
 	dsp::ClockDivider lightDivider;
 	dsp::BooleanTrigger softTrigger;
@@ -72,19 +65,10 @@ struct WTVCO : Module {
 		configLight(PHASE_LIGHT, "Phase");
 
 		lightDivider.setDivision(16);
-
-		for (int c = 0; c < 16; c++) {
-			src[c] = src_callback_new(srcCallback, SRC_SINC_FASTEST, 1, NULL, this);
-			assert(src[c]);
-		}
+		wavetable.quality = 4;
+		wavetable.reset();
 
 		onReset(ResetEvent());
-	}
-
-	~WTVCO() {
-		for (int c = 0; c < 16; c++) {
-			src_delete(src[c]);
-		}
 	}
 
 	void onReset(const ResetEvent& e) override {
@@ -121,38 +105,6 @@ struct WTVCO : Module {
 		lights[PHASE_LIGHT + 2].setBrightness(0.f);
 	}
 
-	static long srcCallback(void* cbData, float** data) {
-		WTVCO* that = (WTVCO*) cbData;
-		int c = that->callbackChannel;
-		// Get pos
-		float posF = that->callbackPos - std::trunc(that->callbackPos);
-		size_t pos0 = std::trunc(that->callbackPos);
-		size_t pos1 = pos0 + 1;
-		// Fill callbackBuffer
-		for (int i = 0; i < CALLBACK_BUFFER_LEN; i++) {
-			size_t index = (that->callbackIndexes[c] + i) % that->wavetable.waveLen;
-			// Get waves
-			float out;
-			float out0 = that->wavetable.at(index, pos0);
-			if (posF > 0.f) {
-				float out1 = that->wavetable.at(index, pos1);
-				out = crossfade(out0, out1, posF);
-			}
-			else {
-				out = out0;
-			}
-
-			that->callbackBuffers[c][i] = out;
-		}
-
-		that->callbackIndexes[c] += CALLBACK_BUFFER_LEN;
-		data[0] = that->callbackBuffers[c];
-		return CALLBACK_BUFFER_LEN;
-	}
-
-	void fillInputBuffer(int c) {
-	}
-
 	void process(const ProcessArgs& args) override {
 		if (linearTrigger.process(params[LINEAR_PARAM].getValue() > 0.f))
 			linear ^= true;
@@ -185,7 +137,14 @@ struct WTVCO : Module {
 			// Limit to Nyquist frequency
 			freq = simd::fmin(freq, args.sampleRate / 2.f);
 
-			float_4 ratio = args.sampleRate / freq / wavetable.waveLen;
+			// Accumulate phase
+			float_4 phase = phases[c / 4];
+			phase += freq * args.sampleTime;
+			// Wrap phase
+			phase -= simd::trunc(phase);
+			phases[c / 4] = phase;
+			// Scale phase from 0 to waveLen
+			phase *= wavetable.waveLen * wavetable.quality;
 
 			// Get wavetable position, scaled from 0 to (waveCount - 1)
 			float_4 pos = posParam + inputs[POS_INPUT].getPolyVoltageSimd<float_4>(c) * posCvParam / 10.f;
@@ -196,17 +155,24 @@ struct WTVCO : Module {
 				lastPos = pos[0];
 
 			float_4 out = 0.f;
-
 			for (int cc = 0; cc < 4 && c + cc < channels; cc++) {
-				callbackChannel = c + cc;
-				callbackPos = pos[cc];
-				// Not sure why this call is needed since we set ratio in src_callback_read(). Perhaps a SRC bug?
-				src_set_ratio(src[c + cc], ratio[cc]);
-				float outBuf[1];
-				long ret = src_callback_read(src[c + cc], ratio[cc], 1, outBuf);
-				// DEBUG("ret %ld ratio %f", ret, ratio[cc]);
-				if (ret > 0)
-					out[cc] = outBuf[0];
+				// Get wave indexes
+				float phaseF = phase[cc] - std::trunc(phase[cc]);
+				size_t i0 = std::trunc(phase[cc]);
+				size_t i1 = (i0 + 1) % (wavetable.waveLen * wavetable.quality);
+				// Get pos indexes
+				float posF = pos[cc] - std::trunc(pos[cc]);
+				size_t pos0 = std::trunc(pos[cc]);
+				size_t pos1 = pos0 + 1;
+				// Get waves
+				float out0 = crossfade(wavetable.interpolatedAt(i0, pos0), wavetable.interpolatedAt(i1, pos0), phaseF);
+				if (posF > 0.f) {
+					float out1 = crossfade(wavetable.interpolatedAt(i0, pos1), wavetable.interpolatedAt(i1, pos1), phaseF);
+					out[cc] = crossfade(out0, out1, posF);
+				}
+				else {
+					out[cc] = out0;
+				}
 			}
 
 			outputs[WAVE_OUTPUT].setVoltageSimd(out * 5.f, c);
