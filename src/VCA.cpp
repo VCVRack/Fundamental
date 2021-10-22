@@ -1,6 +1,9 @@
 #include "plugin.hpp"
 
 
+// Deprecated. Use VCA-1 instead.
+
+
 struct VCA : Module {
 	enum ParamIds {
 		LEVEL1_PARAM,
