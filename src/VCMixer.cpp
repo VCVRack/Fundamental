@@ -27,6 +27,7 @@ struct VCMixer : Module {
 	dsp::ClockDivider lightDivider;
 
 	VCMixer() {
+		config(0, 0, 0, 0);
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		// x^1 scaling up to 6 dB
 		configParam(MIX_LVL_PARAM, 0.0, 2.0, 1.0, "Mix level", " dB", -10, 20);
@@ -51,8 +52,7 @@ struct VCMixer : Module {
 		// Get number of poly channels for mix output
 		int mixChannels = 1;
 		for (int i = 0; i < 4; i++) {
-			int channels = inputs[CH_INPUTS + i].getChannels();
-			mixChannels = std::max(mixChannels, channels);
+			mixChannels = std::max(mixChannels, inputs[CH_INPUTS + i].getChannels());
 		}
 		float mix[16] = {};
 
@@ -153,28 +153,27 @@ struct VCMixerWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParam<RoundLargeBlackKnob>(mm2px(Vec(19.049999, 21.161154)), module, VCMixer::MIX_LVL_PARAM));
-		addParam(createLightParam<LEDLightSlider<GreenLight>>(mm2px(Vec(5.8993969, 44.33149).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAMS + 0, VCMixer::LVL_LIGHTS + 0));
-		addParam(createLightParam<LEDLightSlider<GreenLight>>(mm2px(Vec(17.899343, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAMS + 1, VCMixer::LVL_LIGHTS + 1));
-		addParam(createLightParam<LEDLightSlider<GreenLight>>(mm2px(Vec(29.899292, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAMS + 2, VCMixer::LVL_LIGHTS + 2));
-		addParam(createLightParam<LEDLightSlider<GreenLight>>(mm2px(Vec(41.90065, 44.331486).plus(Vec(-2, 0))), module, VCMixer::LVL_PARAMS + 3, VCMixer::LVL_LIGHTS + 3));
+		addParam(createLightParamCentered<LEDLightSlider<GreenLight>>(mm2px(Vec(6.604, 33.605)), module, VCMixer::LVL_PARAMS + 0, VCMixer::LVL_LIGHTS + 0));
+		addParam(createLightParamCentered<LEDLightSlider<GreenLight>>(mm2px(Vec(17.441, 33.605)), module, VCMixer::LVL_PARAMS + 1, VCMixer::LVL_LIGHTS + 1));
+		addParam(createLightParamCentered<LEDLightSlider<GreenLight>>(mm2px(Vec(28.279, 33.605)), module, VCMixer::LVL_PARAMS + 2, VCMixer::LVL_LIGHTS + 2));
+		addParam(createLightParamCentered<LEDLightSlider<GreenLight>>(mm2px(Vec(39.116, 33.605)), module, VCMixer::LVL_PARAMS + 3, VCMixer::LVL_LIGHTS + 3));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(22.776, 64.366)), module, VCMixer::MIX_LVL_PARAM));
 
-		// Use old interleaved order for backward compatibility with <0.6
-		addInput(createInput<PJ301MPort>(mm2px(Vec(3.2935331, 23.404598)), module, VCMixer::MIX_CV_INPUT));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(3.2935331, 78.531639)), module, VCMixer::CH_INPUTS + 0));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(3.2935331, 93.531586)), module, VCMixer::CV_INPUTS + 0));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(15.29348, 78.531639)), module, VCMixer::CH_INPUTS + 1));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(15.29348, 93.531586)), module, VCMixer::CV_INPUTS + 1));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(27.293465, 78.531639)), module, VCMixer::CH_INPUTS + 2));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(27.293465, 93.531586)), module, VCMixer::CV_INPUTS + 2));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(39.293411, 78.531639)), module, VCMixer::CH_INPUTS + 3));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(39.293411, 93.531586)), module, VCMixer::CV_INPUTS + 3));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.604, 64.347)), module, VCMixer::MIX_CV_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.604, 80.549)), module, VCMixer::CV_INPUTS + 0));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.441, 80.549)), module, VCMixer::CV_INPUTS + 1));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.279, 80.549)), module, VCMixer::CV_INPUTS + 2));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(39.116, 80.549)), module, VCMixer::CV_INPUTS + 3));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.604, 96.859)), module, VCMixer::CH_INPUTS + 0));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.441, 96.859)), module, VCMixer::CH_INPUTS + 1));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.279, 96.859)), module, VCMixer::CH_INPUTS + 2));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(39.116, 96.821)), module, VCMixer::CH_INPUTS + 3));
 
-		addOutput(createOutput<PJ301MPort>(mm2px(Vec(39.293411, 23.4046)), module, VCMixer::MIX_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(mm2px(Vec(3.2935331, 108.53153)), module, VCMixer::CH_OUTPUTS + 0));
-		addOutput(createOutput<PJ301MPort>(mm2px(Vec(15.29348, 108.53153)), module, VCMixer::CH_OUTPUTS + 1));
-		addOutput(createOutput<PJ301MPort>(mm2px(Vec(27.293465, 108.53153)), module, VCMixer::CH_OUTPUTS + 2));
-		addOutput(createOutput<PJ301MPort>(mm2px(Vec(39.293411, 108.53153)), module, VCMixer::CH_OUTPUTS + 3));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.116, 64.347)), module, VCMixer::MIX_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.604, 113.115)), module, VCMixer::CH_OUTPUTS + 0));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(17.441, 113.115)), module, VCMixer::CH_OUTPUTS + 1));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.279, 113.115)), module, VCMixer::CH_OUTPUTS + 2));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.116, 113.115)), module, VCMixer::CH_OUTPUTS + 3));
 	}
 };
 
