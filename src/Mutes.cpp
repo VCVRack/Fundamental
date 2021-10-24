@@ -69,7 +69,7 @@ struct Mutes : Module {
 	}
 	void onRandomize() override {
 		for (int i = 0; i < 10; i++) {
-			state[i] = (random::uniform() < 0.5f);
+			state[i] = random::get<bool>();
 		}
 	}
 
@@ -96,6 +96,12 @@ struct Mutes : Module {
 				if (stateJ)
 					state[i] = json_boolean_value(stateJ);
 			}
+		}
+	}
+
+	void invertMutes() {
+		for (int i = 0; i < 10; i++) {
+			state[i] ^= true;
 		}
 	}
 };
@@ -143,6 +149,17 @@ struct MutesWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.332, 92.86)), module, Mutes::OUT_OUTPUTS + 7));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.332, 102.987)), module, Mutes::OUT_OUTPUTS + 8));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.332, 113.115)), module, Mutes::OUT_OUTPUTS + 9));
+	}
+
+	void appendContextMenu(Menu* menu) override {
+		Mutes* module = dynamic_cast<Mutes*>(this->module);
+		assert(module);
+
+		menu->addChild(new MenuSeparator);
+
+		menu->addChild(createMenuItem("Invert mutes", "",
+			[=]() {module->invertMutes();}
+		));
 	}
 };
 
