@@ -5,7 +5,6 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="75"
@@ -35,7 +34,7 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="716"
+     inkscape:window-width="867"
      inkscape:window-height="480"
      id="namedview206"
      showgrid="false"
@@ -63,15 +62,6 @@
          stop-color="#e1e1e1"
          id="stop4" />
     </linearGradient>
-    <symbol
-       id="be7e929e-7ad8-4b70-941e-386cf6d2e52c"
-       data-name="New Symbol 9"
-       viewBox="0 0 4.061 3.615">
-      <path
-         d="M2.35242,3.42947,4.01038.55779A.37186.37186,0,0,0,3.68834,0H.37242a.37186.37186,0,0,0-.322.55779l1.658,2.87168A.37187.37187,0,0,0,2.35242,3.42947Z"
-         fill="#1f1f1f"
-         id="path7" />
-    </symbol>
   </defs>
   <g
      id="a80ca31a-5334-4cc0-b350-2a1b1473a882"
@@ -96,18 +86,24 @@
        stroke-linejoin="round"
        stroke-width="0.8"
        id="line15" />
-    <use
-       width="4.06076"
-       height="3.6154"
-       transform="translate(19.47902 189.54716)"
-       xlink:href="#be7e929e-7ad8-4b70-941e-386cf6d2e52c"
-       id="use17" />
-    <use
-       width="4.06076"
-       height="3.6154"
-       transform="translate(51.02031 189.54716)"
-       xlink:href="#be7e929e-7ad8-4b70-941e-386cf6d2e52c"
-       id="use19" />
+    <g
+       id="use17"
+       transform="translate(19.47902,189.54716)">
+      <path
+         id="path4866"
+         d="M 2.35242,3.42947 4.01038,0.55779 A 0.37186,0.37186 0 0 0 3.68834,0 H 0.37242 a 0.37186,0.37186 0 0 0 -0.322,0.55779 l 1.658,2.87168 a 0.37187,0.37187 0 0 0 0.644,0 z"
+         inkscape:connector-curvature="0"
+         style="fill:#1f1f1f" />
+    </g>
+    <g
+       id="use19"
+       transform="translate(51.02031,189.54716)">
+      <path
+         id="path4870"
+         d="M 2.35242,3.42947 4.01038,0.55779 A 0.37186,0.37186 0 0 0 3.68834,0 H 0.37242 a 0.37186,0.37186 0 0 0 -0.322,0.55779 l 1.658,2.87168 a 0.37187,0.37187 0 0 0 0.644,0 z"
+         inkscape:connector-curvature="0"
+         style="fill:#1f1f1f" />
+    </g>
     <g
        id="g29">
       <circle
@@ -270,18 +266,24 @@
          stroke-width="0.8"
          id="line65" />
     </g>
-    <use
-       width="4.06076"
-       height="3.6154"
-       transform="translate(35.68861 51.41743) rotate(-90)"
-       xlink:href="#be7e929e-7ad8-4b70-941e-386cf6d2e52c"
-       id="use69" />
-    <use
-       width="4.06076"
-       height="3.6154"
-       transform="translate(36.97318 215.11546) rotate(-90)"
-       xlink:href="#be7e929e-7ad8-4b70-941e-386cf6d2e52c"
-       id="use71" />
+    <g
+       id="use69"
+       transform="rotate(-90,43.55302,7.86441)">
+      <path
+         id="path4874"
+         d="M 2.35242,3.42947 4.01038,0.55779 A 0.37186,0.37186 0 0 0 3.68834,0 H 0.37242 a 0.37186,0.37186 0 0 0 -0.322,0.55779 l 1.658,2.87168 a 0.37187,0.37187 0 0 0 0.644,0 z"
+         inkscape:connector-curvature="0"
+         style="fill:#1f1f1f" />
+    </g>
+    <g
+       id="use71"
+       transform="rotate(-90,126.04432,89.07114)">
+      <path
+         id="path4878"
+         d="M 2.35242,3.42947 4.01038,0.55779 A 0.37186,0.37186 0 0 0 3.68834,0 H 0.37242 a 0.37186,0.37186 0 0 0 -0.322,0.55779 l 1.658,2.87168 a 0.37187,0.37187 0 0 0 0.644,0 z"
+         inkscape:connector-curvature="0"
+         style="fill:#1f1f1f" />
+    </g>
   </g>
   <g
      id="ef7dc233-b6e6-47ed-8302-d40ee24b029e"

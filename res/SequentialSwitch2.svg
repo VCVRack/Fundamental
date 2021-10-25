@@ -5,7 +5,6 @@
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="45"
@@ -35,16 +34,16 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="716"
-     inkscape:window-height="480"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
      id="namedview96"
      showgrid="false"
      inkscape:zoom="0.62105263"
      inkscape:cx="22.5"
      inkscape:cy="190"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="0"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
      inkscape:current-layer="svg94" />
   <defs
      id="defs10">
@@ -64,15 +63,6 @@
          stop-color="#e1e1e1"
          id="stop4" />
     </linearGradient>
-    <symbol
-       id="b8cad260-5770-4a07-b76b-162d33aeae61"
-       data-name="New Symbol 9"
-       viewBox="0 0 4.061 3.615">
-      <path
-         d="M2.35242,3.42947,4.01038.55779A.37186.37186,0,0,0,3.68834,0H.37242a.37186.37186,0,0,0-.322.55779l1.658,2.87168A.37187.37187,0,0,0,2.35242,3.42947Z"
-         fill="#1f1f1f"
-         id="path7" />
-    </symbol>
   </defs>
   <g
      id="b80d2353-80d5-423e-ae42-56e5cb5389c8"
@@ -127,12 +117,15 @@
        rx="2.83465"
        fill="#1f1f1f"
        id="rect27" />
-    <use
-       width="4.06076"
-       height="3.6154"
-       transform="translate(21.93797 26.09991) rotate(-90)"
-       xlink:href="#b8cad260-5770-4a07-b76b-162d33aeae61"
-       id="use29" />
+    <g
+       id="use29"
+       transform="rotate(-90,24.01894,2.08097)">
+      <path
+         id="path4814"
+         d="M 2.35242,3.42947 4.01038,0.55779 A 0.37186,0.37186 0 0 0 3.68834,0 H 0.37242 a 0.37186,0.37186 0 0 0 -0.322,0.55779 l 1.658,2.87168 a 0.37187,0.37187 0 0 0 0.644,0 z"
+         inkscape:connector-curvature="0"
+         style="fill:#1f1f1f" />
+    </g>
   </g>
   <g
      id="b46944f3-ed92-4475-9230-488daf2844ce"
