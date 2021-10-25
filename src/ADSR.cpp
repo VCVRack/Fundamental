@@ -1,12 +1,7 @@
 #include "plugin.hpp"
 
 
-using namespace simd;
-
-
-const float MIN_TIME = 1e-3f;
-const float MAX_TIME = 10.f;
-const float LAMBDA_BASE = MAX_TIME / MIN_TIME;
+using simd::float_4;
 
 
 struct ADSR : Module {
@@ -15,6 +10,12 @@ struct ADSR : Module {
 		DECAY_PARAM,
 		SUSTAIN_PARAM,
 		RELEASE_PARAM,
+		// added in 2.0
+		ATTACK_CV_PARAM,
+		DECAY_CV_PARAM,
+		SUSTAIN_CV_PARAM,
+		RELEASE_CV_PARAM,
+		PUSH_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -23,7 +24,7 @@ struct ADSR : Module {
 		SUSTAIN_INPUT,
 		RELEASE_INPUT,
 		GATE_INPUT,
-		TRIG_INPUT,
+		RETRIG_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -35,17 +36,22 @@ struct ADSR : Module {
 		DECAY_LIGHT,
 		SUSTAIN_LIGHT,
 		RELEASE_LIGHT,
+		PUSH_LIGHT,
 		NUM_LIGHTS
 	};
 
-	float_4 attacking[4] = {float_4::zero()};
-	float_4 env[4] = {0.f};
+	static constexpr float MIN_TIME = 1e-3f;
+	static constexpr float MAX_TIME = 10.f;
+	static constexpr float LAMBDA_BASE = MAX_TIME / MIN_TIME;
+
+	float_4 attacking[4] = {};
+	float_4 env[4] = {};
 	dsp::TSchmittTrigger<float_4> trigger[4];
 	dsp::ClockDivider cvDivider;
-	float_4 attackLambda[4] = {0.f};
-	float_4 decayLambda[4] = {0.f};
-	float_4 releaseLambda[4] = {0.f};
-	float_4 sustain[4] = {0.f};
+	float_4 attackLambda[4] = {};
+	float_4 decayLambda[4] = {};
+	float_4 releaseLambda[4] = {};
+	float_4 sustain[4] = {};
 	dsp::ClockDivider lightDivider;
 
 	ADSR() {
@@ -54,12 +60,21 @@ struct ADSR : Module {
 		configParam(DECAY_PARAM, 0.f, 1.f, 0.5f, "Decay", " ms", LAMBDA_BASE, MIN_TIME * 1000);
 		configParam(SUSTAIN_PARAM, 0.f, 1.f, 0.5f, "Sustain", "%", 0, 100);
 		configParam(RELEASE_PARAM, 0.f, 1.f, 0.5f, "Release", " ms", LAMBDA_BASE, MIN_TIME * 1000);
+
+		configParam(ATTACK_CV_PARAM, -1.f, 1.f, 0.f, "Attack CV", "%", 0, 100);
+		configParam(DECAY_CV_PARAM, -1.f, 1.f, 0.f, "Decay CV", "%", 0, 100);
+		configParam(SUSTAIN_CV_PARAM, -1.f, 1.f, 0.f, "Sustain CV", "%", 0, 100);
+		configParam(RELEASE_CV_PARAM, -1.f, 1.f, 0.f, "Release CV", "%", 0, 100);
+
+		configButton(PUSH_PARAM, "Push");
+
 		configInput(ATTACK_INPUT, "Attack");
 		configInput(DECAY_INPUT, "Decay");
 		configInput(SUSTAIN_INPUT, "Sustain");
 		configInput(RELEASE_INPUT, "Release");
 		configInput(GATE_INPUT, "Gate");
-		configInput(TRIG_INPUT, "Retrigger");
+		configInput(RETRIG_INPUT, "Retrigger");
+
 		configOutput(ENVELOPE_OUTPUT, "Envelope");
 
 		cvDivider.setDivision(16);
@@ -71,7 +86,7 @@ struct ADSR : Module {
 		// 0.23 us serial with all lambdas computed
 		// 0.15-0.18 us serial with all lambdas computed with SSE
 
-		int channels = inputs[GATE_INPUT].getChannels();
+		int channels = std::max(1, inputs[GATE_INPUT].getChannels());
 
 		// Compute lambdas
 		if (cvDivider.process()) {
@@ -80,12 +95,17 @@ struct ADSR : Module {
 			float sustainParam = params[SUSTAIN_PARAM].getValue();
 			float releaseParam = params[RELEASE_PARAM].getValue();
 
+			float attackCvParam = params[ATTACK_CV_PARAM].getValue();
+			float decayCvParam = params[DECAY_CV_PARAM].getValue();
+			float sustainCvParam = params[SUSTAIN_CV_PARAM].getValue();
+			float releaseCvParam = params[RELEASE_CV_PARAM].getValue();
+
 			for (int c = 0; c < channels; c += 4) {
 				// CV
-				float_4 attack = attackParam + inputs[ATTACK_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f;
-				float_4 decay = decayParam + inputs[DECAY_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f;
-				float_4 sustain = sustainParam + inputs[SUSTAIN_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f;
-				float_4 release = releaseParam + inputs[RELEASE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f;
+				float_4 attack = attackParam + inputs[ATTACK_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * attackCvParam;
+				float_4 decay = decayParam + inputs[DECAY_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * decayCvParam;
+				float_4 sustain = sustainParam + inputs[SUSTAIN_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * sustainCvParam;
+				float_4 release = releaseParam + inputs[RELEASE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * releaseCvParam;
 
 				attack = simd::clamp(attack, 0.f, 1.f);
 				decay = simd::clamp(decay, 0.f, 1.f);
@@ -99,14 +119,19 @@ struct ADSR : Module {
 			}
 		}
 
-		float_4 gate[4];
+		float_4 gate[4] = {};
+		bool push = params[PUSH_PARAM].getValue();
 
 		for (int c = 0; c < channels; c += 4) {
 			// Gate
 			gate[c / 4] = inputs[GATE_INPUT].getVoltageSimd<float_4>(c) >= 1.f;
 
+			if (push) {
+				gate[c / 4] = float_4::mask();
+			}
+
 			// Retrigger
-			float_4 triggered = trigger[c / 4].process(inputs[TRIG_INPUT].getPolyVoltageSimd<float_4>(c));
+			float_4 triggered = trigger[c / 4].process(inputs[RETRIG_INPUT].getPolyVoltageSimd<float_4>(c));
 			attacking[c / 4] = simd::ifelse(triggered, float_4::mask(), attacking[c / 4]);
 
 			// Get target and lambda for exponential decay
@@ -150,7 +175,41 @@ struct ADSR : Module {
 				if (simd::movemask(~gate[c / 4] & ~resting))
 					lights[RELEASE_LIGHT].setBrightness(1);
 			}
+
+			// Push button light
+			bool anyGate = false;
+			for (int c = 0; c < channels; c += 4)
+				anyGate = anyGate || simd::movemask(gate[c / 4]);
+			lights[PUSH_LIGHT].setBrightness(anyGate);
 		}
+	}
+};
+
+
+struct ADSRDisplay : LedDisplay {
+	ADSR* module;
+
+	void drawLayer(const DrawArgs& args, int layer) override {
+		if (layer == 1) {
+			Rect r = box.zeroPos().shrink(Vec(2, 4));
+			Vec s = r.getTopLeft();
+			Vec e = r.getBottomRight();
+			float decayX = 20.0;
+			float releaseX = 80.0;
+			float releaseY = 40.0;
+
+			nvgBeginPath(args.vg);
+			nvgMoveTo(args.vg, s.x, e.y);
+			nvgBezierTo(args.vg, s.x, s.y, decayX, s.y, decayX, s.y);
+			nvgBezierTo(args.vg, decayX, releaseY, releaseX, releaseY, releaseX, releaseY);
+			nvgBezierTo(args.vg, releaseX, e.y, e.x, e.y, e.x, e.y);
+			nvgLineCap(args.vg, NVG_ROUND);
+			nvgMiterLimit(args.vg, 2.f);
+			nvgStrokeWidth(args.vg, 1.5f);
+			nvgStrokeColor(args.vg, SCHEME_YELLOW);
+			nvgStroke(args.vg);
+		}
+		LedDisplay::drawLayer(args, layer);
 	}
 };
 
@@ -165,27 +224,29 @@ struct ADSRWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<LEDSlider>(mm2px(Vec(6.604, 55.454)), module, ADSR::ATTACK_PARAM));
-		addParam(createParamCentered<LEDSlider>(mm2px(Vec(17.441, 55.454)), module, ADSR::DECAY_PARAM));
-		addParam(createParamCentered<LEDSlider>(mm2px(Vec(28.279, 55.454)), module, ADSR::SUSTAIN_PARAM));
-		addParam(createParamCentered<LEDSlider>(mm2px(Vec(39.116, 55.454)), module, ADSR::RELEASE_PARAM));
-		// addParam(createParamCentered<Trimpot>(mm2px(Vec(6.604, 80.603)), module, ADSR::ATTCV_PARAM));
-		// addParam(createParamCentered<Trimpot>(mm2px(Vec(17.441, 80.63)), module, ADSR::DECCV_PARAM));
-		// addParam(createParamCentered<Trimpot>(mm2px(Vec(28.279, 80.603)), module, ADSR::SUSCV_PARAM));
-		// addParam(createParamCentered<Trimpot>(mm2px(Vec(39.119, 80.603)), module, ADSR::RELCV_PARAM));
-		// addParam(createParamCentered<LEDLightBezel>(mm2px(Vec(6.604, 113.115)), module, ADSR::PUSH_PARAM));
+		addParam(createLightParamCentered<LEDLightSlider<YellowLight>>(mm2px(Vec(6.604, 55.454)), module, ADSR::ATTACK_PARAM, ADSR::ATTACK_LIGHT));
+		addParam(createLightParamCentered<LEDLightSlider<YellowLight>>(mm2px(Vec(17.441, 55.454)), module, ADSR::DECAY_PARAM, ADSR::DECAY_LIGHT));
+		addParam(createLightParamCentered<LEDLightSlider<YellowLight>>(mm2px(Vec(28.279, 55.454)), module, ADSR::SUSTAIN_PARAM, ADSR::SUSTAIN_LIGHT));
+		addParam(createLightParamCentered<LEDLightSlider<YellowLight>>(mm2px(Vec(39.116, 55.454)), module, ADSR::RELEASE_PARAM, ADSR::RELEASE_LIGHT));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(6.604, 80.603)), module, ADSR::ATTACK_CV_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(17.441, 80.63)), module, ADSR::DECAY_CV_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(28.279, 80.603)), module, ADSR::SUSTAIN_CV_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(39.119, 80.603)), module, ADSR::RELEASE_CV_PARAM));
+		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(6.604, 113.115)), module, ADSR::PUSH_PARAM, ADSR::PUSH_LIGHT));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.604, 96.882)), module, ADSR::ATTACK_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.441, 96.859)), module, ADSR::DECAY_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.279, 96.886)), module, ADSR::SUSTAIN_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(39.119, 96.89)), module, ADSR::RELEASE_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.441, 113.115)), module, ADSR::GATE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.279, 113.115)), module, ADSR::TRIG_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.279, 113.115)), module, ADSR::RETRIG_INPUT));
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.119, 113.115)), module, ADSR::ENVELOPE_OUTPUT));
 
-		// mm2px(Vec(45.72, 21.219))
-		// addChild(createWidget<Widget>(mm2px(Vec(0.0, 13.039))));
+		ADSRDisplay* display = createWidget<ADSRDisplay>(mm2px(Vec(0.0, 13.039)));
+		display->box.size = mm2px(Vec(45.72, 21.219));
+		display->module = module;
+		addChild(display);
 	}
 };
 
