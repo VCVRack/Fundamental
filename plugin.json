@@ -14,7 +14,7 @@
   "modules": [
     {
       "slug": "VCO",
-      "name": "VCO-1",
+      "name": "VCO",
       "description": "Voltage-controlled oscillator",
       "manualUrl": "https://vcvrack.com/Fundamental#VCO",
       "tags": [
@@ -44,7 +44,7 @@
     },
     {
       "slug": "VCA-1",
-      "name": "VCA-1",
+      "name": "VCA",
       "description": "Voltage-controlled amplifier",
       "manualUrl": "https://vcvrack.com/Fundamental#VCA",
       "tags": [
@@ -114,7 +114,7 @@
     },
     {
       "slug": "VCMixer",
-      "name": "Mixer",
+      "name": "VCA Mixer",
       "description": "Mixes 4 signals with built-in VCAs",
       "manualUrl": "https://vcvrack.com/Fundamental#VCMixer",
       "tags": [
@@ -176,7 +176,7 @@
     },
     {
       "slug": "SEQ3",
-      "name": "SEQ-3",
+      "name": "SEQ 3",
       "description": "3-channel 8-step sequencer also with gate outputs",
       "manualUrl": "https://vcvrack.com/Fundamental#SEQ-3",
       "tags": [
@@ -186,7 +186,7 @@
     {
       "slug": "SequentialSwitch1",
       "name": "Sequential Switch 1",
-      "description": "Routes an input to one of to 4 outputs",
+      "description": "Routes 1 input to one of 4 outputs",
       "manualUrl": "https://vcvrack.com/Fundamental#SequentialSwitch",
       "tags": [
         "Utility",
@@ -196,7 +196,7 @@
     {
       "slug": "SequentialSwitch2",
       "name": "Sequential Switch 2",
-      "description": "Routes one of to 4 inputs to an output",
+      "description": "Routes one of 4 inputs to 1 output",
       "manualUrl": "https://vcvrack.com/Fundamental#SequentialSwitch",
       "tags": [
         "Utility",
@@ -206,7 +206,7 @@
     {
       "slug": "Octave",
       "name": "Octave",
-      "description": "Shifts 1V/oct CV by octaves",
+      "description": "Shifts 1V/oct pitch CV by octaves",
       "manualUrl": "https://vcvrack.com/Fundamental#Octave",
       "tags": [
         "Utility",
@@ -246,7 +246,7 @@
     {
       "slug": "Sum",
       "name": "Sum",
-      "description": "Sums all channels in a polyphonic cable",
+      "description": "Sums all channels of a polyphonic cable",
       "manualUrl": "https://vcvrack.com/Fundamental#Sum",
       "tags": [
         "Polyphonic",
@@ -266,7 +266,7 @@
     {
       "slug": "MidSide",
       "name": "Mid/Side",
-      "description": "Mid/side stereo encoder/decoder",
+      "description": "Encodes/decodes between mid/side and left/right stereo signals",
       "manualUrl": "https://vcvrack.com/Fundamental#MidSide",
       "tags": [
         "Utility",
