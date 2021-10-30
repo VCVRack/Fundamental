@@ -15,7 +15,6 @@ struct Sum : Module {
 		NUM_OUTPUTS
 	};
 	enum LightIds {
-		ENUMS(CHANNEL_LIGHTS, 16),
 		ENUMS(VU_LIGHTS, 6),
 		NUM_LIGHTS
 	};
@@ -23,6 +22,7 @@ struct Sum : Module {
 	dsp::VuMeter2 vuMeter;
 	dsp::ClockDivider vuDivider;
 	dsp::ClockDivider lightDivider;
+	int lastChannels = 0;
 
 	Sum() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -46,16 +46,29 @@ struct Sum : Module {
 
 		// Set channel lights infrequently
 		if (lightDivider.process()) {
-			for (int c = 0; c < 16; c++) {
-				bool active = (c < inputs[POLY_INPUT].getChannels());
-				lights[CHANNEL_LIGHTS + c].setBrightness(active);
-			}
+			lastChannels = inputs[POLY_INPUT].getChannels();
 
 			lights[VU_LIGHTS + 0].setBrightness(vuMeter.getBrightness(0.f, 0.f));
 			for (int i = 1; i < 6; i++) {
 				lights[VU_LIGHTS + i].setBrightness(vuMeter.getBrightness(-3.f * i, -3.f * (i - 1)));
 			}
 		}
+	}
+};
+
+
+struct SumDisplay : LedDisplay {
+	Sum* module;
+};
+
+
+struct SumChannelDisplay : ChannelDisplay {
+	Sum* module;
+	void step() override {
+		int channels = 16;
+		if (module)
+			channels = module->lastChannels;
+		text = string::f("%d", channels);
 	}
 };
 
@@ -70,35 +83,21 @@ struct SumWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.62, 53.519)), module, Sum::LEVEL_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.62, 64.284)), module, Sum::LEVEL_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.619, 21.347)), module, Sum::POLY_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 96.798)), module, Sum::POLY_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 112.021)), module, Sum::MONO_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.066)), module, Sum::MONO_OUTPUT));
 
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(4.619, 33.595)), module, Sum::CHANNEL_LIGHTS + 0));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(6.619, 33.595)), module, Sum::CHANNEL_LIGHTS + 1));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(8.619, 33.595)), module, Sum::CHANNEL_LIGHTS + 2));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(10.619, 33.595)), module, Sum::CHANNEL_LIGHTS + 3));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(4.619, 35.595)), module, Sum::CHANNEL_LIGHTS + 4));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(6.619, 35.595)), module, Sum::CHANNEL_LIGHTS + 5));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(8.619, 35.595)), module, Sum::CHANNEL_LIGHTS + 6));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(10.619, 35.595)), module, Sum::CHANNEL_LIGHTS + 7));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(4.619, 37.595)), module, Sum::CHANNEL_LIGHTS + 8));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(6.619, 37.595)), module, Sum::CHANNEL_LIGHTS + 9));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(8.619, 37.595)), module, Sum::CHANNEL_LIGHTS + 10));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(10.619, 37.595)), module, Sum::CHANNEL_LIGHTS + 11));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(4.619, 39.595)), module, Sum::CHANNEL_LIGHTS + 12));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(6.619, 39.595)), module, Sum::CHANNEL_LIGHTS + 13));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(8.619, 39.595)), module, Sum::CHANNEL_LIGHTS + 14));
-		addChild(createLightCentered<TinyLight<BlueLight>>(mm2px(Vec(10.619, 39.595)), module, Sum::CHANNEL_LIGHTS + 15));
+		SumDisplay* display = createWidget<SumDisplay>(mm2px(Vec(0.0, 12.834)));
+		display->box.size = mm2px(Vec(15.241, 36.981));
+		display->module = module;
+		addChild(display);
 
-		addChild(createLightCentered<MediumLight<RedLight>>(mm2px(Vec(7.619, 70.792)), module, Sum::VU_LIGHTS + 0));
-		addChild(createLightCentered<MediumLight<YellowLight>>(mm2px(Vec(7.619, 75.917)), module, Sum::VU_LIGHTS + 1));
-		addChild(createLightCentered<MediumLight<YellowLight>>(mm2px(Vec(7.619, 81.042)), module, Sum::VU_LIGHTS + 2));
-		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(7.619, 86.167)), module, Sum::VU_LIGHTS + 3));
-		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(7.619, 91.292)), module, Sum::VU_LIGHTS + 4));
-		addChild(createLightCentered<MediumLight<GreenLight>>(mm2px(Vec(7.619, 96.417)), module, Sum::VU_LIGHTS + 5));
+		SumChannelDisplay* channelDisplay = createWidget<SumChannelDisplay>(mm2px(Vec(3.521, 77.191)));
+		channelDisplay->box.size = mm2px(Vec(8.197, 8.197));
+		channelDisplay->module = module;
+		addChild(channelDisplay);
 	}
 };
 
