@@ -1,7 +1,6 @@
 #pragma once
 #include <rack.hpp>
 #include <osdialog.h>
-#include <samplerate.h>
 #include "dr_wav.h"
 
 
@@ -12,31 +11,32 @@ static const char WAVETABLE_FILTERS[] = "WAV (.wav):wav,WAV";
 struct Wavetable {
 	/** Number of points in each wave */
 	size_t waveLen = 0;
-	/** All waves concatenated */
+	/** All waves concatenated
+	(waveCount, waveLen)
+	*/
 	std::vector<float> samples;
-	/** Upsampling factor. No upsampling if 0. */
-	size_t quality = 0;
-	std::vector<float> interpolatedSamples;
 	/** Name of loaded wavetable. */
 	std::string filename;
 
-	Wavetable() {
-		reset();
-	}
+	// Interpolated wavetables
+	/** Upsampling factor. No upsampling if 0. */
+	size_t quality = 0;
+	/** Number of filtered wavetables to precompute */
+	size_t octaves = 0;
+	/** (octave, waveCount, waveLen * quality) */
+	std::vector<float> interpolatedSamples;
+	float sampleRate = 44100;
 
-	float &at(size_t sampleIndex, size_t waveIndex) {
-		return samples[sampleIndex + waveIndex * waveLen];
-	}
-	float at(size_t sampleIndex, size_t waveIndex) const {
-		return samples[sampleIndex + waveIndex * waveLen];
-	}
-	float interpolatedAt(size_t sampleIndex, size_t waveIndex) const {
-		return interpolatedSamples[sampleIndex + waveIndex * quality * waveLen];
-	}
+	Wavetable() {}
 
-	/** Returns the number of waves in the wavetable. */
-	size_t getWaveCount() const {
-		return samples.size() / waveLen;
+	float &at(size_t waveIndex, size_t sampleIndex) {
+		return samples[waveLen * waveIndex + sampleIndex];
+	}
+	float at(size_t waveIndex, size_t sampleIndex) const {
+		return samples[waveLen * waveIndex + sampleIndex];
+	}
+	float interpolatedAt(size_t octave, size_t waveIndex, size_t sampleIndex) const {
+		return interpolatedSamples[samples.size() * quality * octave + waveLen * quality * waveIndex + sampleIndex];
 	}
 
 	void reset() {
@@ -48,60 +48,80 @@ struct Wavetable {
 		// Sine
 		for (size_t i = 0; i < waveLen; i++) {
 			float p = float(i) / waveLen;
-			at(i, 0) = std::sin(2 * float(M_PI) * p);
+			at(0, i) = std::sin(2 * float(M_PI) * p);
 		}
 		// Triangle
 		for (size_t i = 0; i < waveLen; i++) {
 			float p = float(i) / waveLen;
-			at(i, 1) = (p < 0.25f) ? 4*p : (p < 0.75f) ? 2 - 4*p : 4*p - 4;
+			at(1, i) = (p < 0.25f) ? 4*p : (p < 0.75f) ? 2 - 4*p : 4*p - 4;
 		}
 		// Sawtooth
 		for (size_t i = 0; i < waveLen; i++) {
 			float p = float(i) / waveLen;
-			at(i, 2) = (p < 0.5f) ? 2*p : 2*p - 2;
+			at(2, i) = (p < 0.5f) ? 2*p : 2*p - 2;
 		}
 		// Square
 		for (size_t i = 0; i < waveLen; i++) {
 			float p = float(i) / waveLen;
-			at(i, 3) = (p < 0.5f) ? 1 : -1;
+			at(3, i) = (p < 0.5f) ? 1 : -1;
 		}
 		interpolate();
 	}
 
+	void setQuality(size_t quality) {
+		if (quality == this->quality)
+			return;
+		this->quality = quality;
+		interpolate();
+	}
+
+	void setWaveLen(size_t waveLen) {
+		if (waveLen == this->waveLen)
+			return;
+		this->waveLen = waveLen;
+		interpolate();
+	}
+
+	/** Returns the number of waves in the wavetable. */
+	size_t getWaveCount() const {
+		return samples.size() / waveLen;
+	}
+
 	void interpolate() {
-		if (quality == 0)
+		if (quality == 0 || octaves == 0)
 			return;
 		if (waveLen < 2)
 			return;
 
-		interpolatedSamples.clear();
-		interpolatedSamples.resize(samples.size() * quality);
-
 		size_t waveCount = getWaveCount();
+		if (waveCount == 0)
+			return;
 
-		float* in = new float[3 * waveLen];
-		float* out = new float[3 * waveLen * quality];
+		interpolatedSamples.clear();
+		interpolatedSamples.resize(octaves * samples.size() * quality);
+		float* in = new float[quality * waveLen]();
+		float* inF = new float[2 * quality * waveLen];
+		dsp::RealFFT fft(quality * waveLen);
 
 		for (size_t i = 0; i < waveCount; i++) {
-			std::memcpy(&in[0 * waveLen], &samples[i * waveLen], waveLen * sizeof(float));
-			std::memcpy(&in[1 * waveLen], &samples[i * waveLen], waveLen * sizeof(float));
-			std::memcpy(&in[2 * waveLen], &samples[i * waveLen], waveLen * sizeof(float));
-
-			SRC_DATA srcData = {};
-			srcData.data_in = in;
-			srcData.input_frames = 3 * waveLen;
-			srcData.data_out = out;
-			srcData.output_frames = 3 * waveLen * quality;
-			srcData.end_of_input = true;
-			srcData.src_ratio = quality;
-			src_simple(&srcData, SRC_SINC_FASTEST, 1);
-			DEBUG("used %ld gen %ld", srcData.input_frames_used, srcData.output_frames_gen);
-
-			std::memcpy(&interpolatedSamples[i * waveLen * quality], &out[1 * waveLen * quality], waveLen * quality * sizeof(float));
+			// Zero-stuff interpolated wave
+			for (size_t j = 0; j < waveLen; j++) {
+				in[j * quality] = samples[i * waveLen + j] / waveLen;
+			}
+			fft.rfft(in, inF);
+			// Lowpass inF
+			for (int octave = octaves - 1; octave >= 0; octave--) {
+				size_t firstJ = 1 << (octave + 1);
+				for (size_t j = firstJ; j < waveLen * quality; j++) {
+					inF[2 * j + 0] = 0.f;
+					inF[2 * j + 1] = 0.f;
+				}
+				fft.irfft(inF, &interpolatedSamples[samples.size() * quality * octave + waveLen * quality * i]);
+			}
 		}
 
+		delete[] inF;
 		delete[] in;
-		delete[] out;
 	}
 
 	json_t* toJson() const {
@@ -117,7 +137,7 @@ struct Wavetable {
 		// waveLen
 		json_t* waveLenJ = json_object_get(rootJ, "waveLen");
 		if (waveLenJ)
-			waveLen = json_integer_value(waveLenJ);
+			setWaveLen(json_integer_value(waveLenJ));
 		// filename
 		json_t* filenameJ = json_object_get(rootJ, "filename");
 		if (filenameJ)
@@ -125,17 +145,37 @@ struct Wavetable {
 	}
 
 	void load(std::string path) {
-		drwav wav;
-		// TODO Unicode on Windows
-		if (!drwav_init_file(&wav, path.c_str(), NULL))
-			return;
-
 		samples.clear();
-		samples.resize(wav.totalPCMFrameCount * wav.channels);
 
-		drwav_read_pcm_frames_f32(&wav, wav.totalPCMFrameCount, samples.data());
+		std::string ext = string::lowercase(system::getExtension(path));
+		if (ext == ".wav") {
+			// Load WAV
+			drwav wav;
+#if defined ARCH_WIN
+			if (!drwav_init_file_w(&wav, string::UTF8toUTF16(path).c_str(), NULL))
+#else
+			if (!drwav_init_file(&wav, path.c_str(), NULL))
+#endif
+				return;
 
-		drwav_uninit(&wav);
+			samples.resize(wav.totalPCMFrameCount * wav.channels);
+
+			drwav_read_pcm_frames_f32(&wav, wav.totalPCMFrameCount, samples.data());
+			drwav_uninit(&wav);
+		}
+		else {
+			// Load float32
+			std::vector<uint8_t> data = system::readFile(path);
+			size_t len = data.size() / sizeof(float);
+			samples.resize(len);
+			std::memcpy(samples.data(), data.data(), len * sizeof(float));
+		}
+
+		// Clamp samples between -1 and 1
+		for (size_t i = 0; i < samples.size(); i++) {
+			samples[i] = clamp(samples[i], -1.f, 1.f);
+		}
+
 		interpolate();
 	}
 
@@ -218,7 +258,7 @@ struct Wavetable {
 };
 
 
-static const Wavetable defaultWavetable;
+static Wavetable defaultWavetable;
 
 
 template <class TModule>
@@ -227,6 +267,9 @@ struct WTDisplay : LedDisplay {
 
 	void drawLayer(const DrawArgs& args, int layer) override {
 		if (layer == 1) {
+			if (defaultWavetable.samples.empty())
+				defaultWavetable.reset();
+
 			// Get module data or defaults
 			const Wavetable& wavetable = module ? module->wavetable : defaultWavetable;
 			float lastPos = module ? module->lastPos : 0.f;
@@ -261,9 +304,9 @@ struct WTDisplay : LedDisplay {
 			for (size_t i = 0; i <= wavetable.waveLen; i += iSkip) {
 				// Get wave value
 				float wave;
-				float wave0 = wavetable.at(i % wavetable.waveLen, pos0);
+				float wave0 = wavetable.at(pos0, i % wavetable.waveLen);
 				if (posF > 0.f) {
-					float wave1 = wavetable.at(i % wavetable.waveLen, (pos0 + 1));
+					float wave1 = wavetable.at(pos0 + 1, i % wavetable.waveLen);
 					wave = crossfade(wave0, wave1, posF);
 				}
 				else {

@@ -84,11 +84,10 @@ struct WTLFO : Module {
 		configLight(PHASE_LIGHT, "Phase");
 
 		lightDivider.setDivision(16);
-		onReset(ResetEvent());
+		onReset();
 	}
 
-	void onReset(const ResetEvent& e) override {
-		Module::onReset(e);
+	void onReset() override {
 		offset = false;
 		invert = false;
 		wavetable.reset();
@@ -206,9 +205,9 @@ struct WTLFO : Module {
 				size_t pos0 = std::trunc(pos[cc]);
 				size_t pos1 = pos0 + 1;
 				// Get waves
-				float out0 = crossfade(wavetable.at(i0, pos0), wavetable.at(i1, pos0), phaseF);
+				float out0 = crossfade(wavetable.at(pos0, i0), wavetable.at(pos0, i1), phaseF);
 				if (posF > 0.f) {
-					float out1 = crossfade(wavetable.at(i0, pos1), wavetable.at(i1, pos1), phaseF);
+					float out1 = crossfade(wavetable.at(pos1, i0), wavetable.at(pos1, i1), phaseF);
 					out[cc] = crossfade(out0, out1, posF);
 				}
 				else {

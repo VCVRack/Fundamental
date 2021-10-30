@@ -65,21 +65,19 @@ struct WTVCO : Module {
 		configLight(PHASE_LIGHT, "Phase");
 
 		lightDivider.setDivision(16);
-		wavetable.quality = 4;
-		wavetable.reset();
+		wavetable.octaves = 8;
+		wavetable.setQuality(4);
 
-		onReset(ResetEvent());
+		onReset();
 	}
 
-	void onReset(const ResetEvent& e) override {
-		Module::onReset(e);
+	void onReset() override {
 		soft = false;
 		linear = false;
 		wavetable.reset();
 	}
 
-	void onRandomize(const RandomizeEvent& e) override {
-		Module::onRandomize(e);
+	void onRandomize() override {
 		soft = random::get<bool>();
 		linear = random::get<bool>();
 	}
@@ -137,6 +135,9 @@ struct WTVCO : Module {
 			// Limit to Nyquist frequency
 			freq = simd::fmin(freq, args.sampleRate / 2.f);
 
+			// Number of octaves above frequency until Nyquist
+			float_4 octave = simd::log2(args.sampleRate / 2 / freq);
+
 			// Accumulate phase
 			float_4 phase = phases[c / 4];
 			phase += freq * args.sampleTime;
@@ -144,7 +145,7 @@ struct WTVCO : Module {
 			phase -= simd::trunc(phase);
 			phases[c / 4] = phase;
 			// Scale phase from 0 to waveLen
-			phase *= wavetable.waveLen * wavetable.quality;
+			phase *= (wavetable.waveLen * wavetable.quality);
 
 			// Get wavetable position, scaled from 0 to (waveCount - 1)
 			float_4 pos = posParam + inputs[POS_INPUT].getPolyVoltageSimd<float_4>(c) * posCvParam / 10.f;
@@ -165,9 +166,10 @@ struct WTVCO : Module {
 				size_t pos0 = std::trunc(pos[cc]);
 				size_t pos1 = pos0 + 1;
 				// Get waves
-				float out0 = crossfade(wavetable.interpolatedAt(i0, pos0), wavetable.interpolatedAt(i1, pos0), phaseF);
+				int octave0 = clamp((int) octave[cc], 0, 7);
+				float out0 = crossfade(wavetable.interpolatedAt(octave0, pos0, i0), wavetable.interpolatedAt(octave0, pos0, i1), phaseF);
 				if (posF > 0.f) {
-					float out1 = crossfade(wavetable.interpolatedAt(i0, pos1), wavetable.interpolatedAt(i1, pos1), phaseF);
+					float out1 = crossfade(wavetable.interpolatedAt(octave0, pos1, i0), wavetable.interpolatedAt(octave0, pos1, i1), phaseF);
 					out[cc] = crossfade(out0, out1, posF);
 				}
 				else {
