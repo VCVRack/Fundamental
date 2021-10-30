@@ -4,7 +4,7 @@
 #include "dr_wav.h"
 
 
-static const char WAVETABLE_FILTERS[] = "WAV (.wav):wav,WAV";
+static const char WAVETABLE_FILTERS[] = "WAV (.wav):wav,WAV;Raw:f32,i8,i16,i24,i32,*";
 
 
 /** Loads and stores wavetable samples and metadata */
@@ -164,16 +164,35 @@ struct Wavetable {
 			drwav_uninit(&wav);
 		}
 		else {
-			// Load float32
+			// Load bytes from file
 			std::vector<uint8_t> data = system::readFile(path);
-			size_t len = data.size() / sizeof(float);
-			samples.resize(len);
-			std::memcpy(samples.data(), data.data(), len * sizeof(float));
-		}
 
-		// Clamp samples between -1 and 1
-		for (size_t i = 0; i < samples.size(); i++) {
-			samples[i] = clamp(samples[i], -1.f, 1.f);
+			if (ext == ".f32") {
+				size_t len = data.size() / sizeof(float);
+				samples.resize(len);
+				// This is the same as memcpy but consistent with the other conversions.
+				dsp::convert((const float*) data.data(), samples.data(), len);
+			}
+			else if (ext == ".s8" || ext == ".i8") {
+				size_t len = data.size() / sizeof(int8_t);
+				samples.resize(len);
+				dsp::convert((const int8_t*) data.data(), samples.data(), len);
+			}
+			else if (ext == ".s16" || ext == ".i16") {
+				size_t len = data.size() / sizeof(int16_t);
+				samples.resize(len);
+				dsp::convert((const int16_t*) data.data(), samples.data(), len);
+			}
+			else if (ext == ".s24" || ext == ".i24") {
+				size_t len = data.size() / sizeof(dsp::int24_t);
+				samples.resize(len);
+				dsp::convert((const dsp::int24_t*) data.data(), samples.data(), len);
+			}
+			else if (ext == ".s32" || ext == ".i32" || true) {
+				size_t len = data.size() / sizeof(int32_t);
+				samples.resize(len);
+				dsp::convert((const int32_t*) data.data(), samples.data(), len);
+			}
 		}
 
 		interpolate();
@@ -266,6 +285,8 @@ struct WTDisplay : LedDisplay {
 	TModule* module;
 
 	void drawLayer(const DrawArgs& args, int layer) override {
+		nvgScissor(args.vg, RECT_ARGS(args.clipBox));
+
 		if (layer == 1) {
 			if (defaultWavetable.samples.empty())
 				defaultWavetable.reset();
@@ -329,6 +350,8 @@ struct WTDisplay : LedDisplay {
 			nvgStrokeColor(args.vg, SCHEME_YELLOW);
 			nvgStroke(args.vg);
 		}
+
+		nvgResetScissor(args.vg);
 		LedDisplay::drawLayer(args, layer);
 	}
 
