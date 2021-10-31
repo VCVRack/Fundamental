@@ -184,9 +184,9 @@ struct Wavetable {
 				dsp::convert((const int16_t*) data.data(), samples.data(), len);
 			}
 			else if (ext == ".s24" || ext == ".i24") {
-				size_t len = data.size() / sizeof(dsp::int24_t);
+				size_t len = data.size() / sizeof(dsp::Int24);
 				samples.resize(len);
-				dsp::convert((const dsp::int24_t*) data.data(), samples.data(), len);
+				dsp::convert((const dsp::Int24*) data.data(), samples.data(), len);
 			}
 			else if (ext == ".s32" || ext == ".i32" || true) {
 				size_t len = data.size() / sizeof(int32_t);
