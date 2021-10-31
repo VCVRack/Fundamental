@@ -96,6 +96,8 @@ struct WTLFO : Module {
 		for (int c = 0; c < 16; c += 4) {
 			phases[c / 4] = 0.f;
 		}
+		clockFreq = 1.f;
+		clockTimer.reset();
 	}
 
 	void onRandomize(const RandomizeEvent& e) override {
@@ -137,7 +139,7 @@ struct WTLFO : Module {
 		if (inputs[CLOCK_INPUT].isConnected()) {
 			clockTimer.process(args.sampleTime);
 
-			if (clockTrigger.process(rescale(inputs[CLOCK_INPUT].getVoltage(), 0.1f, 2.f, 0.f, 1.f))) {
+			if (clockTrigger.process(inputs[CLOCK_INPUT].getVoltage(), 0.1f, 2.f)) {
 				float clockFreq = 1.f / clockTimer.getTime();
 				clockTimer.reset();
 				if (0.001f <= clockFreq && clockFreq <= 1000.f) {
@@ -170,7 +172,7 @@ struct WTLFO : Module {
 		for (int c = 0; c < channels; c += 4) {
 			// Calculate frequency in Hz
 			float_4 pitch = freqParam + inputs[FM_INPUT].getVoltageSimd<float_4>(c) * fmParam;
-			float_4 freq = clockFreq / 2.f * simd::pow(2.f, pitch);
+			float_4 freq = clockFreq / 2.f * dsp::approxExp2_taylor5(pitch + 30.f) / std::pow(2.f, 30.f);
 			freq = simd::fmin(freq, 1024.f);
 
 			// Accumulate phase
