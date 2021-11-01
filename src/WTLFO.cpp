@@ -119,14 +119,6 @@ struct WTLFO : Module {
 		}
 	}
 
-	void clearOutput() {
-		outputs[WAVE_OUTPUT].setVoltage(0.f);
-		outputs[WAVE_OUTPUT].setChannels(1);
-		lights[PHASE_LIGHT + 0].setBrightness(0.f);
-		lights[PHASE_LIGHT + 1].setBrightness(0.f);
-		lights[PHASE_LIGHT + 2].setBrightness(0.f);
-	}
-
 	void process(const ProcessArgs& args) override {
 		if (offsetTrigger.process(params[OFFSET_PARAM].getValue() > 0.f))
 			offset ^= true;
@@ -158,72 +150,71 @@ struct WTLFO : Module {
 		float posCvParam = params[POS_CV_PARAM].getValue();
 
 		// Check valid wave and wavetable size
-		if (wavetable.waveLen < 2) {
-			clearOutput();
-			return;
-		}
 		int waveCount = wavetable.getWaveCount();
-		if (waveCount < 1) {
-			clearOutput();
-			return;
-		}
+		if (wavetable.waveLen >= 2 && waveCount >= 1) {
+			// Iterate channels
+			for (int c = 0; c < channels; c += 4) {
+				// Calculate frequency in Hz
+				float_4 pitch = freqParam + inputs[FM_INPUT].getVoltageSimd<float_4>(c) * fmParam;
+				float_4 freq = clockFreq / 2.f * dsp::approxExp2_taylor5(pitch + 30.f) / std::pow(2.f, 30.f);
+				freq = simd::fmin(freq, 1024.f);
 
-		// Iterate channels
-		for (int c = 0; c < channels; c += 4) {
-			// Calculate frequency in Hz
-			float_4 pitch = freqParam + inputs[FM_INPUT].getVoltageSimd<float_4>(c) * fmParam;
-			float_4 freq = clockFreq / 2.f * dsp::approxExp2_taylor5(pitch + 30.f) / std::pow(2.f, 30.f);
-			freq = simd::fmin(freq, 1024.f);
+				// Accumulate phase
+				float_4 phase = phases[c / 4];
+				phase += freq * args.sampleTime;
+				// Wrap phase
+				phase -= simd::trunc(phase);
+				// Reset phase
+				float_4 reset = resetTriggers[c / 4].process(simd::rescale(inputs[RESET_INPUT].getPolyVoltageSimd<float_4>(c), 0.1f, 2.f, 0.f, 1.f));
+				phase = simd::ifelse(reset, 0.f, phase);
+				phases[c / 4] = phase;
+				// Scale phase from 0 to waveLen
+				phase *= wavetable.waveLen;
 
-			// Accumulate phase
-			float_4 phase = phases[c / 4];
-			phase += freq * args.sampleTime;
-			// Wrap phase
-			phase -= simd::trunc(phase);
-			// Reset phase
-			float_4 reset = resetTriggers[c / 4].process(simd::rescale(inputs[RESET_INPUT].getPolyVoltageSimd<float_4>(c), 0.1f, 2.f, 0.f, 1.f));
-			phase = simd::ifelse(reset, 0.f, phase);
-			phases[c / 4] = phase;
-			// Scale phase from 0 to waveLen
-			phase *= wavetable.waveLen;
+				// Get wavetable position, scaled from 0 to (waveCount - 1)
+				float_4 pos = posParam + inputs[POS_INPUT].getPolyVoltageSimd<float_4>(c) * posCvParam / 10.f;
+				pos = simd::clamp(pos);
+				pos *= (waveCount - 1);
 
-			// Get wavetable position, scaled from 0 to (waveCount - 1)
-			float_4 pos = posParam + inputs[POS_INPUT].getPolyVoltageSimd<float_4>(c) * posCvParam / 10.f;
-			pos = simd::clamp(pos);
-			pos *= (waveCount - 1);
+				if (c == 0)
+					lastPos = pos[0];
 
-			if (c == 0)
-				lastPos = pos[0];
-
-			// Get wavetable points
-			float_4 out = 0.f;
-			for (int cc = 0; cc < 4 && c + cc < channels; cc++) {
-				// Get wave indexes
-				float phaseF = phase[cc] - std::trunc(phase[cc]);
-				size_t i0 = std::trunc(phase[cc]);
-				size_t i1 = (i0 + 1) % wavetable.waveLen;
-				// Get pos indexes
-				float posF = pos[cc] - std::trunc(pos[cc]);
-				size_t pos0 = std::trunc(pos[cc]);
-				size_t pos1 = pos0 + 1;
-				// Get waves
-				float out0 = crossfade(wavetable.at(pos0, i0), wavetable.at(pos0, i1), phaseF);
-				if (posF > 0.f) {
-					float out1 = crossfade(wavetable.at(pos1, i0), wavetable.at(pos1, i1), phaseF);
-					out[cc] = crossfade(out0, out1, posF);
+				// Get wavetable points
+				float_4 out = 0.f;
+				for (int cc = 0; cc < 4 && c + cc < channels; cc++) {
+					// Get wave indexes
+					float phaseF = phase[cc] - std::trunc(phase[cc]);
+					size_t i0 = std::trunc(phase[cc]);
+					size_t i1 = (i0 + 1) % wavetable.waveLen;
+					// Get pos indexes
+					float posF = pos[cc] - std::trunc(pos[cc]);
+					size_t pos0 = std::trunc(pos[cc]);
+					size_t pos1 = pos0 + 1;
+					// Get waves
+					float out0 = crossfade(wavetable.at(pos0, i0), wavetable.at(pos0, i1), phaseF);
+					if (posF > 0.f) {
+						float out1 = crossfade(wavetable.at(pos1, i0), wavetable.at(pos1, i1), phaseF);
+						out[cc] = crossfade(out0, out1, posF);
+					}
+					else {
+						out[cc] = out0;
+					}
 				}
-				else {
-					out[cc] = out0;
-				}
+
+				// Invert and offset
+				if (invert)
+					out *= -1.f;
+				if (offset)
+					out += 1.f;
+
+				outputs[WAVE_OUTPUT].setVoltageSimd(out * 5.f, c);
 			}
-
-			// Invert and offset
-			if (invert)
-				out *= -1.f;
-			if (offset)
-				out += 1.f;
-
-			outputs[WAVE_OUTPUT].setVoltageSimd(out * 5.f, c);
+		}
+		else {
+			// Wavetable is invalid, so set 0V
+			for (int c = 0; c < channels; c += 4) {
+				outputs[WAVE_OUTPUT].setVoltageSimd(float_4(0.f), c);
+			}
 		}
 
 		outputs[WAVE_OUTPUT].setChannels(channels);
