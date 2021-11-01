@@ -36,8 +36,6 @@ struct WTLFO : Module {
 	};
 
 	Wavetable wavetable;
-	bool offset = false;
-	bool invert = false;
 
 	float_4 phases[4] = {};
 	float lastPos = 0.f;
@@ -52,9 +50,8 @@ struct WTLFO : Module {
 
 	WTLFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		// TODO Change to momentary with backward compatibility in fromJson()
-		configButton(OFFSET_PARAM, "Offset 0-10V");
-		configButton(INVERT_PARAM, "Invert wave");
+		configSwitch(OFFSET_PARAM, 0.f, 1.f, 0.f, "Offset", {"Bipolar", "Unipolar"});
+		configSwitch(INVERT_PARAM, 0.f, 1.f, 0.f, "Invert");
 
 		struct FrequencyQuantity : ParamQuantity {
 			float getDisplayValue() override {
@@ -88,8 +85,6 @@ struct WTLFO : Module {
 	}
 
 	void onReset() override {
-		offset = false;
-		invert = false;
 		wavetable.reset();
 
 		// Reset state
@@ -98,12 +93,6 @@ struct WTLFO : Module {
 		}
 		clockFreq = 1.f;
 		clockTimer.reset();
-	}
-
-	void onRandomize(const RandomizeEvent& e) override {
-		Module::onRandomize(e);
-		offset = random::get<bool>();
-		invert = random::get<bool>();
 	}
 
 	void onAdd(const AddEvent& e) override {
@@ -120,10 +109,8 @@ struct WTLFO : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		if (offsetTrigger.process(params[OFFSET_PARAM].getValue() > 0.f))
-			offset ^= true;
-		if (invertTrigger.process(params[INVERT_PARAM].getValue() > 0.f))
-			invert ^= true;
+		bool offset = (params[OFFSET_PARAM].getValue() > 0.f);
+		bool invert = (params[INVERT_PARAM].getValue() > 0.f);
 
 		int channels = std::max(1, inputs[FM_INPUT].getChannels());
 
@@ -239,10 +226,6 @@ struct WTLFO : Module {
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
-		// offset
-		json_object_set_new(rootJ, "offset", json_boolean(offset));
-		// invert
-		json_object_set_new(rootJ, "invert", json_boolean(invert));
 		// Merge wavetable
 		json_t* wavetableJ = wavetable.toJson();
 		json_object_update(rootJ, wavetableJ);
@@ -251,14 +234,6 @@ struct WTLFO : Module {
 	}
 
 	void dataFromJson(json_t* rootJ) override {
-		// offset
-		json_t* offsetJ = json_object_get(rootJ, "offset");
-		if (offsetJ)
-			offset = json_boolean_value(offsetJ);
-		// invert
-		json_t* invertJ = json_object_get(rootJ, "invert");
-		if (invertJ)
-			invert = json_boolean_value(invertJ);
 		// wavetable
 		wavetable.fromJson(rootJ);
 	}
@@ -278,9 +253,9 @@ struct WTLFOWidget : ModuleWidget {
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(8.913, 56.388)), module, WTLFO::FREQ_PARAM));
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(26.647, 56.388)), module, WTLFO::POS_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(6.987, 80.603)), module, WTLFO::FM_PARAM));
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<YellowLight>>>(mm2px(Vec(17.824, 80.517)), module, WTLFO::INVERT_PARAM, WTLFO::INVERT_LIGHT));
+		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(17.824, 80.517)), module, WTLFO::INVERT_PARAM, WTLFO::INVERT_LIGHT));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(28.662, 80.536)), module, WTLFO::POS_CV_PARAM));
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<YellowLight>>>(mm2px(Vec(17.824, 96.859)), module, WTLFO::OFFSET_PARAM, WTLFO::OFFSET_LIGHT));
+		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(17.824, 96.859)), module, WTLFO::OFFSET_PARAM, WTLFO::OFFSET_LIGHT));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.987, 96.859)), module, WTLFO::FM_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.662, 96.859)), module, WTLFO::POS_INPUT));
