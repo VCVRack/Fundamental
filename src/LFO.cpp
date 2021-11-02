@@ -54,7 +54,22 @@ struct LFO : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configSwitch(OFFSET_PARAM, 0.f, 1.f, 0.f, "Offset", {"Bipolar", "Unipolar"});
 		configSwitch(INVERT_PARAM, 0.f, 1.f, 0.f, "Invert");
-		configParam(FREQ_PARAM, -8.f, 10.f, 1.f, "Frequency", " Hz", 2, 1);
+
+		struct FrequencyQuantity : ParamQuantity {
+			float getDisplayValue() override {
+				LFO* module = reinterpret_cast<LFO*>(this->module);
+				if (module->clockFreq == 2.f) {
+					unit = " Hz";
+					displayMultiplier = 1.f;
+				}
+				else {
+					unit = "x";
+					displayMultiplier = 1 / 2.f;
+				}
+				return ParamQuantity::getDisplayValue();
+			}
+		};
+		configParam<FrequencyQuantity>(FREQ_PARAM, -8.f, 10.f, 1.f, "Frequency", " Hz", 2, 1);
 		configParam(FM_PARAM, -1.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
 		getParamQuantity(FM_PARAM)->randomizeEnabled = false;
 		configParam(PW_PARAM, 0.01f, 0.99f, 0.5f, "Pulse width", "%", 0.f, 100.f);
