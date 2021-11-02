@@ -158,8 +158,12 @@ struct Wavetable {
 #endif
 				return;
 
+			size_t len = wav.totalPCMFrameCount * wav.channels;
+			if (len == 0 || len >= (1 << 20))
+				return;
+
 			samples.clear();
-			samples.resize(wav.totalPCMFrameCount * wav.channels);
+			samples.resize(len);
 
 			drwav_read_pcm_frames_f32(&wav, wav.totalPCMFrameCount, samples.data());
 			drwav_uninit(&wav);

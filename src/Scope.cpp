@@ -180,7 +180,7 @@ struct Scope : Module {
 };
 
 
-struct ScopeDisplay : TransparentWidget {
+struct ScopeDisplay : LedDisplay {
 	Scope* module;
 	int statsFrame = 0;
 	std::string fontPath;
