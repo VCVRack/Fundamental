@@ -37,9 +37,11 @@ struct WTVCO : Module {
 	};
 
 	Wavetable wavetable;
-
 	float_4 phases[4] = {};
 	float lastPos = 0.f;
+	dsp::MinBlepGenerator<16, 16, float_4> syncMinBleps[4];
+	float_4 lastSyncValues[4] = {};
+	float_4 syncDirections[4] = {};
 
 	dsp::ClockDivider lightDivider;
 	dsp::BooleanTrigger softTrigger;
@@ -67,7 +69,7 @@ struct WTVCO : Module {
 
 		configLight(PHASE_LIGHT, "Phase");
 
-		wavetable.setQuality(4);
+		wavetable.setQuality(8);
 
 		lightDivider.setDivision(16);
 
@@ -76,6 +78,9 @@ struct WTVCO : Module {
 
 	void onReset() override {
 		wavetable.reset();
+		for (int i = 0; i < 4; i++) {
+			syncDirections[i] = 1.f;
+		}
 	}
 
 	void onAdd(const AddEvent& e) override {
@@ -99,6 +104,30 @@ struct WTVCO : Module {
 		lights[PHASE_LIGHT + 2].setBrightness(0.f);
 	}
 
+	float getWave(float index, float pos, float octave) {
+		// Get wave indexes
+		float indexF = index - std::trunc(index);
+		size_t index0 = std::trunc(index);
+		size_t index1 = (index0 + 1) % (wavetable.waveLen * wavetable.quality);
+		// Get position indexes
+		float posF = pos - std::trunc(pos);
+		size_t pos0 = std::trunc(pos);
+		size_t pos1 = pos0 + 1;
+		// Get octave index
+		// TODO Interpolate octaves
+		size_t octave0 = clamp((int) std::trunc(octave), 0, (int) wavetable.octaves - 1);
+		// Linearly interpolate wave index
+		float out0 = crossfade(wavetable.interpolatedAt(octave0, pos0, index0), wavetable.interpolatedAt(octave0, pos0, index1), indexF);
+		// Linearly interpolate position if needed
+		if (posF > 0.f) {
+			float out1 = crossfade(wavetable.interpolatedAt(octave0, pos1, index0), wavetable.interpolatedAt(octave0, pos1, index1), indexF);
+			return crossfade(out0, out1, posF);
+		}
+		else {
+			return out0;
+		}
+	}
+
 	void process(const ProcessArgs& args) override {
 		float freqParam = params[FREQ_PARAM].getValue();
 		float fmParam = params[FM_PARAM].getValue();
@@ -106,6 +135,7 @@ struct WTVCO : Module {
 		float posCvParam = params[POS_CV_PARAM].getValue();
 		bool soft = params[SOFT_PARAM].getValue() > 0.f;
 		bool linear = params[LINEAR_PARAM].getValue() > 0.f;
+		bool syncEnabled = inputs[SYNC_INPUT].isConnected();
 
 		int channels = std::max({1, inputs[PITCH_INPUT].getChannels(), inputs[FM_INPUT].getChannels()});
 
@@ -114,21 +144,33 @@ struct WTVCO : Module {
 			// Iterate channels
 			for (int c = 0; c < channels; c += 4) {
 				// Calculate frequency in Hz
-				float_4 pitch = freqParam / 12.f + inputs[PITCH_INPUT].getPolyVoltageSimd<float_4>(c) + inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;
-				float_4 freq = dsp::FREQ_C4 * dsp::approxExp2_taylor5(pitch + 30.f) / std::pow(2.f, 30.f);
+				float_4 pitch = freqParam / 12.f + inputs[PITCH_INPUT].getPolyVoltageSimd<float_4>(c);
+				float_4 freq;
+				if (!linear) {
+					pitch += inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;
+					freq = dsp::FREQ_C4 * dsp::approxExp2_taylor5(pitch + 30.f) / std::pow(2.f, 30.f);
+				}
+				else {
+					freq = dsp::FREQ_C4 * dsp::approxExp2_taylor5(pitch + 30.f) / std::pow(2.f, 30.f);
+					freq *= 1.f + inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;
+				}
 
 				// Limit to Nyquist frequency
 				freq = simd::fmin(freq, args.sampleRate / 2);
-				float_4 nyquistRatio = args.sampleRate / 2 / freq;
+				float_4 octave = simd::log2(args.sampleRate / 2 / freq);
 
 				// Accumulate phase
 				float_4 phase = phases[c / 4];
-				phase += freq * args.sampleTime;
+				if (!soft) {
+					syncDirections[c / 4] = 1.f;
+				}
+				// Delta phase can be negative
+				float_4 deltaPhase = freq * args.sampleTime * syncDirections[c / 4];
+				phase += deltaPhase;
 				// Wrap phase
-				phase -= simd::trunc(phase);
+				phase -= simd::floor(phase);
 				phases[c / 4] = phase;
-				// Scale phase from 0 to waveLen
-				phase *= (wavetable.waveLen * wavetable.quality);
+				float_4 index = phase * wavetable.waveLen * wavetable.quality;
 
 				// Get wavetable position, scaled from 0 to (waveCount - 1)
 				float_4 pos = posParam + inputs[POS_INPUT].getPolyVoltageSimd<float_4>(c) * posCvParam / 10.f;
@@ -138,29 +180,42 @@ struct WTVCO : Module {
 				if (c == 0)
 					lastPos = pos[0];
 
+				// Get wave output serially
+				int ccs = std::min(4, channels - c);
 				float_4 out = 0.f;
-				for (int cc = 0; cc < 4 && c + cc < channels; cc++) {
-					// Get wave indexes
-					float phaseF = phase[cc] - std::trunc(phase[cc]);
-					size_t i0 = std::trunc(phase[cc]);
-					size_t i1 = (i0 + 1) % (wavetable.waveLen * wavetable.quality);
-					// Get pos indexes
-					float posF = pos[cc] - std::trunc(pos[cc]);
-					size_t pos0 = std::trunc(pos[cc]);
-					size_t pos1 = pos0 + 1;
-					// Get waves
-					// TODO Interpolate octaves
-					int octave0 = math::log2((int) nyquistRatio[cc]);
-					octave0 = clamp(octave0, 0, (int) wavetable.octaves - 1);
-					float out0 = crossfade(wavetable.interpolatedAt(octave0, pos0, i0), wavetable.interpolatedAt(octave0, pos0, i1), phaseF);
-					if (posF > 0.f) {
-						float out1 = crossfade(wavetable.interpolatedAt(octave0, pos1, i0), wavetable.interpolatedAt(octave0, pos1, i1), phaseF);
-						out[cc] = crossfade(out0, out1, posF);
-					}
-					else {
-						out[cc] = out0;
+				for (int cc = 0; cc < ccs; cc++) {
+					out[cc] = getWave(index[cc], pos[cc], octave[cc]);
+				}
+
+				// Sync
+				if (syncEnabled) {
+					float_4 syncValue = inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c);
+					float_4 deltaSync = syncValue - lastSyncValues[c / 4];
+					float_4 syncCrossing = -lastSyncValues[c / 4] / deltaSync;
+					lastSyncValues[c / 4] = syncValue;
+					float_4 sync = (0.f < syncCrossing) & (syncCrossing <= 1.f) & (syncValue >= 0.f);
+					int syncMask = simd::movemask(sync);
+					if (syncMask) {
+						if (soft) {
+							syncDirections[c / 4] = simd::ifelse(sync, -syncDirections[c / 4], syncDirections[c / 4]);
+						}
+						else {
+							phases[c / 4] = simd::ifelse(sync, (1.f - syncCrossing) * deltaPhase, phases[c / 4]);
+							// Insert minBLEP for sync serially
+							for (int cc = 0; cc < ccs; cc++) {
+								if (syncMask & (1 << cc)) {
+									float_4 mask = simd::movemaskInverse<float_4>(1 << cc);
+									float p = syncCrossing[cc] - 1.f;
+									float index = phases[c / 4][cc] * wavetable.waveLen * wavetable.quality;
+									float out1 = getWave(index, pos[cc], octave[cc]);
+									float_4 x = mask & (out1 - out[cc]);
+									syncMinBleps[c / 4].insertDiscontinuity(p, x);
+								}
+							}
+						}
 					}
 				}
+				out += syncMinBleps[c / 4].process();
 
 				outputs[WAVE_OUTPUT].setVoltageSimd(out * 5.f, c);
 			}
@@ -177,10 +232,10 @@ struct WTVCO : Module {
 		// Light
 		if (lightDivider.process()) {
 			if (channels == 1) {
-				// float b = 1.f - phases[0][0];
-				// lights[PHASE_LIGHT + 0].setSmoothBrightness(b, args.sampleTime * lightDivider.getDivision());
-				// lights[PHASE_LIGHT + 1].setBrightness(0.f);
-				// lights[PHASE_LIGHT + 2].setBrightness(0.f);
+				float b = 1.f - phases[0][0];
+				lights[PHASE_LIGHT + 0].setSmoothBrightness(b, args.sampleTime * lightDivider.getDivision());
+				lights[PHASE_LIGHT + 1].setBrightness(0.f);
+				lights[PHASE_LIGHT + 2].setBrightness(0.f);
 			}
 			else {
 				lights[PHASE_LIGHT + 0].setBrightness(0.f);
