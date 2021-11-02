@@ -21,7 +21,7 @@ struct Wavetable {
 	// Interpolated wavetables
 	/** Upsampling factor. No upsampling if 0. */
 	size_t quality = 0;
-	/** Number of filtered wavetables to precompute */
+	/** Number of filtered wavetables. Automatically computed from waveLen. */
 	size_t octaves = 0;
 	/** (octave, waveCount, waveLen * quality) */
 	std::vector<float> interpolatedSamples;
@@ -90,7 +90,7 @@ struct Wavetable {
 	}
 
 	void interpolate() {
-		if (quality == 0 || octaves == 0)
+		if (quality == 0)
 			return;
 		if (waveLen < 2)
 			return;
@@ -99,31 +99,38 @@ struct Wavetable {
 		if (waveCount == 0)
 			return;
 
+		octaves = math::log2(waveLen) - 1;
 		interpolatedSamples.clear();
 		interpolatedSamples.resize(octaves * samples.size() * quality);
-		float* in = new float[quality * waveLen]();
-		float* inF = new float[2 * quality * waveLen];
-		dsp::RealFFT fft(quality * waveLen);
+
+		float* in = new float[waveLen];
+		float* inF = new float[2 * waveLen];
+		dsp::RealFFT inFFT(waveLen);
+
+		float* outF = new float[2 * waveLen * quality]();
+		dsp::RealFFT outFFT(waveLen * quality);
 
 		for (size_t i = 0; i < waveCount; i++) {
-			// Zero-stuff interpolated wave
+			// Compute FFT of wave
 			for (size_t j = 0; j < waveLen; j++) {
-				in[j * quality] = samples[i * waveLen + j] / waveLen;
+				in[j] = samples[waveLen * i + j] / waveLen;
 			}
-			fft.rfft(in, inF);
-			// Lowpass inF
-			for (int octave = octaves - 1; octave >= 0; octave--) {
-				size_t firstJ = 1 << (octave + 1);
-				for (size_t j = firstJ; j < waveLen * quality; j++) {
-					inF[2 * j + 0] = 0.f;
-					inF[2 * j + 1] = 0.f;
+			inFFT.rfft(in, inF);
+			// Compute FFT-filtered versions of each wave
+			for (size_t octave = 0; octave < octaves; octave++) {
+				size_t bins = 1 << octave;
+				// Only overwrite the first waveLen bins
+				for (size_t j = 0; j < waveLen; j++) {
+					outF[2 * j + 0] = (j <= bins) ? inF[2 * j + 0] : 0.f;
+					outF[2 * j + 1] = (j <= bins) ? inF[2 * j + 1] : 0.f;
 				}
-				fft.irfft(inF, &interpolatedSamples[samples.size() * quality * octave + waveLen * quality * i]);
+				outFFT.irfft(outF, &interpolatedSamples[samples.size() * quality * octave + waveLen * quality * i]);
 			}
 		}
 
-		delete[] inF;
 		delete[] in;
+		delete[] inF;
+		delete[] outF;
 	}
 
 	json_t* toJson() const {
@@ -262,6 +269,10 @@ struct Wavetable {
 	}
 
 	void appendContextMenu(Menu* menu) {
+		menu->addChild(createMenuItem("Initialize wavetable", "",
+			[=]() {reset();}
+		));
+
 		menu->addChild(createMenuItem("Load wavetable", "",
 			[=]() {loadDialog();}
 		));

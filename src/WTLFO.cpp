@@ -109,10 +109,12 @@ struct WTLFO : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		float freqParam = params[FREQ_PARAM].getValue();
+		float fmParam = params[FM_PARAM].getValue();
+		float posParam = params[POS_PARAM].getValue();
+		float posCvParam = params[POS_CV_PARAM].getValue();
 		bool offset = (params[OFFSET_PARAM].getValue() > 0.f);
 		bool invert = (params[INVERT_PARAM].getValue() > 0.f);
-
-		int channels = std::max(1, inputs[FM_INPUT].getChannels());
 
 		// Clock
 		if (inputs[CLOCK_INPUT].isConnected()) {
@@ -131,10 +133,7 @@ struct WTLFO : Module {
 			clockFreq = 2.f;
 		}
 
-		float freqParam = params[FREQ_PARAM].getValue();
-		float fmParam = params[FM_PARAM].getValue();
-		float posParam = params[POS_PARAM].getValue();
-		float posCvParam = params[POS_CV_PARAM].getValue();
+		int channels = std::max(1, inputs[FM_INPUT].getChannels());
 
 		// Check valid wave and wavetable size
 		int waveCount = wavetable.getWaveCount();

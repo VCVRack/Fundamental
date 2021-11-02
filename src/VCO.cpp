@@ -288,7 +288,7 @@ struct VCO : Module {
 		configParam(FM_PARAM, 0.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
 		configParam(PW_PARAM, 0.01f, 0.99f, 0.5f, "Pulse width", "%", 0.f, 100.f);
 		configParam(PWM_PARAM, 0.f, 1.f, 0.f, "Pulse width modulation", "%", 0.f, 100.f);
-		configInput(PITCH_INPUT, "1V/oct pitch");
+		configInput(PITCH_INPUT, "1V/octave pitch");
 		configInput(FM_INPUT, "Frequency modulation");
 		configInput(SYNC_INPUT, "Sync");
 		configInput(PW_INPUT, "Pulse width modulation");
@@ -371,8 +371,8 @@ struct VCOWidget : ModuleWidget {
 		addParam(createParamCentered<RoundHugeBlackKnob>(mm2px(Vec(22.905, 29.808)), module, VCO::FREQ_PARAM));
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(22.862, 56.388)), module, VCO::PW_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(6.607, 80.603)), module, VCO::FM_PARAM));
-		addParam(createParamCentered<LEDButton>(mm2px(Vec(17.444, 80.603)), module, VCO::LINEAR_PARAM));
-		addParam(createParamCentered<LEDButton>(mm2px(Vec(28.282, 80.603)), module, VCO::SYNC_PARAM));
+		addParam(createParamCentered<LEDLatch>(mm2px(Vec(17.444, 80.603)), module, VCO::LINEAR_PARAM));
+		addParam(createParamCentered<LEDLatch>(mm2px(Vec(28.282, 80.603)), module, VCO::SYNC_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(39.118, 80.603)), module, VCO::PWM_PARAM));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.607, 96.859)), module, VCO::FM_INPUT));
