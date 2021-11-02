@@ -19,30 +19,22 @@ struct Mutes : Module {
 		NUM_LIGHTS
 	};
 
-	bool state[10];
-	dsp::BooleanTrigger muteTrigger[10];
-
 	Mutes() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		for (int i = 0; i < 10; i++) {
-			configButton(MUTE_PARAMS + i, string::f("Row %d mute", i + 1));
+			configSwitch(MUTE_PARAMS + i, 0.f, 1.f, 0.f, string::f("Row %d mute", i + 1));
 			configInput(IN_INPUTS + i, string::f("Row %d", i + 1));
 			configOutput(OUT_OUTPUTS + i, string::f("Row %d", i + 1));
 		}
-
-		onReset();
 	}
 
 	void process(const ProcessArgs& args) override {
-		const float zero[16] = {};
-		float out[16] = {};
-		int channels = 1;
-
 		// Iterate rows
 		for (int i = 0; i < 10; i++) {
-			// Process trigger
-			if (muteTrigger[i].process(params[MUTE_PARAMS + i].getValue() > 0.f))
-				state[i] ^= true;
+			int channels = 1;
+			const float zero[16] = {};
+			float out[16] = {};
+			bool mute = params[MUTE_PARAMS + i].getValue() > 0.f;
 
 			// Get input
 			// Inputs are normalized to the input above it, so only set if connected
@@ -54,54 +46,29 @@ struct Mutes : Module {
 			// Set output
 			if (outputs[OUT_OUTPUTS + i].isConnected()) {
 				outputs[OUT_OUTPUTS + i].setChannels(channels);
-				outputs[OUT_OUTPUTS + i].writeVoltages(state[i] ? out : zero);
+				outputs[OUT_OUTPUTS + i].writeVoltages(mute ? zero : out);
 			}
 
 			// Set light
-			lights[MUTE_LIGHTS + i].setBrightness(state[i] ? 0.9f : 0.f);
+			lights[MUTE_LIGHTS + i].setBrightness(mute);
 		}
-	}
-
-	void onReset() override {
-		for (int i = 0; i < 10; i++) {
-			state[i] = true;
-		}
-	}
-	void onRandomize() override {
-		for (int i = 0; i < 10; i++) {
-			state[i] = random::get<bool>();
-		}
-	}
-
-	json_t* dataToJson() override {
-		json_t* rootJ = json_object();
-
-		// states
-		json_t* statesJ = json_array();
-		for (int i = 0; i < 10; i++) {
-			json_t* stateJ = json_boolean(state[i]);
-			json_array_append_new(statesJ, stateJ);
-		}
-		json_object_set_new(rootJ, "states", statesJ);
-
-		return rootJ;
 	}
 
 	void dataFromJson(json_t* rootJ) override {
-		// states
+		// In <2.0, states were stored in data
 		json_t* statesJ = json_object_get(rootJ, "states");
 		if (statesJ) {
 			for (int i = 0; i < 10; i++) {
 				json_t* stateJ = json_array_get(statesJ, i);
 				if (stateJ)
-					state[i] = json_boolean_value(stateJ);
+					params[MUTE_PARAMS + i].setValue(!json_boolean_value(stateJ));
 			}
 		}
 	}
 
-	void invertMutes() {
+	void invert() {
 		for (int i = 0; i < 10; i++) {
-			state[i] ^= true;
+			params[MUTE_PARAMS + i].setValue(!params[MUTE_PARAMS + i].getValue());
 		}
 	}
 };
@@ -117,16 +84,16 @@ struct MutesWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(20.312, 21.968)), module, Mutes::MUTE_PARAMS + 0, Mutes::MUTE_LIGHTS + 0));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(20.312, 32.095)), module, Mutes::MUTE_PARAMS + 1, Mutes::MUTE_LIGHTS + 1));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(20.312, 42.222)), module, Mutes::MUTE_PARAMS + 2, Mutes::MUTE_LIGHTS + 2));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(20.312, 52.35)), module, Mutes::MUTE_PARAMS + 3, Mutes::MUTE_LIGHTS + 3));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(20.312, 62.477)), module, Mutes::MUTE_PARAMS + 4, Mutes::MUTE_LIGHTS + 4));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(20.312, 72.605)), module, Mutes::MUTE_PARAMS + 5, Mutes::MUTE_LIGHTS + 5));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(20.312, 82.732)), module, Mutes::MUTE_PARAMS + 6, Mutes::MUTE_LIGHTS + 6));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(20.312, 92.86)), module, Mutes::MUTE_PARAMS + 7, Mutes::MUTE_LIGHTS + 7));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(20.312, 102.987)), module, Mutes::MUTE_PARAMS + 8, Mutes::MUTE_LIGHTS + 8));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(20.312, 113.115)), module, Mutes::MUTE_PARAMS + 9, Mutes::MUTE_LIGHTS + 9));
+		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 21.968)), module, Mutes::MUTE_PARAMS + 0, Mutes::MUTE_LIGHTS + 0));
+		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 32.095)), module, Mutes::MUTE_PARAMS + 1, Mutes::MUTE_LIGHTS + 1));
+		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 42.222)), module, Mutes::MUTE_PARAMS + 2, Mutes::MUTE_LIGHTS + 2));
+		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 52.35)), module, Mutes::MUTE_PARAMS + 3, Mutes::MUTE_LIGHTS + 3));
+		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 62.477)), module, Mutes::MUTE_PARAMS + 4, Mutes::MUTE_LIGHTS + 4));
+		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 72.605)), module, Mutes::MUTE_PARAMS + 5, Mutes::MUTE_LIGHTS + 5));
+		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 82.732)), module, Mutes::MUTE_PARAMS + 6, Mutes::MUTE_LIGHTS + 6));
+		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 92.86)), module, Mutes::MUTE_PARAMS + 7, Mutes::MUTE_LIGHTS + 7));
+		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 102.987)), module, Mutes::MUTE_PARAMS + 8, Mutes::MUTE_LIGHTS + 8));
+		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 113.115)), module, Mutes::MUTE_PARAMS + 9, Mutes::MUTE_LIGHTS + 9));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.291, 21.968)), module, Mutes::IN_INPUTS + 0));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.291, 32.095)), module, Mutes::IN_INPUTS + 1));
@@ -158,7 +125,7 @@ struct MutesWidget : ModuleWidget {
 		menu->addChild(new MenuSeparator);
 
 		menu->addChild(createMenuItem("Invert mutes", "",
-			[=]() {module->invertMutes();}
+			[=]() {module->invert();}
 		));
 	}
 };
