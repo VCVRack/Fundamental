@@ -50,11 +50,9 @@ struct SEQ3 : Module {
 	dsp::BooleanTrigger gateTriggers[8];
 
 	dsp::SchmittTrigger clockTrigger;
-	dsp::SchmittTrigger runTrigger;
 	dsp::SchmittTrigger resetTrigger;
 
 	dsp::PulseGenerator clockPulse;
-	dsp::PulseGenerator runPulse;
 	dsp::PulseGenerator resetPulse;
 
 	/** Phase of internal LFO */
@@ -147,9 +145,12 @@ struct SEQ3 : Module {
 	void process(const ProcessArgs& args) override {
 		// Run
 		// Use bitwise OR "|" to always evaluate both expressions
-		if (runButtonTrigger.process(params[RUN_PARAM].getValue()) | runTrigger.process(inputs[RUN_INPUT].getVoltage(), 0.1f, 2.f)) {
+		if (runButtonTrigger.process(params[RUN_PARAM].getValue())) {
 			running ^= true;
-			runPulse.trigger(1e-3f);
+		}
+		// Run input overrides button
+		if (inputs[RUN_INPUT].isConnected()) {
+			running = (inputs[RUN_INPUT].getVoltage() >= 2.f);
 		}
 
 		// Reset
@@ -218,7 +219,7 @@ struct SEQ3 : Module {
 
 		outputs[STEPS_OUTPUT].setVoltage((numSteps - 1) * 1.f);
 		outputs[CLOCK_OUTPUT].setVoltage(clockGate ? 10.f : 0.f);
-		outputs[RUN_OUTPUT].setVoltage(runPulse.process(args.sampleTime) ? 10.f : 0.f);
+		outputs[RUN_OUTPUT].setVoltage(running ? 10.f : 0.f);
 		outputs[RESET_OUTPUT].setVoltage(resetGate ? 10.f : 0.f);
 
 		lights[CLOCK_LIGHT].setSmoothBrightness(clockGate, args.sampleTime);

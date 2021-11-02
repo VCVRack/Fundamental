@@ -48,14 +48,12 @@ struct LFO : Module {
 	float clockFreq = 1.f;
 	dsp::Timer clockTimer;
 
-	dsp::BooleanTrigger offsetTrigger;
-	dsp::BooleanTrigger invertTrigger;
 	dsp::ClockDivider lightDivider;
 
 	LFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configButton(OFFSET_PARAM, "Offset 0-10V");
-		configButton(INVERT_PARAM, "Invert");
+		configSwitch(OFFSET_PARAM, 0.f, 1.f, 0.f, "Offset", {"Bipolar", "Unipolar"});
+		configSwitch(INVERT_PARAM, 0.f, 1.f, 0.f, "Invert");
 
 		struct FrequencyQuantity : ParamQuantity {
 			float getDisplayValue() override {
@@ -95,8 +93,6 @@ struct LFO : Module {
 	}
 
 	void onReset() override {
-		offset = false;
-		invert = false;
 		for (int c = 0; c < 16; c += 4) {
 			phases[c / 4] = 0.f;
 		}
@@ -109,14 +105,8 @@ struct LFO : Module {
 		float fmParam = params[FM_PARAM].getValue();
 		float pwParam = params[PW_PARAM].getValue();
 		float pwmParam = params[PWM_PARAM].getValue();
-
-		// Buttons
-		if (offsetTrigger.process(params[OFFSET_PARAM].getValue() > 0.f)) {
-			offset ^= true;
-		}
-		if (invertTrigger.process(params[INVERT_PARAM].getValue() > 0.f)) {
-			invert ^= true;
-		}
+		bool offset = params[OFFSET_PARAM].getValue() > 0.f;
+		bool invert = params[INVERT_PARAM].getValue() > 0.f;
 
 		// Clock
 		if (inputs[CLOCK_INPUT].isConnected()) {
@@ -227,39 +217,6 @@ struct LFO : Module {
 			lights[INVERT_LIGHT].setBrightness(invert);
 		}
 	}
-
-	json_t* dataToJson() override {
-		json_t* rootJ = json_object();
-		// offset
-		json_object_set_new(rootJ, "offset", json_boolean(offset));
-		// invert
-		json_object_set_new(rootJ, "invert", json_boolean(invert));
-		return rootJ;
-	}
-
-	void dataFromJson(json_t* rootJ) override {
-		// offset
-		json_t* offsetJ = json_object_get(rootJ, "offset");
-		if (offsetJ)
-			offset = json_boolean_value(offsetJ);
-		// invert
-		json_t* invertJ = json_object_get(rootJ, "invert");
-		if (invertJ)
-			invert = json_boolean_value(invertJ);
-	}
-
-	void paramsFromJson(json_t* rootJ) override {
-		Module::paramsFromJson(rootJ);
-		// In <2.0, OFFSET_PARAM and INVERT_PARAM were toggle switches instead of momentary buttons, so if params are on after deserializing, set boolean states instead.
-		if (params[OFFSET_PARAM].getValue() > 0.f) {
-			offset = true;
-			params[OFFSET_PARAM].setValue(0.f);
-		}
-		if (params[INVERT_PARAM].getValue() > 0.f) {
-			invert = true;
-			params[INVERT_PARAM].setValue(0.f);
-		}
-	}
 };
 
 
@@ -276,8 +233,8 @@ struct LFOWidget : ModuleWidget {
 		addParam(createParamCentered<RoundHugeBlackKnob>(mm2px(Vec(22.902, 29.803)), module, LFO::FREQ_PARAM));
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(22.861, 56.388)), module, LFO::PW_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(6.604, 80.603)), module, LFO::FM_PARAM));
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<YellowLight>>>(mm2px(Vec(17.441, 80.603)), module, LFO::INVERT_PARAM, LFO::INVERT_LIGHT));
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<YellowLight>>>(mm2px(Vec(28.279, 80.603)), module, LFO::OFFSET_PARAM, LFO::OFFSET_LIGHT));
+		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(17.441, 80.603)), module, LFO::INVERT_PARAM, LFO::INVERT_LIGHT));
+		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(28.279, 80.603)), module, LFO::OFFSET_PARAM, LFO::OFFSET_LIGHT));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(39.116, 80.603)), module, LFO::PWM_PARAM));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.604, 96.859)), module, LFO::FM_INPUT));

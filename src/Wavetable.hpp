@@ -84,6 +84,8 @@ struct Wavetable {
 
 	/** Returns the number of waves in the wavetable. */
 	size_t getWaveCount() const {
+		if (waveLen == 0)
+			return 0;
 		return samples.size() / waveLen;
 	}
 
@@ -145,8 +147,6 @@ struct Wavetable {
 	}
 
 	void load(std::string path) {
-		samples.clear();
-
 		std::string ext = string::lowercase(system::getExtension(path));
 		if (ext == ".wav") {
 			// Load WAV
@@ -158,6 +158,7 @@ struct Wavetable {
 #endif
 				return;
 
+			samples.clear();
 			samples.resize(wav.totalPCMFrameCount * wav.channels);
 
 			drwav_read_pcm_frames_f32(&wav, wav.totalPCMFrameCount, samples.data());
@@ -166,6 +167,7 @@ struct Wavetable {
 		else {
 			// Load bytes from file
 			std::vector<uint8_t> data = system::readFile(path);
+			samples.clear();
 
 			if (ext == ".f32") {
 				size_t len = data.size() / sizeof(float);

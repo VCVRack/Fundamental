@@ -24,6 +24,9 @@ struct Scope : Module {
 		NUM_INPUTS
 	};
 	enum OutputIds {
+		// new in 2.0
+		X_OUTPUT,
+		Y_OUTPUT,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -353,36 +356,31 @@ struct ScopeWidget : ModuleWidget {
 		setModule(module);
 		setPanel(createPanel(asset::plugin(pluginInstance, "res/Scope.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		{
-			ScopeDisplay* display = new ScopeDisplay();
-			display->module = module;
-			display->box.pos = Vec(0, 44);
-			display->box.size = Vec(box.size.x, 140);
-			addChild(display);
-		}
+		// addParam(createParamCentered<LEDButton>(mm2px(Vec(8.643, 80.603)), module, Scope::_1X2_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(24.897, 80.551)), module, Scope::X_SCALE_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(41.147, 80.551)), module, Scope::Y_SCALE_PARAM));
+		// addParam(createParamCentered<LEDButton>(mm2px(Vec(57.397, 80.521)), module, Scope::TRIG_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(8.643, 96.819)), module, Scope::TIME_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(24.897, 96.789)), module, Scope::X_POS_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(41.147, 96.815)), module, Scope::Y_POS_PARAM));
+		// addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(57.397, 96.815)), module, Scope::THERS_PARAM));
 
-		addParam(createParam<RoundBlackSnapKnob>(Vec(15, 209), module, Scope::X_SCALE_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(15, 263), module, Scope::X_POS_PARAM));
-		addParam(createParam<RoundBlackSnapKnob>(Vec(61, 209), module, Scope::Y_SCALE_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(61, 263), module, Scope::Y_POS_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(107, 209), module, Scope::TIME_PARAM));
-		addParam(createParam<CKD6>(Vec(106, 262), module, Scope::LISSAJOUS_PARAM));
-		addParam(createParam<RoundBlackKnob>(Vec(153, 209), module, Scope::TRIG_PARAM));
-		addParam(createParam<CKD6>(Vec(152, 262), module, Scope::EXTERNAL_PARAM));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.643, 113.115)), module, Scope::X_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(33.023, 113.115)), module, Scope::Y_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(57.397, 113.115)), module, Scope::TRIG_INPUT));
 
-		addInput(createInput<PJ301MPort>(Vec(17, 319), module, Scope::X_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(63, 319), module, Scope::Y_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(154, 319), module, Scope::TRIG_INPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.833, 113.115)), module, Scope::X_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(45.212, 113.115)), module, Scope::Y_OUTPUT));
 
-		addChild(createLight<SmallLight<GreenLight>>(Vec(104, 251), module, Scope::PLOT_LIGHT));
-		addChild(createLight<SmallLight<GreenLight>>(Vec(104, 296), module, Scope::LISSAJOUS_LIGHT));
-		addChild(createLight<SmallLight<GreenLight>>(Vec(150, 251), module, Scope::INTERNAL_LIGHT));
-		addChild(createLight<SmallLight<GreenLight>>(Vec(150, 296), module, Scope::EXTERNAL_LIGHT));
+		ScopeDisplay* display = createWidget<ScopeDisplay>(Vec(0, 44));
+		display->box.size = Vec(box.size.x, 140);
+		display->module = module;
+		addChild(display);
 	}
 };
 
