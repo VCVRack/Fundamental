@@ -275,9 +275,9 @@ struct SEQ3Widget : ModuleWidget {
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(11.753, 26.755)), module, SEQ3::TEMPO_PARAM));
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(32.077, 26.782)), module, SEQ3::STEPS_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(49.372, 34.066)), module, SEQ3::TEMPO_CV_PARAM));
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(88.424, 33.679)), module, SEQ3::RUN_PARAM, SEQ3::RUN_LIGHT));
+		addParam(createLightParamCentered<VCVLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(88.424, 33.679)), module, SEQ3::RUN_PARAM, SEQ3::RUN_LIGHT));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(62.39, 34.066)), module, SEQ3::STEPS_CV_PARAM));
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(101.441, 33.679)), module, SEQ3::RESET_PARAM, SEQ3::RESET_LIGHT));
+		addParam(createLightParamCentered<VCVLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(101.441, 33.679)), module, SEQ3::RESET_PARAM, SEQ3::RESET_LIGHT));
 
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(10.319, 46.563)), module, SEQ3::CV_PARAMS + 8 * 0 + 0));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(23.336, 46.563)), module, SEQ3::CV_PARAMS + 8 * 0 + 1));

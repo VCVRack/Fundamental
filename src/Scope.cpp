@@ -361,10 +361,10 @@ struct ScopeWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		// addParam(createParamCentered<LEDButton>(mm2px(Vec(8.643, 80.603)), module, Scope::_1X2_PARAM));
+		// addParam(createParamCentered<VCVButton>(mm2px(Vec(8.643, 80.603)), module, Scope::_1X2_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(24.897, 80.551)), module, Scope::X_SCALE_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(41.147, 80.551)), module, Scope::Y_SCALE_PARAM));
-		// addParam(createParamCentered<LEDButton>(mm2px(Vec(57.397, 80.521)), module, Scope::TRIG_PARAM));
+		// addParam(createParamCentered<VCVButton>(mm2px(Vec(57.397, 80.521)), module, Scope::TRIG_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(8.643, 96.819)), module, Scope::TIME_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(24.897, 96.789)), module, Scope::X_POS_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(41.147, 96.815)), module, Scope::Y_POS_PARAM));

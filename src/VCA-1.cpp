@@ -102,7 +102,7 @@ struct VCA_1VUKnob : SliderKnob {
 				        r.size.y * gain);
 			}
 		}
-		nvgFillColor(args.vg, SCHEME_GREEN);
+		nvgFillColor(args.vg, SCHEME_YELLOW);
 		nvgFill(args.vg);
 
 		// Invisible separators

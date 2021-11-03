@@ -224,15 +224,15 @@ struct ADSRWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createLightParamCentered<LEDLightSlider<YellowLight>>(mm2px(Vec(6.604, 55.454)), module, ADSR::ATTACK_PARAM, ADSR::ATTACK_LIGHT));
-		addParam(createLightParamCentered<LEDLightSlider<YellowLight>>(mm2px(Vec(17.441, 55.454)), module, ADSR::DECAY_PARAM, ADSR::DECAY_LIGHT));
-		addParam(createLightParamCentered<LEDLightSlider<YellowLight>>(mm2px(Vec(28.279, 55.454)), module, ADSR::SUSTAIN_PARAM, ADSR::SUSTAIN_LIGHT));
-		addParam(createLightParamCentered<LEDLightSlider<YellowLight>>(mm2px(Vec(39.116, 55.454)), module, ADSR::RELEASE_PARAM, ADSR::RELEASE_LIGHT));
+		addParam(createLightParamCentered<VCVLightSlider<YellowLight>>(mm2px(Vec(6.604, 55.454)), module, ADSR::ATTACK_PARAM, ADSR::ATTACK_LIGHT));
+		addParam(createLightParamCentered<VCVLightSlider<YellowLight>>(mm2px(Vec(17.441, 55.454)), module, ADSR::DECAY_PARAM, ADSR::DECAY_LIGHT));
+		addParam(createLightParamCentered<VCVLightSlider<YellowLight>>(mm2px(Vec(28.279, 55.454)), module, ADSR::SUSTAIN_PARAM, ADSR::SUSTAIN_LIGHT));
+		addParam(createLightParamCentered<VCVLightSlider<YellowLight>>(mm2px(Vec(39.116, 55.454)), module, ADSR::RELEASE_PARAM, ADSR::RELEASE_LIGHT));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(6.604, 80.603)), module, ADSR::ATTACK_CV_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(17.441, 80.63)), module, ADSR::DECAY_CV_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(28.279, 80.603)), module, ADSR::SUSTAIN_CV_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(39.119, 80.603)), module, ADSR::RELEASE_CV_PARAM));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(6.604, 113.115)), module, ADSR::PUSH_PARAM, ADSR::PUSH_LIGHT));
+		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(6.604, 113.115)), module, ADSR::PUSH_PARAM, ADSR::PUSH_LIGHT));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.604, 96.882)), module, ADSR::ATTACK_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.441, 96.859)), module, ADSR::DECAY_INPUT));
