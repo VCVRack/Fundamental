@@ -132,11 +132,11 @@ struct Delay : Module {
 			historyBuffer.push(dry);
 		}
 
-		if (outBuffer.empty() && historyBuffer.size() >= 2) {
+		if (outBuffer.empty()) {
 			// How many samples do we need consume to catch up?
 			float consume = index - historyBuffer.size();
-			double ratio = std::pow(2.f, clamp(consume / 1000.f, -1.f, 1.f));
-			// DEBUG("index %f historyBuffer %lu consume %f ratio %f", index, historyBuffer.size(), consume, ratio);
+			double ratio = std::pow(4.f, clamp(consume / 10000.f, -1.f, 1.f));
+			// DEBUG("index %f historyBuffer %lu consume %f ratio %lf", index, historyBuffer.size(), consume, ratio);
 
 			// Convert samples from the historyBuffer to catch up or slow down so `index` and `historyBuffer.size()` eventually match approximately
 			SRC_DATA srcData;
@@ -149,6 +149,7 @@ struct Delay : Module {
 			src_process(src, &srcData);
 			historyBuffer.startIncr(srcData.input_frames_used);
 			outBuffer.endIncr(srcData.output_frames_gen);
+			// DEBUG("used %ld gen %ld", srcData.input_frames_used, srcData.output_frames_gen);
 		}
 
 		float wet = 0.f;
