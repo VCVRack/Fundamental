@@ -84,16 +84,16 @@ struct MutesWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 21.968)), module, Mutes::MUTE_PARAMS + 0, Mutes::MUTE_LIGHTS + 0));
-		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 32.095)), module, Mutes::MUTE_PARAMS + 1, Mutes::MUTE_LIGHTS + 1));
-		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 42.222)), module, Mutes::MUTE_PARAMS + 2, Mutes::MUTE_LIGHTS + 2));
-		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 52.35)), module, Mutes::MUTE_PARAMS + 3, Mutes::MUTE_LIGHTS + 3));
-		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 62.477)), module, Mutes::MUTE_PARAMS + 4, Mutes::MUTE_LIGHTS + 4));
-		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 72.605)), module, Mutes::MUTE_PARAMS + 5, Mutes::MUTE_LIGHTS + 5));
-		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 82.732)), module, Mutes::MUTE_PARAMS + 6, Mutes::MUTE_LIGHTS + 6));
-		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 92.86)), module, Mutes::MUTE_PARAMS + 7, Mutes::MUTE_LIGHTS + 7));
-		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 102.987)), module, Mutes::MUTE_PARAMS + 8, Mutes::MUTE_LIGHTS + 8));
-		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(20.312, 113.115)), module, Mutes::MUTE_PARAMS + 9, Mutes::MUTE_LIGHTS + 9));
+		addParam(createLightParamCentered<VCVLightBezelLatch<>>(mm2px(Vec(20.312, 21.968)), module, Mutes::MUTE_PARAMS + 0, Mutes::MUTE_LIGHTS + 0));
+		addParam(createLightParamCentered<VCVLightBezelLatch<>>(mm2px(Vec(20.312, 32.095)), module, Mutes::MUTE_PARAMS + 1, Mutes::MUTE_LIGHTS + 1));
+		addParam(createLightParamCentered<VCVLightBezelLatch<>>(mm2px(Vec(20.312, 42.222)), module, Mutes::MUTE_PARAMS + 2, Mutes::MUTE_LIGHTS + 2));
+		addParam(createLightParamCentered<VCVLightBezelLatch<>>(mm2px(Vec(20.312, 52.35)), module, Mutes::MUTE_PARAMS + 3, Mutes::MUTE_LIGHTS + 3));
+		addParam(createLightParamCentered<VCVLightBezelLatch<>>(mm2px(Vec(20.312, 62.477)), module, Mutes::MUTE_PARAMS + 4, Mutes::MUTE_LIGHTS + 4));
+		addParam(createLightParamCentered<VCVLightBezelLatch<>>(mm2px(Vec(20.312, 72.605)), module, Mutes::MUTE_PARAMS + 5, Mutes::MUTE_LIGHTS + 5));
+		addParam(createLightParamCentered<VCVLightBezelLatch<>>(mm2px(Vec(20.312, 82.732)), module, Mutes::MUTE_PARAMS + 6, Mutes::MUTE_LIGHTS + 6));
+		addParam(createLightParamCentered<VCVLightBezelLatch<>>(mm2px(Vec(20.312, 92.86)), module, Mutes::MUTE_PARAMS + 7, Mutes::MUTE_LIGHTS + 7));
+		addParam(createLightParamCentered<VCVLightBezelLatch<>>(mm2px(Vec(20.312, 102.987)), module, Mutes::MUTE_PARAMS + 8, Mutes::MUTE_LIGHTS + 8));
+		addParam(createLightParamCentered<VCVLightBezelLatch<>>(mm2px(Vec(20.312, 113.115)), module, Mutes::MUTE_PARAMS + 9, Mutes::MUTE_LIGHTS + 9));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.291, 21.968)), module, Mutes::IN_INPUTS + 0));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.291, 32.095)), module, Mutes::IN_INPUTS + 1));

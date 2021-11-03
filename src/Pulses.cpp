@@ -25,7 +25,7 @@ struct Pulses : Module {
 	Pulses() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		for (int i = 0; i < 10; i++) {
-			configButton(PUSH_PARAMS + i, string::f("Row %d button", i + 1));
+			configButton(PUSH_PARAMS + i, string::f("Row %d push", i + 1));
 			configOutput(TRIG_OUTPUTS + i, string::f("Row %d trigger", i + 1));
 			configOutput(GATE_OUTPUTS + i, string::f("Row %d gate", i + 1));
 		}
@@ -56,16 +56,16 @@ struct PulsesWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(7.28, 21.968)), module, Pulses::PUSH_PARAMS + 0, Pulses::PUSH_LIGHTS + 0));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(7.28, 32.095)), module, Pulses::PUSH_PARAMS + 1, Pulses::PUSH_LIGHTS + 1));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(7.28, 42.222)), module, Pulses::PUSH_PARAMS + 2, Pulses::PUSH_LIGHTS + 2));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(7.28, 52.35)), module, Pulses::PUSH_PARAMS + 3, Pulses::PUSH_LIGHTS + 3));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(7.28, 62.477)), module, Pulses::PUSH_PARAMS + 4, Pulses::PUSH_LIGHTS + 4));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(7.28, 72.605)), module, Pulses::PUSH_PARAMS + 5, Pulses::PUSH_LIGHTS + 5));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(7.28, 82.732)), module, Pulses::PUSH_PARAMS + 6, Pulses::PUSH_LIGHTS + 6));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(7.28, 92.86)), module, Pulses::PUSH_PARAMS + 7, Pulses::PUSH_LIGHTS + 7));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(7.28, 102.987)), module, Pulses::PUSH_PARAMS + 8, Pulses::PUSH_LIGHTS + 8));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(7.28, 113.115)), module, Pulses::PUSH_PARAMS + 9, Pulses::PUSH_LIGHTS + 9));
+		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(7.28, 21.968)), module, Pulses::PUSH_PARAMS + 0, Pulses::PUSH_LIGHTS + 0));
+		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(7.28, 32.095)), module, Pulses::PUSH_PARAMS + 1, Pulses::PUSH_LIGHTS + 1));
+		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(7.28, 42.222)), module, Pulses::PUSH_PARAMS + 2, Pulses::PUSH_LIGHTS + 2));
+		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(7.28, 52.35)), module, Pulses::PUSH_PARAMS + 3, Pulses::PUSH_LIGHTS + 3));
+		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(7.28, 62.477)), module, Pulses::PUSH_PARAMS + 4, Pulses::PUSH_LIGHTS + 4));
+		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(7.28, 72.605)), module, Pulses::PUSH_PARAMS + 5, Pulses::PUSH_LIGHTS + 5));
+		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(7.28, 82.732)), module, Pulses::PUSH_PARAMS + 6, Pulses::PUSH_LIGHTS + 6));
+		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(7.28, 92.86)), module, Pulses::PUSH_PARAMS + 7, Pulses::PUSH_LIGHTS + 7));
+		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(7.28, 102.987)), module, Pulses::PUSH_PARAMS + 8, Pulses::PUSH_LIGHTS + 8));
+		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(7.28, 113.115)), module, Pulses::PUSH_PARAMS + 9, Pulses::PUSH_LIGHTS + 9));
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.313, 21.968)), module, Pulses::TRIG_OUTPUTS + 0));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.313, 32.095)), module, Pulses::TRIG_OUTPUTS + 1));
