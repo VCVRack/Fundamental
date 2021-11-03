@@ -2,8 +2,6 @@
 #include <samplerate.h>
 
 
-#define HISTORY_SIZE (1<<21)
-
 struct Delay : Module {
 	enum ParamId {
 		TIME_PARAM,
@@ -34,20 +32,33 @@ struct Delay : Module {
 		NUM_OUTPUTS
 	};
 	enum LightId {
-		PERIOD_LIGHT,
+		CLOCK_LIGHT,
 		NUM_LIGHTS
 	};
 
+	constexpr static size_t HISTORY_SIZE = 1 << 21;
 	dsp::DoubleRingBuffer<float, HISTORY_SIZE> historyBuffer;
 	dsp::DoubleRingBuffer<float, 16> outBuffer;
 	SRC_STATE* src;
 	float lastWet = 0.f;
 	dsp::RCFilter lowpassFilter;
 	dsp::RCFilter highpassFilter;
+	float clockFreq = 1.f;
+	dsp::Timer clockTimer;
+	dsp::SchmittTrigger clockTrigger;
+	float clockPhase = 0.f;
 
 	Delay() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(TIME_PARAM, 0.f, 1.f, 0.5f, "Time", " s", 10.f / 1e-3, 1e-3);
+
+		// This was made before the pitch voltage standard existed, so it uses TIME_PARAM = 0 as 0.001s and TIME_PARAM = 1 as 10s with a formula of:
+		// time = 0.001 * 10000^TIME_PARAM
+		// or
+		// TIME_PARAM = log10(time * 1000) / 4
+		const float timeMin = log10(0.001f * 1000) / 4;
+		const float timeMax = log10(10.f * 1000) / 4;
+		const float timeDefault = log10(0.5f * 1000) / 4;
+		configParam(TIME_PARAM, timeMin, timeMax, timeDefault, "Time", " s", 10.f / 1e-3, 1e-3);
 		configParam(FEEDBACK_PARAM, 0.f, 1.f, 0.5f, "Feedback", "%", 0, 100);
 		configParam(TONE_PARAM, 0.f, 1.f, 0.5f, "Tone", "%", 0, 200, -100);
 		configParam(MIX_PARAM, 0.f, 1.f, 0.5f, "Mix", "%", 0, 100);
@@ -61,6 +72,7 @@ struct Delay : Module {
 		getParamQuantity(MIX_CV_PARAM)->randomizeEnabled = false;
 
 		configInput(TIME_INPUT, "Time");
+		getInputInfo(TIME_INPUT)->description = "1V/octave when Time CV is 100%";
 		configInput(FEEDBACK_INPUT, "Feedback");
 		configInput(TONE_INPUT, "Tone");
 		configInput(MIX_INPUT, "Mix");
@@ -79,34 +91,54 @@ struct Delay : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		// Clock
+		if (inputs[CLOCK_INPUT].isConnected()) {
+			clockTimer.process(args.sampleTime);
+
+			if (clockTrigger.process(inputs[CLOCK_INPUT].getVoltage(), 0.1f, 2.f)) {
+				float clockFreq = 1.f / clockTimer.getTime();
+				clockTimer.reset();
+				if (0.001f <= clockFreq && clockFreq <= 1000.f) {
+					this->clockFreq = clockFreq;
+				}
+			}
+		}
+		else {
+			// Default frequency when clock is unpatched
+			clockFreq = 2.f;
+		}
+
 		// Get input to delay block
 		float in = inputs[IN_INPUT].getVoltageSum();
 		float feedback = params[FEEDBACK_PARAM].getValue() + inputs[FEEDBACK_INPUT].getVoltage() / 10.f * params[FEEDBACK_CV_PARAM].getValue();
 		feedback = clamp(feedback, 0.f, 1.f);
 		float dry = in + lastWet * feedback;
 
-		// Compute delay time in seconds
-		float delay = params[TIME_PARAM].getValue() + inputs[TIME_INPUT].getVoltage() / 10.f * params[TIME_CV_PARAM].getValue();
-		delay = clamp(delay, 0.f, 1.f);
-		delay = 1e-3 * std::pow(10.f / 1e-3, delay);
-		// Number of delay samples
-		float index = std::round(delay * args.sampleRate);
+		// Compute freq
+		// Scale time knob to 1V/oct pitch based on formula explained in constructor, for backwards compatibility
+		float pitch = std::log2(1000.f) - std::log2(10000.f) * params[TIME_PARAM].getValue();
+		pitch += inputs[TIME_INPUT].getVoltage() * params[TIME_CV_PARAM].getValue();
+		float freq = clockFreq / 2.f * std::pow(2.f, pitch);
+		// Number of desired delay samples
+		float index = args.sampleRate / freq;
+		// In order to delay accurate samples, subtract by the historyBuffer size, and an experimentally tweaked amount.
+		index -= 16 + 4.f;
+		index = clamp(index, 2.f, float(HISTORY_SIZE - 1));
+		// DEBUG("freq %f index %f", freq, index);
+
 
 		// Push dry sample into history buffer
 		if (!historyBuffer.full()) {
 			historyBuffer.push(dry);
 		}
 
-		// How many samples do we need consume to catch up?
-		float consume = index - historyBuffer.size();
+		if (outBuffer.empty() && historyBuffer.size() >= 2) {
+			// How many samples do we need consume to catch up?
+			float consume = index - historyBuffer.size();
+			double ratio = std::pow(2.f, clamp(consume / 1000.f, -1.f, 1.f));
+			// DEBUG("index %f historyBuffer %lu consume %f ratio %f", index, historyBuffer.size(), consume, ratio);
 
-		if (outBuffer.empty()) {
-			double ratio = 1.f;
-			if (std::fabs(consume) >= 16.f) {
-				// Here's where the delay magic is. Smooth the ratio depending on how divergent we are from the correct delay time.
-				ratio = std::pow(10.f, clamp(consume / 10000.f, -1.f, 1.f));
-			}
-
+			// Convert samples from the historyBuffer to catch up or slow down so `index` and `historyBuffer.size()` eventually match approximately
 			SRC_DATA srcData;
 			srcData.data_in = (const float*) historyBuffer.startData();
 			srcData.data_out = (float*) outBuffer.endData();
@@ -139,20 +171,34 @@ struct Delay : Module {
 		highpassFilter.process(wet);
 		wet = highpassFilter.highpass();
 
+		// Set wet output
+		outputs[WET_OUTPUT].setVoltage(wet);
 		lastWet = wet;
 
+		// Set mix output
 		float mix = params[MIX_PARAM].getValue() + inputs[MIX_INPUT].getVoltage() / 10.f * params[MIX_CV_PARAM].getValue();
 		mix = clamp(mix, 0.f, 1.f);
 		float out = crossfade(in, wet, mix);
 		outputs[MIX_OUTPUT].setVoltage(out);
+
+		// Clock light
+		clockPhase += freq * args.sampleTime;
+		if (clockPhase >= 1.f) {
+			clockPhase -= 1.f;
+			lights[CLOCK_LIGHT].setBrightness(1.f);
+		}
+		else {
+			lights[CLOCK_LIGHT].setBrightnessSmooth(0.f, args.sampleTime);
+		}
 	}
 
 	void fromJson(json_t* rootJ) override {
-		// These attenuators didn't exist in version <2.0, so set to 1 for default compatibility.
-		params[TIME_CV_PARAM].setValue(1.f);
+		// These attenuators didn't exist in version <2.0, so set to 1 in case they are not overwritten.
 		params[FEEDBACK_CV_PARAM].setValue(1.f);
 		params[TONE_CV_PARAM].setValue(1.f);
 		params[MIX_CV_PARAM].setValue(1.f);
+		// The time input scaling has changed, so don't set to 1.
+		// params[TIME_CV_PARAM].setValue(1.f);
 
 		Module::fromJson(rootJ);
 	}
@@ -188,7 +234,7 @@ struct DelayWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.278, 113.115)), module, Delay::WET_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.115, 113.115)), module, Delay::MIX_OUTPUT));
 
-		addChild(createLightCentered<SmallLight<YellowLight>>(mm2px(Vec(22.738, 16.428)), module, Delay::PERIOD_LIGHT));
+		addChild(createLightCentered<SmallLight<YellowLight>>(mm2px(Vec(22.738, 16.428)), module, Delay::CLOCK_LIGHT));
 	}
 };
 
