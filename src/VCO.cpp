@@ -371,8 +371,8 @@ struct VCOWidget : ModuleWidget {
 		addParam(createParamCentered<RoundHugeBlackKnob>(mm2px(Vec(22.905, 29.808)), module, VCO::FREQ_PARAM));
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(22.862, 56.388)), module, VCO::PW_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(6.607, 80.603)), module, VCO::FM_PARAM));
-		addParam(createParamCentered<LEDLatch>(mm2px(Vec(17.444, 80.603)), module, VCO::LINEAR_PARAM));
-		addParam(createParamCentered<LEDLatch>(mm2px(Vec(28.282, 80.603)), module, VCO::SYNC_PARAM));
+		addParam(createParamCentered<VCVLatch>(mm2px(Vec(17.444, 80.603)), module, VCO::LINEAR_PARAM));
+		addParam(createParamCentered<VCVLatch>(mm2px(Vec(28.282, 80.603)), module, VCO::SYNC_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(39.118, 80.603)), module, VCO::PWM_PARAM));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.607, 96.859)), module, VCO::FM_INPUT));

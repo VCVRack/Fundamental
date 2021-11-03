@@ -276,9 +276,9 @@ struct WTVCOWidget : ModuleWidget {
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(8.915, 56.388)), module, WTVCO::FREQ_PARAM));
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(26.645, 56.388)), module, WTVCO::POS_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(6.897, 80.603)), module, WTVCO::FM_PARAM));
-		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(17.734, 80.603)), module, WTVCO::LINEAR_PARAM, WTVCO::LINEAR_LIGHT));
+		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(17.734, 80.603)), module, WTVCO::LINEAR_PARAM, WTVCO::LINEAR_LIGHT));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(28.571, 80.603)), module, WTVCO::POS_CV_PARAM));
-		addParam(createLightParamCentered<LEDLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(17.734, 96.859)), module, WTVCO::SOFT_PARAM, WTVCO::SOFT_LIGHT));
+		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(17.734, 96.859)), module, WTVCO::SOFT_PARAM, WTVCO::SOFT_LIGHT));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.897, 96.813)), module, WTVCO::FM_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.571, 96.859)), module, WTVCO::POS_INPUT));

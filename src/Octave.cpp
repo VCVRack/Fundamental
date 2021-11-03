@@ -23,7 +23,7 @@ struct Octave : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(OCTAVE_PARAM, -4.f, 4.f, 0.f, "Shift", " oct");
 		getParamQuantity(OCTAVE_PARAM)->snapEnabled = true;
-		configInput(PITCH_INPUT, "Pitch");
+		configInput(PITCH_INPUT, "1V/octave pitch");
 		configInput(OCTAVE_INPUT, "Octave shift CV");
 		configOutput(PITCH_OUTPUT, "Pitch");
 	}
