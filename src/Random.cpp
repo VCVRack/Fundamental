@@ -9,11 +9,11 @@ struct Random : Module {
 		MODE_PARAM,
 		// new in 2.0
 		PROB_PARAM, // TODO
-		RANDOM_PARAM, // TODO
+		RAND_PARAM, // TODO
 		RATE_CV_PARAM,
 		SHAPE_CV_PARAM,
 		PROB_CV_PARAM,
-		RANDOM_CV_PARAM,
+		RAND_CV_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -23,7 +23,7 @@ struct Random : Module {
 		EXTERNAL_INPUT,
 		// new in 2.0
 		PROB_INPUT,
-		RANDOM_INPUT,
+		RAND_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
@@ -39,7 +39,7 @@ struct Random : Module {
 		RATE_LIGHT,
 		SHAPE_LIGHT,
 		PROB_LIGHT,
-		RANDOM_LIGHT,
+		RAND_LIGHT,
 		OFFSET_LIGHT,
 		NUM_LIGHTS
 	};
@@ -51,14 +51,13 @@ struct Random : Module {
 	float clockPhase = 0.f;
 	int trigFrame = 0;
 	int lastTrigFrames = INT_MAX;
-	bool offset = false;
 
 	Random() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(RATE_PARAM, std::log2(0.002f), std::log2(2000.f), std::log2(2.f), "Rate", " Hz", 2);
 		configParam(SHAPE_PARAM, 0.f, 1.f, 1.f, "Shape", "%", 0, 100);
 		configParam(PROB_PARAM, 0.f, 1.f, 1.f, "Probability", "%", 0, 100);
-		configParam(RANDOM_PARAM, 0.f, 1.f, 1.f, "Randomness", "%", 0, 100);
+		configParam(RAND_PARAM, 0.f, 1.f, 1.f, "Randomness", "%", 0, 100);
 
 		configParam(RATE_CV_PARAM, -1.f, 1.f, 0.f, "Rate CV", "%", 0, 100);
 		getParamQuantity(RATE_CV_PARAM)->randomizeEnabled = false;
@@ -66,15 +65,15 @@ struct Random : Module {
 		getParamQuantity(SHAPE_CV_PARAM)->randomizeEnabled = false;
 		configParam(PROB_CV_PARAM, -1.f, 1.f, 0.f, "Probability CV", "%", 0, 100);
 		getParamQuantity(PROB_CV_PARAM)->randomizeEnabled = false;
-		configParam(RANDOM_CV_PARAM, -1.f, 1.f, 0.f, "Randomness CV", "%", 0, 100);
-		getParamQuantity(RANDOM_CV_PARAM)->randomizeEnabled = false;
+		configParam(RAND_CV_PARAM, -1.f, 1.f, 0.f, "Randomness CV", "%", 0, 100);
+		getParamQuantity(RAND_CV_PARAM)->randomizeEnabled = false;
 
-		configButton(OFFSET_PARAM, "Offset 0-10V");
+		configSwitch(OFFSET_PARAM, 0.f, 1.f, 0.f, "Offset", {"Bipolar", "Unipolar"});
 
 		configInput(RATE_INPUT, "Rate");
 		configInput(SHAPE_INPUT, "Shape");
 		configInput(PROB_INPUT, "Probability");
-		configInput(RANDOM_INPUT, "Randomness");
+		configInput(RAND_INPUT, "Randomness");
 		configInput(TRIGGER_INPUT, "Trigger");
 		configInput(EXTERNAL_INPUT, "External");
 
@@ -83,12 +82,6 @@ struct Random : Module {
 		configOutput(SMOOTH_OUTPUT, "Smooth");
 		configOutput(EXPONENTIAL_OUTPUT, "Exponential");
 		configOutput(GATE_OUTPUT, "Gate");
-
-		onReset();
-	}
-
-	void onReset() override {
-		offset = false;
 	}
 
 	void trigger() {
@@ -126,10 +119,6 @@ struct Random : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		if (offsetTrigger.process(params[OFFSET_PARAM].getValue() > 0.f)) {
-			offset ^= true;
-		}
-
 		if (inputs[TRIGGER_INPUT].isConnected()) {
 			// Advance clock phase based on tempo estimate
 			trigFrame++;
@@ -158,10 +147,18 @@ struct Random : Module {
 			}
 		}
 
-		// Shape
+		// Params
 		float shape = params[SHAPE_PARAM].getValue();
 		shape += inputs[SHAPE_INPUT].getVoltage() / 10.f * params[SHAPE_CV_PARAM].getValue();
 		shape = clamp(shape, 0.f, 1.f);
+
+		float prob = params[PROB_PARAM].getValue();
+		prob += inputs[PROB_INPUT].getVoltage() / 10.f * params[PROB_CV_PARAM].getValue();
+		prob = clamp(prob, 0.f, 1.f);
+
+		float rand = params[RAND_PARAM].getValue();
+		rand += inputs[RAND_INPUT].getVoltage() / 10.f * params[RAND_CV_PARAM].getValue();
+		rand = clamp(rand, 0.f, 1.f);
 
 		// Stepped
 		if (outputs[STEPPED_OUTPUT].isConnected()) {
@@ -220,7 +217,9 @@ struct Random : Module {
 		// Lights
 		lights[RATE_LIGHT].setSmoothBrightness(0.f, args.sampleTime);
 		lights[SHAPE_LIGHT].setBrightness(shape);
-		lights[OFFSET_LIGHT].setBrightness(offset);
+		lights[PROB_LIGHT].setBrightness(prob);
+		lights[RAND_LIGHT].setBrightness(rand);
+		// lights[OFFSET_LIGHT].setBrightness(uni);
 	}
 
 	void paramsFromJson(json_t* rootJ) override {
@@ -228,27 +227,8 @@ struct Random : Module {
 		params[RATE_CV_PARAM].setValue(1.f);
 		params[SHAPE_CV_PARAM].setValue(1.f);
 		params[PROB_CV_PARAM].setValue(1.f);
-		params[RANDOM_CV_PARAM].setValue(1.f);
+		params[RAND_CV_PARAM].setValue(1.f);
 		Module::paramsFromJson(rootJ);
-		// In <2.0, OFFSET_PARAM was a toggle switch instead of a momentary button, so if param is on after deserializing, set boolean states instead.
-		if (params[OFFSET_PARAM].getValue() > 0.f) {
-			offset = true;
-			params[OFFSET_PARAM].setValue(0.f);
-		}
-	}
-
-	json_t* dataToJson() override {
-		json_t* rootJ = json_object();
-		// offset
-		json_object_set_new(rootJ, "offset", json_boolean(offset));
-		return rootJ;
-	}
-
-	void dataFromJson(json_t* rootJ) override {
-		// offset
-		json_t* offsetJ = json_object_get(rootJ, "offset");
-		if (offsetJ)
-			offset = json_boolean_value(offsetJ);
 	}
 };
 
@@ -263,19 +243,19 @@ struct RandomWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createLightParamCentered<LEDLightSlider<GreenLight>>(mm2px(Vec(6.479, 33.605)), module, Random::RATE_PARAM, Random::RATE_LIGHT));
-		addParam(createLightParamCentered<LEDLightSlider<GreenLight>>(mm2px(Vec(17.315, 33.605)), module, Random::PROB_PARAM, Random::PROB_LIGHT));
-		addParam(createLightParamCentered<LEDLightSlider<GreenLight>>(mm2px(Vec(28.152, 33.605)), module, Random::RANDOM_PARAM, Random::RANDOM_LIGHT));
-		addParam(createLightParamCentered<LEDLightSlider<GreenLight>>(mm2px(Vec(38.98, 33.605)), module, Random::SHAPE_PARAM, Random::SHAPE_LIGHT));
+		addParam(createLightParamCentered<VCVLightSlider<GreenLight>>(mm2px(Vec(6.479, 33.605)), module, Random::RATE_PARAM, Random::RATE_LIGHT));
+		addParam(createLightParamCentered<VCVLightSlider<GreenLight>>(mm2px(Vec(17.315, 33.605)), module, Random::PROB_PARAM, Random::PROB_LIGHT));
+		addParam(createLightParamCentered<VCVLightSlider<GreenLight>>(mm2px(Vec(28.152, 33.605)), module, Random::RAND_PARAM, Random::RAND_LIGHT));
+		addParam(createLightParamCentered<VCVLightSlider<GreenLight>>(mm2px(Vec(38.98, 33.605)), module, Random::SHAPE_PARAM, Random::SHAPE_LIGHT));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(6.479, 64.347)), module, Random::RATE_CV_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(17.317, 64.347)), module, Random::PROB_CV_PARAM));
-		addParam(createParamCentered<Trimpot>(mm2px(Vec(28.154, 64.347)), module, Random::RANDOM_CV_PARAM));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(28.154, 64.347)), module, Random::RAND_CV_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(38.991, 64.347)), module, Random::SHAPE_CV_PARAM));
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<YellowLight>>>(mm2px(Vec(28.154, 96.859)), module, Random::OFFSET_PARAM, Random::OFFSET_LIGHT));
+		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(28.154, 96.859)), module, Random::OFFSET_PARAM, Random::OFFSET_LIGHT));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.479, 80.549)), module, Random::RATE_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.317, 80.549)), module, Random::PROB_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.154, 80.553)), module, Random::RANDOM_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.154, 80.553)), module, Random::RAND_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(38.991, 80.557)), module, Random::SHAPE_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.479, 96.859)), module, Random::TRIGGER_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.317, 96.859)), module, Random::EXTERNAL_INPUT));

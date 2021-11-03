@@ -306,14 +306,14 @@ struct SEQ3Widget : ModuleWidget {
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(88.424, 74.605)), module, SEQ3::CV_PARAMS + 8 * 2 + 6));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(101.441, 74.605)), module, SEQ3::CV_PARAMS + 8 * 2 + 7));
 
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(10.319, 85.801)), module, SEQ3::GATE_PARAMS + 0, SEQ3::GATE_LIGHTS + 0));
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(23.336, 85.801)), module, SEQ3::GATE_PARAMS + 1, SEQ3::GATE_LIGHTS + 1));
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(36.354, 85.801)), module, SEQ3::GATE_PARAMS + 2, SEQ3::GATE_LIGHTS + 2));
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(49.371, 85.801)), module, SEQ3::GATE_PARAMS + 3, SEQ3::GATE_LIGHTS + 3));
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(62.389, 85.801)), module, SEQ3::GATE_PARAMS + 4, SEQ3::GATE_LIGHTS + 4));
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(75.406, 85.801)), module, SEQ3::GATE_PARAMS + 5, SEQ3::GATE_LIGHTS + 5));
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(88.424, 85.801)), module, SEQ3::GATE_PARAMS + 6, SEQ3::GATE_LIGHTS + 6));
-		addParam(createLightParamCentered<LEDLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(101.441, 85.801)), module, SEQ3::GATE_PARAMS + 7, SEQ3::GATE_LIGHTS + 7));
+		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(10.319, 85.801)), module, SEQ3::GATE_PARAMS + 0, SEQ3::GATE_LIGHTS + 0));
+		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(23.336, 85.801)), module, SEQ3::GATE_PARAMS + 1, SEQ3::GATE_LIGHTS + 1));
+		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(36.354, 85.801)), module, SEQ3::GATE_PARAMS + 2, SEQ3::GATE_LIGHTS + 2));
+		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(49.371, 85.801)), module, SEQ3::GATE_PARAMS + 3, SEQ3::GATE_LIGHTS + 3));
+		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(62.389, 85.801)), module, SEQ3::GATE_PARAMS + 4, SEQ3::GATE_LIGHTS + 4));
+		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(75.406, 85.801)), module, SEQ3::GATE_PARAMS + 5, SEQ3::GATE_LIGHTS + 5));
+		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(88.424, 85.801)), module, SEQ3::GATE_PARAMS + 6, SEQ3::GATE_LIGHTS + 6));
+		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(101.441, 85.801)), module, SEQ3::GATE_PARAMS + 7, SEQ3::GATE_LIGHTS + 7));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(49.371, 17.307)), module, SEQ3::TEMPO_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(62.389, 17.307)), module, SEQ3::STEPS_INPUT));
