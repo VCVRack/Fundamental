@@ -152,7 +152,7 @@ struct WTVCO : Module {
 				}
 				else {
 					freq = dsp::FREQ_C4 * dsp::approxExp2_taylor5(pitch + 30.f) / std::pow(2.f, 30.f);
-					freq *= 1.f + inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;
+					freq += dsp::FREQ_C4 * inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;
 				}
 
 				// Limit to Nyquist frequency
