@@ -11,11 +11,11 @@
    height="380"
    viewBox="0 0 105 380"
    version="1.1"
-   id="svg211"
+   id="svg172"
    sodipodi:docname="WTVCO.svg"
    inkscape:version="0.92.3 (2405546, 2018-03-11)">
   <metadata
-     id="metadata215">
+     id="metadata176">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
@@ -36,19 +36,19 @@
      inkscape:pageshadow="2"
      inkscape:window-width="1920"
      inkscape:window-height="1017"
-     id="namedview213"
+     id="namedview174"
      showgrid="false"
      inkscape:zoom="0.62105263"
      inkscape:cx="52.5"
      inkscape:cy="190"
-     inkscape:window-x="1912"
+     inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg211" />
+     inkscape:current-layer="svg172" />
   <defs
      id="defs7">
     <linearGradient
-       id="bd1d6b77-4acb-42b8-bfd2-1d3b993477fb"
+       id="bc6b8b4e-70a4-498d-896e-d887edf96652"
        x1="52.5"
        x2="52.5"
        y2="380"
@@ -64,16 +64,16 @@
     </linearGradient>
   </defs>
   <g
-     id="f4628be0-637d-4f12-9f2d-157f8f2a1b91"
+     id="b33b2172-5c63-4d47-92e0-3edd1b47bf11"
      data-name="FND BG">
     <rect
        width="105"
        height="380"
-       fill="url(#bd1d6b77-4acb-42b8-bfd2-1d3b993477fb)"
+       fill="url(#bc6b8b4e-70a4-498d-896e-d887edf96652)"
        id="rect9" />
   </g>
   <g
-     id="ff98a635-5745-4558-9b4a-0dc2952500c8"
+     id="b506e62f-3d28-4627-905a-bd74acc0a76b"
      data-name="FND GRAPH">
     <g
        id="g20">
@@ -213,7 +213,7 @@
          stroke-linejoin="round"
          id="line48" />
       <path
-         d="M26.30432,247.88639a11.53379,11.53379,0,1,0-11.81153.04123"
+         d="M12.21051,246.15346a11.53074,11.53074,0,1,1,16.30693,0"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -244,7 +244,7 @@
          stroke-linejoin="round"
          id="line56" />
       <path
-         d="M90.30434,247.88639a11.5338,11.5338,0,1,0-11.81152.04123"
+         d="M76.21054,246.15346a11.53074,11.53074,0,1,1,16.30692,0"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -253,7 +253,7 @@
     </g>
   </g>
   <g
-     id="eb147f6d-b3d0-490e-a8dc-740bf56a7b1a"
+     id="ace79046-acc8-4c9a-92d1-6a36173501a0"
      data-name="FND TXT">
     <g
        id="g71">
@@ -435,82 +435,82 @@
     </g>
   </g>
   <g
-     id="a05b69b5-cc37-45e1-b518-003e761ec441"
+     id="fb60f178-513e-4729-a89c-72162dea90e4"
      data-name="components"
-     style="display:none"
-     inkscape:groupmode="layer">
+     inkscape:groupmode="layer"
+     style="display:none">
     <circle
-       id="adb3e01d-f312-48b9-8a53-f59a8f3f3507"
+       id="a12b2dd1-7a73-4fc0-a593-446b6cc7102a"
        data-name="Freq#SmallLight"
        cx="52.360062"
        cy="145.89278"
        r="3"
        style="fill:#ff00ff" />
     <circle
-       id="b1357153-ce87-4097-b311-4af84e007b83"
+       id="a8db53fd-2cef-4979-a964-6b0d0afaf2e9"
        data-name="Wt#PJ301MPort"
        cx="84.363998"
        cy="334"
        r="5"
        style="fill:#0000ff" />
     <circle
-       id="a2f56c1d-b971-4abc-a0c9-5b1dfc699a89"
+       id="eb5c0535-c379-49af-9e8d-82f1991f60f1"
        data-name="Pitch#PJ301MPort"
        cx="20.36397"
        cy="334"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="a991e7b3-2330-40a9-a62e-9940978397ef"
+       id="bafcc144-3ba5-4342-b6c5-75b7ad28f7b2"
        data-name="Fm#PJ301MPort"
        cx="20.36397"
        cy="285.86591"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="b9d6556f-d4c2-4dff-b0cd-15e08fe6f2e2"
+       id="fbbca4e9-b985-4ffd-8223-3583bf3537b3"
        data-name="FmCv#Trimpot"
        cx="20.36397"
        cy="238"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="e006dff2-cbf0-4d01-af20-d93e756cf92d"
+       id="f5569cae-59a4-4935-975f-b2fb261ca481"
        data-name="PosCv#Trimpot"
        cx="84.363998"
        cy="238"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="bf0ab6d9-f953-44aa-8c70-34bdeca0f788"
+       id="ff400e46-c51d-43ff-9f02-76541d717752"
        data-name="Pos#PJ301MPort"
        cx="84.363998"
        cy="286"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="b5357e0d-40d8-4886-9fc0-f05fac30d4e5"
+       id="a01e3ae0-5128-4475-a239-3c3b1f44e528"
        data-name="Sync#PJ301MPort"
        cx="52.363998"
        cy="334"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="b5fb66cc-4974-4ad9-8c79-536068e4fc17"
+       id="f77de51d-b38b-41ee-8a57-dcc6547bf777"
        data-name="Soft#LEDButton"
        cx="52.363998"
        cy="286"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="bf9a26f6-a6e1-48d8-b0e3-3bd4b3349006"
+       id="e30760a6-f406-42d5-b436-1533a0703d6d"
        data-name="Lfm#LEDButton"
        cx="52.363998"
        cy="238"
        r="5"
        style="fill:#ff0000" />
     <rect
-       id="ae297f39-0e37-46d8-beff-922f03b5d03d"
+       id="a662aadd-fde5-4473-a15a-fd1ff8008d05"
        data-name="Screen"
        y="38.5"
        width="105"
@@ -518,14 +518,14 @@
        x="0"
        style="fill:#ffff00" />
     <circle
-       id="bf4b5c21-b23f-4796-83bc-b6b4af940758"
+       id="b23c705e-a6ef-43e1-893f-7574df06d833"
        data-name="Freq#RoundLargeBlackKnob"
        cx="26.32432"
        cy="166.5"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="be269d1e-557d-476b-971e-bd5f67868a8d"
+       id="b3216763-34e3-42f1-b229-530672ae7b79"
        data-name="Wt#RoundLargeBlackKnob"
        cx="78.675697"
        cy="166.5"

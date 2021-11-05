@@ -48,7 +48,7 @@
   <defs
      id="defs7">
     <linearGradient
-       id="a6814eab-d85e-40b9-8ae7-7b71416233d9"
+       id="a9ab1653-35f1-420f-b471-ae2549273d21"
        x1="52.5"
        x2="52.5"
        y2="380"
@@ -64,16 +64,16 @@
     </linearGradient>
   </defs>
   <g
-     id="a5319b3c-8107-4eef-844d-41a28d6837b5"
+     id="aac510e2-d5f8-43a7-b273-546a77f3e7ac"
      data-name="FND BG">
     <rect
        width="105"
        height="380"
-       fill="url(#a6814eab-d85e-40b9-8ae7-7b71416233d9)"
+       fill="url(#a9ab1653-35f1-420f-b471-ae2549273d21)"
        id="rect9" />
   </g>
   <g
-     id="f24342f1-dc00-4029-9fd3-54e649ed7462"
+     id="b5c38ce6-12fc-4898-abd4-3f38ba3d6d34"
      data-name="FND GRAPH">
     <g
        id="g20">
@@ -171,9 +171,9 @@
        id="g48">
       <line
          x1="20.63139"
-         y1="250.87596"
+         y1="250.87459"
          x2="20.63139"
-         y2="260.07791"
+         y2="260.07654"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -182,16 +182,16 @@
          id="line42" />
       <line
          x1="20.63139"
-         y1="226.54155"
+         y1="226.54018"
          x2="20.63139"
-         y2="238.02094"
+         y2="238.01957"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
          stroke-linejoin="round"
          id="line44" />
       <path
-         d="M26.57173,247.88776a11.5338,11.5338,0,1,0-11.81152.04123"
+         d="M12.47793,246.15346a11.53074,11.53074,0,1,1,16.30692,0"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -202,9 +202,9 @@
        id="g56">
       <line
          x1="84.63134"
-         y1="250.67698"
+         y1="250.87459"
          x2="84.63134"
-         y2="259.87893"
+         y2="260.07654"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -213,16 +213,16 @@
          id="line50" />
       <line
          x1="84.63134"
-         y1="226.34257"
+         y1="226.54018"
          x2="84.63134"
-         y2="237.82196"
+         y2="238.01957"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
          stroke-linejoin="round"
          id="line52" />
       <path
-         d="M90.57168,247.68878a11.5338,11.5338,0,1,0-11.81152.04123"
+         d="M76.47788,246.15346a11.53074,11.53074,0,1,1,16.30692,0"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -231,7 +231,7 @@
     </g>
   </g>
   <g
-     id="ac090b5e-f20f-4eec-ae1d-d5876f274dcb"
+     id="bb36efdf-32fc-4bde-995c-22b59db43d11"
      data-name="FND TXT">
     <g
        id="g67">
@@ -409,12 +409,12 @@
     </g>
   </g>
   <g
-     id="b5990850-42d7-49f8-b9fa-490442424496"
+     id="e3949997-701e-4623-b7ca-3406c0a3a60b"
      data-name="components"
      inkscape:groupmode="layer"
      style="display:none">
     <rect
-       id="e0fdf173-5f18-4aae-91c7-586b41e8504e"
+       id="e0d40ebc-150f-4bf2-a0d1-a59a1a3eac9c"
        data-name="Screen"
        x="0.01282"
        y="38.505341"
@@ -422,84 +422,84 @@
        height="86.29126"
        style="fill:#ffff00" />
     <circle
-       id="be54ec87-3d64-4916-8368-e565664617b2"
+       id="a04e3c0c-95ff-4aa8-be50-a6c79ac6391e"
        data-name="Wt#PJ301MPort"
        cx="84.63134"
        cy="334"
        r="5"
        style="fill:#0000ff" />
     <circle
-       id="ef1eaf36-7c32-47e5-9db8-ad8a065bc2cb"
+       id="abd34417-a0d4-45d4-9818-5c43c2f7d24d"
        data-name="Clk#PJ301MPort"
        cx="20.63139"
        cy="334"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="e438b472-e7ce-446a-848c-291e5640133c"
+       id="a48a9d65-f6c4-4ba5-a678-447cfb0a39b4"
        data-name="Fm#PJ301MPort"
        cx="20.63139"
        cy="286"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="a8ab516d-ea17-4a15-9493-4d332c571be7"
+       id="e0bff85a-ccee-4470-bc2e-5a8aa30cddde"
        data-name="FmCv#Trimpot"
        cx="20.63139"
        cy="238.00137"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="b59cfd5e-c0ad-4325-8aab-f391a760f7e0"
+       id="bf7f0ea4-8516-4eb6-a37a-ce58eb18902b"
        data-name="PosCv#Trimpot"
        cx="84.63134"
        cy="237.80238"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="e05a6e5d-df96-4e75-b360-7aa17618d8b1"
+       id="e51aecfa-6c53-489f-8b18-44e016e80f3b"
        data-name="Pos#PJ301MPort"
        cx="84.63134"
        cy="286"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="f5d60ab8-4559-4abd-992b-9687d303308e"
+       id="a33d9e0f-3ff1-46ab-9d85-895fb23dcb8c"
        data-name="Sync#PJ301MPort"
        cx="52.63134"
        cy="334"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="fcb79564-bcd4-44a2-8959-f83f09c10a71"
+       id="bb5631f8-89ff-4c44-be96-98a4b8847394"
        data-name="Ofst#LEDButton"
        cx="52.63134"
        cy="286"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="b0b9b23f-d1bf-401b-a74c-7f6ebd649015"
+       id="f0fdc1e4-5047-42f9-908f-986e01c42844"
        data-name="Inv#LEDButton"
        cx="52.63134"
        cy="237.74788"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="f5a2b054-87e7-43d0-af5c-c3ef3cec45c7"
+       id="a1770d31-e9ea-44d5-83fc-f9d84ad5939c"
        data-name="Freq#SmallLight"
        cx="52.35429"
        cy="145.89278"
        r="3"
        style="fill:#ff00ff" />
     <circle
-       id="b14ab918-8086-4d48-b3b9-ccc5d9e52dce"
+       id="a1b09db7-3640-4893-9fd6-e9a90c7328fe"
        data-name="Freq#RoundLargeBlackKnob"
        cx="26.31855"
        cy="166.5"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="bde41dbc-2a59-4a5d-a25c-e62a550790c3"
+       id="eb0ac970-dafd-45b2-a294-f4a301995daa"
        data-name="Wt#RoundLargeBlackKnob"
        cx="78.68145"
        cy="166.5"
