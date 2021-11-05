@@ -34,21 +34,21 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="716"
-     inkscape:window-height="480"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
      id="namedview293"
      showgrid="false"
      inkscape:zoom="0.62105263"
      inkscape:cx="67.5"
      inkscape:cy="190"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="0"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
      inkscape:current-layer="svg291" />
   <defs
      id="defs7">
     <linearGradient
-       id="e66a35dd-7094-4123-94fb-ceded8a1f4c5"
+       id="b5923744-cbcc-4d88-aefc-59fc27f74fbc"
        x1="67.50002"
        x2="67.50002"
        y2="380"
@@ -64,17 +64,17 @@
     </linearGradient>
   </defs>
   <g
-     id="e69bf6be-5aaa-4b65-9f77-6dfe568eb497"
+     id="a473deef-0fb3-453d-8217-58808a11e162"
      data-name="FND BG">
     <rect
        x="0.00003"
        width="134.99999"
        height="380"
-       fill="url(#e66a35dd-7094-4123-94fb-ceded8a1f4c5)"
+       fill="url(#b5923744-cbcc-4d88-aefc-59fc27f74fbc)"
        id="rect9" />
   </g>
   <g
-     id="b555dc5b-9fce-4a5c-ae5e-c400489a02f9"
+     id="ab71e601-9fd3-40f1-8475-868c5dcb179f"
      data-name="FND GRAPH">
     <line
        x1="42.62572"
@@ -353,9 +353,9 @@
        id="g76">
       <line
          x1="19.13231"
-         y1="202.87459"
+         y1="202.94551"
          x2="19.13231"
-         y2="212.07654"
+         y2="212.14746"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -364,16 +364,16 @@
          id="line70" />
       <line
          x1="19.13231"
-         y1="178.54018"
+         y1="178.6111"
          x2="19.13231"
-         y2="190.01957"
+         y2="190.09049"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
          stroke-linejoin="round"
          id="line72" />
       <path
-         d="M25.07266,199.88639a11.53379,11.53379,0,1,0-11.81153.04123"
+         d="M10.97885,198.22438a11.53074,11.53074,0,1,1,16.30693,0"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -384,9 +384,9 @@
        id="g84">
       <line
          x1="51.13235"
-         y1="202.87459"
+         y1="202.94551"
          x2="51.13235"
-         y2="212.07654"
+         y2="212.14746"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -395,16 +395,16 @@
          id="line78" />
       <line
          x1="51.13235"
-         y1="178.54018"
+         y1="178.6111"
          x2="51.13235"
-         y2="190.01957"
+         y2="190.09049"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
          stroke-linejoin="round"
          id="line80" />
       <path
-         d="M57.0727,199.88639a11.53379,11.53379,0,1,0-11.81153.04123"
+         d="M42.97889,198.22438a11.53074,11.53074,0,1,1,16.30693,0"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -415,9 +415,9 @@
        id="g92">
       <line
          x1="83.13235"
-         y1="202.87459"
+         y1="202.94551"
          x2="83.13235"
-         y2="212.07654"
+         y2="212.14746"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -426,16 +426,16 @@
          id="line86" />
       <line
          x1="83.13235"
-         y1="178.54018"
+         y1="178.6111"
          x2="83.13235"
-         y2="190.01957"
+         y2="190.09049"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
          stroke-linejoin="round"
          id="line88" />
       <path
-         d="M89.0727,199.88639a11.53379,11.53379,0,1,0-11.81153.04123"
+         d="M74.97889,198.22438a11.53074,11.53074,0,1,1,16.30693,0"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -446,9 +446,9 @@
        id="g100">
       <line
          x1="115.13235"
-         y1="202.87459"
+         y1="202.94551"
          x2="115.13235"
-         y2="212.07654"
+         y2="212.14746"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -457,16 +457,16 @@
          id="line94" />
       <line
          x1="115.13235"
-         y1="178.54018"
+         y1="178.6111"
          x2="115.13235"
-         y2="190.01957"
+         y2="190.09049"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
          stroke-linejoin="round"
          id="line96" />
       <path
-         d="M121.0727,199.88639a11.53379,11.53379,0,1,0-11.81153.04123"
+         d="M106.97889,198.22438a11.53074,11.53074,0,1,1,16.30693,0"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -475,24 +475,24 @@
     </g>
   </g>
   <g
-     id="b1ee2ad7-f2cc-4d5c-a8a9-017d6a13c113"
+     id="f0e80bda-ba6e-4742-a980-8f1965301e8d"
      data-name="FND TXT">
     <g
        id="g111">
       <path
-         d="M105.7832,268.60645v-.01368a2.43424,2.43424,0,0,1,2.48633-2.45215,2.62951,2.62951,0,0,1,1.62012.46045.522.522,0,0,1,.2168.41993.51717.51717,0,0,1-.834.40673,1.65909,1.65909,0,0,0-1.03613-.32519,1.4249,1.4249,0,0,0-1.36231,1.47656v.01367a1.42116,1.42116,0,0,0,1.43653,1.50391,1.66639,1.66639,0,0,0,.98242-.28418v-.67773h-.7041a.44808.44808,0,0,1-.4541-.44727.45376.45376,0,0,1,.4541-.45361h1.19238a.51737.51737,0,0,1,.52148.52148v1.15186a.7055.7055,0,0,1-.36621.66406,3.15164,3.15164,0,0,1-1.66015.47412A2.37375,2.37375,0,0,1,105.7832,268.60645Z"
+         d="M108.0791,267.18359h-1.00195a.481.481,0,1,1,0-.96191H110.125a.481.481,0,1,1,0,.96191h-1.00195v3.29981a.522.522,0,0,1-1.044,0Z"
          fill="#f0f0f0"
          id="path103" />
       <path
-         d="M111.19141,270.29346l1.65332-3.73291a.64428.64428,0,0,1,.61035-.41309h.06054a.635.635,0,0,1,.60254.41309l1.65332,3.73291a.505.505,0,0,1,.05469.21.49467.49467,0,0,1-.49512.50146.53066.53066,0,0,1-.501-.35937l-.31836-.74512H112.4248l-.332.7793a.51164.51164,0,0,1-.48047.32519.48011.48011,0,0,1-.48144-.48779A.56369.56369,0,0,1,111.19141,270.29346ZM114.125,268.979l-.65723-1.56494-.65722,1.56494Z"
+         d="M111.51465,266.74316a.5179.5179,0,0,1,.52246-.52148h1.64551a1.8911,1.8911,0,0,1,1.38281.481,1.49122,1.49122,0,0,1,.40625,1.084v.01367a1.44829,1.44829,0,0,1-.94824,1.44287l.72461.88086a.60865.60865,0,0,1,.16894.39942.485.485,0,0,1-.49414.48144.624.624,0,0,1-.51465-.271l-1.0166-1.2876h-.833v1.03711a.522.522,0,0,1-1.04394,0Zm2.10058,1.78223c.50782,0,.79981-.27148.79981-.6709v-.01367c0-.44727-.31152-.67773-.82031-.67773h-1.03614v1.3623Z"
          fill="#f0f0f0"
          id="path105" />
       <path
-         d="M117.42383,267.18359h-1.00195a.481.481,0,1,1,0-.96191h3.04785a.481.481,0,1,1,0,.96191h-1.002v3.29981a.522.522,0,0,1-1.04394,0Z"
+         d="M116.69434,266.70264a.52148.52148,0,1,1,1.043,0v3.78076a.52148.52148,0,1,1-1.043,0Z"
          fill="#f0f0f0"
          id="path107" />
       <path
-         d="M120.85938,270.44238v-3.69922a.51789.51789,0,0,1,.52246-.52148h2.62793a.46845.46845,0,0,1,.46777.46777.46287.46287,0,0,1-.46777.46045h-2.11329v.96192h1.8086a.46835.46835,0,0,1,.46777.46728.46266.46266,0,0,1-.46777.46094h-1.8086v.99609H124.044a.46835.46835,0,0,1,.46777.46729.46256.46256,0,0,1-.46777.46045h-2.66211A.51759.51759,0,0,1,120.85938,270.44238Z"
+         d="M118.89453,268.60645v-.01368a2.43424,2.43424,0,0,1,2.48633-2.45215,2.62951,2.62951,0,0,1,1.62012.46045.522.522,0,0,1,.21679.41993.51717.51717,0,0,1-.834.40673,1.65909,1.65909,0,0,0-1.03613-.32519,1.4249,1.4249,0,0,0-1.36231,1.47656v.01367a1.42116,1.42116,0,0,0,1.43653,1.50391,1.66639,1.66639,0,0,0,.98242-.28418v-.67773h-.7041a.44809.44809,0,0,1-.45411-.44727.45376.45376,0,0,1,.45411-.45361h1.19238a.51738.51738,0,0,1,.52148.52148v1.15186a.7055.7055,0,0,1-.36621.66406,3.15164,3.15164,0,0,1-1.66015.47412A2.37375,2.37375,0,0,1,118.89453,268.60645Z"
          fill="#f0f0f0"
          id="path109" />
     </g>
@@ -794,145 +794,145 @@
     </g>
   </g>
   <g
-     id="e9a0ae23-8504-41fb-bc53-b90e5c063c7e"
+     id="afa9daa1-cafe-4994-af1a-e50ed69ff9ef"
      data-name="components"
-     style="display:none"
-     inkscape:groupmode="layer">
+     inkscape:groupmode="layer"
+     style="display:none">
     <circle
-       id="a42832f8-563b-4545-b4e8-a31dda183ad6"
+       id="f596749b-0cb3-4e51-9197-fdcec78b88a6"
        data-name="Rate#PJ301MPort"
        cx="19.132311"
        cy="237.84212"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="ba3795cc-b508-4647-8121-989e5a20aa32"
+       id="aa05794f-4d28-45a6-adc4-3fbc03f58b37"
        data-name="Prob#PJ301MPort"
        cx="51.132351"
        cy="237.84209"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="b6daccc1-94d4-431d-8aa9-92f2e1a928a8"
+       id="acc8d206-9511-4cef-8602-f88bde59e284"
        data-name="Rnd#PJ301MPort"
        cx="83.132347"
        cy="237.85397"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="bbed47f4-55db-45a6-8ebf-511d314f7300"
+       id="a36d695c-2e73-44af-802d-e86754f42d9c"
        data-name="Shape#PJ301MPort"
        cx="115.13235"
        cy="237.86584"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="aea9786f-aec5-4145-a813-da0839205db2"
+       id="b24da343-bf3f-4ece-b111-8e25e413138d"
        data-name="Trig#PJ301MPort"
        cx="19.132311"
        cy="286"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="b31718a5-e99f-4c3b-8302-ae5b7a5730a4"
+       id="fa7cbb2d-fb6a-409b-bc4b-c086c92ae759"
        data-name="In#PJ301MPort"
        cx="51.132351"
        cy="286"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="eaa61cb6-19e9-41b1-9e92-240c193528d1"
+       id="f9289341-2299-4b72-b4e1-7081da9deea0"
        data-name="Ofst#LEDButton"
        cx="83.132347"
        cy="286"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="f219a449-b8a9-4e4a-9ca8-bf4ef12f88c2"
+       id="a777dcca-15d8-4cbe-8006-b6665d6e9fd8"
        data-name="Rate#LEDSlider"
        cx="19.132311"
        cy="99.228233"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="f51cfe2b-5db1-4bf6-93af-204466277a26"
+       id="fce00290-eb62-4762-9039-f92e22c1bfc6"
        data-name="Prob#LEDSlider"
        cx="51.126751"
        cy="99.228233"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="e33b0066-e801-4d1b-8f3d-e4d2e1b68d2b"
+       id="f304728d-b7d6-41c5-85aa-57938063b864"
        data-name="Rnd#LEDSlider"
        cx="83.125923"
        cy="99.228233"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="b58dd8ca-b135-4df8-ac51-f608967eb721"
+       id="bc377f26-26d7-4473-a393-72d484233a95"
        data-name="Shape#LEDSlider"
        cx="115.09708"
        cy="99.228233"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="b96e547b-6369-4632-a600-178bea532bf3"
+       id="ef61abbe-59de-46a0-ab1c-d7a928d61214"
        data-name="Lin#PJ301MPort"
        cx="51.132351"
        cy="334"
        r="5"
        style="fill:#0000ff" />
     <circle
-       id="a2707cf4-4054-4558-b579-1d3a8283a155"
+       id="ae9816b4-a43d-41d2-9d54-c6d3760303dd"
        data-name="Step#PJ301MPort"
        cx="19.132311"
        cy="334"
        r="5"
        style="fill:#0000ff" />
     <circle
-       id="fd5e6423-7538-4ff0-8df5-eeef1abee997"
+       id="b629cf29-52ef-48c5-9210-7e4131e3e86f"
        data-name="Exp#PJ301MPort"
        cx="83.132347"
        cy="334"
        r="5"
        style="fill:#0000ff" />
     <circle
-       id="bc3d8732-ff87-438e-b6e6-4f10e6f1e6fa"
+       id="ab16b98a-bbf6-4234-8a06-56b1ee3981db"
        data-name="Smth#PJ301MPort"
        cx="115.13235"
        cy="334"
        r="5"
        style="fill:#0000ff" />
     <circle
-       id="b03c5a1c-2bce-4ddc-8d9b-14994ace13c4"
+       id="b3231dce-687e-469b-b7dd-d4426614e78e"
        data-name="Gate#PJ301MPort"
        cx="115.13235"
        cy="286"
        r="5"
        style="fill:#0000ff" />
     <circle
-       id="b0424902-dc1b-466b-ac76-9815d171c9ea"
+       id="a76e4967-9455-4912-82dd-2f1a42e18b72"
        data-name="RateCv#Trimpot"
        cx="19.132311"
        cy="190"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="f48a76d8-b65f-42be-928b-07bcf34b66c5"
+       id="bbaeffdb-7133-4bae-acb9-639c1f6ab727"
        data-name="ProbCv#Trimpot"
        cx="51.132351"
        cy="190"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="a77dee7d-3785-41cb-aa9c-a00097140416"
+       id="b788a5d1-3231-4479-8530-11250870f37b"
        data-name="RndCv#Trimpot"
        cx="83.132347"
        cy="190"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="bfbec9fc-1ddb-4771-9b48-18adcf270a12"
+       id="aedeacaf-faf1-4b10-af4e-93613f3c5648"
        data-name="ShapeCv#Trimpot"
        cx="115.13235"
        cy="190"

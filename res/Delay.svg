@@ -34,21 +34,21 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="716"
-     inkscape:window-height="480"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
      id="namedview234"
      showgrid="false"
      inkscape:zoom="0.62105263"
      inkscape:cx="67.499992"
      inkscape:cy="190"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="0"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
      inkscape:current-layer="svg232" />
   <defs
      id="defs7">
     <linearGradient
-       id="aa77bbde-14c6-4e62-86dd-688abebb6e9e"
+       id="b4cd9c1b-4507-462d-8544-10081f6efec0"
        x1="67.49999"
        x2="67.49999"
        y2="380"
@@ -64,16 +64,16 @@
     </linearGradient>
   </defs>
   <g
-     id="ea213cdb-be5e-459c-b498-07b154a5545a"
+     id="e0550b12-6d7b-4874-8e2e-f5d6c960d134"
      data-name="FND BG">
     <rect
        width="134.99999"
        height="380"
-       fill="url(#aa77bbde-14c6-4e62-86dd-688abebb6e9e)"
+       fill="url(#b4cd9c1b-4507-462d-8544-10081f6efec0)"
        id="rect9" />
   </g>
   <g
-     id="a584cbd0-c109-42ab-9ab7-114f69e5d238"
+     id="ae4c5001-d221-412c-abb3-d19d79fe7eca"
      data-name="FND GRAPH">
     <rect
        x="69.16269"
@@ -244,10 +244,10 @@
     <g
        id="g68">
       <line
-         x1="83.49722"
-         y1="250.751"
-         x2="83.49722"
-         y2="259.95294"
+         x1="19.50278"
+         y1="250.87459"
+         x2="19.50278"
+         y2="260.07654"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -255,17 +255,17 @@
          stroke-width="0.8"
          id="line62" />
       <line
-         x1="83.49722"
-         y1="226.41659"
-         x2="83.49722"
-         y2="237.89598"
+         x1="19.50278"
+         y1="226.54018"
+         x2="19.50278"
+         y2="238.01957"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
          stroke-linejoin="round"
          id="line64" />
       <path
-         d="M89.43756,247.7628A11.5338,11.5338,0,1,0,77.626,247.804"
+         d="M11.34932,246.15346a11.53074,11.53074,0,1,1,16.30693,0"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -275,10 +275,10 @@
     <g
        id="g76">
       <line
-         x1="51.50273"
-         y1="250.751"
-         x2="51.50273"
-         y2="259.95294"
+         x1="51.50579"
+         y1="250.87459"
+         x2="51.50579"
+         y2="260.07654"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -286,17 +286,17 @@
          stroke-width="0.8"
          id="line70" />
       <line
-         x1="51.50273"
-         y1="226.41659"
-         x2="51.50273"
-         y2="237.89598"
+         x1="51.50579"
+         y1="226.54018"
+         x2="51.50579"
+         y2="238.01957"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
          stroke-linejoin="round"
          id="line72" />
       <path
-         d="M57.44308,247.7628a11.53379,11.53379,0,1,0-11.81153.04123"
+         d="M43.35233,246.15346a11.53074,11.53074,0,1,1,16.30693,0"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -306,10 +306,10 @@
     <g
        id="g84">
       <line
-         x1="19.50278"
-         y1="250.75096"
-         x2="19.50278"
-         y2="259.95291"
+         x1="83.50881"
+         y1="250.87459"
+         x2="83.50881"
+         y2="260.07654"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -317,17 +317,17 @@
          stroke-width="0.8"
          id="line78" />
       <line
-         x1="19.50278"
-         y1="226.41655"
-         x2="19.50278"
-         y2="237.89594"
+         x1="83.50881"
+         y1="226.54018"
+         x2="83.50881"
+         y2="238.01957"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
          stroke-linejoin="round"
          id="line80" />
       <path
-         d="M25.44313,247.76276a11.5338,11.5338,0,1,0-11.81153.04123"
+         d="M75.35534,246.15346a11.53074,11.53074,0,1,1,16.30693,0"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -337,10 +337,10 @@
     <g
        id="g92">
       <line
-         x1="115.49722"
-         y1="250.75096"
-         x2="115.49722"
-         y2="259.95291"
+         x1="115.51182"
+         y1="250.87459"
+         x2="115.51182"
+         y2="260.07654"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -348,17 +348,17 @@
          stroke-width="0.8"
          id="line86" />
       <line
-         x1="115.49722"
-         y1="226.41655"
-         x2="115.49722"
-         y2="237.89594"
+         x1="115.51182"
+         y1="226.54018"
+         x2="115.51182"
+         y2="238.01957"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
          stroke-linejoin="round"
          id="line88" />
       <path
-         d="M121.43756,247.76276a11.5338,11.5338,0,1,0-11.81152.04123"
+         d="M107.35835,246.15346a11.53075,11.53075,0,1,1,16.30693,0"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -367,7 +367,7 @@
     </g>
   </g>
   <g
-     id="a4bdf262-2f51-45d9-8598-9de9b17f7c49"
+     id="bc3493b7-77d8-4b6a-8124-9b52f940f53d"
      data-name="FND TXT">
     <g
        id="g101">
@@ -594,124 +594,124 @@
     </g>
   </g>
   <g
-     id="be7246d7-abf6-4868-aa08-65fc722a5704"
+     id="b01d0a7e-58da-4174-a7ca-f9fd6b71e57a"
      data-name="components"
      inkscape:groupmode="layer"
      style="display:none">
     <circle
-       id="b9b7755d-6442-455f-810e-5ddda5dc11c1"
+       id="bba5fcb5-0656-4d87-9a14-62bb1e60628b"
        data-name="Period#SmallLight"
        cx="67.138443"
        cy="48.5079"
        r="3"
        style="fill:#ff00ff" />
     <circle
-       id="a0bae797-cefd-4049-b310-01f1ed50cecc"
+       id="a07eb455-7c9b-4843-a84b-81758fe3bcb8"
        data-name="Tone#PJ301MPort"
        cx="83.497223"
        cy="285.884"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="b8eda4de-81de-4332-a056-d8740b661496"
+       id="b7aad80c-43e6-4680-913c-f8cec603809f"
        data-name="Clk#PJ301MPort"
        cx="51.502731"
        cy="334"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="a48f864d-7380-4ab8-a601-bba967502420"
+       id="a99a58e3-b5fb-47e4-b223-cc28dfb63878"
        data-name="In#PJ301MPort"
        cx="19.502781"
        cy="334"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="fca14cc6-c1a3-497d-9739-2e82d1a83f4b"
+       id="bbe3a0ed-9b3a-441a-a661-84085e06ed49"
        data-name="Wet#PJ301MPort"
        cx="83.497223"
        cy="334"
        r="5"
        style="fill:#0000ff" />
     <circle
-       id="b1a0fdd8-d11c-4f2d-b5dd-9054f691e229"
+       id="a7ae4426-df0f-413c-8e3b-d037fa8a5644"
        data-name="Time#PJ301MPort"
        cx="19.502781"
        cy="286"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="bb56a479-76d9-402e-a8bd-58819f674e6e"
+       id="a00b6eaf-d649-44aa-8dd5-a2bc7d5323e8"
        data-name="Fdbck#PJ301MPort"
        cx="51.502731"
        cy="286"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="ed2a7110-be67-4bc4-a6bc-5fface5166e0"
+       id="b533782a-efe1-466a-99a1-399f9805b0d7"
        data-name="Mix#PJ301MPort"
        cx="115.49722"
        cy="285.884"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="a1291021-da6f-4a84-839e-ea0759bf9f53"
+       id="f592e13e-6a52-4bea-91df-7c9d62997e75"
        data-name="Mix#PJ301MPort"
        cx="115.49722"
        cy="334"
        r="5"
        style="fill:#0000ff" />
     <circle
-       id="b04266ee-2eb5-4970-9ccb-98f837a17773"
+       id="a6702351-c771-4531-850c-ac5ab32a8e19"
        data-name="Tone#RoundLargeBlackKnob"
        cx="37.14341"
        cy="166.5"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="a303942c-4d67-4257-a60e-03ea5251e4b4"
+       id="ece54f55-35c7-4a9a-abe4-24052957496c"
        data-name="Mix#RoundLargeBlackKnob"
        cx="97.14341"
        cy="166.5"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="a3a35a39-f467-45c1-972d-4be18b66871c"
+       id="a460104b-e938-4d45-8e42-3ea69db3c1a8"
        data-name="Time#RoundLargeBlackKnob"
        cx="37.14341"
        cy="78.977989"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="b46f2cff-2e91-4b8a-9a6d-70655ad00af3"
+       id="a9434cee-4a25-4820-accd-b49315b6505e"
        data-name="Fdbk#RoundLargeBlackKnob"
        cx="97.14341"
        cy="78.977989"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="f692f90f-2c13-42a7-a6d5-2d9c41611fa3"
+       id="b8ce3742-0bbd-418b-9e21-404f6f96584f"
        data-name="ToneCv#Trimpot"
        cx="83.497223"
        cy="237.8764"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="eb3f4bf5-36c2-404a-bedc-1fb57ec14d30"
+       id="bba8a517-fb18-490e-8333-68c3d43c69e3"
        data-name="FdbkCv#Trimpot"
        cx="51.502731"
        cy="237.8764"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="fc171fe2-8660-4af8-b72e-3a85c9cdfc95"
+       id="a0c8c458-b3f9-4916-b6f0-61b42740c3b2"
        data-name="TimeCv#Trimpot"
        cx="19.502781"
        cy="237.87637"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="bf487e0c-d2e3-4358-8ac6-2e0c2543b564"
+       id="faa359ae-ca6e-41fa-9665-9643a578f42a"
        data-name="MixCv#Trimpot"
        cx="115.49722"
        cy="237.87637"
