@@ -114,18 +114,29 @@ struct WTVCO : Module {
 		size_t pos0 = std::trunc(pos);
 		size_t pos1 = pos0 + 1;
 		// Get octave index
-		// TODO Interpolate octaves
-		size_t octave0 = clamp((int) std::trunc(octave), 0, (int) wavetable.octaves - 1);
+		float octaveF = octave - std::trunc(octave);
+		size_t octave0 = std::trunc(octave);
+		octave0 = std::min(octave0, wavetable.octaves - 1);
+		size_t octave1 = octave0 + 1;
+
 		// Linearly interpolate wave index
-		float out0 = crossfade(wavetable.interpolatedAt(octave0, pos0, index0), wavetable.interpolatedAt(octave0, pos0, index1), indexF);
+		float out = crossfade(wavetable.interpolatedAt(octave0, pos0, index0), wavetable.interpolatedAt(octave0, pos0, index1), indexF);
+		// Interpolate octave
+		// if (octaveF > 0.f && octave1 < wavetable.octaves) {
+		// 	float out1 = crossfade(wavetable.interpolatedAt(octave1, pos0, index0), wavetable.interpolatedAt(octave1, pos0, index1), indexF);
+		// 	out = crossfade(out, out1, octaveF);
+		// }
 		// Linearly interpolate position if needed
 		if (posF > 0.f) {
 			float out1 = crossfade(wavetable.interpolatedAt(octave0, pos1, index0), wavetable.interpolatedAt(octave0, pos1, index1), indexF);
-			return crossfade(out0, out1, posF);
+			// Interpolate octave
+			// if (octaveF > 0.f && octave1 < wavetable.octaves) {
+			// 	float out2 = crossfade(wavetable.interpolatedAt(octave1, pos1, index0), wavetable.interpolatedAt(octave1, pos1, index1), indexF);
+			// 	out1 = crossfade(out1, out2, octaveF);
+			// }
+			out = crossfade(out, out1, posF);
 		}
-		else {
-			return out0;
-		}
+		return out;
 	}
 
 	void process(const ProcessArgs& args) override {
