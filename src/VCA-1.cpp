@@ -71,8 +71,8 @@ struct VCA_1VUKnob : SliderKnob {
 
 		VCA_1* module = dynamic_cast<VCA_1*>(this->module);
 
-		const Vec margin = Vec(3, 3);
-		Rect r = box.zeroPos().grow(margin.neg());
+		Rect r = box.zeroPos();
+		NVGcolor bgColor = nvgRGB(0x12, 0x12, 0x12);
 
 		int channels = module ? module->lastChannels : 1;
 		engine::ParamQuantity* pq = getParamQuantity();
@@ -86,7 +86,7 @@ struct VCA_1VUKnob : SliderKnob {
 			        r.pos.y + r.size.y * (1 - value),
 			        r.size.x,
 			        r.size.y * value);
-			nvgFillColor(args.vg, color::mult(color::WHITE, 0.33));
+			nvgFillColor(args.vg, color::mult(color::WHITE, 0.25));
 			nvgFill(args.vg);
 		}
 
@@ -115,18 +115,13 @@ struct VCA_1VUKnob : SliderKnob {
 			        r.size.x + 2.0,
 			        1.0);
 		}
-		nvgFillColor(args.vg, color::BLACK);
+		nvgFillColor(args.vg, bgColor);
 		nvgFill(args.vg);
 	}
 };
 
 
 struct VCA_1Display : LedDisplay {
-	void setModule(VCA_1* module) {
-		VCA_1VUKnob* knob = createParam<VCA_1VUKnob>(mm2px(Vec(0.0, 0.0)), module, VCA_1::LEVEL_PARAM);
-		knob->box.size = mm2px(Vec(15.263, 55.88));
-		addChild(knob);
-	}
 };
 
 
@@ -147,8 +142,11 @@ struct VCA_1Widget : ModuleWidget {
 
 		VCA_1Display* display = createWidget<VCA_1Display>(mm2px(Vec(0.0, 13.039)));
 		display->box.size = mm2px(Vec(15.263, 55.88));
-		display->setModule(module);
 		addChild(display);
+
+		VCA_1VUKnob* knob = createParam<VCA_1VUKnob>(mm2px(Vec(2.253, 15.931)), module, VCA_1::LEVEL_PARAM);
+		knob->box.size = mm2px(Vec(10.734, 50.253));
+		addChild(knob);
 	}
 
 	void appendContextMenu(Menu* menu) override {

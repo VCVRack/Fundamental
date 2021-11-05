@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   xmlns:dc="http://purl.org/dc/elements/1.1/"
-   xmlns:cc="http://creativecommons.org/ns#"
-   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="45"
    height="380"
    viewBox="0 0 45 380"
    version="1.1"
-   id="svg112"
-   sodipodi:docname="VCA.svg"
-   inkscape:version="0.92.3 (2405546, 2018-03-11)">
+   id="svg60"
+   sodipodi:docname="VCA-1.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
   <metadata
-     id="metadata116">
+     id="metadata64">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
@@ -34,21 +34,22 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="716"
-     inkscape:window-height="480"
-     id="namedview114"
+     inkscape:window-width="1600"
+     inkscape:window-height="882"
+     id="namedview62"
      showgrid="false"
-     inkscape:zoom="0.62105263"
-     inkscape:cx="22.5"
-     inkscape:cy="190"
+     inkscape:zoom="1.831032"
+     inkscape:cx="8.7382416"
+     inkscape:cy="155.10379"
      inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="svg112" />
+     inkscape:window-y="18"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="eecf84db-9978-4a59-8668-617340dd9f58"
+     inkscape:pagecheckerboard="0" />
   <defs
      id="defs7">
     <linearGradient
-       id="a5a3b44e-55ec-47ae-b21b-f9bad042bdcb"
+       id="ed30176d-4121-458c-ba58-78f2b0eede37"
        x1="22.49999"
        x2="22.49999"
        y2="380"
@@ -64,16 +65,16 @@
     </linearGradient>
   </defs>
   <g
-     id="a0bab2db-694e-4656-a5ef-4e87a140906d"
+     id="bc0e1b07-a574-4121-907f-2b3b4e707b5b"
      data-name="FND BG">
     <rect
        width="44.99997"
        height="380"
-       fill="url(#a5a3b44e-55ec-47ae-b21b-f9bad042bdcb)"
+       fill="url(#ed30176d-4121-458c-ba58-78f2b0eede37)"
        id="rect9" />
   </g>
   <g
-     id="be8189d1-548b-4ea0-ab74-3f7440e44c75"
+     id="ed04c5cb-63e7-4b5d-bcd8-65fae1a66654"
      data-name="FND GRAPH">
     <line
        x1="22.49994"
@@ -128,7 +129,7 @@
        id="rect26" />
   </g>
   <g
-     id="bfdf3389-b927-4a1b-914d-3b5c56f8bf75"
+     id="b0d9b3cc-cbeb-4853-b6bd-1a10d19e86f2"
      data-name="FND TXT">
     <g
        id="g35">
@@ -173,42 +174,46 @@
     </g>
   </g>
   <g
-     id="ab392147-494d-41d2-bea9-bb620b383a92"
+     id="eecf84db-9978-4a59-8668-617340dd9f58"
      data-name="components"
      inkscape:groupmode="layer"
      style="display:none">
     <circle
-       id="b54f24fc-e0af-44c8-aa7c-1072bcdf99ff"
+       id="aed2a318-f783-4744-a1ac-df522f0cabc1"
        data-name="In#PJ301MPort"
        cx="22.5"
        cy="286"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="ff50e2c0-f73e-4344-a107-2b7513510590"
+       id="b914b80d-c7c0-4d37-ae8b-3883a59fa140"
        data-name="Vca#PJ301MPort"
        cx="22.5"
        cy="238"
        r="5"
        style="fill:#00ff00" />
     <circle
-       id="ad29ab0d-8aea-4d50-b713-e96644aa1a84"
+       id="a203c5a8-5ce9-47ea-80d4-502687b1df35"
        data-name="Out#PJ301MPort"
        cx="22.5"
        cy="334"
        r="5"
        style="fill:#0000ff" />
-    <g
-       id="f7d4c797-5363-4495-b452-6bb4b667351b"
-       data-name="Screen">
-      <rect
-         y="38.5"
-         width="45"
-         height="165"
-         rx="0.059179999"
-         id="rect108"
-         x="0"
-         style="fill:#ffff00" />
-    </g>
+    <rect
+       y="38.5"
+       width="45"
+       height="165"
+       rx="0.059179999"
+       id="rect55"
+       x="0"
+       style="fill:#ffff00;fill-opacity:1" />
+    <rect
+       id="a7d34c10-d0f5-4d64-a4ae-acb03eea9939"
+       data-name="B"
+       x="6.6519499"
+       y="47.04084"
+       width="31.69611"
+       height="148.38467"
+       style="fill:#ffff00;fill-opacity:1" />
   </g>
 </svg>
