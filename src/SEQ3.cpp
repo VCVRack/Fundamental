@@ -95,7 +95,7 @@ struct SEQ3 : Module {
 		for (int j = 0; j < 3; j++) {
 			configOutput(CV_OUTPUTS + j, string::f("CV %d", j + 1));
 		}
-		configOutput(GATE_OUTPUT, "Gate");
+		configOutput(GATE_OUTPUT, "Trigger");
 		configOutput(STEPS_OUTPUT, "Steps");
 		configOutput(CLOCK_OUTPUT, "Clock");
 		configOutput(RUN_OUTPUT, "Run");
