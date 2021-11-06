@@ -8,8 +8,8 @@ struct Random : Module {
 		OFFSET_PARAM,
 		MODE_PARAM,
 		// new in 2.0
-		PROB_PARAM, // TODO
-		RAND_PARAM, // TODO
+		PROB_PARAM,
+		RAND_PARAM,
 		RATE_CV_PARAM,
 		SHAPE_CV_PARAM,
 		PROB_CV_PARAM,
@@ -19,7 +19,7 @@ struct Random : Module {
 	enum InputIds {
 		RATE_INPUT,
 		SHAPE_INPUT,
-		TRIGGER_INPUT,
+		TRIG_INPUT,
 		EXTERNAL_INPUT,
 		// new in 2.0
 		PROB_INPUT,
@@ -32,7 +32,7 @@ struct Random : Module {
 		SMOOTH_OUTPUT,
 		EXPONENTIAL_OUTPUT,
 		// new in 2.0
-		GATE_OUTPUT, // TODO
+		TRIG_OUTPUT,
 		NUM_OUTPUTS
 	};
 	enum LightIds {
@@ -44,101 +44,112 @@ struct Random : Module {
 		NUM_LIGHTS
 	};
 
-	dsp::SchmittTrigger trigTrigger;
-	dsp::BooleanTrigger offsetTrigger;
-	float lastValue = 0.f;
-	float value = 0.f;
+	float lastVoltage = 0.f;
+	float nextVoltage = 0.f;
+	/** Waits at 1 until reset */
+	float phase = 0.f;
+	float clockFreq = 0.f;
+	/** Internal clock phase */
 	float clockPhase = 0.f;
-	int trigFrame = 0;
-	int lastTrigFrames = INT_MAX;
+	/** External clock timer */
+	dsp::Timer clockTimer;
+	dsp::SchmittTrigger clockTrigger;
+	dsp::PulseGenerator trigGenerator;
 
 	Random() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(RATE_PARAM, std::log2(0.002f), std::log2(2000.f), std::log2(2.f), "Rate", " Hz", 2);
+		configParam(RATE_PARAM, std::log2(0.002f), std::log2(2000.f), std::log2(2.f), "Clock rate", " Hz", 2);
 		configParam(SHAPE_PARAM, 0.f, 1.f, 1.f, "Shape", "%", 0, 100);
-		configParam(PROB_PARAM, 0.f, 1.f, 1.f, "Probability", "%", 0, 100);
-		configParam(RAND_PARAM, 0.f, 1.f, 1.f, "Randomness", "%", 0, 100);
+		configParam(PROB_PARAM, 0.f, 1.f, 1.f, "Trigger probability", "%", 0, 100);
+		configParam(RAND_PARAM, 0.f, 1.f, 1.f, "Random spread", "%", 0, 100);
 
-		configParam(RATE_CV_PARAM, -1.f, 1.f, 0.f, "Rate CV", "%", 0, 100);
+		configParam(RATE_CV_PARAM, -1.f, 1.f, 0.f, "Clock rate CV", "%", 0, 100);
 		getParamQuantity(RATE_CV_PARAM)->randomizeEnabled = false;
 		configParam(SHAPE_CV_PARAM, -1.f, 1.f, 0.f, "Shape CV", "%", 0, 100);
 		getParamQuantity(SHAPE_CV_PARAM)->randomizeEnabled = false;
-		configParam(PROB_CV_PARAM, -1.f, 1.f, 0.f, "Probability CV", "%", 0, 100);
+		configParam(PROB_CV_PARAM, -1.f, 1.f, 0.f, "Trigger probability CV", "%", 0, 100);
 		getParamQuantity(PROB_CV_PARAM)->randomizeEnabled = false;
-		configParam(RAND_CV_PARAM, -1.f, 1.f, 0.f, "Randomness CV", "%", 0, 100);
+		configParam(RAND_CV_PARAM, -1.f, 1.f, 0.f, "Random spread CV", "%", 0, 100);
 		getParamQuantity(RAND_CV_PARAM)->randomizeEnabled = false;
 
 		configSwitch(OFFSET_PARAM, 0.f, 1.f, 0.f, "Offset", {"Bipolar", "Unipolar"});
 
-		configInput(RATE_INPUT, "Rate");
+		configInput(RATE_INPUT, "Clock rate");
 		configInput(SHAPE_INPUT, "Shape");
-		configInput(PROB_INPUT, "Probability");
-		configInput(RAND_INPUT, "Randomness");
-		configInput(TRIGGER_INPUT, "Trigger");
+		configInput(PROB_INPUT, "Trigger probability");
+		configInput(RAND_INPUT, "Random spread");
+		configInput(TRIG_INPUT, "Trigger");
 		configInput(EXTERNAL_INPUT, "External");
 
 		configOutput(STEPPED_OUTPUT, "Stepped");
 		configOutput(LINEAR_OUTPUT, "Linear");
 		configOutput(SMOOTH_OUTPUT, "Smooth");
 		configOutput(EXPONENTIAL_OUTPUT, "Exponential");
-		configOutput(GATE_OUTPUT, "Gate");
-	}
-
-	void trigger() {
-		lastValue = value;
-		if (inputs[EXTERNAL_INPUT].isConnected()) {
-			value = inputs[EXTERNAL_INPUT].getVoltage() / 10.f;
-		}
-		else {
-			// Choose a new random value
-			bool absolute = params[MODE_PARAM].getValue() > 0.f;
-			bool uni = params[OFFSET_PARAM].getValue() > 0.f;
-			if (absolute) {
-				value = random::uniform();
-				if (!uni)
-					value -= 0.5f;
-			}
-			else {
-				// Switch to uni if bi
-				if (!uni)
-					value += 0.5f;
-				float deltaValue = random::normal();
-				// Bias based on value
-				deltaValue -= (value - 0.5f) * 2.f;
-				// Scale delta and accumulate value
-				const float stdDev = 1 / 10.f;
-				deltaValue *= stdDev;
-				value += deltaValue;
-				value = clamp(value, 0.f, 1.f);
-				// Switch back to bi
-				if (!uni)
-					value -= 0.5f;
-			}
-		}
-		lights[RATE_LIGHT].setBrightness(3.f);
+		configOutput(TRIG_OUTPUT, "Trigger");
 	}
 
 	void process(const ProcessArgs& args) override {
-		if (inputs[TRIGGER_INPUT].isConnected()) {
-			// Advance clock phase based on tempo estimate
-			trigFrame++;
-			float deltaPhase = 1.f / lastTrigFrames;
-			clockPhase += deltaPhase;
-			clockPhase = std::min(clockPhase, 1.f);
-			// Trigger
-			if (trigTrigger.process(rescale(inputs[TRIGGER_INPUT].getVoltage(), 0.1f, 2.f, 0.f, 1.f))) {
-				clockPhase = 0.f;
-				lastTrigFrames = trigFrame;
-				trigFrame = 0;
+		// Params
+		float shape = params[SHAPE_PARAM].getValue();
+		shape += inputs[SHAPE_INPUT].getVoltage() / 10.f * params[SHAPE_CV_PARAM].getValue();
+		shape = clamp(shape, 0.f, 1.f);
+
+		float rand = params[RAND_PARAM].getValue();
+		rand += inputs[RAND_INPUT].getVoltage() / 10.f * params[RAND_CV_PARAM].getValue();
+		rand = clamp(rand, 0.f, 1.f);
+
+		bool uni = params[OFFSET_PARAM].getValue() > 0.f;
+
+		auto trigger = [&]() {
+			float prob = params[PROB_PARAM].getValue();
+			prob += inputs[PROB_INPUT].getVoltage() / 10.f * params[PROB_CV_PARAM].getValue();
+			prob = clamp(prob, 0.f, 1.f);
+
+			lights[RATE_LIGHT].setBrightness(3.f);
+
+			// Probabilistic trigger
+			if (prob < 1.f && random::uniform() > prob)
+				return;
+
+			// Generate next random voltage
+			lastVoltage = nextVoltage;
+			if (inputs[EXTERNAL_INPUT].isConnected()) {
+				nextVoltage = inputs[EXTERNAL_INPUT].getVoltage();
+			}
+			else {
+				// Crossfade new random voltage with last
+				float v = 10.f * random::uniform();
+				if (!uni)
+					v -= 5.f;
+				nextVoltage = crossfade(nextVoltage, v, rand);
+			}
+
+			phase = 0.f;
+
+			trigGenerator.trigger(1e-3f);
+			lights[PROB_LIGHT].setBrightness(3.f);
+		};
+
+		// Trigger or internal clock
+		float deltaPhase;
+
+		if (inputs[TRIG_INPUT].isConnected()) {
+			clockTimer.process(args.sampleTime);
+
+			if (clockTrigger.process(inputs[TRIG_INPUT].getVoltage(), 0.1f, 2.f)) {
+				clockFreq = 1.f / clockTimer.getTime();
+				clockTimer.reset();
 				trigger();
 			}
+
+			deltaPhase = std::fmin(clockFreq * args.sampleTime, 0.5f);
 		}
 		else {
 			// Advance clock phase by rate
 			float rate = params[RATE_PARAM].getValue();
 			rate += inputs[RATE_PARAM].getVoltage() * params[RATE_CV_PARAM].getValue();
-			float clockFreq = std::pow(2.f, rate);
-			float deltaPhase = std::fmin(clockFreq * args.sampleTime, 0.5f);
+			clockFreq = std::pow(2.f, rate);
+			deltaPhase = std::fmin(clockFreq * args.sampleTime, 0.5f);
 			clockPhase += deltaPhase;
 			// Trigger
 			if (clockPhase >= 1.f) {
@@ -147,25 +158,16 @@ struct Random : Module {
 			}
 		}
 
-		// Params
-		float shape = params[SHAPE_PARAM].getValue();
-		shape += inputs[SHAPE_INPUT].getVoltage() / 10.f * params[SHAPE_CV_PARAM].getValue();
-		shape = clamp(shape, 0.f, 1.f);
-
-		float prob = params[PROB_PARAM].getValue();
-		prob += inputs[PROB_INPUT].getVoltage() / 10.f * params[PROB_CV_PARAM].getValue();
-		prob = clamp(prob, 0.f, 1.f);
-
-		float rand = params[RAND_PARAM].getValue();
-		rand += inputs[RAND_INPUT].getVoltage() / 10.f * params[RAND_CV_PARAM].getValue();
-		rand = clamp(rand, 0.f, 1.f);
+		// Advance phase
+		phase += deltaPhase;
+		phase = std::min(1.f, phase);
 
 		// Stepped
 		if (outputs[STEPPED_OUTPUT].isConnected()) {
 			float steps = std::ceil(std::pow(shape, 2) * 15 + 1);
-			float v = std::ceil(clockPhase * steps) / steps;
-			v = rescale(v, 0.f, 1.f, lastValue, value);
-			outputs[STEPPED_OUTPUT].setVoltage(v * 10.f);
+			float v = std::ceil(phase * steps) / steps;
+			v = rescale(v, 0.f, 1.f, lastVoltage, nextVoltage);
+			outputs[STEPPED_OUTPUT].setVoltage(v);
 		}
 
 		// Linear
@@ -173,13 +175,13 @@ struct Random : Module {
 			float slope = 1 / shape;
 			float v;
 			if (slope < 1e6f) {
-				v = std::fmin(clockPhase * slope, 1.f);
+				v = std::fmin(phase * slope, 1.f);
 			}
 			else {
 				v = 1.f;
 			}
-			v = rescale(v, 0.f, 1.f, lastValue, value);
-			outputs[LINEAR_OUTPUT].setVoltage(v * 10.f);
+			v = rescale(v, 0.f, 1.f, lastVoltage, nextVoltage);
+			outputs[LINEAR_OUTPUT].setVoltage(v);
 		}
 
 		// Smooth
@@ -187,39 +189,42 @@ struct Random : Module {
 			float p = 1 / shape;
 			float v;
 			if (p < 1e6f) {
-				v = std::fmin(clockPhase * p, 1.f);
+				v = std::fmin(phase * p, 1.f);
 				v = std::cos(M_PI * v);
 			}
 			else {
 				v = -1.f;
 			}
-			v = rescale(v, 1.f, -1.f, lastValue, value);
-			outputs[SMOOTH_OUTPUT].setVoltage(v * 10.f);
+			v = rescale(v, 1.f, -1.f, lastVoltage, nextVoltage);
+			outputs[SMOOTH_OUTPUT].setVoltage(v);
 		}
 
 		// Exp
 		if (outputs[EXPONENTIAL_OUTPUT].isConnected()) {
-			float b = std::pow(shape, 4);
+			float b = std::pow(shape, 8);
 			float v;
 			if (0.999f < b) {
-				v = clockPhase;
+				v = phase;
 			}
 			else if (1e-20f < b) {
-				v = (std::pow(b, clockPhase) - 1.f) / (b - 1.f);
+				v = (std::pow(b, phase) - 1.f) / (b - 1.f);
 			}
 			else {
 				v = 1.f;
 			}
-			v = rescale(v, 0.f, 1.f, lastValue, value);
-			outputs[EXPONENTIAL_OUTPUT].setVoltage(v * 10.f);
+			v = rescale(v, 0.f, 1.f, lastVoltage, nextVoltage);
+			outputs[EXPONENTIAL_OUTPUT].setVoltage(v);
 		}
+
+		// Trigger output
+		outputs[TRIG_OUTPUT].setVoltage(trigGenerator.process(args.sampleTime) ? 0.f : 10.f);
 
 		// Lights
 		lights[RATE_LIGHT].setSmoothBrightness(0.f, args.sampleTime);
-		lights[SHAPE_LIGHT].setBrightness(shape);
-		lights[PROB_LIGHT].setBrightness(prob);
+		lights[PROB_LIGHT].setSmoothBrightness(0.f, args.sampleTime);
 		lights[RAND_LIGHT].setBrightness(rand);
-		// lights[OFFSET_LIGHT].setBrightness(uni);
+		lights[SHAPE_LIGHT].setBrightness(shape);
+		lights[OFFSET_LIGHT].setBrightness(uni);
 	}
 
 	void paramsFromJson(json_t* rootJ) override {
@@ -257,10 +262,10 @@ struct RandomWidget : ModuleWidget {
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.317, 80.549)), module, Random::PROB_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.154, 80.553)), module, Random::RAND_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(38.991, 80.557)), module, Random::SHAPE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.479, 96.859)), module, Random::TRIGGER_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.479, 96.859)), module, Random::TRIG_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.317, 96.859)), module, Random::EXTERNAL_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(38.991, 96.859)), module, Random::GATE_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(38.991, 96.859)), module, Random::TRIG_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.479, 113.115)), module, Random::STEPPED_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(17.317, 113.115)), module, Random::LINEAR_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.154, 113.115)), module, Random::EXPONENTIAL_OUTPUT));
