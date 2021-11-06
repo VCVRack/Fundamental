@@ -11,11 +11,11 @@
    height="380"
    viewBox="0 0 45 380"
    version="1.1"
-   id="svg157"
+   id="svg96"
    sodipodi:docname="SUM.svg"
    inkscape:version="0.92.3 (2405546, 2018-03-11)">
   <metadata
-     id="metadata161">
+     id="metadata100">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
@@ -34,21 +34,21 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="716"
-     inkscape:window-height="480"
-     id="namedview159"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     id="namedview98"
      showgrid="false"
      inkscape:zoom="0.62105263"
      inkscape:cx="22.5"
      inkscape:cy="190"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="svg157" />
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg96" />
   <defs
      id="defs7">
     <linearGradient
-       id="e509ed03-3e7a-4bf0-b112-8953fd9c9775"
+       id="e54ef980-998c-4ad0-9676-a26d002d49f9"
        x1="22.5"
        x2="22.5"
        y2="380"
@@ -64,16 +64,16 @@
     </linearGradient>
   </defs>
   <g
-     id="e43c32f6-37e3-4701-b556-233516132173"
+     id="ec51bad8-ff72-4de2-83f7-8c803837db07"
      data-name="FND BG">
     <rect
        width="45"
        height="380"
-       fill="url(#e509ed03-3e7a-4bf0-b112-8953fd9c9775)"
+       fill="url(#e54ef980-998c-4ad0-9676-a26d002d49f9)"
        id="rect9" />
   </g>
   <g
-     id="fa768f65-e8a9-46f3-bda4-9b2b960338f2"
+     id="bebc0bf4-a7d7-4ee3-bba3-1050ddfd9430"
      data-name="FND GRAPH">
     <line
        x1="22.49996"
@@ -136,7 +136,7 @@
     </g>
   </g>
   <g
-     id="fb31f872-9bbc-4f1f-8c21-ce6096fd2f54"
+     id="f10b78a7-ee01-4633-b2a4-ed03e2375577"
      data-name="FND TXT">
     <g
        id="g43">
@@ -235,33 +235,33 @@
     </g>
   </g>
   <g
-     id="aea13535-2995-48dc-be35-21ac33feada0"
+     id="b2b0bacb-d797-4a3e-bbde-0f62b55dc04c"
      data-name="components"
      inkscape:groupmode="layer"
      style="display:none">
     <circle
-       id="e71c2f6a-80ae-4d3f-993d-8b31e3464a89"
+       id="a57cab38-dc0f-49d0-a87e-7576dd252177"
        data-name="Sum#RoundBlackKnob"
        cx="22.49996"
        cy="189.81477"
        r="5"
        style="fill:#ff0000" />
     <circle
-       id="f0e67f4f-da74-424e-be98-4acc32b4b484"
+       id="bba5359c-bf46-4a7e-8793-a5f2ba9a7428"
        data-name="Mono#PJ301MPort"
        cx="22.49996"
        cy="333.85507"
        r="5"
        style="fill:#0000ff" />
     <circle
-       id="ab06248d-722e-4beb-8df5-aa2b519cbad8"
+       id="a5c0d832-a420-420f-99ee-5e202ab983e0"
        data-name="Poly#PJ301MPort"
        cx="22.49996"
        cy="285.8197"
        r="5"
        style="fill:#00ff00" />
     <rect
-       id="f44d6e48-6050-4fa6-9b46-ba41a9730e37"
+       id="e46370ec-613d-4e9e-9b2b-5a1e20a8bfa2"
        data-name="Chan"
        x="10.39802"
        y="227.92471"
@@ -269,48 +269,54 @@
        height="24.20389"
        style="fill:#ffff00" />
     <rect
-       id="f61601c3-9739-41d0-b635-5ca43072e29e"
+       id="f4b15c7a-97b4-42b2-84b1-640e3beb9fe8"
        data-name="Screen"
        x="-0.00327"
        y="37.89547"
        width="45.003269"
        height="109.19598"
        style="fill:#ffff00" />
-    <path
-       id="b20cdc2b-3590-4f39-ae7a-2cbb28b0cf6b"
-       data-name="LRed#RedLight"
-       d="m 31.91516,50.35079 a 2.9572,2.9572 0 1 0 2.95678,2.95761 2.95725,2.95725 0 0 0 -2.95678,-2.95761"
-       inkscape:connector-curvature="0"
+    <circle
+       id="b40f0d39-aecc-4448-a725-1481521321de"
+       data-name="Red#RedLight"
+       cx="31.91474"
+       cy="53.387989"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="adc61a94-6685-4f42-b721-79a2fffe2ed5"
-       data-name="LYellow#RedLight"
-       d="M 31.91516,65.993 A 2.9572,2.9572 0 1 0 34.87194,68.95061 2.95724,2.95724 0 0 0 31.91516,65.993"
-       inkscape:connector-curvature="0"
+    <circle
+       id="f11f670a-9581-4474-a437-a87fbfe729a8"
+       data-name="Yellow#RedLight"
+       cx="31.91474"
+       cy="69.030182"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="b46df729-be42-44fe-82bb-9b9abe55e8a8"
-       data-name="LGreen1#RedLight"
-       d="m 31.91516,81.63517 a 2.9572,2.9572 0 1 0 2.95678,2.95761 2.95724,2.95724 0 0 0 -2.95678,-2.95761"
-       inkscape:connector-curvature="0"
+    <circle
+       id="e2021c3a-9ef0-4513-8bbd-da2a88f4ad91"
+       data-name="Green4#RedLight"
+       cx="31.91474"
+       cy="84.672371"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="b3259563-173e-40ba-abbe-00631037bd13"
-       data-name="LGreen2#RedLight"
-       d="m 31.91516,97.27736 a 2.9572,2.9572 0 1 0 2.95678,2.95761 2.95724,2.95724 0 0 0 -2.95678,-2.95761"
-       inkscape:connector-curvature="0"
+    <circle
+       id="e4d66ba5-1ff1-4394-bff1-2f4e295b0cbb"
+       data-name="Green3#RedLight"
+       cx="31.91474"
+       cy="100.31456"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="fac160a6-d61a-4098-9d92-09892335b497"
-       data-name="LGreen3#RedLight"
-       d="m 31.91516,112.91955 a 2.9572,2.9572 0 1 0 2.95678,2.95761 2.95724,2.95724 0 0 0 -2.95678,-2.95761"
-       inkscape:connector-curvature="0"
+    <circle
+       id="e768e54f-c849-4b91-8a38-97a2f787922e"
+       data-name="Green2#RedLight"
+       cx="31.91474"
+       cy="115.95675"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="eae08627-6579-421b-a3b2-1220f1bc46ad"
-       data-name="LGreen4#RedLight"
-       d="m 31.91516,128.56173 a 2.9572,2.9572 0 1 0 2.95678,2.95762 2.95725,2.95725 0 0 0 -2.95678,-2.95762"
-       inkscape:connector-curvature="0"
+    <circle
+       id="a33eb0a6-ef53-4f82-ad2d-a715ceed9f28"
+       data-name="Green1#RedLight"
+       cx="31.91474"
+       cy="131.59892"
+       r="3"
        style="fill:#ff00ff" />
   </g>
 </svg>

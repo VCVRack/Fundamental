@@ -54,7 +54,7 @@ struct DigitalDisplay : Widget {
 
 		// Get font
 		std::shared_ptr<Font> font = APP->window->loadFont(fontPath);
-		if (font->handle < 0)
+		if (!font)
 			return;
 		nvgFontFaceId(args.vg, font->handle);
 		nvgFontSize(args.vg, fontSize);
@@ -74,7 +74,7 @@ struct DigitalDisplay : Widget {
 
 struct ChannelDisplay : DigitalDisplay {
 	ChannelDisplay() {
-		fontPath = asset::plugin(pluginInstance, "res/DSEG7ClassicMini-BoldItalic.ttf");
+		fontPath = asset::system("res/fonts/DSEG7ClassicMini-BoldItalic.ttf");
 		textPos = Vec(22, 20);
 		bgText = "18";
 		fontSize = 16;

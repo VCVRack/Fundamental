@@ -11,11 +11,11 @@
    height="380"
    viewBox="0 0 45 380"
    version="1.1"
-   id="svg154"
+   id="svg61"
    sodipodi:docname="VIZ.svg"
    inkscape:version="0.92.3 (2405546, 2018-03-11)">
   <metadata
-     id="metadata158">
+     id="metadata65">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
@@ -34,21 +34,21 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="716"
-     inkscape:window-height="480"
-     id="namedview156"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     id="namedview63"
      showgrid="false"
      inkscape:zoom="0.62105263"
      inkscape:cx="22.5"
      inkscape:cy="190"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="0"
-     inkscape:current-layer="svg154" />
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg61" />
   <defs
      id="defs7">
     <linearGradient
-       id="a7c85910-efa2-49be-b51d-63d3f80a4577"
+       id="e51cf18d-cbcc-4a37-8e86-eac6c9ff20cc"
        x1="22.5"
        x2="22.5"
        y2="380"
@@ -64,16 +64,16 @@
     </linearGradient>
   </defs>
   <g
-     id="b13fbb94-2523-43f1-8b7b-76c02900e16c"
+     id="ab1c627f-f4bd-4991-a619-92cd42dfe24d"
      data-name="FND BG">
     <rect
        width="45"
        height="380"
-       fill="url(#a7c85910-efa2-49be-b51d-63d3f80a4577)"
+       fill="url(#e51cf18d-cbcc-4a37-8e86-eac6c9ff20cc)"
        id="rect9" />
   </g>
   <g
-     id="b87e7f95-1233-4dde-a5c0-e29fb2f84614"
+     id="ae4da3dd-d5fd-4864-af3a-a88f6d045cc8"
      data-name="FND GRAPH">
     <g
        id="g20">
@@ -98,7 +98,7 @@
     </g>
   </g>
   <g
-     id="b148c7a9-98ae-44fd-9639-16f535c2406c"
+     id="fc7f0e2d-bc53-4e06-a543-8c081ebd28b0"
      data-name="FND TXT">
     <g
        id="g31">
@@ -133,120 +133,136 @@
     </g>
   </g>
   <g
-     id="b7f3c585-bc80-4700-89be-f9c3dbe33dbd"
+     id="bbfdc750-ac0d-4211-9004-81dfe88faaf5"
      data-name="components"
      inkscape:groupmode="layer"
      style="display:none">
     <circle
-       id="b316d787-fbe9-48b7-af86-7b559295a9a0"
+       id="b4de3f96-b2af-4ba9-bebc-598837f5f896"
        data-name="Poly#PJ301MPort"
        cx="22.500031"
        cy="334"
        r="5"
        style="fill:#00ff00" />
     <rect
-       id="ec9dac3c-8600-4714-ac89-1ca8235b202d"
+       id="f5a34085-32b5-4891-858b-a90bfd36737a"
        data-name="Screen"
        x="0.0094299996"
        y="38.5"
        width="44.99057"
        height="263.81198"
        style="fill:#ffff00" />
-    <path
-       id="a738cb83-2bec-4c75-ad4b-f3faa67405e3"
+    <circle
+       id="e0c163ef-7e34-4bf1-8a93-f3daa2aae854"
        data-name="Viz01#RedLight"
-       d="m 32.06413,50.35079 a 2.9572,2.9572 0 1 0 2.95678,2.95761 2.95726,2.95726 0 0 0 -2.95678,-2.95761"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="53.350788"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="be0c28f2-d866-4418-8214-6c352f6b1a6d"
+    <circle
+       id="bbca0620-65d4-4ef6-978c-b02fa119ff06"
        data-name="Viz02#RedLight"
-       d="M 32.06413,65.993 A 2.9572,2.9572 0 1 0 35.02091,68.95061 2.95726,2.95726 0 0 0 32.06413,65.993"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="68.992981"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="e85e0c58-aa6b-4289-af1c-3011309e1e2d"
+    <circle
+       id="bfa83c8b-2027-40f7-b9da-767acb75ae82"
        data-name="Viz03#RedLight"
-       d="m 32.06413,81.63517 a 2.9572,2.9572 0 1 0 2.95678,2.95761 2.95725,2.95725 0 0 0 -2.95678,-2.95761"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="84.63517"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="bd060286-7cf5-4364-a6f0-f97535566d3b"
+    <circle
+       id="a05bc1b4-f343-429d-a231-e2960c953cd1"
        data-name="Viz04#RedLight"
-       d="m 32.06413,97.27736 a 2.9572,2.9572 0 1 0 2.95678,2.95761 2.95725,2.95725 0 0 0 -2.95678,-2.95761"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="100.27736"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="a2a5d779-761f-40c8-8b34-165ba96232ef"
+    <circle
+       id="eb8ec47a-f865-4330-bd76-42ed31263893"
        data-name="Viz05#RedLight"
-       d="m 32.06413,112.91955 a 2.9572,2.9572 0 1 0 2.95678,2.95761 2.95725,2.95725 0 0 0 -2.95678,-2.95761"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="115.91954"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="f1d5e052-5737-49c1-b5d8-86c945792406"
+    <circle
+       id="e5d109f2-8a6c-4bd5-a409-539afa7e6e56"
        data-name="Viz06#RedLight"
-       d="m 32.06413,128.56173 a 2.9572,2.9572 0 1 0 2.95678,2.95762 2.95727,2.95727 0 0 0 -2.95678,-2.95762"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="131.56174"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="b1d22013-9978-4d5e-b9ab-b78b3ef18f74"
+    <circle
+       id="e870f9cb-2a54-4c5b-86cb-88ddf4637079"
        data-name="Viz07#RedLight"
-       d="m 32.06413,144.20392 a 2.9572,2.9572 0 1 0 2.95678,2.95762 2.95727,2.95727 0 0 0 -2.95678,-2.95762"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="147.39961"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="b4aa208f-29f3-4f29-8b76-cf6911e754e7"
+    <circle
+       id="e0fca2a7-4795-43dc-85f1-610057341fe6"
        data-name="Viz08#RedLight"
-       d="m 32.06413,159.84611 a 2.9572,2.9572 0 1 0 2.95678,2.95762 2.95727,2.95727 0 0 0 -2.95678,-2.95762"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="163.04179"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="fb234c65-d014-4d90-b008-a118c103c162"
+    <circle
+       id="a45246e7-e170-42d0-b0d4-31d4f33afed5"
        data-name="Viz09#RedLight"
-       d="m 32.06413,175.4883 a 2.9572,2.9572 0 1 0 2.95678,2.95762 2.95727,2.95727 0 0 0 -2.95678,-2.95762"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="178.68399"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="bcc91c36-0d79-434c-8b71-a61a285ec8b2"
+    <circle
+       id="e192849b-3ccb-4674-a3fc-221cc6151347"
        data-name="Viz10#RedLight"
-       d="m 32.06413,191.13049 a 2.9572,2.9572 0 1 0 2.95678,2.95761 2.95726,2.95726 0 0 0 -2.95678,-2.95761"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="194.32617"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="ff26f033-6c49-4097-9c80-513ecb0d37ae"
+    <circle
+       id="a1be30e3-5ba4-4b64-a90f-85649fd4931d"
        data-name="Viz11#RedLight"
-       d="m 32.06413,206.77268 a 2.9572,2.9572 0 1 0 2.95678,2.95761 2.95726,2.95726 0 0 0 -2.95678,-2.95761"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="209.96835"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="b167d49e-5d45-4a75-9619-ee0b949dffba"
+    <circle
+       id="b63b74f8-fc43-4c8b-abc4-93a7495bebb1"
        data-name="Viz12#RedLight"
-       d="m 32.06413,222.41487 a 2.9572,2.9572 0 1 0 2.95678,2.95761 2.95726,2.95726 0 0 0 -2.95678,-2.95761"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="225.80624"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="e7e19aaa-128a-408c-b3e8-326320883bbd"
+    <circle
+       id="b1eb3a5d-94d0-4255-a5b8-da4caa2985f2"
        data-name="Viz13#RedLight"
-       d="m 32.06413,238.05706 a 2.9572,2.9572 0 1 0 2.95678,2.95761 2.95725,2.95725 0 0 0 -2.95678,-2.95761"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="241.44843"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="b0b208d4-3cbd-4123-a6cd-a37202080f38"
+    <circle
+       id="a08a28fa-79bd-40ab-a361-b2840882dd90"
        data-name="Viz14#RedLight"
-       d="m 32.06413,253.69925 a 2.9572,2.9572 0 1 0 2.95678,2.95761 2.95725,2.95725 0 0 0 -2.95678,-2.95761"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="257.09061"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="f363b55a-6ce5-48f0-b481-c589380adc0c"
+    <circle
+       id="a9ad23b6-5301-440e-b20a-b56db0a9f7b7"
        data-name="Viz15#RedLight"
-       d="m 32.06413,269.34143 a 2.9572,2.9572 0 1 0 2.95678,2.95762 2.95727,2.95727 0 0 0 -2.95678,-2.95762"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="272.73279"
+       r="3"
        style="fill:#ff00ff" />
-    <path
-       id="fd7b9cfd-8efe-4008-a366-7629c9ec33ee"
+    <circle
+       id="e4ed2f79-c9a5-4fa3-928d-fbc9e7c00736"
        data-name="Viz16#RedLight"
-       d="m 32.06413,284.98362 a 2.9572,2.9572 0 1 0 2.95678,2.95762 2.95727,2.95727 0 0 0 -2.95678,-2.95762"
-       inkscape:connector-curvature="0"
+       cx="32.024879"
+       cy="288.375"
+       r="3"
        style="fill:#ff00ff" />
   </g>
 </svg>

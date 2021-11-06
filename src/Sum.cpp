@@ -89,6 +89,13 @@ struct SumWidget : ModuleWidget {
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.066)), module, Sum::MONO_OUTPUT));
 
+		addChild(createLightCentered<RedLight>(mm2px(Vec(10.808, 18.081)), module, Sum::VU_LIGHTS + 0));
+		addChild(createLightCentered<RedLight>(mm2px(Vec(10.808, 23.378)), module, Sum::VU_LIGHTS + 1));
+		addChild(createLightCentered<RedLight>(mm2px(Vec(10.808, 28.676)), module, Sum::VU_LIGHTS + 2));
+		addChild(createLightCentered<RedLight>(mm2px(Vec(10.808, 33.973)), module, Sum::VU_LIGHTS + 3));
+		addChild(createLightCentered<RedLight>(mm2px(Vec(10.808, 39.271)), module, Sum::VU_LIGHTS + 4));
+		addChild(createLightCentered<RedLight>(mm2px(Vec(10.808, 44.568)), module, Sum::VU_LIGHTS + 5));
+
 		SumDisplay* display = createWidget<SumDisplay>(mm2px(Vec(0.0, 12.834)));
 		display->box.size = mm2px(Vec(15.241, 36.981));
 		display->module = module;

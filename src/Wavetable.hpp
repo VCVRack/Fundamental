@@ -313,7 +313,10 @@ struct WTDisplay : LedDisplay {
 			float lastPos = module ? module->lastPos : 0.f;
 
 			// Draw filename text
-			std::shared_ptr<Font> font = APP->window->loadFont(asset::system("res/fonts/ShareTechMono-Regular.ttf"));
+			std::string fontPath = asset::system("res/fonts/ShareTechMono-Regular.ttf");
+			std::shared_ptr<Font> font = APP->window->loadFont(fontPath);
+			if (!font)
+				return;
 			nvgFontSize(args.vg, 13);
 			nvgFontFaceId(args.vg, font->handle);
 			nvgFillColor(args.vg, SCHEME_YELLOW);

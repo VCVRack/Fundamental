@@ -205,7 +205,7 @@ struct ScopeDisplay : LedDisplay {
 	Stats statsX, statsY;
 
 	ScopeDisplay() {
-		fontPath = asset::plugin(pluginInstance, "res/sudo/Sudo.ttf");
+		fontPath = asset::system("res/fonts/ShareTechMono-Regular.ttf");
 	}
 
 	void drawWaveform(const DrawArgs& args, float* bufferX, float offsetX, float gainX, float* bufferY, float offsetY, float gainY) {
@@ -269,15 +269,19 @@ struct ScopeDisplay : LedDisplay {
 		nvgFill(args.vg);
 
 		std::shared_ptr<Font> font = APP->window->loadFont(fontPath);
-		nvgFontSize(args.vg, 9);
-		nvgFontFaceId(args.vg, font->handle);
-		nvgFillColor(args.vg, nvgRGBA(0x1e, 0x28, 0x2b, 0xff));
-		nvgText(args.vg, p.x - 8, p.y + 3, "T", NULL);
+		if (font) {
+			nvgFontSize(args.vg, 9);
+			nvgFontFaceId(args.vg, font->handle);
+			nvgFillColor(args.vg, nvgRGBA(0x1e, 0x28, 0x2b, 0xff));
+			nvgText(args.vg, p.x - 8, p.y + 3, "T", NULL);
+		}
 		nvgResetScissor(args.vg);
 	}
 
 	void drawStats(const DrawArgs& args, Vec pos, const char* title, Stats* stats) {
 		std::shared_ptr<Font> font = APP->window->loadFont(fontPath);
+		if (!font)
+			return;
 		nvgFontSize(args.vg, 13);
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextLetterSpacing(args.vg, -2);
