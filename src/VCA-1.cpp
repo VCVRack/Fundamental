@@ -91,32 +91,32 @@ struct VCA_1VUKnob : SliderKnob {
 		}
 
 		// Segment gain
-		nvgBeginPath(args.vg);
 		for (int c = 0; c < channels; c++) {
 			float gain = module ? module->lastGains[c] : 1.f;
 			if (gain >= 0.005f) {
+				nvgBeginPath(args.vg);
 				nvgRect(args.vg,
 				        r.pos.x + r.size.x * c / channels,
 				        r.pos.y + r.size.y * (1 - gain),
 				        r.size.x / channels,
 				        r.size.y * gain);
+				nvgFillColor(args.vg, SCHEME_YELLOW);
+				nvgFill(args.vg);
 			}
 		}
-		nvgFillColor(args.vg, SCHEME_YELLOW);
-		nvgFill(args.vg);
 
 		// Invisible separators
 		const int segs = 25;
-		nvgBeginPath(args.vg);
+		nvgFillColor(args.vg, bgColor);
 		for (int i = 1; i < segs; i++) {
+			nvgBeginPath(args.vg);
 			nvgRect(args.vg,
 			        r.pos.x - 1.0,
 			        r.pos.y + r.size.y * i / segs,
 			        r.size.x + 2.0,
 			        1.0);
+			nvgFill(args.vg);
 		}
-		nvgFillColor(args.vg, bgColor);
-		nvgFill(args.vg);
 	}
 };
 
