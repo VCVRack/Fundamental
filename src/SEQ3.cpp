@@ -44,6 +44,7 @@ struct SEQ3 : Module {
 	};
 
 	bool running = true;
+	bool clockPassthrough = false;
 
 	dsp::BooleanTrigger runButtonTrigger;
 	dsp::BooleanTrigger resetButtonTrigger;
@@ -107,6 +108,7 @@ struct SEQ3 : Module {
 	}
 
 	void onReset() override {
+		clockPassthrough = false;
 		for (int i = 0; i < 8; i++) {
 			gates[i] = true;
 		}
@@ -164,6 +166,7 @@ struct SEQ3 : Module {
 
 		// Clock
 		bool clock = false;
+		bool clockGate = false;
 		if (running) {
 			if (inputs[CLOCK_INPUT].isConnected()) {
 				// External clock
@@ -171,6 +174,7 @@ struct SEQ3 : Module {
 				if (clockTrigger.process(inputs[CLOCK_INPUT].getVoltage(), 0.1f, 2.f) && !resetGate) {
 					clock = true;
 				}
+				clockGate = clockTrigger.isHigh();
 			}
 			else {
 				// Internal clock
@@ -181,6 +185,7 @@ struct SEQ3 : Module {
 					clock = true;
 				}
 				phase -= std::trunc(phase);
+				clockGate = (phase < 0.5f);
 			}
 		}
 
@@ -195,7 +200,9 @@ struct SEQ3 : Module {
 			if (index >= numSteps)
 				index = 0;
 		}
-		bool clockGate = clockPulse.process(args.sampleTime);
+		// Unless we're passing the clock gate, generate a pulse
+		if (!clockPassthrough)
+			clockGate = clockPulse.process(args.sampleTime);
 
 		// Gate buttons
 		for (int i = 0; i < 8; i++) {
@@ -240,6 +247,9 @@ struct SEQ3 : Module {
 		}
 		json_object_set_new(rootJ, "gates", gatesJ);
 
+		// clockPassthrough
+		json_object_set_new(rootJ, "clockPassthrough", json_boolean(clockPassthrough));
+
 		return rootJ;
 	}
 
@@ -258,6 +268,13 @@ struct SEQ3 : Module {
 					gates[i] = !!json_integer_value(gateJ);
 			}
 		}
+
+		// clockPassthrough
+		json_t* clockPassthroughJ = json_object_get(rootJ, "clockPassthrough");
+		if (clockPassthroughJ)
+			clockPassthrough = json_is_true(clockPassthroughJ);
+		else
+			clockPassthrough = true;
 	}
 };
 
@@ -354,6 +371,10 @@ struct SEQ3Widget : ModuleWidget {
 	void appendContextMenu(Menu* menu) override {
 		SEQ3* module = dynamic_cast<SEQ3*>(this->module);
 		assert(module);
+
+		menu->addChild(new MenuSeparator);
+
+		menu->addChild(createBoolPtrMenuItem("Clock passthrough", "", &module->clockPassthrough));
 
 		menu->addChild(new MenuSeparator);
 
