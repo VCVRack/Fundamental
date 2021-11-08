@@ -32,7 +32,7 @@ struct Sum : Module {
 
 		vuMeter.lambda = 1 / 0.1f;
 		vuDivider.setDivision(16);
-		lightDivider.setDivision(256);
+		lightDivider.setDivision(512);
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -48,10 +48,12 @@ struct Sum : Module {
 		if (lightDivider.process()) {
 			lastChannels = inputs[POLY_INPUT].getChannels();
 
-			lights[VU_LIGHTS + 0].setBrightness(vuMeter.getBrightness(0.f, 0.f));
-			for (int i = 1; i < 6; i++) {
-				lights[VU_LIGHTS + i].setBrightness(vuMeter.getBrightness(-3.f * i, -3.f * (i - 1)));
-			}
+			lights[VU_LIGHTS + 0].setBrightness(vuMeter.getBrightness(0, 0));
+			lights[VU_LIGHTS + 1].setBrightness(vuMeter.getBrightness(-3, 0));
+			lights[VU_LIGHTS + 2].setBrightness(vuMeter.getBrightness(-6, -3));
+			lights[VU_LIGHTS + 3].setBrightness(vuMeter.getBrightness(-12, -6));
+			lights[VU_LIGHTS + 4].setBrightness(vuMeter.getBrightness(-24, -12));
+			lights[VU_LIGHTS + 5].setBrightness(vuMeter.getBrightness(-36, -24));
 		}
 	}
 };
@@ -59,11 +61,46 @@ struct Sum : Module {
 
 struct SumDisplay : LedDisplay {
 	Sum* module;
+
+	void drawLayer(const DrawArgs& args, int layer) override {
+		if (layer == 1) {
+			static const std::vector<float> posY = {
+				mm2px(18.068 - 13.039),
+				mm2px(23.366 - 13.039),
+				mm2px(28.663 - 13.039),
+				mm2px(33.961 - 13.039),
+				mm2px(39.258 - 13.039),
+				mm2px(44.556 - 13.039),
+			};
+			static const std::vector<std::string> texts = {
+				" 0", "-3", "-6", "-12", "-24", "-36",
+			};
+
+			std::string fontPath = asset::system("res/fonts/Nunito-Bold.ttf");
+			std::shared_ptr<Font> font = APP->window->loadFont(fontPath);
+			if (!font)
+				return;
+
+			nvgSave(args.vg);
+			nvgFontFaceId(args.vg, font->handle);
+			nvgFontSize(args.vg, 11);
+			nvgTextLetterSpacing(args.vg, 0.0);
+			nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+			nvgFillColor(args.vg, nvgRGB(99, 99, 99));
+
+			for (int i = 0; i < 6; i++) {
+				nvgText(args.vg, 15.0, posY[i], texts[i].c_str(), NULL);
+			}
+			nvgRestore(args.vg);
+		}
+		LedDisplay::drawLayer(args, layer);
+	}
 };
 
 
 struct SumChannelDisplay : ChannelDisplay {
 	Sum* module;
+
 	void step() override {
 		int channels = 16;
 		if (module)
@@ -89,17 +126,17 @@ struct SumWidget : ModuleWidget {
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.066)), module, Sum::MONO_OUTPUT));
 
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.808, 18.081)), module, Sum::VU_LIGHTS + 0));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.808, 23.378)), module, Sum::VU_LIGHTS + 1));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.808, 28.676)), module, Sum::VU_LIGHTS + 2));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.808, 33.973)), module, Sum::VU_LIGHTS + 3));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.808, 39.271)), module, Sum::VU_LIGHTS + 4));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.808, 44.568)), module, Sum::VU_LIGHTS + 5));
-
 		SumDisplay* display = createWidget<SumDisplay>(mm2px(Vec(0.0, 12.834)));
 		display->box.size = mm2px(Vec(15.241, 36.981));
 		display->module = module;
 		addChild(display);
+
+		addChild(createLightCentered<SmallSimpleLight<RedLight>>(mm2px(Vec(10.808, 18.081)), module, Sum::VU_LIGHTS + 0));
+		addChild(createLightCentered<SmallSimpleLight<YellowLight>>(mm2px(Vec(10.808, 23.378)), module, Sum::VU_LIGHTS + 1));
+		addChild(createLightCentered<SmallSimpleLight<GreenLight>>(mm2px(Vec(10.808, 28.676)), module, Sum::VU_LIGHTS + 2));
+		addChild(createLightCentered<SmallSimpleLight<GreenLight>>(mm2px(Vec(10.808, 33.973)), module, Sum::VU_LIGHTS + 3));
+		addChild(createLightCentered<SmallSimpleLight<GreenLight>>(mm2px(Vec(10.808, 39.271)), module, Sum::VU_LIGHTS + 4));
+		addChild(createLightCentered<SmallSimpleLight<GreenLight>>(mm2px(Vec(10.808, 44.568)), module, Sum::VU_LIGHTS + 5));
 
 		SumChannelDisplay* channelDisplay = createWidget<SumChannelDisplay>(mm2px(Vec(3.521, 77.191)));
 		channelDisplay->box.size = mm2px(Vec(8.197, 8.197));
