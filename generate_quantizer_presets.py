@@ -24,9 +24,9 @@ Aeolian 3	1-2-3-4-5-b6-b7
 Locrian 2	1-2-b3-4-b5-b6-b7
 Locrian b4	1-b2-b3-b4-b5-b6-b7
 Bebop Dominant	1-2-3-4-5-6-#6-7
-Bebob Major	1-2-3-4-5-b6-6-7
-Bebob Minor	1-2-b3-3-4-5-6-b7
-Bebob Melodic Minor	1-2-b3-4-5-b6-6-7
+Bebop Major	1-2-3-4-5-b6-6-7
+Bebop Minor	1-2-b3-3-4-5-6-b7
+Bebop Melodic Minor	1-2-b3-4-5-b6-6-7
 Blues Major	1-2-b3-3-5-6
 Blues Minor	1-b3-4-b5-5-b7
 Blues Diminished	1-b2-b3-3-b5-5-6-b7
@@ -122,7 +122,7 @@ for line in scales.splitlines():
 	path = os.path.join(dir, f"{count:02d}_{name}.vcvm")
 	print(path)
 	print(data)
-	with open(path, "w") as f:
+	with open(path, "w", newline='\n') as f:
 		json.dump(data, f, indent=2)
 
 	count += 1
