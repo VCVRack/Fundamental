@@ -45,32 +45,49 @@ struct Viz : Module {
 struct VizDisplay : LedDisplay {
 	Viz* module;
 
-	VizDisplay() {
-		box.size = mm2px(Vec(15.24, 88.126));
-	}
-
 	void drawLayer(const DrawArgs& args, int layer) override {
 		if (layer == 1) {
-			for (int c = 0; c < 16; c++) {
-				Vec p = Vec(15, 16 + (float) c / 16 * (box.size.y - 10));
-				std::string text = string::f("%d", c + 1);
-				std::string fontPath = asset::system("res/fonts/Nunito-Bold.ttf");
-				std::shared_ptr<Font> font = APP->window->loadFont(fontPath);
+			static const std::vector<float> posY = {
+				mm2px(18.068 - 13.039),
+				mm2px(23.366 - 13.039),
+				mm2px(28.663 - 13.039),
+				mm2px(33.961 - 13.039),
+				mm2px(39.258 - 13.039),
+				mm2px(44.556 - 13.039),
+				mm2px(49.919 - 13.039),
+				mm2px(55.217 - 13.039),
+				mm2px(60.514 - 13.039),
+				mm2px(65.812 - 13.039),
+				mm2px(71.109 - 13.039),
+				mm2px(76.473 - 13.039),
+				mm2px(81.771 - 13.039),
+				mm2px(87.068 - 13.039),
+				mm2px(92.366 - 13.039),
+				mm2px(97.663 - 13.039),
+			};
 
-				if (font) {
-					nvgFontFaceId(args.vg, font->handle);
-					nvgFontSize(args.vg, 11);
-					nvgTextLetterSpacing(args.vg, 0.0);
-					nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_BASELINE);
-					if (module && c < module->lastChannel)
-						nvgFillColor(args.vg, nvgRGB(255, 255, 255));
-					else
-						nvgFillColor(args.vg, nvgRGB(99, 99, 99));
-					nvgText(args.vg, p.x, p.y, text.c_str(), NULL);
-				}
+			std::string fontPath = asset::system("res/fonts/Nunito-Bold.ttf");
+			std::shared_ptr<Font> font = APP->window->loadFont(fontPath);
+			if (!font)
+				return;
+
+			nvgSave(args.vg);
+			nvgFontFaceId(args.vg, font->handle);
+			nvgFontSize(args.vg, 11);
+			nvgTextLetterSpacing(args.vg, 0.0);
+			nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+
+			for (int c = 0; c < 16; c++) {
+				if (!module || c < module->lastChannel)
+					nvgFillColor(args.vg, nvgRGB(255, 255, 255));
+				else
+					nvgFillColor(args.vg, nvgRGB(99, 99, 99));
+				std::string text = string::f("%d", c + 1);
+				nvgText(args.vg, 36.0, posY[c], text.c_str(), NULL);
 			}
+			nvgRestore(args.vg);
 		}
-		Widget::drawLayer(args, layer);
+		LedDisplay::drawLayer(args, layer);
 	}
 };
 
