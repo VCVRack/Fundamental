@@ -6,7 +6,7 @@ struct SEQ3 : Module {
 		TEMPO_PARAM,
 		RUN_PARAM,
 		RESET_PARAM,
-		STEPS_PARAM,
+		TRIG_PARAM,
 		ENUMS(CV_PARAMS, 3 * 8),
 		ENUMS(GATE_PARAMS, 8),
 		// added in 2.0
@@ -24,7 +24,7 @@ struct SEQ3 : Module {
 		NUM_INPUTS
 	};
 	enum OutputIds {
-		GATE_OUTPUT,
+		TRIG_OUTPUT,
 		ENUMS(CV_OUTPUTS, 3),
 		ENUMS(STEP_OUTPUTS, 8),
 		// added in 2.0
@@ -69,18 +69,18 @@ struct SEQ3 : Module {
 		getParamQuantity(TEMPO_CV_PARAM)->randomizeEnabled = false;
 		configButton(RUN_PARAM, "Run");
 		configButton(RESET_PARAM, "Reset");
-		configParam(STEPS_PARAM, 1.f, 8.f, 8.f, "Steps");
-		getParamQuantity(STEPS_PARAM)->randomizeEnabled = false;
+		configParam(TRIG_PARAM, 1.f, 8.f, 8.f, "Steps");
+		getParamQuantity(TRIG_PARAM)->randomizeEnabled = false;
 		configParam(STEPS_CV_PARAM, 0.f, 1.f, 1.f, "Steps CV", "%", 0, 100);
 		getParamQuantity(STEPS_CV_PARAM)->randomizeEnabled = false;
-		paramQuantities[STEPS_PARAM]->snapEnabled = true;
+		paramQuantities[TRIG_PARAM]->snapEnabled = true;
 		for (int j = 0; j < 3; j++) {
 			for (int i = 0; i < 8; i++) {
 				configParam(CV_PARAMS + 8 * j + i, -10.f, 10.f, 0.f, string::f("CV %d step %d", j + 1, i + 1), " V");
 			}
 		}
 		for (int i = 0; i < 8; i++) {
-			configButton(GATE_PARAMS + i, string::f("Step %d gate", i + 1));
+			configButton(GATE_PARAMS + i, string::f("Step %d trigger", i + 1));
 		}
 
 		configInput(TEMPO_INPUT, "Tempo");
@@ -95,7 +95,7 @@ struct SEQ3 : Module {
 		for (int j = 0; j < 3; j++) {
 			configOutput(CV_OUTPUTS + j, string::f("CV %d", j + 1));
 		}
-		configOutput(GATE_OUTPUT, "Trigger");
+		configOutput(TRIG_OUTPUT, "Trigger");
 		configOutput(STEPS_OUTPUT, "Steps");
 		configOutput(CLOCK_OUTPUT, "Clock");
 		configOutput(RUN_OUTPUT, "Run");
@@ -185,7 +185,7 @@ struct SEQ3 : Module {
 		}
 
 		// Get number of steps
-		float steps = params[STEPS_PARAM].getValue() + inputs[STEPS_INPUT].getVoltage() * params[STEPS_CV_PARAM].getValue();
+		float steps = params[TRIG_PARAM].getValue() + inputs[STEPS_INPUT].getVoltage() * params[STEPS_CV_PARAM].getValue();
 		int numSteps = (int) clamp(std::round(steps), 1.f, 8.f);
 
 		// Advance step
@@ -215,7 +215,7 @@ struct SEQ3 : Module {
 		outputs[CV_OUTPUTS + 0].setVoltage(params[CV_PARAMS + 8 * 0 + index].getValue());
 		outputs[CV_OUTPUTS + 1].setVoltage(params[CV_PARAMS + 8 * 1 + index].getValue());
 		outputs[CV_OUTPUTS + 2].setVoltage(params[CV_PARAMS + 8 * 2 + index].getValue());
-		outputs[GATE_OUTPUT].setVoltage((clockGate && gates[index]) ? 10.f : 0.f);
+		outputs[TRIG_OUTPUT].setVoltage((clockGate && gates[index]) ? 10.f : 0.f);
 
 		outputs[STEPS_OUTPUT].setVoltage((numSteps - 1) * 1.f);
 		outputs[CLOCK_OUTPUT].setVoltage(clockGate ? 10.f : 0.f);
@@ -273,7 +273,7 @@ struct SEQ3Widget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(11.753, 26.755)), module, SEQ3::TEMPO_PARAM));
-		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(32.077, 26.782)), module, SEQ3::STEPS_PARAM));
+		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(32.077, 26.782)), module, SEQ3::TRIG_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(49.372, 34.066)), module, SEQ3::TEMPO_CV_PARAM));
 		addParam(createLightParamCentered<VCVLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(88.424, 33.679)), module, SEQ3::RUN_PARAM, SEQ3::RUN_LIGHT));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(62.39, 34.066)), module, SEQ3::STEPS_CV_PARAM));
@@ -333,7 +333,7 @@ struct SEQ3Widget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(10.319, 113.115)), module, SEQ3::CV_OUTPUTS + 0));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(23.336, 113.115)), module, SEQ3::CV_OUTPUTS + 1));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(36.354, 113.115)), module, SEQ3::CV_OUTPUTS + 2));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(49.371, 113.115)), module, SEQ3::GATE_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(49.371, 113.115)), module, SEQ3::TRIG_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(62.389, 113.115)), module, SEQ3::STEPS_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(75.406, 113.115)), module, SEQ3::CLOCK_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(88.424, 113.115)), module, SEQ3::RUN_OUTPUT));

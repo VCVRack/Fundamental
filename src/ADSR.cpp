@@ -183,6 +183,16 @@ struct ADSR : Module {
 			lights[PUSH_LIGHT].setBrightness(anyGate);
 		}
 	}
+
+	void paramsFromJson(json_t* rootJ) override {
+		// These attenuators didn't exist in version <2.0, so set to 1 in case they are not overwritten.
+		params[ATTACK_CV_PARAM].setValue(1.f);
+		params[DECAY_CV_PARAM].setValue(1.f);
+		params[SUSTAIN_CV_PARAM].setValue(1.f);
+		params[RELEASE_CV_PARAM].setValue(1.f);
+
+		Module::paramsFromJson(rootJ);
+	}
 };
 
 
