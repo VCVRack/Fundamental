@@ -65,7 +65,7 @@ struct WTVCO : Module {
 		configInput(POS_INPUT, "Wavetable position");
 		configInput(PITCH_INPUT, "1V/octave pitch");
 
-		configOutput(WAVE_OUTPUT, "Wave");
+		configOutput(WAVE_OUTPUT, "Wavetable");
 
 		configLight(PHASE_LIGHT, "Phase");
 

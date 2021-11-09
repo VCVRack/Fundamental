@@ -73,11 +73,14 @@ struct WTLFO : Module {
 		getParamQuantity(FM_PARAM)->randomizeEnabled = false;
 		configParam(POS_CV_PARAM, -1.f, 1.f, 0.f, "Wavetable position CV", "%", 0.f, 100.f);
 		getParamQuantity(POS_CV_PARAM)->randomizeEnabled = false;
+
 		configInput(FM_INPUT, "Frequency modulation");
 		configInput(RESET_INPUT, "Reset");
 		configInput(POS_INPUT, "Wavetable position");
 		configInput(CLOCK_INPUT, "Clock");
-		configOutput(WAVE_OUTPUT, "Wave");
+
+		configOutput(WAVE_OUTPUT, "Wavetable");
+
 		configLight(PHASE_LIGHT, "Phase");
 
 		lightDivider.setDivision(16);
