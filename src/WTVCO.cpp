@@ -114,10 +114,10 @@ struct WTVCO : Module {
 		size_t pos0 = std::trunc(pos);
 		size_t pos1 = pos0 + 1;
 		// Get octave index
-		float octaveF = octave - std::trunc(octave);
+		// float octaveF = octave - std::trunc(octave);
 		size_t octave0 = std::trunc(octave);
 		octave0 = std::min(octave0, wavetable.octaves - 1);
-		size_t octave1 = octave0 + 1;
+		// size_t octave1 = octave0 + 1;
 
 		// Linearly interpolate wave index
 		float out = crossfade(wavetable.interpolatedAt(octave0, pos0, index0), wavetable.interpolatedAt(octave0, pos0, index1), indexF);
