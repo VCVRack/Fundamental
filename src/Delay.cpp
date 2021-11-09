@@ -193,7 +193,7 @@ struct Delay : Module {
 		}
 	}
 
-	void fromJson(json_t* rootJ) override {
+	void paramsFromJson(json_t* rootJ) override {
 		// These attenuators didn't exist in version <2.0, so set to 1 in case they are not overwritten.
 		params[FEEDBACK_CV_PARAM].setValue(1.f);
 		params[TONE_CV_PARAM].setValue(1.f);
@@ -201,7 +201,7 @@ struct Delay : Module {
 		// The time input scaling has changed, so don't set to 1.
 		// params[TIME_CV_PARAM].setValue(1.f);
 
-		Module::fromJson(rootJ);
+		Module::paramsFromJson(rootJ);
 	}
 };
 

@@ -226,6 +226,12 @@ struct WTLFO : Module {
 		}
 	}
 
+	void paramsFromJson(json_t* rootJ) override {
+		// In <2.0, there were no attenuverters, so set them to 1.0 in case they are not overwritten.
+		params[POS_CV_PARAM].setValue(1.f);
+		Module::paramsFromJson(rootJ);
+	}
+
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
 		// Merge wavetable

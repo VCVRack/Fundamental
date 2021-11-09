@@ -6,7 +6,7 @@ struct Random : Module {
 		RATE_PARAM,
 		SHAPE_PARAM,
 		OFFSET_PARAM,
-		MODE_PARAM,
+		MODE_PARAM, // removed in 2.0
 		// new in 2.0
 		PROB_PARAM,
 		RAND_PARAM,
@@ -148,7 +148,7 @@ struct Random : Module {
 			// Advance clock phase by rate
 			float rate = params[RATE_PARAM].getValue();
 			rate += inputs[RATE_PARAM].getVoltage() * params[RATE_CV_PARAM].getValue();
-			clockFreq = std::pow(2.f, rate);
+			clockFreq = 2.f * std::pow(2.f, rate);
 			deltaPhase = std::fmin(clockFreq * args.sampleTime, 0.5f);
 			clockPhase += deltaPhase;
 			// Trigger
@@ -233,7 +233,15 @@ struct Random : Module {
 		params[SHAPE_CV_PARAM].setValue(1.f);
 		params[PROB_CV_PARAM].setValue(1.f);
 		params[RAND_CV_PARAM].setValue(1.f);
+		// In <2.0, mode=0 implied relative mode, corresponding to about 20% RND.
+		params[RAND_PARAM].setValue(0.2f);
 		Module::paramsFromJson(rootJ);
+
+		// In <2.0, mode was used for absolute/relative mode. RND is a generalization so set it if mode is enabled.
+		if (params[MODE_PARAM].getValue() > 0.f) {
+			params[MODE_PARAM].setValue(0.f);
+			params[RAND_PARAM].setValue(1.f);
+		}
 	}
 };
 

@@ -83,7 +83,7 @@ struct VizDisplay : LedDisplay {
 				else
 					nvgFillColor(args.vg, nvgRGB(99, 99, 99));
 				std::string text = string::f("%d", c + 1);
-				nvgText(args.vg, 36.0, posY[c], text.c_str(), NULL);
+				nvgText(args.vg, 15.0, posY[c], text.c_str(), NULL);
 			}
 			nvgRestore(args.vg);
 		}
@@ -104,27 +104,27 @@ struct VizWidget : ModuleWidget {
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Viz::POLY_INPUT));
 
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 18.068)), module, Viz::VU_LIGHTS + 0));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 23.366)), module, Viz::VU_LIGHTS + 1));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 28.663)), module, Viz::VU_LIGHTS + 2));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 33.961)), module, Viz::VU_LIGHTS + 3));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 39.258)), module, Viz::VU_LIGHTS + 4));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 44.556)), module, Viz::VU_LIGHTS + 5));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 49.919)), module, Viz::VU_LIGHTS + 6));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 55.217)), module, Viz::VU_LIGHTS + 7));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 60.514)), module, Viz::VU_LIGHTS + 8));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 65.812)), module, Viz::VU_LIGHTS + 9));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 71.109)), module, Viz::VU_LIGHTS + 10));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 76.473)), module, Viz::VU_LIGHTS + 11));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 81.771)), module, Viz::VU_LIGHTS + 12));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 87.068)), module, Viz::VU_LIGHTS + 13));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 92.366)), module, Viz::VU_LIGHTS + 14));
-		addChild(createLightCentered<RedLight>(mm2px(Vec(10.846, 97.663)), module, Viz::VU_LIGHTS + 15));
-
 		VizDisplay* display = createWidget<VizDisplay>(mm2px(Vec(0.003, 13.039)));
 		display->box.size = mm2px(Vec(15.237, 89.344));
 		display->module = module;
 		addChild(display);
+
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 18.068)), module, Viz::VU_LIGHTS + 2 * 0));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 23.366)), module, Viz::VU_LIGHTS + 2 * 1));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 28.663)), module, Viz::VU_LIGHTS + 2 * 2));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 33.961)), module, Viz::VU_LIGHTS + 2 * 3));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 39.258)), module, Viz::VU_LIGHTS + 2 * 4));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 44.556)), module, Viz::VU_LIGHTS + 2 * 5));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 49.919)), module, Viz::VU_LIGHTS + 2 * 6));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 55.217)), module, Viz::VU_LIGHTS + 2 * 7));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 60.514)), module, Viz::VU_LIGHTS + 2 * 8));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 65.812)), module, Viz::VU_LIGHTS + 2 * 9));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 71.109)), module, Viz::VU_LIGHTS + 2 * 10));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 76.473)), module, Viz::VU_LIGHTS + 2 * 11));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 81.771)), module, Viz::VU_LIGHTS + 2 * 12));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 87.068)), module, Viz::VU_LIGHTS + 2 * 13));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 92.366)), module, Viz::VU_LIGHTS + 2 * 14));
+		addChild(createLightCentered<SmallSimpleLight<GreenRedLight>>(mm2px(Vec(10.846, 97.663)), module, Viz::VU_LIGHTS + 2 * 15));
 	}
 };
 
