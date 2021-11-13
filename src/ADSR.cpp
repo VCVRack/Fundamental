@@ -120,7 +120,7 @@ struct ADSR : Module {
 		}
 
 		float_4 gate[4] = {};
-		bool push = params[PUSH_PARAM].getValue();
+		bool push = (params[PUSH_PARAM].getValue() > 0.f);
 
 		for (int c = 0; c < channels; c += 4) {
 			// Gate
@@ -201,18 +201,33 @@ struct ADSRDisplay : LedDisplay {
 
 	void drawLayer(const DrawArgs& args, int layer) override {
 		if (layer == 1) {
-			Rect r = box.zeroPos().shrink(Vec(2, 4));
-			Vec s = r.getTopLeft();
-			Vec e = r.getBottomRight();
-			float decayX = 20.0;
-			float releaseX = 80.0;
-			float releaseY = 40.0;
+			// Module parameters
+			float attackLambda = module ? module->attackLambda[0][0] : 1.f;
+			float decayLambda = module ? module->decayLambda[0][0] : 1.f;
+			float releaseLambda = module ? module->releaseLambda[0][0] : 1.f;
+			float sustain = module ? module->sustain[0][0] : 0.5f;
+
+			// Scale lambdas
+			const float power = 0.5f;
+			float attack = std::pow(attackLambda, -power);
+			float decay = std::pow(decayLambda, -power);
+			float release = std::pow(releaseLambda, -power);
+			float totalLambda = attack + decay + release;
+
+			Rect r = box.zeroPos().shrink(Vec(4, 5));
+			Vec p0 = r.getBottomLeft();
+			Vec p1 = r.interpolate(Vec(attack / totalLambda, 0));
+			Vec p2 = r.interpolate(Vec((attack + decay) / totalLambda, 1 - sustain));
+			Vec p3 = r.getBottomRight();
+			Vec attackHandle = Vec(p0.x, crossfade(p0.y, p1.y, 0.8f));
+			Vec decayHandle = Vec(p1.x, crossfade(p1.y, p2.y, 0.8f));
+			Vec releaseHandle = Vec(p2.x, crossfade(p2.y, p3.y, 0.8f));
 
 			nvgBeginPath(args.vg);
-			nvgMoveTo(args.vg, s.x, e.y);
-			nvgBezierTo(args.vg, s.x, s.y, decayX, s.y, decayX, s.y);
-			nvgBezierTo(args.vg, decayX, releaseY, releaseX, releaseY, releaseX, releaseY);
-			nvgBezierTo(args.vg, releaseX, e.y, e.x, e.y, e.x, e.y);
+			nvgMoveTo(args.vg, p0.x, p0.y);
+			nvgBezierTo(args.vg, p0.x, p0.y, attackHandle.x, attackHandle.y, p1.x, p1.y);
+			nvgBezierTo(args.vg, p1.x, p1.y, decayHandle.x, decayHandle.y, p2.x, p2.y);
+			nvgBezierTo(args.vg, p2.x, p2.y, releaseHandle.x, releaseHandle.y, p3.x, p3.y);
 			nvgLineCap(args.vg, NVG_ROUND);
 			nvgMiterLimit(args.vg, 2.f);
 			nvgStrokeWidth(args.vg, 1.5f);
