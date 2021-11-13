@@ -57,7 +57,6 @@ struct LadderFilter {
 		return state[3];
 	}
 	T highpass() {
-		// TODO This is incorrect when `resonance > 0`. Is the math wrong?
 		return clip((input - resonance * state[3]) - 4 * state[0] + 6 * state[1] - 4 * state[2] + state[3]);
 	}
 };
@@ -97,20 +96,32 @@ struct VCF : Module {
 
 	VCF() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
-		// Multiply and offset for backward patch compatibility
-		configParam(FREQ_PARAM, 0.f, 1.f, 0.5f, "Cutoff frequency", " Hz", std::pow(2, 10.f), dsp::FREQ_C4 / std::pow(2, 5.f));
-		configParam(FINE_PARAM, 0.f, 1.f, 0.5f, "Fine frequency");
+		// To preserve backward compatibility with <2.0, FREQ_PARAM follows
+		// freq = C4 * 2^(10 * param - 5)
+		// or
+		// param = (log2(freq / C4) + 5) / 10
+		const float minFreq = (std::log2(dsp::FREQ_C4 / 8000.f) + 5) / 10;
+		const float maxFreq = (std::log2(8000.f / dsp::FREQ_C4) + 5) / 10;
+		const float defaultFreq = (0.f + 5) / 10;
+		configParam(FREQ_PARAM, minFreq, maxFreq, defaultFreq, "Cutoff frequency", " Hz", std::pow(2, 10.f), dsp::FREQ_C4 / std::pow(2, 5.f));
 		configParam(RES_PARAM, 0.f, 1.f, 0.f, "Resonance", "%", 0.f, 100.f);
 		configParam(RES_CV_PARAM, -1.f, 1.f, 0.f, "Resonance CV", "%", 0.f, 100.f);
 		configParam(FREQ_CV_PARAM, -1.f, 1.f, 0.f, "Cutoff frequency CV", "%", 0.f, 100.f);
-		configParam(DRIVE_PARAM, 0.f, 1.f, 0.f, "Drive", "", 0, 11);
+		// gain(drive) = (1 + drive)^5
+		// gain(0) = 1
+		// gain(-1) = 0
+		// gain(1) = 5
+		configParam(DRIVE_PARAM, -1.f, 1.f, 0.f, "Drive", "%", 0, 100, 100);
 		configParam(DRIVE_CV_PARAM, -1.f, 1.f, 0.f, "Drive CV", "%", 0, 100);
+
 		configInput(FREQ_INPUT, "Frequency");
 		configInput(RES_INPUT, "Resonance");
 		configInput(DRIVE_INPUT, "Drive");
 		configInput(IN_INPUT, "Audio");
+
 		configOutput(LPF_OUTPUT, "Lowpass filter");
 		configOutput(HPF_OUTPUT, "Highpass filter");
+
 		configBypass(IN_INPUT, LPF_OUTPUT);
 		configBypass(IN_INPUT, HPF_OUTPUT);
 	}
@@ -129,24 +140,21 @@ struct VCF : Module {
 		float driveCvParam = params[DRIVE_CV_PARAM].getValue();
 		float resParam = params[RES_PARAM].getValue();
 		float resCvParam = params[RES_CV_PARAM].getValue();
-		float fineParam = params[FINE_PARAM].getValue();
-		fineParam = dsp::quadraticBipolar(fineParam * 2.f - 1.f) * 7.f / 12.f;
-		float freqCvParam = params[FREQ_CV_PARAM].getValue();
-		freqCvParam = dsp::quadraticBipolar(freqCvParam);
 		float freqParam = params[FREQ_PARAM].getValue();
+		// Rescale for backward compatibility
 		freqParam = freqParam * 10.f - 5.f;
+		float freqCvParam = params[FREQ_CV_PARAM].getValue();
 
 		int channels = std::max(1, inputs[IN_INPUT].getChannels());
 
 		for (int c = 0; c < channels; c += 4) {
-			auto* filter = &filters[c / 4];
+			auto& filter = filters[c / 4];
 
-			float_4 input = float_4::load(inputs[IN_INPUT].getVoltages(c)) / 5.f;
+			float_4 input = inputs[IN_INPUT].getVoltageSimd<float_4>(c) / 5.f;
 
 			// Drive gain
-			// TODO Make center of knob unity gain, 0 is off like a VCA
 			float_4 drive = driveParam + inputs[DRIVE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * driveCvParam;
-			drive = clamp(drive, 0.f, 1.f);
+			drive = clamp(drive, -1.f, 1.f);
 			float_4 gain = simd::pow(1.f + drive, 5);
 			input *= gain;
 
@@ -156,48 +164,59 @@ struct VCF : Module {
 			// Set resonance
 			float_4 resonance = resParam + inputs[RES_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * resCvParam;
 			resonance = clamp(resonance, 0.f, 1.f);
-			filter->resonance = simd::pow(resonance, 2) * 10.f;
+			filter.resonance = simd::pow(resonance, 2) * 10.f;
 
 			// Get pitch
-			float_4 pitch = freqParam + fineParam + inputs[FREQ_INPUT].getPolyVoltageSimd<float_4>(c) * freqCvParam;
+			float_4 pitch = freqParam + inputs[FREQ_INPUT].getPolyVoltageSimd<float_4>(c) * freqCvParam;
 			// Set cutoff
 			float_4 cutoff = dsp::FREQ_C4 * simd::pow(2.f, pitch);
-			cutoff = clamp(cutoff, 1.f, 8000.f);
-			filter->setCutoff(cutoff);
+			// Without oversampling, we must limit to 8000 Hz or so @ 44100 Hz
+			cutoff = clamp(cutoff, 1.f, args.sampleRate * 0.18f);
+			filter.setCutoff(cutoff);
+
+			// Upsample input
+			// float dt = args.sampleTime / UPSAMPLE;
+			// float inputBuf[UPSAMPLE];
+			// float lowpassBuf[UPSAMPLE];
+			// float highpassBuf[UPSAMPLE];
+			// inputUpsampler.process(input, inputBuf);
+			// for (int i = 0; i < UPSAMPLE; i++) {
+			// 	// Step the filter
+			// 	filter.process(inputBuf[i], dt);
+			// 	if (outputs[LPF_OUTPUT].isConnected())
+			// 		lowpassBuf[i] = filter.lowpass();
+			// 	if (outputs[HPF_OUTPUT].isConnected())
+			// 		highpassBuf[i] = filter.highpass();
+			// }
+
+			// // Set outputs
+			// if (outputs[LPF_OUTPUT].isConnected()) {
+			// 	outputs[LPF_OUTPUT].setVoltage(5.f * lowpassDecimator.process(lowpassBuf));
+			// }
+			// if (outputs[HPF_OUTPUT].isConnected()) {
+			// 	outputs[HPF_OUTPUT].setVoltage(5.f * highpassDecimator.process(highpassBuf));
+			// }
 
 			// Set outputs
-			filter->process(input, args.sampleTime);
-			float_4 lowpass = 5.f * filter->lowpass();
-			lowpass.store(outputs[LPF_OUTPUT].getVoltages(c));
-			float_4 highpass = 5.f * filter->highpass();
-			highpass.store(outputs[HPF_OUTPUT].getVoltages(c));
+			filter.process(input, args.sampleTime);
+			if (outputs[LPF_OUTPUT].isConnected()) {
+				outputs[LPF_OUTPUT].setVoltageSimd(5.f * filter.lowpass(), c);
+			}
+			if (outputs[HPF_OUTPUT].isConnected()) {
+				outputs[HPF_OUTPUT].setVoltageSimd(5.f * filter.highpass(), c);
+			}
 		}
 
 		outputs[LPF_OUTPUT].setChannels(channels);
 		outputs[HPF_OUTPUT].setChannels(channels);
+	}
 
-		/*
-		// Process sample
-		float dt = args.sampleTime / UPSAMPLE;
-		float inputBuf[UPSAMPLE];
-		float lowpassBuf[UPSAMPLE];
-		float highpassBuf[UPSAMPLE];
-		inputUpsampler.process(input, inputBuf);
-		for (int i = 0; i < UPSAMPLE; i++) {
-			// Step the filter
-			filter.process(inputBuf[i], dt);
-			lowpassBuf[i] = filter.lowpass;
-			highpassBuf[i] = filter.highpass;
-		}
+	void paramsFromJson(json_t* rootJ) override {
+		// These attenuators didn't exist in version <2.0, so set to 1 in case they are not overwritten.
+		params[RES_CV_PARAM].setValue(1.f);
+		params[DRIVE_CV_PARAM].setValue(1.f);
 
-		// Set outputs
-		if (outputs[LPF_OUTPUT].isConnected()) {
-			outputs[LPF_OUTPUT].setVoltage(5.f * lowpassDecimator.process(lowpassBuf));
-		}
-		if (outputs[HPF_OUTPUT].isConnected()) {
-			outputs[HPF_OUTPUT].setVoltage(5.f * highpassDecimator.process(highpassBuf));
-		}
-		*/
+		Module::paramsFromJson(rootJ);
 	}
 };
 
