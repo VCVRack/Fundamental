@@ -51,7 +51,7 @@ struct WTVCO : Module {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
 		configSwitch(SOFT_PARAM, 0.f, 1.f, 0.f, "Sync", {"Hard", "Soft"});
-		configSwitch(LINEAR_PARAM, 0.f, 1.f, 0.f, "Linear FM");
+		configSwitch(LINEAR_PARAM, 0.f, 1.f, 0.f, "FM mode", {"1V/octave", "Through-zero linear"});
 
 		configParam(FREQ_PARAM, -75.f, 75.f, 0.f, "Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
 		configParam(POS_PARAM, 0.f, 1.f, 0.f, "Wavetable position", "%", 0.f, 100.f);
@@ -140,7 +140,7 @@ struct WTVCO : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		float freqParam = params[FREQ_PARAM].getValue();
+		float freqParam = params[FREQ_PARAM].getValue() / 12.f;
 		float fmParam = params[FM_PARAM].getValue();
 		float posParam = params[POS_PARAM].getValue();
 		float posCvParam = params[POS_CV_PARAM].getValue();
@@ -155,7 +155,7 @@ struct WTVCO : Module {
 			// Iterate channels
 			for (int c = 0; c < channels; c += 4) {
 				// Calculate frequency in Hz
-				float_4 pitch = freqParam / 12.f + inputs[PITCH_INPUT].getPolyVoltageSimd<float_4>(c);
+				float_4 pitch = freqParam + inputs[PITCH_INPUT].getPolyVoltageSimd<float_4>(c);
 				float_4 freq;
 				if (!linear) {
 					pitch += inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;

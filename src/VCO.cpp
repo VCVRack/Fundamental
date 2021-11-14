@@ -35,7 +35,7 @@ struct VoltageControlledOscillator {
 
 	T lastSyncValue = 0.f;
 	T phase = 0.f;
-	T freq;
+	T freq = 0.f;
 	T pulseWidth = 0.5f;
 	T syncDirection = 1.f;
 
@@ -50,10 +50,6 @@ struct VoltageControlledOscillator {
 	T sawValue = 0.f;
 	T triValue = 0.f;
 	T sinValue = 0.f;
-
-	void setPitch(T pitch) {
-		freq = dsp::FREQ_C4 * dsp::approxExp2_taylor5(pitch + 30.f) / std::pow(2.f, 30.f);
-	}
 
 	void setPulseWidth(T pulseWidth) {
 		const float pwMin = 0.01f;
@@ -247,13 +243,14 @@ struct VoltageControlledOscillator {
 
 struct VCO : Module {
 	enum ParamIds {
-		MODE_PARAM,
+		MODE_PARAM, // removed
 		SYNC_PARAM,
 		FREQ_PARAM,
 		FINE_PARAM, // removed
 		FM_PARAM,
 		PW_PARAM,
-		PWM_PARAM,
+		PW_CV_PARAM,
+		// new in 2.0
 		LINEAR_PARAM,
 		NUM_PARAMS
 	};
@@ -273,6 +270,8 @@ struct VCO : Module {
 	};
 	enum LightIds {
 		ENUMS(PHASE_LIGHT, 3),
+		LINEAR_LIGHT,
+		SOFT_LIGHT,
 		NUM_LIGHTS
 	};
 
@@ -281,17 +280,20 @@ struct VCO : Module {
 
 	VCO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configSwitch(MODE_PARAM, 0.f, 1.f, 1.f, "Engine mode", {"Digital", "Analog"});
+		configSwitch(LINEAR_PARAM, 0.f, 1.f, 0.f, "FM mode", {"1V/octave", "Linear"});
 		configSwitch(SYNC_PARAM, 0.f, 1.f, 1.f, "Sync mode", {"Soft", "Hard"});
 		configParam(FREQ_PARAM, -54.f, 54.f, 0.f, "Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
-		configParam(FINE_PARAM, -1.f, 1.f, 0.f, "Fine frequency");
-		configParam(FM_PARAM, 0.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
+		configParam(FM_PARAM, -1.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
+		getParamQuantity(FM_PARAM)->randomizeEnabled = false;
 		configParam(PW_PARAM, 0.01f, 0.99f, 0.5f, "Pulse width", "%", 0.f, 100.f);
-		configParam(PWM_PARAM, 0.f, 1.f, 0.f, "Pulse width modulation", "%", 0.f, 100.f);
+		configParam(PW_CV_PARAM, -1.f, 1.f, 0.f, "Pulse width modulation", "%", 0.f, 100.f);
+		getParamQuantity(PW_CV_PARAM)->randomizeEnabled = false;
+
 		configInput(PITCH_INPUT, "1V/octave pitch");
 		configInput(FM_INPUT, "Frequency modulation");
 		configInput(SYNC_INPUT, "Sync");
 		configInput(PW_INPUT, "Pulse width modulation");
+
 		configOutput(SIN_OUTPUT, "Sine");
 		configOutput(TRI_OUTPUT, "Triangle");
 		configOutput(SAW_OUTPUT, "Sawtooth");
@@ -302,37 +304,52 @@ struct VCO : Module {
 
 	void process(const ProcessArgs& args) override {
 		float freqParam = params[FREQ_PARAM].getValue() / 12.f;
-		freqParam += dsp::quadraticBipolar(params[FINE_PARAM].getValue()) * 3.f / 12.f;
-		float fmParam = dsp::quadraticBipolar(params[FM_PARAM].getValue());
+		float fmParam = params[FM_PARAM].getValue();
+		float pwParam = params[PW_PARAM].getValue();
+		float pwCvParam = params[PW_CV_PARAM].getValue();
+		bool linear = params[LINEAR_PARAM].getValue() > 0.f;
+		bool soft = params[SYNC_PARAM].getValue() <= 0.f;
 
 		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
 
 		for (int c = 0; c < channels; c += 4) {
-			auto* oscillator = &oscillators[c / 4];
-			oscillator->channels = std::min(channels - c, 4);
-			oscillator->analog = params[MODE_PARAM].getValue() > 0.f;
-			oscillator->soft = params[SYNC_PARAM].getValue() <= 0.f;
+			auto& oscillator = oscillators[c / 4];
+			oscillator.channels = std::min(channels - c, 4);
+			// removed
+			oscillator.analog = true;
+			oscillator.soft = soft;
 
-			float_4 pitch = freqParam;
-			pitch += inputs[PITCH_INPUT].getVoltageSimd<float_4>(c);
-			if (inputs[FM_INPUT].isConnected()) {
-				pitch += fmParam * inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c);
+			// Get frequency
+			float_4 pitch = freqParam / 12.f + inputs[PITCH_INPUT].getPolyVoltageSimd<float_4>(c);
+			float_4 freq;
+			if (!linear) {
+				pitch += inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;
+				freq = dsp::FREQ_C4 * dsp::approxExp2_taylor5(pitch + 30.f) / std::pow(2.f, 30.f);
 			}
-			oscillator->setPitch(pitch);
-			oscillator->setPulseWidth(params[PW_PARAM].getValue() + params[PWM_PARAM].getValue() * inputs[PW_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f);
+			else {
+				freq = dsp::FREQ_C4 * dsp::approxExp2_taylor5(pitch + 30.f) / std::pow(2.f, 30.f);
+				freq += dsp::FREQ_C4 * inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;
+			}
+			freq = clamp(freq, 0.f, args.sampleRate / 2.f);
+			oscillator.freq = freq;
 
-			oscillator->syncEnabled = inputs[SYNC_INPUT].isConnected();
-			oscillator->process(args.sampleTime, inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c));
+			// Get pulse width
+			float_4 pw = pwParam + inputs[PW_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * pwCvParam;
+			oscillator.setPulseWidth(pw);
+
+			oscillator.syncEnabled = inputs[SYNC_INPUT].isConnected();
+			float_4 sync = inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c);
+			oscillator.process(args.sampleTime, sync);
 
 			// Set output
 			if (outputs[SIN_OUTPUT].isConnected())
-				outputs[SIN_OUTPUT].setVoltageSimd(5.f * oscillator->sin(), c);
+				outputs[SIN_OUTPUT].setVoltageSimd(5.f * oscillator.sin(), c);
 			if (outputs[TRI_OUTPUT].isConnected())
-				outputs[TRI_OUTPUT].setVoltageSimd(5.f * oscillator->tri(), c);
+				outputs[TRI_OUTPUT].setVoltageSimd(5.f * oscillator.tri(), c);
 			if (outputs[SAW_OUTPUT].isConnected())
-				outputs[SAW_OUTPUT].setVoltageSimd(5.f * oscillator->saw(), c);
+				outputs[SAW_OUTPUT].setVoltageSimd(5.f * oscillator.saw(), c);
 			if (outputs[SQR_OUTPUT].isConnected())
-				outputs[SQR_OUTPUT].setVoltageSimd(5.f * oscillator->sqr(), c);
+				outputs[SQR_OUTPUT].setVoltageSimd(5.f * oscillator.sqr(), c);
 		}
 
 		outputs[SIN_OUTPUT].setChannels(channels);
@@ -353,6 +370,8 @@ struct VCO : Module {
 				lights[PHASE_LIGHT + 1].setBrightness(0.f);
 				lights[PHASE_LIGHT + 2].setBrightness(1.f);
 			}
+			lights[LINEAR_LIGHT].setBrightness(linear);
+			lights[SOFT_LIGHT].setBrightness(soft);
 		}
 	}
 };
@@ -371,9 +390,9 @@ struct VCOWidget : ModuleWidget {
 		addParam(createParamCentered<RoundHugeBlackKnob>(mm2px(Vec(22.905, 29.808)), module, VCO::FREQ_PARAM));
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(22.862, 56.388)), module, VCO::PW_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(6.607, 80.603)), module, VCO::FM_PARAM));
-		addParam(createParamCentered<VCVLatch>(mm2px(Vec(17.444, 80.603)), module, VCO::LINEAR_PARAM));
-		addParam(createParamCentered<VCVLatch>(mm2px(Vec(28.282, 80.603)), module, VCO::SYNC_PARAM));
-		addParam(createParamCentered<Trimpot>(mm2px(Vec(39.118, 80.603)), module, VCO::PWM_PARAM));
+		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(17.444, 80.603)), module, VCO::LINEAR_PARAM, VCO::LINEAR_LIGHT));
+		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(28.282, 80.603)), module, VCO::SYNC_PARAM, VCO::SOFT_LIGHT));
+		addParam(createParamCentered<Trimpot>(mm2px(Vec(39.118, 80.603)), module, VCO::PW_CV_PARAM));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.607, 96.859)), module, VCO::FM_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.444, 96.859)), module, VCO::PITCH_INPUT));
@@ -385,137 +404,9 @@ struct VCOWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.282, 113.115)), module, VCO::SAW_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.119, 113.115)), module, VCO::SQR_OUTPUT));
 
-		addChild(createLightCentered<SmallLight<RedLight>>(mm2px(Vec(31.089, 16.428)), module, VCO::PHASE_LIGHT));
+		addChild(createLightCentered<SmallLight<RedGreenBlueLight>>(mm2px(Vec(31.089, 16.428)), module, VCO::PHASE_LIGHT));
 	}
 };
 
 
 Model* modelVCO = createModel<VCO, VCOWidget>("VCO");
-
-#if 0
-struct VCO2 : Module {
-	enum ParamIds {
-		MODE_PARAM,
-		SYNC_PARAM,
-		FREQ_PARAM,
-		WAVE_PARAM,
-		FM_PARAM,
-		NUM_PARAMS
-	};
-	enum InputIds {
-		FM_INPUT,
-		SYNC_INPUT,
-		WAVE_INPUT,
-		NUM_INPUTS
-	};
-	enum OutputIds {
-		OUT_OUTPUT,
-		NUM_OUTPUTS
-	};
-	enum LightIds {
-		ENUMS(PHASE_LIGHT, 3),
-		NUM_LIGHTS
-	};
-
-	VoltageControlledOscillator<8, 8, float_4> oscillators[4];
-	dsp::ClockDivider lightDivider;
-
-	VCO2() {
-		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configSwitch(MODE_PARAM, 0.f, 1.f, 1.f, "Engine mode", {"Digital", "Analog"});
-		configSwitch(SYNC_PARAM, 0.f, 1.f, 1.f, "Sync mode", {"Soft", "Hard"});
-		configParam(FREQ_PARAM, -54.f, 54.f, 0.f, "Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
-		configParam(WAVE_PARAM, 0.f, 3.f, 1.5f, "Wave");
-		configParam(FM_PARAM, 0.f, 1.f, 1.f, "Frequency modulation", "%", 0.f, 100.f);
-		configInput(FM_INPUT, "Frequency modulation");
-		configInput(SYNC_INPUT, "Sync");
-		configInput(WAVE_INPUT, "Wave type");
-		configOutput(OUT_OUTPUT, "Audio");
-
-		lightDivider.setDivision(16);
-	}
-
-	void process(const ProcessArgs& args) override {
-		float freqParam = params[FREQ_PARAM].getValue() / 12.f;
-		float fmParam = dsp::quadraticBipolar(params[FM_PARAM].getValue());
-		float waveParam = params[WAVE_PARAM].getValue();
-
-		int channels = std::max(inputs[FM_INPUT].getChannels(), 1);
-
-		for (int c = 0; c < channels; c += 4) {
-			auto* oscillator = &oscillators[c / 4];
-			oscillator->channels = std::min(channels - c, 4);
-			oscillator->analog = (params[MODE_PARAM].getValue() > 0.f);
-			oscillator->soft = (params[SYNC_PARAM].getValue() <= 0.f);
-
-			float_4 pitch = freqParam;
-			pitch += fmParam * inputs[FM_INPUT].getVoltageSimd<float_4>(c);
-			oscillator->setPitch(pitch);
-
-			oscillator->syncEnabled = inputs[SYNC_INPUT].isConnected();
-			oscillator->process(args.sampleTime, inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c));
-
-			// Outputs
-			if (outputs[OUT_OUTPUT].isConnected()) {
-				float_4 wave = simd::clamp(waveParam + inputs[WAVE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * 3.f, 0.f, 3.f);
-				float_4 v = 0.f;
-				v += oscillator->sin() * simd::fmax(0.f, 1.f - simd::fabs(wave - 0.f));
-				v += oscillator->tri() * simd::fmax(0.f, 1.f - simd::fabs(wave - 1.f));
-				v += oscillator->saw() * simd::fmax(0.f, 1.f - simd::fabs(wave - 2.f));
-				v += oscillator->sqr() * simd::fmax(0.f, 1.f - simd::fabs(wave - 3.f));
-				outputs[OUT_OUTPUT].setVoltageSimd(5.f * v, c);
-			}
-		}
-
-		outputs[OUT_OUTPUT].setChannels(channels);
-
-		// Light
-		if (lightDivider.process()) {
-			if (channels == 1) {
-				float lightValue = oscillators[0].light()[0];
-				lights[PHASE_LIGHT + 0].setSmoothBrightness(-lightValue, args.sampleTime * lightDivider.getDivision());
-				lights[PHASE_LIGHT + 1].setSmoothBrightness(lightValue, args.sampleTime * lightDivider.getDivision());
-				lights[PHASE_LIGHT + 2].setBrightness(0.f);
-			}
-			else {
-				lights[PHASE_LIGHT + 0].setBrightness(0.f);
-				lights[PHASE_LIGHT + 1].setBrightness(0.f);
-				lights[PHASE_LIGHT + 2].setBrightness(1.f);
-			}
-		}
-	}
-};
-
-
-
-
-struct VCO2Widget : ModuleWidget {
-	VCO2Widget(VCO2* module) {
-		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/WTVCO.svg")));
-
-		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(15, 365)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 365)));
-
-		addParam(createParam<CKSS>(Vec(62, 150), module, VCO2::MODE_PARAM));
-		addParam(createParam<CKSS>(Vec(62, 215), module, VCO2::SYNC_PARAM));
-
-		addParam(createParam<RoundHugeBlackKnob>(Vec(17, 60), module, VCO2::FREQ_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(12, 143), module, VCO2::WAVE_PARAM));
-		addParam(createParam<RoundLargeBlackKnob>(Vec(12, 208), module, VCO2::FM_PARAM));
-
-		addInput(createInput<PJ301MPort>(Vec(11, 276), module, VCO2::FM_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(54, 276), module, VCO2::SYNC_INPUT));
-		addInput(createInput<PJ301MPort>(Vec(11, 320), module, VCO2::WAVE_INPUT));
-
-		addOutput(createOutput<PJ301MPort>(Vec(54, 320), module, VCO2::OUT_OUTPUT));
-
-		addChild(createLight<SmallLight<RedGreenBlueLight>>(Vec(68, 42.5f), module, VCO2::PHASE_LIGHT));
-	}
-};
-
-
-Model* modelVCO2 = createModel<VCO2, VCO2Widget>("VCO2");
-#endif

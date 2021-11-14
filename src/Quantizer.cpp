@@ -26,7 +26,7 @@ struct Quantizer : Module {
 	Quantizer() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(OFFSET_PARAM, -1.f, 1.f, 0.f, "Offset", " semitones", 0.f, 12.f);
-		configInput(PITCH_INPUT, "Pitch");
+		configInput(PITCH_INPUT, "1V/octave pitch");
 		configOutput(PITCH_OUTPUT, "Pitch");
 
 		onReset();
