@@ -58,7 +58,7 @@ struct VoltageControlledOscillator {
 
 	void process(float deltaTime, T syncValue) {
 		// Advance phase
-		T deltaPhase = simd::clamp(freq * deltaTime, 1e-6f, 0.35f);
+		T deltaPhase = simd::clamp(freq * deltaTime, 0.f, 0.35f);
 		if (soft) {
 			// Reverse direction
 			deltaPhase *= syncDirection;
@@ -320,7 +320,7 @@ struct VCO : Module {
 			oscillator.soft = soft;
 
 			// Get frequency
-			float_4 pitch = freqParam / 12.f + inputs[PITCH_INPUT].getPolyVoltageSimd<float_4>(c);
+			float_4 pitch = freqParam + inputs[PITCH_INPUT].getPolyVoltageSimd<float_4>(c);
 			float_4 freq;
 			if (!linear) {
 				pitch += inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;

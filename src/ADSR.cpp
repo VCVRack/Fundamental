@@ -213,6 +213,8 @@ struct ADSRDisplay : LedDisplay {
 			float decay = std::pow(decayLambda, -power);
 			float release = std::pow(releaseLambda, -power);
 			float totalLambda = attack + decay + release;
+			if (totalLambda == 0.f)
+				return;
 
 			Rect r = box.zeroPos().shrink(Vec(4, 5));
 			Vec p0 = r.getBottomLeft();

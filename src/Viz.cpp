@@ -104,7 +104,7 @@ struct VizWidget : ModuleWidget {
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Viz::POLY_INPUT));
 
-		VizDisplay* display = createWidget<VizDisplay>(mm2px(Vec(0.003, 13.039)));
+		VizDisplay* display = createWidget<VizDisplay>(mm2px(Vec(0.0, 13.039)));
 		display->box.size = mm2px(Vec(15.237, 89.344));
 		display->module = module;
 		addChild(display);

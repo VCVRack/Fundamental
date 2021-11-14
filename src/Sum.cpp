@@ -126,7 +126,7 @@ struct SumWidget : ModuleWidget {
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.066)), module, Sum::MONO_OUTPUT));
 
-		SumDisplay* display = createWidget<SumDisplay>(mm2px(Vec(0.0, 12.834)));
+		SumDisplay* display = createWidget<SumDisplay>(mm2px(Vec(0.0, 13.039)));
 		display->box.size = mm2px(Vec(15.241, 36.981));
 		display->module = module;
 		addChild(display);
