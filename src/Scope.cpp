@@ -403,6 +403,9 @@ struct ScopeDisplay : LedDisplay {
 		if (layer != 1)
 			return;
 
+		// Background lines
+		drawBackground(args);
+
 		if (!module)
 			return;
 
@@ -445,9 +448,6 @@ struct ScopeDisplay : LedDisplay {
 			float trigThreshold = module->params[Scope::TRIG_PARAM].getValue();
 			trigThreshold = (trigThreshold + offsetX) * gainX;
 			drawTrig(args, trigThreshold);
-
-			// Background lines
-			drawBackground(args);
 		}
 
 		// Calculate and draw stats
