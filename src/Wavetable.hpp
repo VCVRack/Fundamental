@@ -172,6 +172,10 @@ struct Wavetable {
 			samples.clear();
 			samples.resize(len);
 
+			// If sample rate is a power of 2, set waveLen to it.
+			if ((wav.sampleRate & (wav.sampleRate - 1)) == 0)
+				waveLen = wav.sampleRate;
+
 			drwav_read_pcm_frames_f32(&wav, wav.totalPCMFrameCount, samples.data());
 			drwav_uninit(&wav);
 		}
@@ -232,7 +236,7 @@ struct Wavetable {
 		format.container = drwav_container_riff;
 		format.format = DR_WAVE_FORMAT_PCM;
 		format.channels = 1;
-		format.sampleRate = 44100;
+		format.sampleRate = waveLen;
 		format.bitsPerSample = 16;
 
 		drwav wav;
