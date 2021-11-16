@@ -298,7 +298,7 @@ struct ScopeDisplay : LedDisplay {
 				continue;
 
 			Vec p;
-			p.x = (avgX + offsetX) * gainX * -0.5f + 0.5f;
+			p.x = (avgX + offsetX) * gainX * 0.5f + 0.5f;
 			p.y = (avgY + offsetY) * gainY * -0.5f + 0.5f;
 			p = b.interpolate(p);
 			if (i == 0)
