@@ -456,8 +456,8 @@ struct ScopeDisplay : LedDisplay {
 			calculateStats(statsX, 0, module->channelsX);
 			calculateStats(statsY, 1, module->channelsY);
 		}
-		drawStats(args, Vec(0, 0 + 1), "X", statsX);
-		drawStats(args, Vec(0, box.size.y - 15 - 1), "Y", statsY);
+		drawStats(args, Vec(0, 0 + 1), "1", statsX);
+		drawStats(args, Vec(0, box.size.y - 15 - 1), "2", statsY);
 	}
 };
 
