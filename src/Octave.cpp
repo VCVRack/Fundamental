@@ -80,24 +80,20 @@ struct OctaveButton : Widget {
 			// Enabled
 			nvgBeginPath(args.vg);
 			nvgCircle(args.vg, c.x, c.y, mm2px(4.0 / 2));
-			if (octave < 0)
-				nvgFillColor(args.vg, color::RED);
-			else if (octave > 0)
-				nvgFillColor(args.vg, color::GREEN);
-			else
+			if (octave == 0)
 				nvgFillColor(args.vg, color::alpha(color::WHITE, 0.33));
+			else
+				nvgFillColor(args.vg, SCHEME_YELLOW);
 			nvgFill(args.vg);
 		}
 		else if (lastOctave == octave) {
 			// Disabled but enabled by CV
 			nvgBeginPath(args.vg);
 			nvgCircle(args.vg, c.x, c.y, mm2px(4.0 / 2));
-			if (octave < 0)
-				nvgFillColor(args.vg, color::alpha(color::RED, 0.33));
-			else if (octave > 0)
-				nvgFillColor(args.vg, color::alpha(color::GREEN, 0.33));
+			if (octave == 0)
+				nvgFillColor(args.vg, color::alpha(color::WHITE, 0.5 * 0.33));
 			else
-				nvgFillColor(args.vg, color::alpha(color::WHITE, 0.33 * 0.33));
+				nvgFillColor(args.vg, color::alpha(SCHEME_YELLOW, 0.5));
 			nvgFill(args.vg);
 		}
 		else {
