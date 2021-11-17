@@ -89,7 +89,7 @@ struct OctaveButton : Widget {
 
 			nvgBeginPath(args.vg);
 			nvgCircle(args.vg, c.x, c.y, mm2px(3.0 / 2));
-			nvgFillColor(args.vg, color::BLACK);
+			nvgFillColor(args.vg, nvgRGB(0x12, 0x12, 0x12));
 			nvgFill(args.vg);
 
 			if (octave == 0) {
