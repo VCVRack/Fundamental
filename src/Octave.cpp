@@ -19,6 +19,8 @@ struct Octave : Module {
 		NUM_LIGHTS
 	};
 
+	int lastOctave = 0;
+
 	Octave() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configParam(OCTAVE_PARAM, -4.f, 4.f, 0.f, "Shift", " oct");
@@ -30,14 +32,15 @@ struct Octave : Module {
 
 	void process(const ProcessArgs& args) override {
 		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
-		float octaveParam = params[OCTAVE_PARAM].getValue();
+		int octaveParam = std::round(params[OCTAVE_PARAM].getValue());
 
 		for (int c = 0; c < channels; c++) {
-			float octave = octaveParam + inputs[OCTAVE_INPUT].getPolyVoltage(c);
-			octave = std::round(octave);
+			int octave = octaveParam + std::round(inputs[OCTAVE_INPUT].getPolyVoltage(c));
 			float pitch = inputs[PITCH_INPUT].getVoltage(c);
 			pitch += octave;
 			outputs[PITCH_OUTPUT].setVoltage(pitch, c);
+			if (c == 0)
+				lastOctave = octave;
 		}
 		outputs[PITCH_OUTPUT].setChannels(channels);
 	}
@@ -62,11 +65,16 @@ struct OctaveButton : Widget {
 		Vec c = box.size.div(2);
 
 		int activeOctave = 0;
+		int lastOctave = 0;
 		ParamWidget* paramWidget = getAncestorOfType<ParamWidget>();
 		assert(paramWidget);
 		engine::ParamQuantity* pq = paramWidget->getParamQuantity();
-		if (pq)
+		if (pq) {
 			activeOctave = std::round(pq->getValue());
+			Octave* module = dynamic_cast<Octave*>(pq->module);
+			if (module)
+				lastOctave = module->lastOctave;
+		}
 
 		if (activeOctave == octave) {
 			// Enabled
@@ -78,6 +86,18 @@ struct OctaveButton : Widget {
 				nvgFillColor(args.vg, color::GREEN);
 			else
 				nvgFillColor(args.vg, color::alpha(color::WHITE, 0.33));
+			nvgFill(args.vg);
+		}
+		else if (lastOctave == octave) {
+			// Disabled but enabled by CV
+			nvgBeginPath(args.vg);
+			nvgCircle(args.vg, c.x, c.y, mm2px(4.0 / 2));
+			if (octave < 0)
+				nvgFillColor(args.vg, color::alpha(color::RED, 0.33));
+			else if (octave > 0)
+				nvgFillColor(args.vg, color::alpha(color::GREEN, 0.33));
+			else
+				nvgFillColor(args.vg, color::alpha(color::WHITE, 0.33 * 0.33));
 			nvgFill(args.vg);
 		}
 		else {
