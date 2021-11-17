@@ -217,7 +217,7 @@ struct Random : Module {
 		}
 
 		// Trigger output
-		outputs[TRIG_OUTPUT].setVoltage(trigGenerator.process(args.sampleTime) ? 0.f : 10.f);
+		outputs[TRIG_OUTPUT].setVoltage(trigGenerator.process(args.sampleTime) ? 10.f : 0.f);
 
 		// Lights
 		lights[RATE_LIGHT].setSmoothBrightness(0.f, args.sampleTime);
