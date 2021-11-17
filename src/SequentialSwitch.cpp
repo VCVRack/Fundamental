@@ -19,7 +19,7 @@ struct SequentialSwitch : Module {
 		NUM_OUTPUTS
 	};
 	enum LightIds {
-		ENUMS(CHANNEL_LIGHTS, 4),
+		ENUMS(CHANNEL_LIGHTS, 4 * 2),
 		NUM_LIGHTS
 	};
 
@@ -113,7 +113,8 @@ struct SequentialSwitch : Module {
 		// Set lights
 		if (lightDivider.process()) {
 			for (int i = 0; i < 4; i++) {
-				lights[CHANNEL_LIGHTS + i].setBrightness(index == i);
+				lights[CHANNEL_LIGHTS + 2 * i + 0].setBrightness(index == i);
+				lights[CHANNEL_LIGHTS + 2 * i + 1].setBrightness(i >= length);
 			}
 		}
 	}
@@ -157,10 +158,10 @@ struct SequentialSwitch1Widget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.555, 102.927)), module, TSequentialSwitch::OUT_OUTPUTS + 2));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.555, 113.087)), module, TSequentialSwitch::OUT_OUTPUTS + 3));
 
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.28, 78.863)), module, TSequentialSwitch::CHANNEL_LIGHTS + 0));
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.28, 89.023)), module, TSequentialSwitch::CHANNEL_LIGHTS + 1));
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.28, 99.183)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2));
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.28, 109.343)), module, TSequentialSwitch::CHANNEL_LIGHTS + 3));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(11.28, 78.863)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2 * 0));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(11.28, 89.023)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2 * 1));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(11.28, 99.183)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2 * 2));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(11.28, 109.343)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2 * 3));
 	}
 };
 
@@ -191,10 +192,10 @@ struct SequentialSwitch2Widget : ModuleWidget {
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.8, 113.115)), module, TSequentialSwitch::OUT_OUTPUTS + 0));
 
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.526, 63.259)), module, TSequentialSwitch::CHANNEL_LIGHTS + 0));
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.526, 72.795)), module, TSequentialSwitch::CHANNEL_LIGHTS + 1));
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.526, 82.955)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2));
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(11.526, 93.115)), module, TSequentialSwitch::CHANNEL_LIGHTS + 3));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(11.526, 63.259)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2 * 0));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(11.526, 72.795)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2 * 1));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(11.526, 82.955)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2 * 2));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(11.526, 93.115)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2 * 3));
 	}
 };
 

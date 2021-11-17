@@ -80,3 +80,12 @@ struct ChannelDisplay : DigitalDisplay {
 		fontSize = 16;
 	}
 };
+
+
+template <typename TBase = GrayModuleLightWidget>
+struct YellowRedLight : TBase {
+	YellowRedLight() {
+		this->addBaseColor(SCHEME_YELLOW);
+		this->addBaseColor(SCHEME_RED);
+	}
+};

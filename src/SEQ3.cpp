@@ -39,7 +39,7 @@ struct SEQ3 : Module {
 		RUN_LIGHT,
 		RESET_LIGHT,
 		ENUMS(GATE_LIGHTS, 8),
-		ENUMS(STEP_LIGHTS, 8),
+		ENUMS(STEP_LIGHTS, 8 * 2),
 		NUM_LIGHTS
 	};
 
@@ -215,7 +215,8 @@ struct SEQ3 : Module {
 		// Step outputs
 		for (int i = 0; i < 8; i++) {
 			outputs[STEP_OUTPUTS + i].setVoltage((index == i) ? 10.f : 0.f);
-			lights[STEP_LIGHTS + i].setSmoothBrightness(index == i, args.sampleTime);
+			lights[STEP_LIGHTS + 2 * i + 0].setSmoothBrightness(index == i, args.sampleTime);
+			lights[STEP_LIGHTS + 2 * i + 1].setBrightness(i >= numSteps);
 		}
 
 		// Outputs
@@ -358,14 +359,14 @@ struct SEQ3Widget : ModuleWidget {
 
 		addChild(createLightCentered<SmallLight<YellowLight>>(mm2px(Vec(75.406, 33.497)), module, SEQ3::CLOCK_LIGHT));
 
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(14.064, 93.103)), module, SEQ3::STEP_LIGHTS + 0));
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(27.084, 93.103)), module, SEQ3::STEP_LIGHTS + 1));
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(40.103, 93.103)), module, SEQ3::STEP_LIGHTS + 2));
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(53.122, 93.103)), module, SEQ3::STEP_LIGHTS + 3));
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(66.142, 93.103)), module, SEQ3::STEP_LIGHTS + 4));
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(79.161, 93.103)), module, SEQ3::STEP_LIGHTS + 5));
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(92.181, 93.103)), module, SEQ3::STEP_LIGHTS + 6));
-		addChild(createLightCentered<TinyLight<YellowLight>>(mm2px(Vec(105.2, 93.103)), module, SEQ3::STEP_LIGHTS + 7));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(14.064, 93.103)), module, SEQ3::STEP_LIGHTS + 2 * 0));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(27.084, 93.103)), module, SEQ3::STEP_LIGHTS + 2 * 1));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(40.103, 93.103)), module, SEQ3::STEP_LIGHTS + 2 * 2));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(53.122, 93.103)), module, SEQ3::STEP_LIGHTS + 2 * 3));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(66.142, 93.103)), module, SEQ3::STEP_LIGHTS + 2 * 4));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(79.161, 93.103)), module, SEQ3::STEP_LIGHTS + 2 * 5));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(92.181, 93.103)), module, SEQ3::STEP_LIGHTS + 2 * 6));
+		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(105.2, 93.103)), module, SEQ3::STEP_LIGHTS + 2 * 7));
 	}
 
 	void appendContextMenu(Menu* menu) override {
