@@ -25,7 +25,7 @@ struct Quantizer : Module {
 
 	Quantizer() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(OFFSET_PARAM, -1.f, 1.f, 0.f, "Offset", " semitones", 0.f, 12.f);
+		configParam(OFFSET_PARAM, -1.f, 1.f, 0.f, "Pre-offset", " semitones", 0.f, 12.f);
 		configInput(PITCH_INPUT, "1V/octave pitch");
 		configOutput(PITCH_OUTPUT, "Pitch");
 
@@ -49,17 +49,17 @@ struct Quantizer : Module {
 	void process(const ProcessArgs& args) override {
 		bool playingNotes[12] = {};
 		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
-		float offsetParam = params[OFFSET_PARAM].getValue() / 12.f;
+		float offsetParam = params[OFFSET_PARAM].getValue();
 
 		for (int c = 0; c < channels; c++) {
 			float pitch = inputs[PITCH_INPUT].getVoltage(c);
+			pitch += offsetParam;
 			int range = std::floor(pitch * 24);
 			int octave = eucDiv(range, 24);
 			range -= octave * 24;
 			int note = ranges[range] + octave * 12;
 			playingNotes[eucMod(note, 12)] = true;
 			pitch = float(note) / 12;
-			pitch += offsetParam;
 			outputs[PITCH_OUTPUT].setVoltage(pitch, c);
 		}
 		outputs[PITCH_OUTPUT].setChannels(channels);
