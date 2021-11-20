@@ -21,6 +21,8 @@ struct Mixer : Module {
 		LIGHTS_LEN
 	};
 
+	bool average = false;
+
 	Mixer() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configParam(LEVEL_PARAM, 0.f, 1.f, 1.f, "Level", "%", 0, 100);
@@ -30,12 +32,19 @@ struct Mixer : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		// Get number of channels
+		// Get number of channels and number of connected inputs
 		int channels = 1;
-		for (int i = 0; i < 6; i++)
+		int connected = 0;
+		for (int i = 0; i < 6; i++) {
 			channels = std::max(channels, inputs[IN_INPUTS + i].getChannels());
+			if (inputs[IN_INPUTS + i].isConnected())
+				connected++;
+		}
 
 		float gain = params[LEVEL_PARAM].getValue();
+		if (average) {
+			gain /= std::max(1, connected);
+		}
 
 		// Iterate polyphonic channels
 		for (int c = 0; c < channels; c += 4) {
@@ -53,6 +62,20 @@ struct Mixer : Module {
 		}
 
 		outputs[OUT_OUTPUT].setChannels(channels);
+	}
+
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
+		// average
+		json_object_set_new(rootJ, "average", json_boolean(average));
+		return rootJ;
+	}
+
+	void dataFromJson(json_t* rootJ) override {
+		// average
+		json_t* averageJ = json_object_get(rootJ, "average");
+		if (averageJ)
+			average = json_boolean_value(averageJ);
 	}
 };
 
@@ -77,6 +100,15 @@ struct MixerWidget : ModuleWidget {
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 96.859)), module, Mixer::IN_INPUTS + 5));
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Mixer::OUT_OUTPUT));
+	}
+
+	void appendContextMenu(Menu* menu) override {
+		Mixer* module = dynamic_cast<Mixer*>(this->module);
+		assert(module);
+
+		menu->addChild(new MenuSeparator);
+
+		menu->addChild(createBoolPtrMenuItem("Average voltages", "", &module->average));
 	}
 };
 
