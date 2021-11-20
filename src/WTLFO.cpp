@@ -50,7 +50,7 @@ struct WTLFO : Module {
 
 	WTLFO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configSwitch(OFFSET_PARAM, 0.f, 1.f, 0.f, "Offset", {"Bipolar", "Unipolar"});
+		configSwitch(OFFSET_PARAM, 0.f, 1.f, 1.f, "Offset", {"Bipolar", "Unipolar"});
 		configSwitch(INVERT_PARAM, 0.f, 1.f, 0.f, "Invert");
 
 		struct FrequencyQuantity : ParamQuantity {
