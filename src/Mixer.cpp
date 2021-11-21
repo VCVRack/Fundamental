@@ -21,6 +21,7 @@ struct Mixer : Module {
 		LIGHTS_LEN
 	};
 
+	bool invert = false;
 	bool average = false;
 
 	Mixer() {
@@ -42,6 +43,11 @@ struct Mixer : Module {
 		}
 
 		float gain = params[LEVEL_PARAM].getValue();
+		// Invert
+		if (invert) {
+			gain *= -1.f;
+		}
+		// Average
 		if (average) {
 			gain /= std::max(1, connected);
 		}
@@ -68,6 +74,8 @@ struct Mixer : Module {
 		json_t* rootJ = json_object();
 		// average
 		json_object_set_new(rootJ, "average", json_boolean(average));
+		// invert
+		json_object_set_new(rootJ, "invert", json_boolean(invert));
 		return rootJ;
 	}
 
@@ -76,6 +84,10 @@ struct Mixer : Module {
 		json_t* averageJ = json_object_get(rootJ, "average");
 		if (averageJ)
 			average = json_boolean_value(averageJ);
+		// invert
+		json_t* invertJ = json_object_get(rootJ, "invert");
+		if (invertJ)
+			invert = json_boolean_value(invertJ);
 	}
 };
 
@@ -108,6 +120,7 @@ struct MixerWidget : ModuleWidget {
 
 		menu->addChild(new MenuSeparator);
 
+		menu->addChild(createBoolPtrMenuItem("Invert output", "", &module->invert));
 		menu->addChild(createBoolPtrMenuItem("Average voltages", "", &module->average));
 	}
 };
