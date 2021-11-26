@@ -245,7 +245,7 @@ struct ScopeDisplay : LedDisplay {
 			const Scope::Point& point = module->pointBuffer[i];
 			float max = (wave == 0) ? point.maxX[channel] : point.maxY[channel];
 			if (!std::isfinite(max))
-				continue;
+				max = 0.f;
 
 			Vec p;
 			p.x = (float) i / (BUFFER_SIZE - 1);
@@ -262,7 +262,7 @@ struct ScopeDisplay : LedDisplay {
 			const Scope::Point& point = module->pointBuffer[i];
 			float min = (wave == 0) ? point.minX[channel] : point.minY[channel];
 			if (!std::isfinite(min))
-				continue;
+				min = 0.f;
 
 			Vec p;
 			p.x = (float) i / (BUFFER_SIZE - 1);
