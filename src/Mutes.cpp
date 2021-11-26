@@ -29,11 +29,12 @@ struct Mutes : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		const float zero[16] = {};
+		float out[16] = {};
+
 		// Iterate rows
 		for (int i = 0; i < 10; i++) {
 			int channels = 1;
-			const float zero[16] = {};
-			float out[16] = {};
 			bool mute = params[MUTE_PARAMS + i].getValue() > 0.f;
 
 			// Get input
