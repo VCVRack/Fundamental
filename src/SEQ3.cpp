@@ -50,9 +50,11 @@ struct SEQ3 : Module {
 	dsp::BooleanTrigger resetButtonTrigger;
 	dsp::BooleanTrigger gateTriggers[8];
 
+	dsp::SchmittTrigger runTrigger;
 	dsp::SchmittTrigger clockTrigger;
 	dsp::SchmittTrigger resetTrigger;
 
+	dsp::PulseGenerator runPulse;
 	dsp::PulseGenerator clockPulse;
 	dsp::PulseGenerator resetPulse;
 
@@ -149,10 +151,11 @@ struct SEQ3 : Module {
 		// Use bitwise OR "|" to always evaluate both expressions
 		if (runButtonTrigger.process(params[RUN_PARAM].getValue())) {
 			running ^= true;
+			runPulse.trigger(1e-3f);
 		}
-		// Run input overrides button
-		if (inputs[RUN_INPUT].isConnected()) {
-			running = (inputs[RUN_INPUT].getVoltage() >= 2.f);
+		if (runTrigger.process(inputs[RUN_INPUT].getVoltage(), 0.1f, 2.f)) {
+			running ^= true;
+			runPulse.trigger(1e-3f);
 		}
 
 		// Reset
@@ -227,7 +230,7 @@ struct SEQ3 : Module {
 
 		outputs[STEPS_OUTPUT].setVoltage((numSteps - 1) * 1.f);
 		outputs[CLOCK_OUTPUT].setVoltage(clockGate ? 10.f : 0.f);
-		outputs[RUN_OUTPUT].setVoltage(running ? 10.f : 0.f);
+		outputs[RUN_OUTPUT].setVoltage(runPulse.process(args.sampleTime) ? 10.f : 0.f);
 		outputs[RESET_OUTPUT].setVoltage(resetGate ? 10.f : 0.f);
 
 		lights[CLOCK_LIGHT].setSmoothBrightness(clockGate, args.sampleTime);
