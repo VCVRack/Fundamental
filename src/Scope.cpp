@@ -94,7 +94,7 @@ struct Scope : Module {
 		lights[LISSAJOUS_LIGHT].setBrightness(lissajous);
 
 		bool external = params[EXTERNAL_PARAM].getValue() > 0.f;
-		lights[EXTERNAL_LIGHT].setBrightness(external);
+		lights[EXTERNAL_LIGHT].setBrightness(!external);
 
 		// Compute time
 		float deltaTime = std::pow(2.f, -params[TIME_PARAM].getValue()) / BUFFER_SIZE;
