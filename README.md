@@ -1,9 +1,9 @@
-# Fundamental
+# VCV Fundamental
 
-Since Fundamental will be packaged with *VCV Rack for DAWs*, we cannot accept pull requests.
-See https://github.com/VCVRack/Rack/blob/v1/.github/CONTRIBUTING.md
+Since Fundamental is packaged with *VCV Rack Pro*, we cannot accept pull requests.
+See https://github.com/VCVRack/Rack/blob/v2/.github/CONTRIBUTING.md
 
-Open an issue to request a feature or report a bug.
+Contact [VCV Support](https://vcvrack.com/support) or open a GitHub issue to request a feature or report a bug.
 
 ## Building
 
