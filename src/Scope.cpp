@@ -251,7 +251,7 @@ struct ScopeDisplay : LedDisplay {
 			p.x = (float) i / (BUFFER_SIZE - 1);
 			p.y = (max + offset) * gain * -0.5f + 0.5f;
 			p = b.interpolate(p);
-			p.y += 1.0;
+			p.y -= 1.0;
 			if (i == 0)
 				nvgMoveTo(args.vg, p.x, p.y);
 			else
@@ -268,7 +268,7 @@ struct ScopeDisplay : LedDisplay {
 			p.x = (float) i / (BUFFER_SIZE - 1);
 			p.y = (min + offset) * gain * -0.5f + 0.5f;
 			p = b.interpolate(p);
-			p.y -= 1.0;
+			p.y += 1.0;
 			nvgLineTo(args.vg, p.x, p.y);
 		}
 		nvgClosePath(args.vg);
