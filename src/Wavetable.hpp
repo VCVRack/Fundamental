@@ -25,7 +25,6 @@ struct Wavetable {
 	size_t octaves = 0;
 	/** (octave, waveCount, waveLen * quality) */
 	std::vector<float> interpolatedSamples;
-	float sampleRate = 44100;
 
 	Wavetable() {}
 
@@ -41,7 +40,7 @@ struct Wavetable {
 
 	void reset() {
 		filename = "Basic.wav";
-		waveLen = 256;
+		waveLen = 1024;
 		samples.clear();
 		samples.resize(waveLen * 4);
 
