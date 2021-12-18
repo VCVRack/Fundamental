@@ -1,8 +1,14 @@
-### 2.0.0 (in development)
+# Fundamental changelog
+
+### 2.0.1 (in development)
+- Random
+	- Fix rate frequency being 2 times higher than display value.
+
+### 2.0.0 (2021-11-30)
 - Mixer
 	- When polyphonic and monophonic inputs are combined, copy all mono signals to all mix output poly channels.
 
-### 1.4.1 (in development)
+### 1.4.1 (2020-07-15)
 - Improve VCF model accuracy and stability.
 
 ### 1.4.0 (2019-11-08)
