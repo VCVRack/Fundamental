@@ -82,6 +82,9 @@ struct Delay : Module {
 		configOutput(MIX_OUTPUT, "Mix");
 		configOutput(WET_OUTPUT, "Wet");
 
+		configBypass(IN_INPUT, WET_OUTPUT);
+		configBypass(IN_INPUT, MIX_OUTPUT);
+
 		src = src_new(SRC_SINC_FASTEST, 1, NULL);
 		assert(src);
 	}
