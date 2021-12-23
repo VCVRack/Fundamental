@@ -28,6 +28,7 @@ struct Octave : Module {
 		configInput(PITCH_INPUT, "1V/octave pitch");
 		configInput(OCTAVE_INPUT, "Octave shift CV");
 		configOutput(PITCH_OUTPUT, "Pitch");
+		configBypass(PITCH_INPUT, PITCH_OUTPUT);
 	}
 
 	void process(const ProcessArgs& args) override {
