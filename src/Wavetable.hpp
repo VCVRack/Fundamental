@@ -5,6 +5,7 @@
 
 
 static const char WAVETABLE_FILTERS[] = "WAV (.wav):wav,WAV;Raw:f32,i8,i16,i24,i32,*";
+static std::string wavetableDir;
 
 
 /** Loads and stores wavetable samples and metadata */
@@ -218,13 +219,14 @@ struct Wavetable {
 		osdialog_filters* filters = osdialog_filters_parse(WAVETABLE_FILTERS);
 		DEFER({osdialog_filters_free(filters);});
 
-		char* pathC = osdialog_file(OSDIALOG_OPEN, NULL, NULL, filters);
+		char* pathC = osdialog_file(OSDIALOG_OPEN, wavetableDir.empty() ? NULL : wavetableDir.c_str(), NULL, filters);
 		if (!pathC) {
 			// Fail silently
 			return;
 		}
 		std::string path = pathC;
 		std::free(pathC);
+		wavetableDir = system::getDirectory(path);
 
 		load(path);
 		filename = system::getFilename(path);
@@ -255,7 +257,7 @@ struct Wavetable {
 		osdialog_filters* filters = osdialog_filters_parse(WAVETABLE_FILTERS);
 		DEFER({osdialog_filters_free(filters);});
 
-		char* pathC = osdialog_file(OSDIALOG_SAVE, NULL, filename.c_str(), filters);
+		char* pathC = osdialog_file(OSDIALOG_SAVE, wavetableDir.empty() ? NULL : wavetableDir.c_str(), filename.c_str(), filters);
 		if (!pathC) {
 			// Cancel silently
 			return;
@@ -267,6 +269,7 @@ struct Wavetable {
 		if (system::getExtension(path) != ".wav") {
 			path += ".wav";
 		}
+		wavetableDir = system::getDirectory(path);
 
 		save(path);
 	}
