@@ -2,6 +2,7 @@
 #include <rack.hpp>
 #include <osdialog.h>
 #include "dr_wav.h"
+#include <mutex>
 
 
 static const char WAVETABLE_FILTERS[] = "WAV (.wav):wav,WAV;Raw:f32,i8,i16,i24,i32,*";
@@ -26,6 +27,7 @@ struct Wavetable {
 	size_t octaves = 0;
 	/** (octave, waveCount, waveLen * quality) */
 	std::vector<float> interpolatedSamples;
+	mutable std::recursive_mutex mutex;
 
 	Wavetable() {}
 
@@ -40,6 +42,7 @@ struct Wavetable {
 	}
 
 	void reset() {
+		std::lock_guard<std::recursive_mutex> lock(mutex);
 		filename = "Basic.wav";
 		waveLen = 1024;
 		samples.clear();
@@ -69,6 +72,7 @@ struct Wavetable {
 	}
 
 	void setQuality(size_t quality) {
+		std::lock_guard<std::recursive_mutex> lock(mutex);
 		if (quality == this->quality)
 			return;
 		this->quality = quality;
@@ -76,6 +80,7 @@ struct Wavetable {
 	}
 
 	void setWaveLen(size_t waveLen) {
+		std::lock_guard<std::recursive_mutex> lock(mutex);
 		if (waveLen == this->waveLen)
 			return;
 		this->waveLen = waveLen;
@@ -90,6 +95,7 @@ struct Wavetable {
 	}
 
 	void interpolate() {
+		std::lock_guard<std::recursive_mutex> lock(mutex);
 		if (quality == 0)
 			return;
 		if (waveLen < 2)
@@ -134,6 +140,7 @@ struct Wavetable {
 	}
 
 	json_t* toJson() const {
+		std::lock_guard<std::recursive_mutex> lock(mutex);
 		json_t* rootJ = json_object();
 		// waveLen
 		json_object_set_new(rootJ, "waveLen", json_integer(waveLen));
@@ -143,6 +150,7 @@ struct Wavetable {
 	}
 
 	void fromJson(json_t* rootJ) {
+		std::lock_guard<std::recursive_mutex> lock(mutex);
 		// waveLen
 		json_t* waveLenJ = json_object_get(rootJ, "waveLen");
 		if (waveLenJ)
@@ -154,6 +162,7 @@ struct Wavetable {
 	}
 
 	void load(std::string path) {
+		std::lock_guard<std::recursive_mutex> lock(mutex);
 		std::string ext = string::lowercase(system::getExtension(path));
 		if (ext == ".wav") {
 			// Load WAV
@@ -233,6 +242,7 @@ struct Wavetable {
 	}
 
 	void save(std::string path) const {
+		std::lock_guard<std::recursive_mutex> lock(mutex);
 		drwav_data_format format;
 		format.container = drwav_container_riff;
 		format.format = DR_WAVE_FORMAT_PCM;
@@ -316,6 +326,7 @@ struct WTDisplay : LedDisplay {
 
 			// Get module data or defaults
 			const Wavetable& wavetable = module ? module->wavetable : defaultWavetable;
+			std::lock_guard<std::recursive_mutex> lock(wavetable.mutex);
 			float lastPos = module ? module->lastPos : 0.f;
 
 			// Draw filename text

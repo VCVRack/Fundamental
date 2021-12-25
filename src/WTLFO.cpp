@@ -138,6 +138,10 @@ struct WTLFO : Module {
 
 		int channels = std::max(1, inputs[FM_INPUT].getChannels());
 
+		if (!wavetable.mutex.try_lock())
+			return;
+		DEFER({wavetable.mutex.unlock();});
+
 		// Check valid wave and wavetable size
 		int waveCount = wavetable.getWaveCount();
 		if (wavetable.waveLen >= 2 && waveCount >= 1) {
