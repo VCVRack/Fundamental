@@ -10,7 +10,7 @@
   "authorUrl": "https://vcvrack.com/",
   "manualUrl": "https://vcvrack.com/Fundamental.html#manual",
   "sourceUrl": "https://github.com/VCVRack/Fundamental",
-  "changelogUrl": "https://github.com/VCVRack/Fundamental/blob/v1/CHANGELOG.md",
+  "changelogUrl": "https://github.com/VCVRack/Fundamental/blob/v2/CHANGELOG.md",
   "modules": [
     {
       "slug": "VCO",
