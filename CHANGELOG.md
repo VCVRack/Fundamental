@@ -1,6 +1,10 @@
 # Fundamental changelog
 
-### 2.0.1 (in development)
+### 2.0.2 (2021-12-26)
+- Wavetable VCO and LFO
+	- Fix probabilistic crash when loading wavetable files.
+
+### 2.0.1 (2021-12-18)
 - Random
 	- Fix rate frequency being 2 times higher than display value.
 
