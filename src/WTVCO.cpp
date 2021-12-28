@@ -150,12 +150,8 @@ struct WTVCO : Module {
 
 		int channels = std::max({1, inputs[PITCH_INPUT].getChannels(), inputs[FM_INPUT].getChannels()});
 
-		if (!wavetable.mutex.try_lock())
-			return;
-		DEFER({wavetable.mutex.unlock();});
-
 		int waveCount = wavetable.getWaveCount();
-		if (wavetable.waveLen >= 2 && waveCount >= 1) {
+		if (!wavetable.loading && wavetable.waveLen >= 2 && waveCount >= 1) {
 			// Iterate channels
 			for (int c = 0; c < channels; c += 4) {
 				// Calculate frequency in Hz

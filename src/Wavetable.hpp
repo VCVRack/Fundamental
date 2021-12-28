@@ -2,7 +2,7 @@
 #include <rack.hpp>
 #include <osdialog.h>
 #include "dr_wav.h"
-#include <mutex>
+#include <thread>
 
 
 static const char WAVETABLE_FILTERS[] = "WAV (.wav):wav,WAV;Raw:f32,i8,i16,i24,i32,*";
@@ -11,12 +11,12 @@ static std::string wavetableDir;
 
 /** Loads and stores wavetable samples and metadata */
 struct Wavetable {
-	/** Number of points in each wave */
-	size_t waveLen = 0;
 	/** All waves concatenated
 	(waveCount, waveLen)
 	*/
 	std::vector<float> samples;
+	/** Number of points in each wave */
+	size_t waveLen = 0;
 	/** Name of loaded wavetable. */
 	std::string filename;
 
@@ -25,9 +25,12 @@ struct Wavetable {
 	size_t quality = 0;
 	/** Number of filtered wavetables. Automatically computed from waveLen. */
 	size_t octaves = 0;
-	/** (octave, waveCount, waveLen * quality) */
+	/** Waves bandlimited at each octave
+	(octave, waveCount, waveLen * quality)
+	*/
 	std::vector<float> interpolatedSamples;
-	mutable std::recursive_mutex mutex;
+
+	bool loading = false;
 
 	Wavetable() {}
 
@@ -42,10 +45,12 @@ struct Wavetable {
 	}
 
 	void reset() {
-		std::lock_guard<std::recursive_mutex> lock(mutex);
 		filename = "Basic.wav";
 		waveLen = 1024;
-		samples.clear();
+		loading = true;
+		DEFER({loading = false;});
+		// HACK Sleep 100us so DSP thread is likely to finish processing before we resize the vector
+		std::this_thread::sleep_for(std::chrono::duration<double>(100e-6));
 		samples.resize(waveLen * 4);
 
 		// Sine
@@ -72,7 +77,6 @@ struct Wavetable {
 	}
 
 	void setQuality(size_t quality) {
-		std::lock_guard<std::recursive_mutex> lock(mutex);
 		if (quality == this->quality)
 			return;
 		this->quality = quality;
@@ -80,7 +84,6 @@ struct Wavetable {
 	}
 
 	void setWaveLen(size_t waveLen) {
-		std::lock_guard<std::recursive_mutex> lock(mutex);
 		if (waveLen == this->waveLen)
 			return;
 		this->waveLen = waveLen;
@@ -95,7 +98,6 @@ struct Wavetable {
 	}
 
 	void interpolate() {
-		std::lock_guard<std::recursive_mutex> lock(mutex);
 		if (quality == 0)
 			return;
 		if (waveLen < 2)
@@ -140,7 +142,6 @@ struct Wavetable {
 	}
 
 	json_t* toJson() const {
-		std::lock_guard<std::recursive_mutex> lock(mutex);
 		json_t* rootJ = json_object();
 		// waveLen
 		json_object_set_new(rootJ, "waveLen", json_integer(waveLen));
@@ -150,7 +151,6 @@ struct Wavetable {
 	}
 
 	void fromJson(json_t* rootJ) {
-		std::lock_guard<std::recursive_mutex> lock(mutex);
 		// waveLen
 		json_t* waveLenJ = json_object_get(rootJ, "waveLen");
 		if (waveLenJ)
@@ -162,7 +162,11 @@ struct Wavetable {
 	}
 
 	void load(std::string path) {
-		std::lock_guard<std::recursive_mutex> lock(mutex);
+		loading = true;
+		DEFER({loading = false;});
+		// HACK Sleep 100us so DSP thread is likely to finish processing before we resize the vector
+		std::this_thread::sleep_for(std::chrono::duration<double>(100e-6));
+
 		std::string ext = string::lowercase(system::getExtension(path));
 		if (ext == ".wav") {
 			// Load WAV
@@ -242,7 +246,9 @@ struct Wavetable {
 	}
 
 	void save(std::string path) const {
-		std::lock_guard<std::recursive_mutex> lock(mutex);
+		if (samples.size() == 0)
+			return;
+
 		drwav_data_format format;
 		format.container = drwav_container_riff;
 		format.format = DR_WAVE_FORMAT_PCM;
@@ -254,10 +260,9 @@ struct Wavetable {
 		if (!drwav_init_file_write(&wav, path.c_str(), &format, NULL))
 			return;
 
-		size_t len = samples.size();
-		int16_t* buf = new int16_t[len];
-		drwav_f32_to_s16(buf, samples.data(), len);
-		drwav_write_pcm_frames(&wav, len, buf);
+		int16_t* buf = new int16_t[samples.size()];
+		drwav_f32_to_s16(buf, samples.data(), samples.size());
+		drwav_write_pcm_frames(&wav, samples.size(), buf);
 		delete[] buf;
 
 		drwav_uninit(&wav);
@@ -326,7 +331,6 @@ struct WTDisplay : LedDisplay {
 
 			// Get module data or defaults
 			const Wavetable& wavetable = module ? module->wavetable : defaultWavetable;
-			std::lock_guard<std::recursive_mutex> lock(wavetable.mutex);
 			float lastPos = module ? module->lastPos : 0.f;
 
 			// Draw filename text
