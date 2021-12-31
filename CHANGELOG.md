@@ -1,5 +1,9 @@
 # Fundamental changelog
 
+### 2.0.3 (2021-12-31)
+- Wavetable VCO and LFO
+	- Make wavetable loading lock-free, fixing hiccups and increasing performance.
+
 ### 2.0.2 (2021-12-26)
 - Wavetable VCO and LFO
 	- Fix probabilistic crash when loading wavetable files.
