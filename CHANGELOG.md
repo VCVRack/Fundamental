@@ -1,5 +1,9 @@
 # Fundamental changelog
 
+### 2.1.0 (in development)
+- VCA Mix
+	- When mixing polyphonic and monophonic signals, don't copy monophonic signals to all polyphonic channels. Simply mix them to polyphonic channel 1.
+
 ### 2.0.3 (2021-12-31)
 - Wavetable VCO and LFO
 	- Make wavetable loading lock-free, fixing hiccups and increasing performance.

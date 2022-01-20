@@ -83,17 +83,8 @@ struct VCMixer : Module {
 				}
 
 				// Add to mix
-				if (channels == 1) {
-					// Copy the mono signal to all mix channels
-					for (int c = 0; c < mixChannels; c++) {
-						mix[c] += in[0];
-					}
-				}
-				else {
-					// Copy each poly channel to the corresponding mix channel
-					for (int c = 0; c < channels; c++) {
-						mix[c] += in[c];
-					}
+				for (int c = 0; c < channels; c++) {
+					mix[c] += in[c];
 				}
 
 				// Sum channel for VU meter
