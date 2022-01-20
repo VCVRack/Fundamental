@@ -6,5 +6,5 @@ The **VCV logo and icon** are copyright © 2017 Andrew Belt and may not be used 
 
 The **"VCV" name** is trademarked and may not be used for unofficial products.
 
-The **visual design of the Fundamental modules** is copyright © 2019 [Grayscale](http://grayscale.info/) and licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
+The **visual design of the Fundamental modules** is copyright © 2019-2021 [VCV](https://vcvrack.com/) and licensed under [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
 Commercial use and derivative works are not allowed.
