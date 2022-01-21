@@ -13,8 +13,8 @@ struct Scope : Module {
 		Y_POS_PARAM,
 		TIME_PARAM,
 		LISSAJOUS_PARAM,
+		THRESH_PARAM,
 		TRIG_PARAM,
-		EXTERNAL_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -31,7 +31,7 @@ struct Scope : Module {
 	};
 	enum LightIds {
 		LISSAJOUS_LIGHT,
-		EXTERNAL_LIGHT,
+		TRIG_LIGHT,
 		NUM_LIGHTS
 	};
 
@@ -72,8 +72,8 @@ struct Scope : Module {
 		const float defaultTime = -std::log2(5e-1f);
 		configParam(TIME_PARAM, maxTime, minTime, defaultTime, "Time", " ms/screen", 1 / 2.f, 1000);
 		configSwitch(LISSAJOUS_PARAM, 0.f, 1.f, 0.f, "Scope mode", {"1 & 2", "1 x 2"});
-		configParam(TRIG_PARAM, -10.f, 10.f, 0.f, "Trigger threshold", " V");
-		configSwitch(EXTERNAL_PARAM, 0.f, 1.f, 1.f, "Trigger mode", {"Internal", "External"});
+		configParam(THRESH_PARAM, -10.f, 10.f, 0.f, "Trigger threshold", " V");
+		configSwitch(TRIG_PARAM, 0.f, 1.f, 1.f, "Trigger", {"Enabled", "Disabled"});
 
 		configInput(X_INPUT, "Ch 1");
 		configInput(Y_INPUT, "Ch 2");
@@ -90,15 +90,43 @@ struct Scope : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		bool lissajous = params[LISSAJOUS_PARAM].getValue() > 0.f;
+		bool lissajous = params[LISSAJOUS_PARAM].getValue();
 		lights[LISSAJOUS_LIGHT].setBrightness(lissajous);
 
-		bool external = params[EXTERNAL_PARAM].getValue() > 0.f;
-		lights[EXTERNAL_LIGHT].setBrightness(!external);
+		bool trig = !params[TRIG_PARAM].getValue();
+		lights[TRIG_LIGHT].setBrightness(trig);
 
-		// Compute time
-		float deltaTime = std::pow(2.f, -params[TIME_PARAM].getValue()) / BUFFER_SIZE;
-		int frameCount = (int) std::ceil(deltaTime * args.sampleRate);
+		// Detect trigger if no longer recording
+		if (bufferIndex >= BUFFER_SIZE) {
+			bool triggered = false;
+
+			// Trigger immediately in Lissajous mode, or if trigger detection is disabled
+			if (lissajous || !trig) {
+				triggered = true;
+			}
+			else {
+				// Reset if triggered
+				float trigThreshold = params[THRESH_PARAM].getValue();
+				Input& trigInput = inputs[TRIG_INPUT].isConnected() ? inputs[TRIG_INPUT] : inputs[X_INPUT];
+
+				// This may be 0
+				int trigChannels = trigInput.getChannels();
+				for (int c = 0; c < trigChannels; c++) {
+					float trigVoltage = trigInput.getVoltage(c);
+					if (triggers[c].process(rescale(trigVoltage, trigThreshold, trigThreshold + 0.001f, 0.f, 1.f))) {
+						triggered = true;
+					}
+				}
+			}
+
+			if (triggered) {
+				for (int c = 0; c < 16; c++) {
+					triggers[c].reset();
+				}
+				bufferIndex = 0;
+				frameIndex = 0;
+			}
+		}
 
 		// Set channels
 		int channelsX = inputs[X_INPUT].getChannels();
@@ -123,6 +151,10 @@ struct Scope : Module {
 
 		// Add point to buffer if recording
 		if (bufferIndex < BUFFER_SIZE) {
+			// Compute time
+			float deltaTime = std::pow(2.f, -params[TIME_PARAM].getValue()) / BUFFER_SIZE;
+			int frameCount = (int) std::ceil(deltaTime * args.sampleRate);
+
 			// Get input
 			for (int c = 0; c < channelsX; c++) {
 				float x = inputs[X_INPUT].getVoltage(c);
@@ -144,37 +176,6 @@ struct Scope : Module {
 				bufferIndex++;
 			}
 		}
-
-		// Wait for trigger if no longer recording
-		if (bufferIndex >= BUFFER_SIZE) {
-			auto trigger = [&]() {
-				for (int c = 0; c < 16; c++) {
-					triggers[c].reset();
-				}
-				bufferIndex = 0;
-				frameIndex = 0;
-			};
-
-			// Trigger immediately if external but nothing plugged in, or in Lissajous mode
-			if (lissajous || (external && !inputs[TRIG_INPUT].isConnected())) {
-				trigger();
-				return;
-			}
-
-			// Reset if triggered
-			float trigThreshold = params[TRIG_PARAM].getValue();
-			Input& trigInput = external ? inputs[TRIG_INPUT] : inputs[X_INPUT];
-
-			// This may be 0
-			int trigChannels = trigInput.getChannels();
-			for (int c = 0; c < trigChannels; c++) {
-				float trigVoltage = trigInput.getVoltage(c);
-				if (triggers[c].process(rescale(trigVoltage, trigThreshold, trigThreshold + 0.001f, 0.f, 1.f))) {
-					trigger();
-					return;
-				}
-			}
-		}
 	}
 
 	bool isLissajous() {
@@ -192,7 +193,7 @@ struct Scope : Module {
 		json_t* externalJ = json_object_get(rootJ, "external");
 		if (externalJ) {
 			if (json_integer_value(externalJ))
-				params[EXTERNAL_PARAM].setValue(1.f);
+				params[TRIG_PARAM].setValue(1.f);
 		}
 	}
 };
@@ -445,7 +446,7 @@ struct ScopeDisplay : LedDisplay {
 			}
 
 			// Trigger
-			float trigThreshold = module->params[Scope::TRIG_PARAM].getValue();
+			float trigThreshold = module->params[Scope::THRESH_PARAM].getValue();
 			trigThreshold = (trigThreshold + offsetX) * gainX;
 			drawTrig(args, trigThreshold);
 		}
@@ -475,11 +476,11 @@ struct ScopeWidget : ModuleWidget {
 		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(8.643, 80.603)), module, Scope::LISSAJOUS_PARAM, Scope::LISSAJOUS_LIGHT));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(24.897, 80.551)), module, Scope::X_SCALE_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(41.147, 80.551)), module, Scope::Y_SCALE_PARAM));
-		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(57.397, 80.521)), module, Scope::EXTERNAL_PARAM, Scope::EXTERNAL_LIGHT));
+		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(57.397, 80.521)), module, Scope::TRIG_PARAM, Scope::TRIG_LIGHT));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(8.643, 96.819)), module, Scope::TIME_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(24.897, 96.789)), module, Scope::X_POS_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(41.147, 96.815)), module, Scope::Y_POS_PARAM));
-		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(57.397, 96.815)), module, Scope::TRIG_PARAM));
+		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(57.397, 96.815)), module, Scope::THRESH_PARAM));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.643, 113.115)), module, Scope::X_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(33.023, 113.115)), module, Scope::Y_INPUT));

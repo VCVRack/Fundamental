@@ -3,6 +3,8 @@
 ### 2.1.0 (in development)
 - VCA Mix
 	- When mixing polyphonic and monophonic signals, don't copy monophonic signals to all polyphonic channels. Simply mix them to polyphonic channel 1.
+- Scope
+	- Change TRIG param options from External/Internal to Disabled/Enabled. External trigger input now requires TRIG param to be enabled.
 
 ### 2.0.3 (2021-12-31)
 - Wavetable VCO and LFO
