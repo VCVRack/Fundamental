@@ -222,7 +222,7 @@ struct ScopeDisplay : LedDisplay {
 
 		stats = Stats();
 		for (int i = 0; i < BUFFER_SIZE; i++) {
-			const Scope::Point& point = module->pointBuffer[i];
+			Scope::Point point = module->pointBuffer[i];
 			for (int c = 0; c < channels; c++) {
 				float max = (wave == 0) ? point.maxX[c] : point.maxY[c];
 				float min = (wave == 0) ? point.minX[c] : point.minY[c];
@@ -237,13 +237,18 @@ struct ScopeDisplay : LedDisplay {
 		if (!module)
 			return;
 
+		// Copy point buffer to stack to prevent min/max values being different phase.
+		// This is currently only 256*4*16*4 = 64 kiB.
+		Scope::Point pointBuffer[BUFFER_SIZE];
+		std::copy(std::begin(module->pointBuffer), std::end(module->pointBuffer), std::begin(pointBuffer));
+
 		nvgSave(args.vg);
 		Rect b = box.zeroPos().shrink(Vec(0, 15));
 		nvgScissor(args.vg, RECT_ARGS(b));
 		nvgBeginPath(args.vg);
 		// Draw max points on top
 		for (int i = 0; i < BUFFER_SIZE; i++) {
-			const Scope::Point& point = module->pointBuffer[i];
+			const Scope::Point& point = pointBuffer[i];
 			float max = (wave == 0) ? point.maxX[channel] : point.maxY[channel];
 			if (!std::isfinite(max))
 				max = 0.f;
@@ -260,7 +265,7 @@ struct ScopeDisplay : LedDisplay {
 		}
 		// Draw min points on bottom
 		for (int i = BUFFER_SIZE - 1; i >= 0; i--) {
-			const Scope::Point& point = module->pointBuffer[i];
+			const Scope::Point& point = pointBuffer[i];
 			float min = (wave == 0) ? point.minX[channel] : point.minY[channel];
 			if (!std::isfinite(min))
 				min = 0.f;
@@ -285,6 +290,9 @@ struct ScopeDisplay : LedDisplay {
 		if (!module)
 			return;
 
+		Scope::Point pointBuffer[BUFFER_SIZE];
+		std::copy(std::begin(module->pointBuffer), std::end(module->pointBuffer), std::begin(pointBuffer));
+
 		nvgSave(args.vg);
 		Rect b = box.zeroPos().shrink(Vec(0, 15));
 		nvgScissor(args.vg, RECT_ARGS(b));
@@ -292,7 +300,7 @@ struct ScopeDisplay : LedDisplay {
 		int bufferIndex = module->bufferIndex;
 		for (int i = 0; i < BUFFER_SIZE; i++) {
 			// Get average point
-			const Scope::Point& point = module->pointBuffer[(i + bufferIndex) % BUFFER_SIZE];
+			const Scope::Point& point = pointBuffer[(i + bufferIndex) % BUFFER_SIZE];
 			float avgX = (point.minX[channel] + point.maxX[channel]) / 2;
 			float avgY = (point.minY[channel] + point.maxY[channel]) / 2;
 			if (!std::isfinite(avgX) || !std::isfinite(avgY))

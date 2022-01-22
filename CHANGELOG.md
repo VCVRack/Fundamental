@@ -5,6 +5,7 @@
 	- When mixing polyphonic and monophonic signals, don't copy monophonic signals to all polyphonic channels. Simply mix them to polyphonic channel 1.
 - Scope
 	- Change TRIG param options from External/Internal to Disabled/Enabled. External trigger input now requires TRIG param to be enabled.
+	- Fix min/max points being read from different buffer phases, creating visual glitches in the waveform plot.
 
 ### 2.0.3 (2021-12-31)
 - Wavetable VCO and LFO
