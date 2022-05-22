@@ -1,0 +1,19 @@
+{
+  "plugin": "Fundamental",
+  "model": "CVMix",
+  "version": "2.2.0",
+  "params": [
+    {
+      "value": 1.0,
+      "id": 0
+    },
+    {
+      "value": 1.0,
+      "id": 1
+    },
+    {
+      "value": 1.0,
+      "id": 2
+    }
+  ]
+}
