@@ -35,4 +35,5 @@ void init(Plugin* p) {
 	p->addModel(modelNoise);
 	p->addModel(modelRandom);
 	p->addModel(modelCVMix);
+	p->addModel(modelFade);
 }

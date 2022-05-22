@@ -296,9 +296,20 @@
       "name": "CV Mix",
       "description": "Mixes 3 CV signals with attenuverters",
       "tags": [
+        "Mixer",
         "Utility",
-        "Polyphonic",
-        "Mixer"
+        "Polyphonic"
+      ]
+    },
+    {
+      "slug": "Fade",
+      "name": "Fade",
+      "description": "Crossfades audio or CV",
+      "tags": [
+        "Panning",
+        "Voltage-controlled amplifier",
+        "Utility",
+        "Polyphonic"
       ]
     }
   ]
