@@ -1,5 +1,9 @@
 # Fundamental changelog
 
+### 2.2.0 (2022-05-22)
+- Add CV Mix.
+- Add Fade.
+
 ### 2.1.0 (2022-01-23)
 - VCA Mix
 	- When mixing polyphonic and monophonic signals, don't copy monophonic signals to all polyphonic channels. Simply mix them to polyphonic channel 1.
