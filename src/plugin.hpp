@@ -34,6 +34,7 @@ extern Model* modelViz;
 extern Model* modelMidSide;
 extern Model* modelNoise;
 extern Model* modelRandom;
+extern Model* modelCVMix;
 
 
 struct DigitalDisplay : Widget {

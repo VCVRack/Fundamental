@@ -290,6 +290,16 @@
         "Random",
         "Sample and hold"
       ]
+    },
+    {
+      "slug": "CVMix",
+      "name": "CV Mix",
+      "description": "Mixes 3 CV signals with attenuverters",
+      "tags": [
+        "Utility",
+        "Polyphonic",
+        "Mixer"
+      ]
     }
   ]
 }
