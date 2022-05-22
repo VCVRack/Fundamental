@@ -31,21 +31,23 @@ struct CVMix : Module {
 		if (!outputs[MIX_OUTPUT].isConnected())
 			return;
 
+		using simd::float_4;
+
 		// Get number of channels
 		int channels = 1;
 		for (int i = 0; i < 3; i++)
 			channels = std::max(channels, inputs[CV_INPUTS + i].getChannels());
 
-		for (int c = 0; c < channels; c++) {
+		for (int c = 0; c < channels; c += 4) {
 			// Sum CV inputs
-			float mix = 0.f;
+			float_4 mix = 0.f;
 			for (int i = 0; i < 3; i++) {
-				float cv;
+				float_4 cv;
 				// Normalize first input to 10V
 				if (i == 0)
-					cv = inputs[CV_INPUTS + i].getNormalVoltage(10.f, c);
+					cv = inputs[CV_INPUTS + i].getNormalPolyVoltageSimd<float_4>(10.f, c);
 				else
-					cv = inputs[CV_INPUTS + i].getVoltage(c);
+					cv = inputs[CV_INPUTS + i].getPolyVoltageSimd<float_4>(c);
 
 				// Apply gain
 				cv *= params[LEVEL_PARAMS + i].getValue();
@@ -53,7 +55,7 @@ struct CVMix : Module {
 			}
 
 			// Set mix output
-			outputs[MIX_OUTPUT].setVoltage(mix, c);
+			outputs[MIX_OUTPUT].setVoltageSimd(mix, c);
 		}
 		outputs[MIX_OUTPUT].setChannels(channels);
 	}
