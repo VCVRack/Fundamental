@@ -1,5 +1,9 @@
 # Fundamental changelog
 
+### 2.2.1 (2022-05-24)
+- CV Mix
+	- Normalize all inputs to 10V instead of just the first input.
+
 ### 2.2.0 (2022-05-22)
 - Add CV Mix.
 - Add Fade.
