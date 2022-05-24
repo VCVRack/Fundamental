@@ -28,7 +28,6 @@ struct CVMix : Module {
 
 		for (int i = 0; i < 3; i++)
 			configInput(CV_INPUTS + i, string::f("CV %d", i + 1));
-		getInputInfo(CV_INPUTS + 0)->description = "Normalized to 10 V";
 
 		configOutput(MIX_OUTPUT, "Mix");
 	}
@@ -46,12 +45,8 @@ struct CVMix : Module {
 			// Sum CV inputs
 			float_4 mix = 0.f;
 			for (int i = 0; i < 3; i++) {
-				float_4 cv;
-				// Normalize first input to 10V
-				if (i == 0)
-					cv = inputs[CV_INPUTS + i].getNormalPolyVoltageSimd<float_4>(10.f, c);
-				else
-					cv = inputs[CV_INPUTS + i].getPolyVoltageSimd<float_4>(c);
+				// Normalize inputs to 10V
+				float_4 cv = inputs[CV_INPUTS + i].getNormalPolyVoltageSimd<float_4>(10.f, c);
 
 				// Apply gain
 				cv *= params[LEVEL_PARAMS + i].getValue();
