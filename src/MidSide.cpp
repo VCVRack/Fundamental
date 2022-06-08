@@ -47,41 +47,42 @@ struct MidSide : Module {
 		using simd::float_4;
 
 		// Encoder
-		{
-			int channels = std::max(inputs[ENC_LEFT_INPUT].getChannels(), inputs[ENC_RIGHT_INPUT].getChannels());
-			outputs[ENC_MID_OUTPUT].setChannels(channels);
-			outputs[ENC_SIDES_OUTPUT].setChannels(channels);
+		int channels = std::max(inputs[ENC_LEFT_INPUT].getChannels(), inputs[ENC_RIGHT_INPUT].getChannels());
 
-			for (int c = 0; c < channels; c += 4) {
-				float_4 width = params[ENC_WIDTH_PARAM].getValue();
-				width += inputs[ENC_WIDTH_INPUT].getPolyVoltageSimd<float_4>(c) / 10 * 2;
-				width = simd::fmax(width, 0.f);
-				float_4 left = inputs[ENC_LEFT_INPUT].getVoltageSimd<float_4>(c);
-				float_4 right = inputs[ENC_RIGHT_INPUT].getVoltageSimd<float_4>(c);
-				float_4 mid = (left + right) / 2;
-				float_4 sides = (left - right) / 2 * width;
-				outputs[ENC_MID_OUTPUT].setVoltageSimd(mid, c);
-				outputs[ENC_SIDES_OUTPUT].setVoltageSimd(sides, c);
-			}
+		outputs[ENC_MID_OUTPUT].setChannels(channels);
+		outputs[ENC_SIDES_OUTPUT].setChannels(channels);
+
+		for (int c = 0; c < channels; c += 4) {
+			float_4 width = params[ENC_WIDTH_PARAM].getValue();
+			width += inputs[ENC_WIDTH_INPUT].getPolyVoltageSimd<float_4>(c) / 10 * 2;
+			width = simd::fmax(width, 0.f);
+			float_4 left = inputs[ENC_LEFT_INPUT].getVoltageSimd<float_4>(c);
+			float_4 right = inputs[ENC_RIGHT_INPUT].getVoltageSimd<float_4>(c);
+			float_4 mid = (left + right) / 2;
+			float_4 sides = (left - right) / 2 * width;
+			outputs[ENC_MID_OUTPUT].setVoltageSimd(mid, c);
+			outputs[ENC_SIDES_OUTPUT].setVoltageSimd(sides, c);
 		}
 
 		// Decoder
-		{
-			int channels = std::max(inputs[DEC_MID_INPUT].getChannels(), inputs[DEC_SIDES_INPUT].getChannels());
-			outputs[DEC_LEFT_OUTPUT].setChannels(channels);
-			outputs[DEC_RIGHT_OUTPUT].setChannels(channels);
+		if (inputs[DEC_MID_INPUT].isConnected() || inputs[DEC_SIDES_INPUT].isConnected())
+			channels = std::max(inputs[DEC_MID_INPUT].getChannels(), inputs[DEC_SIDES_INPUT].getChannels());
 
-			for (int c = 0; c < channels; c += 4) {
-				float_4 width = params[DEC_WIDTH_PARAM].getValue();
-				width += inputs[DEC_WIDTH_INPUT].getPolyVoltageSimd<float_4>(c) / 10 * 2;
-				width = simd::fmax(width, 0.f);
-				float_4 mid = inputs[DEC_MID_INPUT].getVoltageSimd<float_4>(c);
-				float_4 sides = inputs[DEC_SIDES_INPUT].getVoltageSimd<float_4>(c);
-				float_4 left = mid + sides * width;
-				float_4 right = mid - sides * width;
-				outputs[DEC_LEFT_OUTPUT].setVoltageSimd(left, c);
-				outputs[DEC_RIGHT_OUTPUT].setVoltageSimd(right, c);
-			}
+		outputs[DEC_LEFT_OUTPUT].setChannels(channels);
+		outputs[DEC_RIGHT_OUTPUT].setChannels(channels);
+
+		for (int c = 0; c < channels; c += 4) {
+			float_4 width = params[DEC_WIDTH_PARAM].getValue();
+			width += inputs[DEC_WIDTH_INPUT].getPolyVoltageSimd<float_4>(c) / 10 * 2;
+			width = simd::fmax(width, 0.f);
+			float_4 mid = outputs[ENC_MID_OUTPUT].getVoltageSimd<float_4>(c);
+			float_4 sides = outputs[ENC_SIDES_OUTPUT].getVoltageSimd<float_4>(c);
+			mid = inputs[DEC_MID_INPUT].getNormalVoltageSimd<float_4>(mid, c);
+			sides = inputs[DEC_SIDES_INPUT].getNormalVoltageSimd<float_4>(sides, c);
+			float_4 left = mid + sides * width;
+			float_4 right = mid - sides * width;
+			outputs[DEC_LEFT_OUTPUT].setVoltageSimd(left, c);
+			outputs[DEC_RIGHT_OUTPUT].setVoltageSimd(right, c);
 		}
 	}
 };
