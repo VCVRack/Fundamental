@@ -13,12 +13,12 @@ struct MidSide : Module {
 		ENC_RIGHT_INPUT,
 		DEC_WIDTH_INPUT,
 		DEC_MID_INPUT,
-		DEC_SIDES_INPUT,
+		DEC_SIDE_INPUT,
 		NUM_INPUTS
 	};
 	enum OutputIds {
 		ENC_MID_OUTPUT,
-		ENC_SIDES_OUTPUT,
+		ENC_SIDE_OUTPUT,
 		DEC_LEFT_OUTPUT,
 		DEC_RIGHT_OUTPUT,
 		NUM_OUTPUTS
@@ -36,9 +36,9 @@ struct MidSide : Module {
 		configInput(ENC_RIGHT_INPUT, "Encoder right");
 		configInput(DEC_WIDTH_INPUT, "Decoder width");
 		configInput(DEC_MID_INPUT, "Decoder mid");
-		configInput(DEC_SIDES_INPUT, "Decoder sides");
+		configInput(DEC_SIDE_INPUT, "Decoder side");
 		configOutput(ENC_MID_OUTPUT, "Encoder mid");
-		configOutput(ENC_SIDES_OUTPUT, "Encoder sides");
+		configOutput(ENC_SIDE_OUTPUT, "Encoder side");
 		configOutput(DEC_LEFT_OUTPUT, "Decoder left");
 		configOutput(DEC_RIGHT_OUTPUT, "Decoder right");
 	}
@@ -50,7 +50,7 @@ struct MidSide : Module {
 		int channels = std::max(inputs[ENC_LEFT_INPUT].getChannels(), inputs[ENC_RIGHT_INPUT].getChannels());
 
 		outputs[ENC_MID_OUTPUT].setChannels(channels);
-		outputs[ENC_SIDES_OUTPUT].setChannels(channels);
+		outputs[ENC_SIDE_OUTPUT].setChannels(channels);
 
 		for (int c = 0; c < channels; c += 4) {
 			float_4 width = params[ENC_WIDTH_PARAM].getValue();
@@ -59,14 +59,14 @@ struct MidSide : Module {
 			float_4 left = inputs[ENC_LEFT_INPUT].getVoltageSimd<float_4>(c);
 			float_4 right = inputs[ENC_RIGHT_INPUT].getVoltageSimd<float_4>(c);
 			float_4 mid = (left + right) / 2;
-			float_4 sides = (left - right) / 2 * width;
+			float_4 side = (left - right) / 2 * width;
 			outputs[ENC_MID_OUTPUT].setVoltageSimd(mid, c);
-			outputs[ENC_SIDES_OUTPUT].setVoltageSimd(sides, c);
+			outputs[ENC_SIDE_OUTPUT].setVoltageSimd(side, c);
 		}
 
 		// Decoder
-		if (inputs[DEC_MID_INPUT].isConnected() || inputs[DEC_SIDES_INPUT].isConnected())
-			channels = std::max(inputs[DEC_MID_INPUT].getChannels(), inputs[DEC_SIDES_INPUT].getChannels());
+		if (inputs[DEC_MID_INPUT].isConnected() || inputs[DEC_SIDE_INPUT].isConnected())
+			channels = std::max(inputs[DEC_MID_INPUT].getChannels(), inputs[DEC_SIDE_INPUT].getChannels());
 
 		outputs[DEC_LEFT_OUTPUT].setChannels(channels);
 		outputs[DEC_RIGHT_OUTPUT].setChannels(channels);
@@ -76,11 +76,11 @@ struct MidSide : Module {
 			width += inputs[DEC_WIDTH_INPUT].getPolyVoltageSimd<float_4>(c) / 10 * 2;
 			width = simd::fmax(width, 0.f);
 			float_4 mid = outputs[ENC_MID_OUTPUT].getVoltageSimd<float_4>(c);
-			float_4 sides = outputs[ENC_SIDES_OUTPUT].getVoltageSimd<float_4>(c);
+			float_4 side = outputs[ENC_SIDE_OUTPUT].getVoltageSimd<float_4>(c);
 			mid = inputs[DEC_MID_INPUT].getNormalVoltageSimd<float_4>(mid, c);
-			sides = inputs[DEC_SIDES_INPUT].getNormalVoltageSimd<float_4>(sides, c);
-			float_4 left = mid + sides * width;
-			float_4 right = mid - sides * width;
+			side = inputs[DEC_SIDE_INPUT].getNormalVoltageSimd<float_4>(side, c);
+			float_4 left = mid + side * width;
+			float_4 right = mid - side * width;
 			outputs[DEC_LEFT_OUTPUT].setVoltageSimd(left, c);
 			outputs[DEC_RIGHT_OUTPUT].setVoltageSimd(right, c);
 		}
@@ -106,10 +106,10 @@ struct MidSideWidget : ModuleWidget {
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.122, 41.373)), module, MidSide::ENC_RIGHT_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.122, 80.603)), module, MidSide::DEC_WIDTH_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.285, 96.859)), module, MidSide::DEC_MID_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.122, 96.859)), module, MidSide::DEC_SIDES_INPUT));
+		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.122, 96.859)), module, MidSide::DEC_SIDE_INPUT));
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.285, 57.679)), module, MidSide::ENC_MID_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.122, 57.679)), module, MidSide::ENC_SIDES_OUTPUT));
+		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.122, 57.679)), module, MidSide::ENC_SIDE_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.285, 113.115)), module, MidSide::DEC_LEFT_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.122, 113.115)), module, MidSide::DEC_RIGHT_OUTPUT));
 	}
