@@ -1,5 +1,9 @@
 # Fundamental changelog
 
+### 2.2.2 (in development)
+- Mid/Side
+	- Normalize decoder mid/side inputs to encoder mid/side outputs.
+
 ### 2.2.1 (2022-05-24)
 - CV Mix
 	- Normalize all inputs to 10V instead of just the first input.
