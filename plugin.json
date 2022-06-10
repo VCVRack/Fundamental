@@ -311,6 +311,15 @@
         "Utility",
         "Polyphonic"
       ]
+    },
+    {
+      "slug": "Logic",
+      "name": "Logic",
+      "description": "Gate logic processor",
+      "tags": [
+        "Logic",
+        "Polyphonic"
+      ]
     }
   ]
 }

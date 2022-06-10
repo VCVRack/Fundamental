@@ -36,6 +36,7 @@ extern Model* modelNoise;
 extern Model* modelRandom;
 extern Model* modelCVMix;
 extern Model* modelFade;
+extern Model* modelLogic;
 
 
 struct DigitalDisplay : Widget {
@@ -100,5 +101,14 @@ struct YellowRedLight : TBase {
 	YellowRedLight() {
 		this->addBaseColor(SCHEME_YELLOW);
 		this->addBaseColor(SCHEME_RED);
+	}
+};
+
+
+template <typename TBase = GrayModuleLightWidget>
+struct YellowBlueLight : TBase {
+	YellowBlueLight() {
+		this->addBaseColor(SCHEME_YELLOW);
+		this->addBaseColor(SCHEME_BLUE);
 	}
 };
