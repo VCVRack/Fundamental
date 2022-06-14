@@ -37,6 +37,7 @@ extern Model* modelRandom;
 extern Model* modelCVMix;
 extern Model* modelFade;
 extern Model* modelLogic;
+extern Model* modelCompare;
 
 
 struct DigitalDisplay : Widget {

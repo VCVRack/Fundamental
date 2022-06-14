@@ -320,6 +320,15 @@
         "Logic",
         "Polyphonic"
       ]
+    },
+    {
+      "slug": "Compare",
+      "name": "Compare",
+      "description": "Compares two voltages",
+      "tags": [
+        "Utility",
+        "Polyphonic"
+      ]
     }
   ]
 }
