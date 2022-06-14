@@ -57,8 +57,8 @@ struct Logic : Module {
 		bool anyState[8] = {};
 
 		for (int c = 0; c < channels; c++) {
-			bool a = inputs[A_INPUT].getPolyVoltage(c) > 1.f;
-			bool b = bPush || inputs[B_INPUT].getPolyVoltage(c) > 1.f;
+			bool a = inputs[A_INPUT].getPolyVoltage(c) >= 1.f;
+			bool b = bPush || inputs[B_INPUT].getPolyVoltage(c) >= 1.f;
 
 			bool states[8] = {
 				!a, // NOTA
