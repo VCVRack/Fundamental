@@ -90,6 +90,15 @@ struct Compare : Module {
 				anyLess = true;
 		}
 
+		outputs[MAX_OUTPUT].setChannels(channels);
+		outputs[MIN_OUTPUT].setChannels(channels);
+		outputs[CLIP_OUTPUT].setChannels(channels);
+		outputs[LIM_OUTPUT].setChannels(channels);
+		outputs[CLIPGATE_OUTPUT].setChannels(channels);
+		outputs[LIMGATE_OUTPUT].setChannels(channels);
+		outputs[GREATER_OUTPUT].setChannels(channels);
+		outputs[LESS_OUTPUT].setChannels(channels);
+
 		lights[CLIP_LIGHT + 0].setBrightnessSmooth(anyClipped && channels <= 1, args.sampleTime);
 		lights[CLIP_LIGHT + 1].setBrightnessSmooth(anyClipped && channels > 1, args.sampleTime);
 		lights[LIM_LIGHT + 0].setBrightnessSmooth(anyLimmed && channels <= 1, args.sampleTime);
