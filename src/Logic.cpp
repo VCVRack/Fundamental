@@ -35,6 +35,8 @@ struct Logic : Module {
 		LIGHTS_LEN
 	};
 
+	dsp::ClockDivider lightDivider;
+
 	Logic() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configButton(B_PARAM, "B");
@@ -48,6 +50,8 @@ struct Logic : Module {
 		configOutput(NAND_OUTPUT, "NAND");
 		configOutput(XOR_OUTPUT, "XOR");
 		configOutput(XNOR_OUTPUT, "XNOR");
+
+		lightDivider.setDivision(32);
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -83,10 +87,12 @@ struct Logic : Module {
 		}
 
 		// Set lights
-		lights[B_BUTTON_LIGHT].setBrightness(bPush);
-		for (int i = 0; i < 8; i++) {
-			lights[NOTA_LIGHT + 2 * i + 0].setBrightness(anyState[i] && channels == 1);
-			lights[NOTA_LIGHT + 2 * i + 1].setBrightness(anyState[i] && channels > 1);
+		if (lightDivider.process()) {
+			lights[B_BUTTON_LIGHT].setBrightness(bPush);
+			for (int i = 0; i < 8; i++) {
+				lights[NOTA_LIGHT + 2 * i + 0].setBrightness(anyState[i] && channels == 1);
+				lights[NOTA_LIGHT + 2 * i + 1].setBrightness(anyState[i] && channels > 1);
+			}
 		}
 	}
 };
