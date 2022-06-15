@@ -38,6 +38,8 @@ extern Model* modelCVMix;
 extern Model* modelFade;
 extern Model* modelLogic;
 extern Model* modelCompare;
+extern Model* modelGates;
+extern Model* modelProcess;
 
 
 struct DigitalDisplay : Widget {

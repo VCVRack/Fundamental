@@ -329,6 +329,22 @@
         "Utility",
         "Polyphonic"
       ]
+    },
+    {
+      "slug": "Gates",
+      "name": "Gates",
+      "description": "Gate processor",
+      "tags": [
+        "Polyphonic"
+      ]
+    },
+    {
+      "slug": "Process",
+      "name": "Process",
+      "description": "CV processor",
+      "tags": [
+        "Polyphonic"
+      ]
     }
   ]
 }

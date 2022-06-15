@@ -38,4 +38,6 @@ void init(Plugin* p) {
 	p->addModel(modelFade);
 	p->addModel(modelLogic);
 	p->addModel(modelCompare);
+	p->addModel(modelGates);
+	p->addModel(modelProcess);
 }
