@@ -64,7 +64,7 @@ struct Gates : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		int channels = inputs[IN_INPUT].getChannels();
+		int channels = std::max(1, inputs[IN_INPUT].getChannels());
 
 		bool anyRise = false;
 		bool anyFall = false;

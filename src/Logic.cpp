@@ -55,7 +55,7 @@ struct Logic : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		int channels = std::max(inputs[A_INPUT].getChannels(), inputs[B_INPUT].getChannels());
+		int channels = std::max({1, inputs[A_INPUT].getChannels(), inputs[B_INPUT].getChannels()});
 
 		bool bPush = params[B_PARAM].getValue() > 0.f;
 		bool anyState[8] = {};
