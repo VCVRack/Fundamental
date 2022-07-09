@@ -30,6 +30,8 @@ struct Compare : Module {
 		LIGHTS_LEN
 	};
 
+	dsp::ClockDivider lightDivider;
+
 	Compare() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configParam(B_PARAM, -10.f, 10.f, 0.f, "B offset", " V");
@@ -43,6 +45,8 @@ struct Compare : Module {
 		configOutput(LIMGATE_OUTPUT, "Limit gate");
 		configOutput(GREATER_OUTPUT, "A>B");
 		configOutput(LESS_OUTPUT, "A<B");
+
+		lightDivider.setDivision(32);
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -76,18 +80,14 @@ struct Compare : Module {
 			outputs[LIM_OUTPUT].setVoltage(a - clip, c);
 
 			outputs[CLIPGATE_OUTPUT].setVoltage(clipped ? 10.f : 0.f, c);
-			if (clipped)
-				anyClipped = true;
-			if (!clipped)
-				anyLimmed = true;
+			anyClipped = anyClipped || clipped;
+			anyLimmed = anyLimmed || !clipped;
 			outputs[LIMGATE_OUTPUT].setVoltage(!clipped ? 10.f : 0.f, c);
 
 			outputs[GREATER_OUTPUT].setVoltage(a > b ? 10.f : 0.f, c);
-			if (a > b)
-				anyGreater = true;
+			anyGreater = anyGreater || (a > b);
 			outputs[LESS_OUTPUT].setVoltage(a < b ? 10.f : 0.f, c);
-			if (a < b)
-				anyLess = true;
+			anyLess = anyLess || (a < b);
 		}
 
 		outputs[MAX_OUTPUT].setChannels(channels);
@@ -99,14 +99,17 @@ struct Compare : Module {
 		outputs[GREATER_OUTPUT].setChannels(channels);
 		outputs[LESS_OUTPUT].setChannels(channels);
 
-		lights[CLIP_LIGHT + 0].setBrightnessSmooth(anyClipped && channels <= 1, args.sampleTime);
-		lights[CLIP_LIGHT + 1].setBrightnessSmooth(anyClipped && channels > 1, args.sampleTime);
-		lights[LIM_LIGHT + 0].setBrightnessSmooth(anyLimmed && channels <= 1, args.sampleTime);
-		lights[LIM_LIGHT + 1].setBrightnessSmooth(anyLimmed && channels > 1, args.sampleTime);
-		lights[GREATER_LIGHT + 0].setBrightnessSmooth(anyGreater && channels <= 1, args.sampleTime);
-		lights[GREATER_LIGHT + 1].setBrightnessSmooth(anyGreater && channels > 1, args.sampleTime);
-		lights[LESS_LIGHT + 0].setBrightnessSmooth(anyLess && channels <= 1, args.sampleTime);
-		lights[LESS_LIGHT + 1].setBrightnessSmooth(anyLess && channels > 1, args.sampleTime);
+		if (lightDivider.process()) {
+			float lightTime = args.sampleTime * lightDivider.getDivision();
+			lights[CLIP_LIGHT + 0].setBrightnessSmooth(anyClipped && channels <= 1, lightTime);
+			lights[CLIP_LIGHT + 1].setBrightnessSmooth(anyClipped && channels > 1, lightTime);
+			lights[LIM_LIGHT + 0].setBrightnessSmooth(anyLimmed && channels <= 1, lightTime);
+			lights[LIM_LIGHT + 1].setBrightnessSmooth(anyLimmed && channels > 1, lightTime);
+			lights[GREATER_LIGHT + 0].setBrightnessSmooth(anyGreater && channels <= 1, lightTime);
+			lights[GREATER_LIGHT + 1].setBrightnessSmooth(anyGreater && channels > 1, lightTime);
+			lights[LESS_LIGHT + 0].setBrightnessSmooth(anyLess && channels <= 1, lightTime);
+			lights[LESS_LIGHT + 1].setBrightnessSmooth(anyLess && channels > 1, lightTime);
+		}
 	}
 };
 

@@ -88,14 +88,53 @@ struct Logic : Module {
 
 		// Set lights
 		if (lightDivider.process()) {
+			float lightTime = args.sampleTime * lightDivider.getDivision();
 			lights[B_BUTTON_LIGHT].setBrightness(bPush);
 			for (int i = 0; i < 8; i++) {
-				lights[NOTA_LIGHT + 2 * i + 0].setBrightness(anyState[i] && channels == 1);
-				lights[NOTA_LIGHT + 2 * i + 1].setBrightness(anyState[i] && channels > 1);
+				lights[NOTA_LIGHT + 2 * i + 0].setBrightnessSmooth(anyState[i] && channels == 1, lightTime);
+				lights[NOTA_LIGHT + 2 * i + 1].setBrightnessSmooth(anyState[i] && channels > 1, lightTime);
 			}
 		}
 	}
 };
+
+
+struct VCVBezelBig : app::SvgSwitch {
+	VCVBezelBig() {
+		momentary = true;
+		addFrame(Svg::load(asset::plugin(pluginInstance, "res/VCVBezelBig.svg")));
+	}
+};
+
+
+template <typename TBase>
+struct VCVBezelLightBig : TBase {
+	VCVBezelLightBig() {
+		this->borderColor = color::BLACK_TRANSPARENT;
+		this->bgColor = color::BLACK_TRANSPARENT;
+		this->box.size = mm2px(math::Vec(9.53, 9.53));
+	}
+};
+
+
+template <typename TBase, typename TLight = WhiteLight>
+struct LightButton : TBase {
+	app::ModuleLightWidget* light;
+
+	LightButton() {
+		light = new TLight;
+		// Move center of light to center of box
+		light->box.pos = this->box.size.div(2).minus(light->box.size.div(2));
+		this->addChild(light);
+	}
+
+	app::ModuleLightWidget* getLight() {
+		return light;
+	}
+};
+
+
+using VCVBezelLightBigWhite = LightButton<VCVBezelBig, VCVBezelLightBig<WhiteLight>>;
 
 
 struct LogicWidget : ModuleWidget {
@@ -108,7 +147,7 @@ struct LogicWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(12.7, 26.755)), module, Logic::B_PARAM, Logic::B_BUTTON_LIGHT));
+		addParam(createLightParamCentered<VCVBezelLightBigWhite>(mm2px(Vec(12.7, 26.755)), module, Logic::B_PARAM, Logic::B_BUTTON_LIGHT));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.299, 52.31)), module, Logic::A_INPUT));
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.136, 52.31)), module, Logic::B_INPUT));
