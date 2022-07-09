@@ -74,10 +74,9 @@ struct Gates : Module {
 		bool anyEnd = false;
 
 		// Reset
+		bool resetButton = false;
 		if (resetParamTrigger.process(params[RESET_PARAM].getValue() > 0.f)) {
-			for (int c = 0; c < 16; c++) {
-				flop[c] = false;
-			}
+			resetButton = true;
 		}
 
 		// Process channels
@@ -104,18 +103,24 @@ struct Gates : Module {
 			}
 
 			// Reset
+			bool reset = resetButton;
 			if (resetTrigger[c].process(inputs[RESET_INPUT].getVoltage(c), 0.1f, 2.f)) {
+				reset = true;
+			}
+			if (reset) {
 				flop[c] = false;
 			}
 
 			// Gate
 			float gatePitch = params[LENGTH_PARAM].getValue() + inputs[LENGTH_INPUT].getPolyVoltage(c);
 			float gateLength = dsp::approxExp2_taylor5(gatePitch + 30.f) / 1073741824;
-			if (std::isfinite(gateTime[c]) && gateTime[c] >= gateLength) {
-				gateTime[c] = INFINITY;
-				eogPulse[c].trigger(1e-3f);
+			if (std::isfinite(gateTime[c])) {
+				gateTime[c] += args.sampleTime;
+				if (reset || gateTime[c] >= gateLength) {
+					gateTime[c] = INFINITY;
+					eogPulse[c].trigger(1e-3f);
+				}
 			}
-			gateTime[c] += args.sampleTime;
 
 			// Outputs
 			bool rise = risePulse[c].process(args.sampleTime);
