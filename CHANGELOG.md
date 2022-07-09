@@ -1,6 +1,10 @@
 # Fundamental changelog
 
-### 2.2.2 (in development)
+### 2.3.0 (in development)
+- Add Logic.
+- Add Compare.
+- Add Gates.
+- Add Process.
 - Mid/Side
 	- Normalize decoder mid/side inputs to encoder mid/side outputs.
 
