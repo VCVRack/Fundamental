@@ -112,7 +112,7 @@ struct VCVBezelLightBig : TBase {
 	VCVBezelLightBig() {
 		this->borderColor = color::BLACK_TRANSPARENT;
 		this->bgColor = color::BLACK_TRANSPARENT;
-		this->box.size = mm2px(math::Vec(9.53, 9.53));
+		this->box.size = mm2px(math::Vec(11.1936, 11.1936));
 	}
 };
 
