@@ -1,6 +1,23 @@
 #include "plugin.hpp"
 
 
+struct SlewFilter {
+	float value = 0.f;
+
+	float process(float in, float slew) {
+		value += math::clamp(in - value, -slew, slew);
+		return value;
+	}
+	float jump(float in) {
+		value = in;
+		return value;
+	}
+	float getValue() {
+		return value;
+	}
+};
+
+
 struct Process : Module {
 	enum ParamId {
 		SLEW_PARAM,
@@ -27,16 +44,29 @@ struct Process : Module {
 		LIGHTS_LEN
 	};
 
-	bool state[16] = {};
-	float sample1[16] = {};
-	float sample2[16] = {};
-	float holdValue[16] = {};
-	float slewValue[16] = {};
-	float glideValue[16] = {};
+	struct Engine {
+		bool state = false;
+		// For glide to turn on after 1ms
+		float onTime = 0.f;
+		float sample1 = 0.f;
+		float sample2 = 0.f;
+		SlewFilter sample1Filter;
+		SlewFilter sample2Filter;
+		float holdValue = 0.f;
+		SlewFilter slewFilter;
+		SlewFilter glideFilter;
+	};
+	Engine engines[16];
 
 	Process() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(SLEW_PARAM, std::log2(1e-3f), std::log2(10.f), std::log2(1e-3f), "Slew", " ms/V", 2, 1000);
+
+		struct SlewQuantity : ParamQuantity {
+			float getDisplayValue() override {
+				return (getSmoothValue() <= getMinValue()) ? 0.f : ParamQuantity::getDisplayValue();
+			}
+		};
+		configParam<SlewQuantity>(SLEW_PARAM, std::log2(1e-3f), std::log2(10.f), std::log2(1e-3f), "Slew", " ms/V", 2, 1000);
 		configButton(GATE_PARAM, "Gate");
 		configInput(SLEW_INPUT, "Slew");
 		configInput(IN_INPUT, "Voltage");
@@ -52,55 +82,75 @@ struct Process : Module {
 	void process(const ProcessArgs& args) override {
 		int channels = inputs[IN_INPUT].getChannels();
 		bool gateButton = params[GATE_PARAM].getValue() > 0.f;
+		float slewParam = params[SLEW_PARAM].getValue();
+		// Hard-left param means infinite slew
+		if (slewParam <= std::log2(1e-3f))
+			slewParam = -INFINITY;
 
 		for (int c = 0; c < channels; c++) {
+			Engine& e = engines[c];
+
 			float in = inputs[IN_INPUT].getVoltage(c);
-
-			float slewPitch = -params[SLEW_PARAM].getValue() - inputs[SLEW_INPUT].getPolyVoltage(c);
-			// V/s
-			float slew = dsp::approxExp2_taylor5(slewPitch + 30.f) / 1073741824;
-
 			float gateValue = inputs[GATE_INPUT].getPolyVoltage(c);
 
-			if (!state[c]) {
+			// Slew rate in V/s
+			float slew = INFINITY;
+			if (std::isfinite(slewParam)) {
+				float slewPitch = slewParam + inputs[SLEW_INPUT].getPolyVoltage(c);
+				slew = dsp::approxExp2_taylor5(-slewPitch + 30.f) / std::exp2(30.f);
+			}
+			float slewDelta = slew * args.sampleTime;
+
+			// Gate trigger/untrigger
+			if (!e.state) {
 				if (gateValue >= 2.f || gateButton) {
 					// Triggered
-					state[c] = true;
+					e.state = true;
+					e.onTime = 0.f;
 					// Hold and track
-					holdValue[c] = in;
+					e.holdValue = in;
 					// Sample and hold
-					sample2[c] = sample1[c];
-					sample1[c] = in;
-					// Glide
-					// TODO delay timer
-					glideValue[c] = in;
+					e.sample2 = e.sample1;
+					e.sample1 = in;
 				}
 			}
 			else {
 				if (gateValue <= 0.1f && !gateButton) {
 					// Untriggered
-					state[c] = false;
+					e.state = false;
 					// Track and hold
-					holdValue[c] = in;
+					e.holdValue = in;
 				}
 			}
 
-			// Slew each value
-			float slewDelta = slew * args.sampleTime;
-			if (state[c]) {
-				slewValue[c] = in;
+			// Track & hold
+			float tr = e.state ? e.holdValue : in;
+			float ht = e.state ? in : e.holdValue;
+
+			// Slew
+			if (e.state) {
+				e.slewFilter.jump(in);
+				e.onTime += args.sampleTime;
 			}
 			else {
-				slewValue[c] += clamp(in - slewValue[c], -slewDelta, slewDelta);
+				e.slewFilter.process(in, slewDelta);
 			}
-			glideValue[c] += clamp(in - glideValue[c], -slewDelta, slewDelta);
 
-			outputs[SH1_OUTPUT].setVoltage(sample1[c], c);
-			outputs[SH2_OUTPUT].setVoltage(sample2[c], c);
-			outputs[TH_OUTPUT].setVoltage(state[c] ? holdValue[c] : in, c);
-			outputs[HT_OUTPUT].setVoltage(state[c] ? in : holdValue[c], c);
-			outputs[SLEW_OUTPUT].setVoltage(slewValue[c], c);
-			outputs[GLIDE_OUTPUT].setVoltage(glideValue[c], c);
+			// Glide
+			// Wait 1ms before considering gate as legato
+			if (e.state && e.onTime > 1e-3f) {
+				e.glideFilter.process(in, slewDelta);
+			}
+			else {
+				e.glideFilter.jump(in);
+			}
+
+			outputs[SH1_OUTPUT].setVoltage(e.sample1Filter.process(e.sample1, slewDelta), c);
+			outputs[SH2_OUTPUT].setVoltage(e.sample2Filter.process(e.sample2, slewDelta), c);
+			outputs[TH_OUTPUT].setVoltage(tr, c);
+			outputs[HT_OUTPUT].setVoltage(ht, c);
+			outputs[SLEW_OUTPUT].setVoltage(e.slewFilter.getValue(), c);
+			outputs[GLIDE_OUTPUT].setVoltage(e.glideFilter.getValue(), c);
 		}
 
 		outputs[SH1_OUTPUT].setChannels(channels);
