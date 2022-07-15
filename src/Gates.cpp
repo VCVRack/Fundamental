@@ -33,27 +33,30 @@ struct Gates : Module {
 		LIGHTS_LEN
 	};
 
+	double time = 0.0;
 	dsp::BooleanTrigger resetParamTrigger;
-	// Bit field for each channel
-	uint16_t stateBits = 0;
-	dsp::SchmittTrigger resetTrigger[16];
-	dsp::PulseGenerator risePulse[16];
-	dsp::PulseGenerator fallPulse[16];
-	bool flop[16] = {};
-	float gateTime[16] = {};
 	dsp::ClockDivider lightDivider;
 
-	double time = 0.0;
 	struct StateEvent {
 		double time;
-		uint16_t stateBits;
+		bool state;
 
 		bool operator<(const StateEvent& other) const {
 			return time < other.time;
 		}
 	};
-	// TODO Change this to a circular buffer with binary search, to avoid allocations.
-	std::set<StateEvent> stateEvents;
+
+	struct Engine {
+		bool state = false;
+		dsp::SchmittTrigger resetTrigger;
+		dsp::PulseGenerator risePulse;
+		dsp::PulseGenerator fallPulse;
+		bool flop = false;
+		float gateTime = INFINITY;
+		// TODO Change this to a circular buffer with binary search, to avoid allocations.
+		std::set<StateEvent> stateEvents;
+	};
+	Engine engines[16];
 
 	Gates() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -70,9 +73,6 @@ struct Gates : Module {
 		configOutput(DELAY_OUTPUT, "Gate delay");
 
 		lightDivider.setDivision(32);
-		for (int c = 0; c < 16; c++) {
-			gateTime[c] = INFINITY;
-		}
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -91,72 +91,52 @@ struct Gates : Module {
 			resetButton = true;
 		}
 
-		bool newState = false;
-
 		// Process channels
 		for (int c = 0; c < channels; c++) {
+			Engine& e = engines[c];
 			float in = inputs[IN_INPUT].getVoltage(c);
 
-			if (stateBits & (1 << c)) {
+			bool newState = false;
+			if (e.state) {
 				// HIGH to LOW
 				if (in <= 0.1f) {
-					// states[c] = false
-					stateBits &= ~(1 << c);
-					fallPulse[c].trigger(1e-3f);
+					e.state = false;
+					e.fallPulse.trigger(1e-3f);
 					newState = true;
 				}
 			}
 			else {
 				// LOW to HIGH
 				if (in >= 2.f) {
-					// states[c] = true
-					stateBits |= (1 << c);
-					risePulse[c].trigger(1e-3f);
+					e.state = true;
+					e.risePulse.trigger(1e-3f);
 					// Flip flop
-					flop[c] ^= true;
+					e.flop ^= true;
 					// Gate
-					gateTime[c] = 0.f;
+					e.gateTime = 0.f;
 					newState = true;
 				}
 			}
 
 			// Reset
 			bool reset = resetButton;
-			if (resetTrigger[c].process(inputs[RESET_INPUT].getVoltage(c), 0.1f, 2.f)) {
+			if (e.resetTrigger.process(inputs[RESET_INPUT].getVoltage(c), 0.1f, 2.f)) {
 				reset = true;
 			}
 			if (reset) {
-				flop[c] = false;
+				e.flop = false;
+				e.stateEvents.clear();
 			}
 
 			// Gate
 			float gatePitch = params[LENGTH_PARAM].getValue() + inputs[LENGTH_INPUT].getPolyVoltage(c);
 			float gateLength = dsp::approxExp2_taylor5(gatePitch + 30.f) / 1073741824;
-			if (std::isfinite(gateTime[c])) {
-				gateTime[c] += args.sampleTime;
-				if (reset || gateTime[c] >= gateLength) {
-					gateTime[c] = INFINITY;
+			if (std::isfinite(e.gateTime)) {
+				e.gateTime += args.sampleTime;
+				if (reset || e.gateTime >= gateLength) {
+					e.gateTime = INFINITY;
 				}
 			}
-
-			// Outputs
-			bool rise = risePulse[c].process(args.sampleTime);
-			outputs[RISE_OUTPUT].setVoltage(rise ? 10.f : 0.f, c);
-			anyRise = anyRise || rise;
-
-			bool fall = fallPulse[c].process(args.sampleTime);
-			outputs[FALL_OUTPUT].setVoltage(fall ? 10.f : 0.f, c);
-			anyFall = anyFall || fall;
-
-			outputs[FLIP_OUTPUT].setVoltage(!flop[c] ? 10.f : 0.f, c);
-			anyFlip = anyFlip || !flop[c];
-
-			outputs[FLOP_OUTPUT].setVoltage(flop[c] ? 10.f : 0.f, c);
-			anyFlop = anyFlop || flop[c];
-
-			bool gate = std::isfinite(gateTime[c]);
-			outputs[GATE_OUTPUT].setVoltage(gate ? 10.f : 0.f, c);
-			anyGate = anyGate || gate;
 
 			// Gate delay output
 			bool delayGate = false;
@@ -164,26 +144,45 @@ struct Gates : Module {
 			double delayTime = time - gateLength;
 			// Find event less than or equal to delayTime.
 			// If not found, gate will be off.
-			auto eventIt = stateEvents.upper_bound({delayTime, 0});
-			if (eventIt != stateEvents.begin()) {
+			auto eventIt = e.stateEvents.upper_bound({delayTime, false});
+			if (eventIt != e.stateEvents.begin()) {
 				eventIt--;
 				const StateEvent& event = *eventIt;
-				delayGate = event.stateBits & (1 << c);
+				delayGate = event.state;
 			}
+
+			if (newState) {
+				// Keep buffer a reasonable size
+				if (e.stateEvents.size() >= (1 << 12) - 1) {
+					e.stateEvents.erase(e.stateEvents.begin());
+				}
+				// Insert current state at current time
+				e.stateEvents.insert({time, e.state});
+			}
+
+			// Outputs
+			bool rise = e.risePulse.process(args.sampleTime);
+			outputs[RISE_OUTPUT].setVoltage(rise ? 10.f : 0.f, c);
+			anyRise = anyRise || rise;
+
+			bool fall = e.fallPulse.process(args.sampleTime);
+			outputs[FALL_OUTPUT].setVoltage(fall ? 10.f : 0.f, c);
+			anyFall = anyFall || fall;
+
+			outputs[FLIP_OUTPUT].setVoltage(!e.flop ? 10.f : 0.f, c);
+			anyFlip = anyFlip || !e.flop;
+
+			outputs[FLOP_OUTPUT].setVoltage(e.flop ? 10.f : 0.f, c);
+			anyFlop = anyFlop || e.flop;
+
+			bool gate = std::isfinite(e.gateTime);
+			outputs[GATE_OUTPUT].setVoltage(gate ? 10.f : 0.f, c);
+			anyGate = anyGate || gate;
 
 			outputs[DELAY_OUTPUT].setVoltage(delayGate ? 10.f : 0.f, c);
 			anyDelay = anyDelay || delayGate;
 		}
 
-		// Push state event
-		if (newState) {
-			// Keep buffer a reasonable size
-			if (stateEvents.size() >= (1 << 12) - 1) {
-				stateEvents.erase(stateEvents.begin());
-			}
-
-			stateEvents.insert({time, stateBits});
-		}
 		time += args.sampleTime;
 
 		outputs[RISE_OUTPUT].setChannels(channels);
