@@ -76,7 +76,7 @@ struct Logic : Module {
 			};
 
 			for (int i = 0; i < 8; i++) {
-				outputs[NOTA_OUTPUT + i].setVoltage(states[i] ? 10.f : 0.f);
+				outputs[NOTA_OUTPUT + i].setVoltage(states[i] ? 10.f : 0.f, c);
 				if (states[i])
 					anyState[i] = true;
 			}
