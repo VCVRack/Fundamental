@@ -1,6 +1,10 @@
 # Fundamental changelog
 
-### 2.3.0 (in development)
+### 2.3.1 (2022-08-07)
+- Logic
+	- Fix polyphonic outputs.
+
+### 2.3.0 (2022-07-15)
 - Add Logic.
 - Add Compare.
 - Add Gates.
