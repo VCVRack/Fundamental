@@ -188,6 +188,7 @@
       "description": "Routes 1 input to one of 4 outputs",
       "manualUrl": "https://vcvrack.com/Fundamental#SequentialSwitch",
       "tags": [
+        "Switch",
         "Utility",
         "Polyphonic"
       ]
@@ -198,6 +199,7 @@
       "description": "Routes one of 4 inputs to 1 output",
       "manualUrl": "https://vcvrack.com/Fundamental#SequentialSwitch",
       "tags": [
+        "Switch",
         "Utility",
         "Polyphonic"
       ]
