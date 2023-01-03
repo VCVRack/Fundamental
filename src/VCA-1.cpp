@@ -92,9 +92,11 @@ struct VCA_1VUKnob : SliderKnob {
 
 		// Segment gain
 		nvgBeginPath(args.vg);
+		bool segmentFill = false;
 		for (int c = 0; c < channels; c++) {
 			float gain = module ? module->lastGains[c] : 1.f;
 			if (gain >= 0.005f) {
+				segmentFill = true;
 				nvgRect(args.vg,
 				        r.pos.x + r.size.x * c / channels,
 				        r.pos.y + r.size.y * (1 - gain),
@@ -103,7 +105,10 @@ struct VCA_1VUKnob : SliderKnob {
 			}
 		}
 		nvgFillColor(args.vg, SCHEME_YELLOW);
-		nvgFill(args.vg);
+		// If nvgFill() is called with 0 path elements, it can fill other undefined paths.
+		if (segmentFill) {
+			nvgFill(args.vg);
+		}
 
 		// Invisible separators
 		const int segs = 25;
