@@ -25,6 +25,7 @@ struct Mutes : Module {
 			configSwitch(MUTE_PARAMS + i, 0.f, 1.f, 0.f, string::f("Row %d mute", i + 1));
 			configInput(IN_INPUTS + i, string::f("Row %d", i + 1));
 			configOutput(OUT_OUTPUTS + i, string::f("Row %d", i + 1));
+			configBypass(IN_INPUTS + i, OUT_OUTPUTS + i);
 		}
 	}
 
