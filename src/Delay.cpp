@@ -121,7 +121,7 @@ struct Delay : Module {
 		// Scale time knob to 1V/oct pitch based on formula explained in constructor, for backwards compatibility
 		float pitch = std::log2(1000.f) - std::log2(10000.f) * params[TIME_PARAM].getValue();
 		pitch += inputs[TIME_INPUT].getVoltage() * params[TIME_CV_PARAM].getValue();
-		float freq = clockFreq / 2.f * std::pow(2.f, pitch);
+		float freq = clockFreq / 2.f * dsp::exp2_taylor5(pitch);
 		// Number of desired delay samples
 		float index = args.sampleRate / freq;
 		// In order to delay accurate samples, subtract by the historyBuffer size, and an experimentally tweaked amount.

@@ -145,7 +145,7 @@ struct WTLFO : Module {
 			for (int c = 0; c < channels; c += 4) {
 				// Calculate frequency in Hz
 				float_4 pitch = freqParam + inputs[FM_INPUT].getVoltageSimd<float_4>(c) * fmParam;
-				float_4 freq = clockFreq / 2.f * dsp::approxExp2_taylor5(pitch + 30.f) / std::pow(2.f, 30.f);
+				float_4 freq = clockFreq / 2.f * dsp::exp2_taylor5(pitch);
 				freq = simd::fmin(freq, 1024.f);
 
 				// Accumulate phase

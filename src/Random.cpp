@@ -148,7 +148,7 @@ struct Random : Module {
 			// Advance clock phase by rate
 			float rate = params[RATE_PARAM].getValue();
 			rate += inputs[RATE_PARAM].getVoltage() * params[RATE_CV_PARAM].getValue();
-			clockFreq = std::pow(2.f, rate);
+			clockFreq = dsp::exp2_taylor5(rate);
 			deltaPhase = std::fmin(clockFreq * args.sampleTime, 0.5f);
 			clockPhase += deltaPhase;
 			// Trigger

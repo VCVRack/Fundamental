@@ -159,10 +159,10 @@ struct WTVCO : Module {
 				float_4 freq;
 				if (!linear) {
 					pitch += inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;
-					freq = dsp::FREQ_C4 * dsp::approxExp2_taylor5(pitch + 30.f) / std::pow(2.f, 30.f);
+					freq = dsp::FREQ_C4 * dsp::exp2_taylor5(pitch);
 				}
 				else {
-					freq = dsp::FREQ_C4 * dsp::approxExp2_taylor5(pitch + 30.f) / std::pow(2.f, 30.f);
+					freq = dsp::FREQ_C4 * dsp::exp2_taylor5(pitch);
 					freq += dsp::FREQ_C4 * inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;
 				}
 

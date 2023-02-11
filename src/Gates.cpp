@@ -136,7 +136,7 @@ struct Gates : Module {
 
 			// Gate output
 			float gatePitch = params[LENGTH_PARAM].getValue() + inputs[LENGTH_INPUT].getPolyVoltage(c);
-			float gateLength = dsp::approxExp2_taylor5(gatePitch + 30.f) / 1073741824;
+			float gateLength = dsp::exp2_taylor5(gatePitch + 30.f) / 1073741824;
 			if (std::isfinite(e.gateTime)) {
 				e.gateTime += args.sampleTime;
 				if (reset || e.gateTime >= gateLength) {

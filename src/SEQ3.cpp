@@ -182,7 +182,7 @@ struct SEQ3 : Module {
 			else {
 				// Internal clock
 				float clockPitch = params[TEMPO_PARAM].getValue() + inputs[TEMPO_INPUT].getVoltage() * params[TEMPO_CV_PARAM].getValue();
-				float clockFreq = std::pow(2.f, clockPitch);
+				float clockFreq = dsp::exp2_taylor5(clockPitch);
 				phase += clockFreq * args.sampleTime;
 				if (phase >= 1.f && !resetGate) {
 					clock = true;

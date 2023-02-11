@@ -131,7 +131,7 @@ struct LFO : Module {
 			// Pitch and frequency
 			float_4 pitch = freqParam;
 			pitch += inputs[FM_INPUT].getVoltageSimd<float_4>(c) * fmParam;
-			float_4 freq = clockFreq / 2.f * dsp::approxExp2_taylor5(pitch + 30.f) / std::pow(2.f, 30.f);
+			float_4 freq = clockFreq / 2.f * dsp::exp2_taylor5(pitch);
 
 			// Pulse width
 			float_4 pw = pwParam;

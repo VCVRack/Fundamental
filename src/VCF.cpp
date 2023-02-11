@@ -169,7 +169,7 @@ struct VCF : Module {
 			// Get pitch
 			float_4 pitch = freqParam + inputs[FREQ_INPUT].getPolyVoltageSimd<float_4>(c) * freqCvParam;
 			// Set cutoff
-			float_4 cutoff = dsp::FREQ_C4 * simd::pow(2.f, pitch);
+			float_4 cutoff = dsp::FREQ_C4 * dsp::exp2_taylor5(pitch);
 			// Without oversampling, we must limit to 8000 Hz or so @ 44100 Hz
 			cutoff = clamp(cutoff, 1.f, args.sampleRate * 0.18f);
 			filter.setCutoff(cutoff);

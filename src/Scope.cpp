@@ -152,7 +152,7 @@ struct Scope : Module {
 		// Add point to buffer if recording
 		if (bufferIndex < BUFFER_SIZE) {
 			// Compute time
-			float deltaTime = std::pow(2.f, -params[TIME_PARAM].getValue()) / BUFFER_SIZE;
+			float deltaTime = dsp::exp2_taylor5(-params[TIME_PARAM].getValue()) / BUFFER_SIZE;
 			int frameCount = (int) std::ceil(deltaTime * args.sampleRate);
 
 			// Get input

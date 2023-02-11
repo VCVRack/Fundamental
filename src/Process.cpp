@@ -97,7 +97,7 @@ struct Process : Module {
 			float slew = INFINITY;
 			if (std::isfinite(slewParam)) {
 				float slewPitch = slewParam + inputs[SLEW_INPUT].getPolyVoltage(c);
-				slew = dsp::approxExp2_taylor5(-slewPitch + 30.f) / std::exp2(30.f);
+				slew = dsp::exp2_taylor5(-slewPitch + 30.f) / std::exp2(30.f);
 			}
 			float slewDelta = slew * args.sampleTime;
 
