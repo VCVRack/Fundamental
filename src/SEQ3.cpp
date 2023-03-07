@@ -163,6 +163,8 @@ struct SEQ3 : Module {
 			resetPulse.trigger(1e-3f);
 			// Reset step index
 			index = 0;
+			// Reset phase
+			phase = 0.f;
 		}
 
 		bool resetGate = resetPulse.process(args.sampleTime);
