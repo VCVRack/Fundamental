@@ -99,6 +99,12 @@ struct Quantizer : Module {
 		}
 	}
 
+	void rotateNotes(int delta) {
+		delta = eucMod(-delta, 12);
+		std::rotate(&enabledNotes[0], &enabledNotes[delta], &enabledNotes[12]);
+		updateRanges();
+	}
+
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
 
@@ -252,6 +258,19 @@ struct QuantizerWidget : ModuleWidget {
 		quantizerDisplay->box.size = mm2px(Vec(15.24, 55.88));
 		quantizerDisplay->setModule(module);
 		addChild(quantizerDisplay);
+	}
+
+	void appendContextMenu(Menu* menu) override {
+		Quantizer* module = getModule<Quantizer>();
+
+		menu->addChild(new MenuSeparator);
+
+		menu->addChild(createMenuItem("Shift notes up", "", [=]() {
+			module->rotateNotes(1);
+		}));
+		menu->addChild(createMenuItem("Shift notes down", "", [=]() {
+			module->rotateNotes(-1);
+		}));
 	}
 };
 
