@@ -25,6 +25,12 @@ struct Fade : Module {
 		LIGHTS_LEN
 	};
 
+	/**
+	0 linear
+	1 -3dB
+	*/
+	int panLaw = 0;
+
 	Fade() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configParam(CROSSFADE_PARAM, 0.f, 1.f, 0.5f, "Crossfade", "%", 0, 100);
@@ -39,6 +45,11 @@ struct Fade : Module {
 		configBypass(IN2_INPUT, OUT2_OUTPUT);
 	}
 
+	void onReset(const ResetEvent& e) override {
+		Module::onReset(e);
+		panLaw = 0;
+	}
+
 	void process(const ProcessArgs& args) override {
 		if (!outputs[OUT1_OUTPUT].isConnected() && !outputs[OUT2_OUTPUT].isConnected())
 			return;
@@ -50,20 +61,39 @@ struct Fade : Module {
 			float_4 crossfade = params[CROSSFADE_PARAM].getValue();
 			crossfade += inputs[CROSSFADE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * params[CROSSFADE_CV_PARAM].getValue();
 			crossfade = clamp(crossfade, 0.f, 1.f);
+			float_4 crossfade1 = 1.f - crossfade;
+
+			// Apply sqrt pan law
+			if (panLaw == 1) {
+				crossfade = (simd::sqrt(crossfade));
+				crossfade1 = simd::sqrt(crossfade1);
+			}
 
 			// Get inputs
 			float_4 in1 = inputs[IN1_INPUT].getPolyVoltageSimd<float_4>(c);
 			float_4 in2 = inputs[IN2_INPUT].getPolyVoltageSimd<float_4>(c);
 
 			// Calculate outputs
-			float_4 out1 = (1.f - crossfade) * in1 + crossfade * in2;
-			float_4 out2 = crossfade * in1 + (1.f - crossfade) * in2;
+			float_4 out1 = crossfade1 * in1 + crossfade * in2;
+			float_4 out2 = crossfade * in1 + crossfade1 * in2;
 			outputs[OUT1_OUTPUT].setVoltageSimd(out1, c);
 			outputs[OUT2_OUTPUT].setVoltageSimd(out2, c);
 		}
 
 		outputs[OUT1_OUTPUT].setChannels(channels);
 		outputs[OUT2_OUTPUT].setChannels(channels);
+	}
+
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
+		json_object_set_new(rootJ, "panLaw", json_integer(panLaw));
+		return rootJ;
+	}
+
+	void dataFromJson(json_t* rootJ) override {
+		json_t* panLawJ = json_object_get(rootJ, "panLaw");
+		if (panLawJ)
+			panLaw = json_integer_value(panLawJ);
 	}
 };
 
@@ -87,6 +117,14 @@ struct FadeWidget : ModuleWidget {
 
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 97.923)), module, Fade::OUT1_OUTPUT));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Fade::OUT2_OUTPUT));
+	}
+
+	void appendContextMenu(Menu* menu) override {
+		Fade* module = getModule<Fade>();
+
+		menu->addChild(new MenuSeparator);
+
+		menu->addChild(createIndexPtrSubmenuItem("Pan law", {"-6 dB (linear)", "-3 dB"}, &module->panLaw));
 	}
 };
 
