@@ -347,6 +347,15 @@
       "tags": [
         "Polyphonic"
       ]
+    },
+    {
+      "slug": "Mult",
+      "name": "Mult",
+      "description": "Copies a signal to 8 outputs",
+      "tags": [
+        "Utility",
+        "Polyphonic"
+      ]
     }
   ]
 }
