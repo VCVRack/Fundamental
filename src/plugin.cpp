@@ -40,4 +40,5 @@ void init(Plugin* p) {
 	p->addModel(modelCompare);
 	p->addModel(modelGates);
 	p->addModel(modelProcess);
+	p->addModel(modelMult);
 }
