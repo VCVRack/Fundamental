@@ -1,5 +1,14 @@
 # Fundamental changelog
 
+### 2.4.0 (2023-04-01)
+- Add Mult.
+- SEQ 3
+	- Reset step phase when reset trigger is received.
+- Mutes
+	- Add bypass routes.
+- VCA
+	- Fix graphical glitch when display segments have 0% height.
+
 ### 2.3.1 (2022-08-07)
 - Logic
 	- Fix polyphonic outputs.
