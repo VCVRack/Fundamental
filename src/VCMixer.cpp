@@ -49,85 +49,83 @@ struct VCMixer : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
+		using simd::float_4;
+
 		// Get number of poly channels for mix output
-		int mixChannels = 1;
+		int channels = 1;
 		for (int i = 0; i < 4; i++) {
-			mixChannels = std::max(mixChannels, inputs[CH_INPUTS + i].getChannels());
+			channels = std::max(channels, inputs[CH_INPUTS + i].getChannels());
 		}
-		float mix[16] = {};
 
-		// Channel strips
-		for (int i = 0; i < 4; i++) {
-			int channels = 1;
-			float in[16] = {};
-			float sum = 0.f;
+		// Iterate polyphony channels (voices)
+		float chSum[4] = {};
 
-			if (inputs[CH_INPUTS + i].isConnected()) {
-				channels = inputs[CH_INPUTS + i].getChannels();
+		for (int c = 0; c < channels; c += 4) {
+			float_4 mix = 0.f;
 
-				// Get input
-				inputs[CH_INPUTS + i].readVoltages(in);
+			// Channel strips
+			for (int i = 0; i < 4; i++) {
+				float_4 out = 0.f;
 
-				// Apply fader gain
-				float gain = std::pow(params[LVL_PARAMS + i].getValue(), 2.f);
-				for (int c = 0; c < channels; c++) {
-					in[c] *= gain;
-				}
+				if (inputs[CH_INPUTS + i].isConnected()) {
+					// Get input
+					out = inputs[CH_INPUTS + i].getPolyVoltageSimd<float_4>(c);
 
-				// Apply CV gain
-				if (inputs[CV_INPUTS + i].isConnected()) {
-					for (int c = 0; c < channels; c++) {
-						float cv = clamp(inputs[CV_INPUTS + i].getPolyVoltage(c) / 10.f, 0.f, 1.f);
-						in[c] *= cv;
+					// Apply fader gain
+					float gain = std::pow(params[LVL_PARAMS + i].getValue(), 2.f);
+					out *= gain;
+
+					// Apply CV gain
+					if (inputs[CV_INPUTS + i].isConnected()) {
+						float_4 cv = inputs[CV_INPUTS + i].getPolyVoltageSimd<float_4>(c) / 10.f;
+						cv = simd::fmax(0.f, cv);
+						out *= cv;
 					}
+
+					// Sum channel for VU meter
+					for (int c2 = 0; c2 < 4; c2++) {
+						chSum[i] += out[c2];
+					}
+
+					// Add to mix
+					mix += out;
 				}
 
-				// Add to mix
-				for (int c = 0; c < channels; c++) {
-					mix[c] += in[c];
-				}
-
-				// Sum channel for VU meter
-				for (int c = 0; c < channels; c++) {
-					sum += in[c];
-				}
+				// Set channel output
+				outputs[CH_OUTPUTS + i].setVoltageSimd(out, c);
 			}
 
-			chMeters[i].process(args.sampleTime, sum / 5.f);
+			// Mix output
+			if (outputs[MIX_OUTPUT].isConnected()) {
+				// Apply mix knob gain
+				float gain = params[MIX_LVL_PARAM].getValue();
+				mix *= gain;
 
-			// Set channel output
-			if (outputs[CH_OUTPUTS + i].isConnected()) {
-				outputs[CH_OUTPUTS + i].setChannels(channels);
-				outputs[CH_OUTPUTS + i].writeVoltages(in);
+				// Apply mix CV gain
+				if (inputs[MIX_CV_INPUT].isConnected()) {
+					float_4 cv = inputs[MIX_CV_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f;
+					cv = simd::fmax(0.f, cv);
+					mix *= cv;
+				}
+
+				// Set mix output
+				outputs[MIX_OUTPUT].setVoltageSimd(mix, c);
 			}
 		}
 
-		// Mix output
-		if (outputs[MIX_OUTPUT].isConnected()) {
-			// Apply mix knob gain
-			float gain = params[MIX_LVL_PARAM].getValue();
-			for (int c = 0; c < mixChannels; c++) {
-				mix[c] *= gain;
-			}
-
-			// Apply mix CV gain
-			if (inputs[MIX_CV_INPUT].isConnected()) {
-				for (int c = 0; c < mixChannels; c++) {
-					float cv = clamp(inputs[MIX_CV_INPUT].getPolyVoltage(c) / 10.f, 0.f, 1.f);
-					mix[c] *= cv;
-				}
-			}
-
-			// Set mix output
-			outputs[MIX_OUTPUT].setChannels(mixChannels);
-			outputs[MIX_OUTPUT].writeVoltages(mix);
+		// Set output channels
+		for (int i = 0; i < 4; i++) {
+			outputs[CH_OUTPUTS + i].setChannels(channels);
 		}
+		outputs[MIX_OUTPUT].setChannels(channels);
 
 		// VU lights
+		for (int i = 0; i < 4; i++) {
+			chMeters[i].process(args.sampleTime, chSum[i] / 5.f);
+		}
 		if (lightDivider.process()) {
 			for (int i = 0; i < 4; i++) {
-				float b = chMeters[i].getBrightness(-24.f, 0.f);
-				lights[LVL_LIGHTS + i].setBrightness(b);
+				lights[LVL_LIGHTS + i].setBrightness(chMeters[i].getBrightness(-24.f, 0.f));
 			}
 		}
 	}
