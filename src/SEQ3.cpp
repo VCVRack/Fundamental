@@ -147,26 +147,27 @@ struct SEQ3 : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		// Run
-		// Use bitwise OR "|" to always evaluate both expressions
-		if (runButtonTrigger.process(params[RUN_PARAM].getValue())) {
+		// Toggle run
+		bool runButtonTriggered = runButtonTrigger.process(params[RUN_PARAM].getValue());
+		bool runTriggered = runTrigger.process(inputs[RUN_INPUT].getVoltage(), 0.1f, 2.f);
+		if (runButtonTriggered || runTriggered) {
 			running ^= true;
 			runPulse.trigger(1e-3f);
 		}
-		if (runTrigger.process(inputs[RUN_INPUT].getVoltage(), 0.1f, 2.f)) {
-			running ^= true;
-			runPulse.trigger(1e-3f);
-		}
+		bool runGate = runPulse.process(args.sampleTime);
 
-		// Reset
-		if (resetButtonTrigger.process(params[RESET_PARAM].getValue()) | resetTrigger.process(inputs[RESET_INPUT].getVoltage(), 0.1f, 2.f)) {
+		int oldIndex = index;
+
+		// Reset to step 1
+		bool resetButtonTriggered = resetButtonTrigger.process(params[RESET_PARAM].getValue());
+		bool resetTriggered = resetTrigger.process(inputs[RESET_INPUT].getVoltage(), 0.1f, 2.f);
+		if (resetButtonTriggered || resetTriggered) {
 			resetPulse.trigger(1e-3f);
 			// Reset step index
 			index = 0;
 			// Reset phase
 			phase = 0.f;
 		}
-
 		bool resetGate = resetPulse.process(args.sampleTime);
 
 		// Clock
@@ -175,8 +176,9 @@ struct SEQ3 : Module {
 		if (running) {
 			if (inputs[CLOCK_INPUT].isConnected()) {
 				// External clock
+				bool clockTriggered = clockTrigger.process(inputs[CLOCK_INPUT].getVoltage(), 0.1f, 2.f);
 				// Ignore clock while reset pulse is high
-				if (clockTrigger.process(inputs[CLOCK_INPUT].getVoltage(), 0.1f, 2.f) && !resetGate) {
+				if (clockTriggered && !resetGate) {
 					clock = true;
 				}
 				clockGate = clockTrigger.isHigh();
@@ -198,16 +200,21 @@ struct SEQ3 : Module {
 		float steps = params[TRIG_PARAM].getValue() + inputs[STEPS_INPUT].getVoltage() * params[STEPS_CV_PARAM].getValue();
 		int numSteps = (int) clamp(std::round(steps), 1.f, 8.f);
 
-		// Advance step
+		// Advance step when clocked
 		if (clock) {
-			clockPulse.trigger(1e-3f);
 			index++;
 			if (index >= numSteps)
 				index = 0;
 		}
+		// Trigger pulse if step was changed
+		if (index != oldIndex) {
+			clockPulse.trigger(1e-3f);
+		}
+
 		// Unless we're passing the clock gate, generate a pulse
-		if (!clockPassthrough)
+		if (!clockPassthrough) {
 			clockGate = clockPulse.process(args.sampleTime);
+		}
 
 		// Gate buttons
 		for (int i = 0; i < 8; i++) {
@@ -232,7 +239,7 @@ struct SEQ3 : Module {
 
 		outputs[STEPS_OUTPUT].setVoltage((numSteps - 1) * 1.f);
 		outputs[CLOCK_OUTPUT].setVoltage(clockGate ? 10.f : 0.f);
-		outputs[RUN_OUTPUT].setVoltage(runPulse.process(args.sampleTime) ? 10.f : 0.f);
+		outputs[RUN_OUTPUT].setVoltage(runGate ? 10.f : 0.f);
 		outputs[RESET_OUTPUT].setVoltage(resetGate ? 10.f : 0.f);
 
 		lights[CLOCK_LIGHT].setSmoothBrightness(clockGate, args.sampleTime);
