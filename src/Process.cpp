@@ -63,7 +63,9 @@ struct Process : Module {
 
 		struct SlewQuantity : ParamQuantity {
 			float getDisplayValue() override {
-				return (getSmoothValue() <= getMinValue()) ? 0.f : ParamQuantity::getDisplayValue();
+				if (getValue() <= getMinValue())
+					return 0.f;
+				return ParamQuantity::getDisplayValue();
 			}
 		};
 		configParam<SlewQuantity>(SLEW_PARAM, std::log2(1e-3f), std::log2(10.f), std::log2(1e-3f), "Slew", " ms/V", 2, 1000);
