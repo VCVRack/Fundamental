@@ -43,7 +43,10 @@ struct ADSR : Module {
 	static constexpr float MIN_TIME = 1e-3f;
 	static constexpr float MAX_TIME = 10.f;
 	static constexpr float LAMBDA_BASE = MAX_TIME / MIN_TIME;
+	static constexpr float ATT_TARGET = 1.2f;
 
+	int channels = 1;
+	float_4 gate[4] = {};
 	float_4 attacking[4] = {};
 	float_4 env[4] = {};
 	dsp::TSchmittTrigger<float_4> trigger[4];
@@ -86,7 +89,7 @@ struct ADSR : Module {
 		// 0.23 us serial with all lambdas computed
 		// 0.15-0.18 us serial with all lambdas computed with SSE
 
-		int channels = std::max(1, inputs[GATE_INPUT].getChannels());
+		channels = std::max(1, inputs[GATE_INPUT].getChannels());
 
 		// Compute lambdas
 		if (cvDivider.process()) {
@@ -119,34 +122,35 @@ struct ADSR : Module {
 			}
 		}
 
-		float_4 gate[4] = {};
 		bool push = (params[PUSH_PARAM].getValue() > 0.f);
 
 		for (int c = 0; c < channels; c += 4) {
 			// Gate
-			gate[c / 4] = inputs[GATE_INPUT].getVoltageSimd<float_4>(c) >= 1.f;
-
+			float_4 oldGate = gate[c / 4];
 			if (push) {
 				gate[c / 4] = float_4::mask();
 			}
+			else {
+				gate[c / 4] = inputs[GATE_INPUT].getVoltageSimd<float_4>(c) >= 1.f;
+			}
+			attacking[c / 4] |= (gate[c / 4] & ~oldGate);
 
 			// Retrigger
 			float_4 triggered = trigger[c / 4].process(inputs[RETRIG_INPUT].getPolyVoltageSimd<float_4>(c));
-			attacking[c / 4] = simd::ifelse(triggered, float_4::mask(), attacking[c / 4]);
+			attacking[c / 4] |= triggered;
+
+			// Turn off attacking state if gate is LOW
+			attacking[c / 4] &= gate[c / 4];
 
 			// Get target and lambda for exponential decay
-			const float attackTarget = 1.2f;
-			float_4 target = simd::ifelse(gate[c / 4], simd::ifelse(attacking[c / 4], attackTarget, sustain[c / 4]), 0.f);
-			float_4 lambda = simd::ifelse(gate[c / 4], simd::ifelse(attacking[c / 4], attackLambda[c / 4], decayLambda[c / 4]), releaseLambda[c / 4]);
+			float_4 target = simd::ifelse(attacking[c / 4], ATT_TARGET, simd::ifelse(gate[c / 4], sustain[c / 4], 0.f));
+			float_4 lambda = simd::ifelse(attacking[c / 4], attackLambda[c / 4], simd::ifelse(gate[c / 4], decayLambda[c / 4], releaseLambda[c / 4]));
 
 			// Adjust env
 			env[c / 4] += (target - env[c / 4]) * lambda * args.sampleTime;
 
 			// Turn off attacking state if envelope is HIGH
-			attacking[c / 4] = simd::ifelse(env[c / 4] >= 1.f, float_4::zero(), attacking[c / 4]);
-
-			// Turn on attacking state if gate is LOW
-			attacking[c / 4] = simd::ifelse(gate[c / 4], attacking[c / 4], float_4::mask());
+			attacking[c / 4] &= (env[c / 4] < 1.f);
 
 			// Set output
 			outputs[ENVELOPE_OUTPUT].setVoltageSimd(10.f * env[c / 4], c);
@@ -201,42 +205,152 @@ struct ADSRDisplay : LedDisplay {
 
 	void drawLayer(const DrawArgs& args, int layer) override {
 		if (layer == 1) {
-			// Module parameters
-			float attackLambda = module ? module->attackLambda[0][0] : 1.f;
-			float decayLambda = module ? module->decayLambda[0][0] : 1.f;
-			float releaseLambda = module ? module->releaseLambda[0][0] : 1.f;
-			float sustain = module ? module->sustain[0][0] : 0.5f;
+			nvgScissor(args.vg, RECT_ARGS(args.clipBox));
 
-			// Scale lambdas
-			const float power = 0.5f;
-			float attack = std::pow(attackLambda, -power);
-			float decay = std::pow(decayLambda, -power);
-			float release = std::pow(releaseLambda, -power);
-			float totalLambda = attack + decay + release;
-			if (totalLambda == 0.f)
-				return;
+			Rect gridBox = getBox().zeroPos().shrink(Vec(0, 6.5));
+			Rect r = gridBox;
+			r.pos.x += 4.5;
+			r.size.x -= 4.5;
+			Vec p;
 
-			Rect r = box.zeroPos().shrink(Vec(4, 5));
-			Vec p0 = r.getBottomLeft();
-			Vec p1 = r.interpolate(Vec(attack / totalLambda, 0));
-			Vec p2 = r.interpolate(Vec((attack + decay) / totalLambda, 1 - sustain));
-			Vec p3 = r.getBottomRight();
-			Vec attackHandle = Vec(p0.x, crossfade(p0.y, p1.y, 0.8f));
-			Vec decayHandle = Vec(p1.x, crossfade(p1.y, p2.y, 0.8f));
-			Vec releaseHandle = Vec(p2.x, crossfade(p2.y, p3.y, 0.8f));
+			// Get parameters
+			float attTime = module ? 1 / module->attackLambda[0][0] : 1.f;
+			float decTime = module ? 1 / module->decayLambda[0][0] : 1.f;
+			float relTime = module ? 1 / module->releaseLambda[0][0] : 1.f;
+			float totalTime = attTime + decTime + relTime;
+			attTime /= totalTime;
+			decTime /= totalTime;
+			relTime /= totalTime;
+			float sustain = module ? module->sustain[0][0] : 0.333f;
+			int channels = module ? module->channels : 1;
 
+			// Grid
+			nvgStrokeWidth(args.vg, 1.0);
+			nvgStrokeColor(args.vg, nvgRGBAf(1, 1, 1, 0.20));
 			nvgBeginPath(args.vg);
-			nvgMoveTo(args.vg, p0.x, p0.y);
-			nvgBezierTo(args.vg, p0.x, p0.y, attackHandle.x, attackHandle.y, p1.x, p1.y);
-			nvgBezierTo(args.vg, p1.x, p1.y, decayHandle.x, decayHandle.y, p2.x, p2.y);
-			nvgBezierTo(args.vg, p2.x, p2.y, releaseHandle.x, releaseHandle.y, p3.x, p3.y);
-			nvgLineCap(args.vg, NVG_ROUND);
-			nvgMiterLimit(args.vg, 2.f);
-			nvgStrokeWidth(args.vg, 1.5f);
-			nvgStrokeColor(args.vg, SCHEME_YELLOW);
+
+			// Left
+			p = r.getTopLeft();
+			nvgMoveTo(args.vg, VEC_ARGS(p));
+			p = r.getBottomLeft();
+			nvgLineTo(args.vg, VEC_ARGS(p));
+			// Top
+			p = gridBox.getTopLeft();
+			nvgMoveTo(args.vg, VEC_ARGS(p));
+			p = gridBox.getTopRight();
+			nvgLineTo(args.vg, VEC_ARGS(p));
+			// Bottom
+			p = gridBox.getBottomLeft();
+			nvgMoveTo(args.vg, VEC_ARGS(p));
+			p = gridBox.getBottomRight();
+			nvgLineTo(args.vg, VEC_ARGS(p));
+			// Attack
+			p = r.interpolate(Vec(attTime, 0));
+			nvgMoveTo(args.vg, VEC_ARGS(p));
+			p = r.interpolate(Vec(attTime, 1));
+			nvgLineTo(args.vg, VEC_ARGS(p));
+			// Decay
+			p = r.interpolate(Vec(attTime + decTime, 1 - sustain));
+			nvgMoveTo(args.vg, VEC_ARGS(p));
+			p = r.interpolate(Vec(attTime + decTime, 1));
+			nvgLineTo(args.vg, VEC_ARGS(p));
+			// Sustain
+			p = r.interpolate(Vec(attTime, 1 - sustain));
+			nvgMoveTo(args.vg, VEC_ARGS(p));
+			p = r.interpolate(Vec(1, 1 - sustain));
+			nvgLineTo(args.vg, VEC_ARGS(p));
+
 			nvgStroke(args.vg);
+
+			// Line
+			nvgStrokeColor(args.vg, SCHEME_YELLOW);
+			nvgBeginPath(args.vg);
+			Vec c1, c2;
+
+			// Begin
+			p = r.getBottomLeft();
+			nvgMoveTo(args.vg, VEC_ARGS(p));
+			// Attack
+			const int I = 10;
+			for (int i = 1; i <= I; i++) {
+				float phase = float(i) / I;
+				// Distribute points more evenly to prevent artifacts
+				phase = std::pow(phase, 2);
+				float env = phaseToEnv(phase);
+				p = r.interpolate(Vec(attTime * phase, 1 - env));
+				nvgLineTo(args.vg, VEC_ARGS(p));
+			}
+			// Decay
+			for (int i = 1; i <= I; i++) {
+				float phase = float(i) / I;
+				phase = std::pow(phase, 2);
+				float env = 1 - phaseToEnv(phase) * (1 - sustain);
+				p = r.interpolate(Vec(attTime + decTime * phase, 1 - env));
+				nvgLineTo(args.vg, VEC_ARGS(p));
+			}
+			// Release
+			for (int i = 1; i <= I; i++) {
+				float phase = float(i) / I;
+				phase = std::pow(phase, 2);
+				float env = (1 - phaseToEnv(phase)) * sustain;
+				p = r.interpolate(Vec(attTime + decTime + relTime * phase, 1 - env));
+				nvgLineTo(args.vg, VEC_ARGS(p));
+			}
+
+			nvgStroke(args.vg);
+
+			// Sustain circle
+			{
+				nvgStrokeColor(args.vg, SCHEME_YELLOW);
+				nvgBeginPath(args.vg);
+				p = r.interpolate(Vec(attTime + decTime, 1 - sustain));
+				nvgCircle(args.vg, VEC_ARGS(p), 2.5);
+				nvgFillColor(args.vg, nvgRGB(0x22, 0x22, 0x22));
+				nvgFill(args.vg);
+				nvgStroke(args.vg);
+			}
+
+			// Position circle
+			for (int c = 0; c < channels; c++) {
+				float env = module ? module->env[c / 4][c % 4] : 0.f;
+				if (env > 0.01f) {
+					bool attacking = module ? (simd::movemask(module->attacking[c / 4]) & (1 << (c % 4))) : false;
+					bool gate = module ? module->gate[c / 4][c % 4] : false;
+
+					if (attacking) {
+						float phase = envToPhase(env);
+						p = r.interpolate(Vec(attTime * phase, 1 - env));
+					}
+					else if (gate) {
+						float phase = envToPhase(1 - (env - sustain) / (1 - sustain));
+						p = r.interpolate(Vec(attTime + decTime * phase, 1 - env));
+					}
+					else {
+						env = std::min(env, sustain);
+						float phase = envToPhase(1 - env / sustain);
+						p = r.interpolate(Vec(attTime + decTime + relTime * phase, 1 - env));
+					}
+					nvgBeginPath(args.vg);
+					nvgCircle(args.vg, VEC_ARGS(p), 2.5);
+					nvgFillColor(args.vg, nvgRGBAf(1, 1, 1, 0.66));
+					nvgFill(args.vg);
+				}
+			}
+
+			nvgResetScissor(args.vg);
 		}
+
 		LedDisplay::drawLayer(args, layer);
+	}
+
+	// Optimized for appearance, not accuracy to ADSR DSP.
+	static constexpr float TARGET = 1.1f;
+	static constexpr float LAMBDA = 2.3978952727983702f; // -std::log(1 - 1 / TARGET);
+	static float phaseToEnv(float phase) {
+		return (1 - std::exp(-LAMBDA * phase)) * TARGET;
+	}
+	static float envToPhase(float env) {
+		return -std::log(1 - env / TARGET) / LAMBDA;
 	}
 };
 
