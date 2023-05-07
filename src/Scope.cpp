@@ -217,8 +217,11 @@ struct ScopeDisplay : LedDisplay {
 	}
 
 	void calculateStats(Stats& stats, int wave, int channels) {
-		if (!module)
+		if (!module) {
+			stats.min = -5.f;
+			stats.max = 5.f;
 			return;
+		}
 
 		stats = Stats();
 		for (int i = 0; i < BUFFER_SIZE; i++) {
@@ -234,13 +237,21 @@ struct ScopeDisplay : LedDisplay {
 	}
 
 	void drawWave(const DrawArgs& args, int wave, int channel, float offset, float gain) {
-		if (!module)
-			return;
-
 		// Copy point buffer to stack to prevent min/max values being different phase.
 		// This is currently only 256*4*16*4 = 64 kiB.
 		Scope::Point pointBuffer[BUFFER_SIZE];
-		std::copy(std::begin(module->pointBuffer), std::end(module->pointBuffer), std::begin(pointBuffer));
+		if (module) {
+			std::copy(std::begin(module->pointBuffer), std::end(module->pointBuffer), std::begin(pointBuffer));
+		}
+		else {
+			for (size_t i = 0; i < BUFFER_SIZE; i++) {
+				float phase = float(i) / BUFFER_SIZE;
+				Scope::Point point;
+				point.minX[0] = point.maxX[0] = 4.f * std::sin(2 * M_PI * phase * 2.f) + 5.f;
+				point.minY[0] = point.maxY[0] = 4.f * std::sin(2 * M_PI * phase * 2.f) - 5.f;
+				pointBuffer[i] = point;
+			}
+		}
 
 		nvgSave(args.vg);
 		Rect b = box.zeroPos().shrink(Vec(0, 15));
@@ -415,26 +426,27 @@ struct ScopeDisplay : LedDisplay {
 		// Background lines
 		drawBackground(args);
 
-		if (!module)
-			return;
-
-		float gainX = std::pow(2.f, std::round(module->params[Scope::X_SCALE_PARAM].getValue())) / 10.f;
-		float gainY = std::pow(2.f, std::round(module->params[Scope::Y_SCALE_PARAM].getValue())) / 10.f;
-		float offsetX = module->params[Scope::X_POS_PARAM].getValue();
-		float offsetY = module->params[Scope::Y_POS_PARAM].getValue();
+		float gainX = module ? module->params[Scope::X_SCALE_PARAM].getValue() : 0.f;
+		gainX = std::pow(2.f, std::round(gainX)) / 10.f;
+		float gainY = module ? module->params[Scope::Y_SCALE_PARAM].getValue() : 0.f;
+		gainY = std::pow(2.f, std::round(gainY)) / 10.f;
+		float offsetX = module ? module->params[Scope::X_POS_PARAM].getValue() : 0.f;
+		float offsetY = module ? module->params[Scope::Y_POS_PARAM].getValue() : 0.f;
 
 		// Get input colors
 		PortWidget* inputX = moduleWidget->getInput(Scope::X_INPUT);
 		PortWidget* inputY = moduleWidget->getInput(Scope::Y_INPUT);
 		CableWidget* inputXCable = APP->scene->rack->getTopCable(inputX);
 		CableWidget* inputYCable = APP->scene->rack->getTopCable(inputY);
-		NVGcolor inputXColor = inputXCable ? inputXCable->color : color::WHITE;
-		NVGcolor inputYColor = inputYCable ? inputYCable->color : color::WHITE;
+		NVGcolor inputXColor = inputXCable ? inputXCable->color : SCHEME_YELLOW;
+		NVGcolor inputYColor = inputYCable ? inputYCable->color : SCHEME_YELLOW;
 
 		// Draw waveforms
-		if (module->isLissajous()) {
+		int channelsY = module ? module->channelsY : 1;
+		int channelsX = module ? module->channelsX : 1;
+		if (module && module->isLissajous()) {
 			// X x Y
-			int lissajousChannels = std::min(module->channelsX, module->channelsY);
+			int lissajousChannels = std::min(channelsX, channelsY);
 			for (int c = 0; c < lissajousChannels; c++) {
 				nvgStrokeColor(args.vg, SCHEME_YELLOW);
 				drawLissajous(args, c, offsetX, gainX, offsetY, gainY);
@@ -442,29 +454,30 @@ struct ScopeDisplay : LedDisplay {
 		}
 		else {
 			// Y
-			for (int c = 0; c < module->channelsY; c++) {
+			for (int c = 0; c < channelsY; c++) {
 				nvgFillColor(args.vg, inputYColor);
 				drawWave(args, 1, c, offsetY, gainY);
 			}
 
 			// X
-			for (int c = 0; c < module->channelsX; c++) {
+			for (int c = 0; c < channelsX; c++) {
 				nvgFillColor(args.vg, inputXColor);
 				drawWave(args, 0, c, offsetX, gainX);
 			}
 
 			// Trigger
-			float trigThreshold = module->params[Scope::THRESH_PARAM].getValue();
+			float trigThreshold = module ? module->params[Scope::THRESH_PARAM].getValue() : 0.f;
 			trigThreshold = (trigThreshold + offsetX) * gainX;
 			drawTrig(args, trigThreshold);
 		}
 
 		// Calculate and draw stats
-		if (++statsFrame >= 4) {
-			statsFrame = 0;
-			calculateStats(statsX, 0, module->channelsX);
-			calculateStats(statsY, 1, module->channelsY);
+		if (statsFrame == 0) {
+			calculateStats(statsX, 0, channelsX);
+			calculateStats(statsY, 1, channelsY);
 		}
+		statsFrame = (statsFrame + 1) % 4;
+
 		drawStats(args, Vec(0, 0 + 1), "1", statsX);
 		drawStats(args, Vec(0, box.size.y - 15 - 1), "2", statsY);
 	}
