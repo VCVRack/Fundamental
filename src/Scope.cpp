@@ -392,25 +392,25 @@ struct ScopeDisplay : LedDisplay {
 			return;
 		nvgFontSize(args.vg, 13);
 		nvgFontFaceId(args.vg, font->handle);
-		nvgTextLetterSpacing(args.vg, -2);
+		nvgTextLetterSpacing(args.vg, -1);
 
 		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x40));
 		nvgText(args.vg, pos.x + 6, pos.y + 11, title, NULL);
 
 		nvgFillColor(args.vg, nvgRGBA(0xff, 0xff, 0xff, 0x80));
-		pos = pos.plus(Vec(22, 11));
+		pos = pos.plus(Vec(20, 11));
 
 		std::string text;
 		text = "pp ";
 		float pp = stats.max - stats.min;
 		text += isNear(pp, 0.f, 100.f) ? string::f("% 6.2f", pp) : "  ---";
 		nvgText(args.vg, pos.x, pos.y, text.c_str(), NULL);
-		text = "max ";
+		text = "max";
 		text += isNear(stats.max, 0.f, 100.f) ? string::f("% 6.2f", stats.max) : "  ---";
-		nvgText(args.vg, pos.x + 58 * 1, pos.y, text.c_str(), NULL);
-		text = "min ";
+		nvgText(args.vg, pos.x + 60 * 1, pos.y, text.c_str(), NULL);
+		text = "min";
 		text += isNear(stats.min, 0.f, 100.f) ? string::f("% 6.2f", stats.min) : "  ---";
-		nvgText(args.vg, pos.x + 58 * 2, pos.y, text.c_str(), NULL);
+		nvgText(args.vg, pos.x + 60 * 2, pos.y, text.c_str(), NULL);
 	}
 
 	void drawBackground(const DrawArgs& args) {
