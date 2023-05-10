@@ -26,6 +26,9 @@ struct VCMixer : Module {
 	dsp::VuMeter2 chMeters[4];
 	dsp::ClockDivider lightDivider;
 
+	bool chExp = false;
+	bool mixExp = false;
+
 	VCMixer() {
 		config(0, 0, 0, 0);
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
@@ -46,6 +49,12 @@ struct VCMixer : Module {
 			configOutput(CH_OUTPUTS + i, string::f("Channel %d", i + 1));
 
 		lightDivider.setDivision(512);
+	}
+
+	void onReset(const ResetEvent& e) override {
+		chExp = false;
+		mixExp = false;
+		Module::onReset(e);
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -79,6 +88,8 @@ struct VCMixer : Module {
 					if (inputs[CV_INPUTS + i].isConnected()) {
 						float_4 cv = inputs[CV_INPUTS + i].getPolyVoltageSimd<float_4>(c) / 10.f;
 						cv = simd::fmax(0.f, cv);
+						if (chExp)
+							cv = (cv * cv) * (cv * cv);
 						out *= cv;
 					}
 
@@ -105,6 +116,8 @@ struct VCMixer : Module {
 				if (inputs[MIX_CV_INPUT].isConnected()) {
 					float_4 cv = inputs[MIX_CV_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f;
 					cv = simd::fmax(0.f, cv);
+					if (mixExp)
+						cv = (cv * cv) * (cv * cv);
 					mix *= cv;
 				}
 
@@ -128,6 +141,26 @@ struct VCMixer : Module {
 				lights[LVL_LIGHTS + i].setBrightness(chMeters[i].getBrightness(-24.f, 0.f));
 			}
 		}
+	}
+
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
+		// chExp
+		json_object_set_new(rootJ, "chExp", json_boolean(chExp));
+		// mixExp
+		json_object_set_new(rootJ, "mixExp", json_boolean(mixExp));
+		return rootJ;
+	}
+
+	void dataFromJson(json_t* rootJ) override {
+		// chExp
+		json_t* chExpJ = json_object_get(rootJ, "chExp");
+		if (chExpJ)
+			chExp = json_boolean_value(chExpJ);
+		// mixExp
+		json_t* mixExpJ = json_object_get(rootJ, "mixExp");
+		if (mixExpJ)
+			mixExp = json_boolean_value(mixExpJ);
 	}
 };
 
@@ -163,6 +196,16 @@ struct VCMixerWidget : ModuleWidget {
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(17.441, 113.115)), module, VCMixer::CH_OUTPUTS + 1));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.279, 113.115)), module, VCMixer::CH_OUTPUTS + 2));
 		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.116, 113.115)), module, VCMixer::CH_OUTPUTS + 3));
+	}
+
+	void appendContextMenu(Menu* menu) override {
+		VCMixer* module = getModule<VCMixer>();
+		assert(module);
+
+		menu->addChild(new MenuSeparator);
+
+		menu->addChild(createBoolPtrMenuItem("Exponential channel VCAs", "", &module->chExp));
+		menu->addChild(createBoolPtrMenuItem("Exponential mix VCA", "", &module->mixExp));
 	}
 };
 
