@@ -94,7 +94,7 @@
     },
     {
       "slug": "ADSR",
-      "name": "ADSR",
+      "name": "ADSR EG",
       "description": "Generates an envelope with Attack/Decay/Sustain/Release",
       "manualUrl": "https://vcvrack.com/Free#ADSR",
       "tags": [
