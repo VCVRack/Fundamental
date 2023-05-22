@@ -221,7 +221,7 @@ struct ADSRDisplay : LedDisplay {
 			attTime /= totalTime;
 			decTime /= totalTime;
 			relTime /= totalTime;
-			float sustain = module ? module->sustain[0][0] : 0.333f;
+			float sustain = module ? module->sustain[0][0] : 0.5f;
 			int channels = module ? module->channels : 1;
 
 			// Grid
@@ -345,7 +345,7 @@ struct ADSRDisplay : LedDisplay {
 
 	// Optimized for appearance, not accuracy to ADSR DSP.
 	static constexpr float TARGET = 1.1f;
-	static constexpr float LAMBDA = 2.3978952727983702f; // -std::log(1 - 1 / TARGET);
+	static constexpr float LAMBDA = 2.3978952727983702f; //-std::log(1 - 1 / TARGET);
 	static float phaseToEnv(float phase) {
 		return (1 - std::exp(-LAMBDA * phase)) * TARGET;
 	}
