@@ -6,7 +6,7 @@
    version="1.1"
    id="svg269"
    sodipodi:docname="SCOPE.svg"
-   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -14,26 +14,25 @@
   <sodipodi:namedview
      id="namedview271"
      pagecolor="#ffffff"
-     bordercolor="#000000"
-     borderopacity="0.25"
-     inkscape:showpageshadow="2"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#d1d1d1"
      showgrid="false"
-     inkscape:zoom="2.1815789"
-     inkscape:cx="97.864897"
-     inkscape:cy="190.22919"
+     inkscape:zoom="1.8921053"
+     inkscape:cx="97.510431"
+     inkscape:cy="190"
      inkscape:window-width="1920"
      inkscape:window-height="1009"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg269" />
+     inkscape:current-layer="uuid-01687cb8-7441-45ec-98e1-245f9b20292f" />
   <defs
      id="defs7">
     <linearGradient
-       id="uuid-278416e2-ee05-4899-8d58-03090518123e"
+       id="uuid-53e641b2-4ed6-4c8c-b9f5-b62382837ca8"
        x1="97.50002"
        y1="0"
        x2="97.50002"
@@ -50,17 +49,17 @@
     </linearGradient>
   </defs>
   <g
-     id="uuid-e2a3dd42-42f3-48db-a4f0-38f1208c9732"
+     id="uuid-c4ee3f4d-09f1-4b84-8562-00919c5a3800"
      data-name="FND BG">
     <rect
        x=".00004"
        width="194.99996"
        height="380"
-       fill="url(#uuid-278416e2-ee05-4899-8d58-03090518123e)"
+       fill="url(#uuid-53e641b2-4ed6-4c8c-b9f5-b62382837ca8)"
        id="rect9" />
   </g>
   <g
-     id="uuid-14d99bdc-3699-4458-9dea-4a3ee9570f67"
+     id="uuid-d53dfa26-254a-467a-ac58-d86b307427be"
      data-name="FND GRAPH">
     <line
        x1="169.47881"
@@ -263,7 +262,7 @@
            id="line60" />
       </g>
       <path
-         d="m82.15147,252.15159c4.83522-2.92859,8.06662-8.2395,8.06662-14.30514,0-9.23-7.48239-16.71239-16.71239-16.71239s-16.71239,7.48239-16.71239,16.71239c0,6.09737,3.2653,11.4321,8.14264,14.35091"
+         d="m64.93596,252.19736c-4.87734-2.91881-8.14264-8.25353-8.14264-14.35091,0-9.23,7.48239-16.71239,16.71239-16.71239s16.71239,7.48239,16.71239,16.71239c0,6.06564-3.2314,11.37655-8.06662,14.30514l-8.63564-14.30517-8.57988,14.35095Z"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -411,7 +410,7 @@
            id="line96" />
       </g>
       <path
-         d="m130.12198,252.15159c4.83522-2.92859,8.06662-8.2395,8.06662-14.30514,0-9.23-7.48239-16.71239-16.71239-16.71239s-16.71239,7.48239-16.71239,16.71239c0,6.09737,3.2653,11.4321,8.14264,14.35091"
+         d="m112.90647,252.19736c-4.87734-2.91881-8.14264-8.25353-8.14264-14.35091,0-9.23,7.48239-16.71239,16.71239-16.71239s16.71239,7.48239,16.71239,16.71239c0,6.06564-3.2314,11.37655-8.06662,14.30514l-8.6255-14.30517-8.59002,14.35095Z"
          fill="none"
          stroke="#1f1f1f"
          stroke-linecap="round"
@@ -429,7 +428,7 @@
     </g>
   </g>
   <g
-     id="uuid-d0521fdc-271b-40b3-9f42-46d1ec8f8be3"
+     id="uuid-59cf0549-b020-411a-85f6-5c31845f97c7"
      data-name="FND TXT">
     <g
        id="g117">
@@ -711,103 +710,103 @@
     </g>
   </g>
   <g
-     id="uuid-694f65dc-b52d-4282-b32b-4cd4e536711c"
+     id="uuid-01687cb8-7441-45ec-98e1-245f9b20292f"
      data-name="components"
-     inkscape:groupmode="layer"
-     style="display:none">
+     style="display:none"
+     inkscape:groupmode="layer">
     <circle
-       id="uuid-ecfb8674-ef5a-4897-acb9-2ff6c77c0a23"
+       id="uuid-e9f982fb-2414-43cb-9c46-31dd417c22f3"
        data-name="1x2#LEDButton"
        cx="25.521191"
        cy="238"
        r="5"
        fill="#ff0000" />
     <circle
-       id="uuid-b8150f6e-ed5e-4265-ad72-10c3f2936928"
+       id="uuid-0e696d93-9562-4857-865b-1ab1ebc29583"
        data-name="Trig#LEDButton"
        cx="169.47881"
        cy="237.75993"
        r="5"
        fill="#ff0000" />
     <circle
-       id="uuid-85cad439-e7e7-4ce8-8e8e-104a9774a5b1"
+       id="uuid-ac818d73-593e-47ac-a73a-0468a40d11b6"
        data-name="In1#PJ301MPort"
        cx="25.521191"
        cy="334"
        r="5"
        fill="#00ff00" />
     <circle
-       id="uuid-eac4dee6-fb0d-4bff-a89c-b94624c792bc"
+       id="uuid-31465d9b-7446-49a6-923d-bf2d4f2ff800"
        data-name="Trig#PJ301MPort"
        cx="169.47881"
        cy="334"
        r="5"
        fill="#00ff00" />
     <circle
-       id="uuid-f5c1d4b0-509f-4e42-b59d-0544b1a086f1"
+       id="uuid-cae7cb64-b9d2-4491-a6b2-1bbe8644b71e"
        data-name="Out2#PJ301MPort"
        cx="133.50073"
        cy="334"
        r="5"
        fill="#0000ff" />
     <circle
-       id="uuid-0b1a3c61-a7e0-4adf-898c-c30a77275c44"
+       id="uuid-ca0ee116-dd43-4274-a871-e021c37688d9"
        data-name="In2#PJ301MPort"
        cx="97.507553"
        cy="334"
        r="5"
        fill="#00ff00" />
     <circle
-       id="uuid-c7b9c153-d94c-4af2-b38d-0e57c07336d4"
+       id="uuid-9f6aaa20-2e2d-4157-ac7e-322d135a42a1"
        data-name="Out1#PJ301MPort"
        cx="61.51437"
        cy="334"
        r="5"
        fill="#0000ff" />
     <circle
-       id="uuid-5a0d6b7a-3f0d-4296-96d3-27675dd568cd"
+       id="uuid-fc739517-3f69-49b2-bc2b-9b7bc3d5fd8a"
        data-name="Ofst2#RoundBlackKnob"
        cx="121.49648"
        cy="285.87146"
        r="5"
        fill="#ff0000" />
     <circle
-       id="uuid-e561f6b1-3e30-4b2f-9d86-82e2775713cc"
+       id="uuid-ab39d8e8-140e-432a-bb9c-0c335ce60cca"
        data-name="Time#RoundBlackKnob"
        cx="25.521191"
        cy="285.88263"
        r="5"
        fill="#ff0000" />
     <circle
-       id="uuid-3349cb46-4260-41ea-872a-b9f9e3530ab7"
+       id="uuid-02c82747-e2a9-449f-a615-e4803e54047f"
        data-name="Ofst1#RoundBlackKnob"
        cx="73.515839"
        cy="285.79443"
        r="5"
        fill="#ff0000" />
     <circle
-       id="uuid-4788e274-5f66-426f-b271-28c0c43d92c5"
+       id="uuid-cac4d032-60a6-4a44-a4f3-589a138067c5"
        data-name="Gain2#RoundBlackKnob"
        cx="121.49648"
        cy="237.84641"
        r="5"
        fill="#ff0000" />
     <circle
-       id="uuid-1a62518b-0e3e-4eb9-b74f-943eecd765ce"
+       id="uuid-b89b9fb9-3f2e-4ffc-a858-490ee0fd20ef"
        data-name="Gain1#RoundBlackKnob"
        cx="73.515839"
        cy="237.84641"
        r="5"
        fill="#ff0000" />
     <circle
-       id="uuid-4c22c8fb-64fc-4e23-a0a7-1d52e4056ed3"
+       id="uuid-598b36ab-02d4-4246-84c2-bbff6f9dda2e"
        data-name="Thers#RoundBlackKnob"
        cx="169.47881"
        cy="285.87146"
        r="5"
        fill="#ff0000" />
     <rect
-       id="uuid-15b7b4af-5e70-455d-a4e5-b21a5d411473"
+       id="uuid-c451808c-f8de-4d15-a4dc-10dce1838ce1"
        data-name="Screen"
        x="3.9999999e-05"
        y="38.5"
