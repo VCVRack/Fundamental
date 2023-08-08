@@ -192,10 +192,10 @@ struct SequentialSwitchWidget : ModuleWidget {
 		if (INPUTS == 1 && OUTPUTS == 4) {
 			setPanel(createPanel(asset::plugin(pluginInstance, "res/SequentialSwitch1.svg"), asset::plugin(pluginInstance, "res/SequentialSwitch1-dark.svg")));
 
-			addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-			addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-			addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-			addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+			addChild(createWidget<ThemedScrew>(Vec(RACK_GRID_WIDTH, 0)));
+			addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+			addChild(createWidget<ThemedScrew>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+			addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 			addParam(createParamCentered<CKSSThreeHorizontal>(mm2px(Vec(7.555, 20.942)), module, TSequentialSwitch::STEPS_PARAM));
 
@@ -217,10 +217,10 @@ struct SequentialSwitchWidget : ModuleWidget {
 		if (INPUTS == 4 && OUTPUTS == 1) {
 			setPanel(createPanel(asset::plugin(pluginInstance, "res/SequentialSwitch2.svg"), asset::plugin(pluginInstance, "res/SequentialSwitch2-dark.svg")));
 
-			addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-			addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-			addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-			addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+			addChild(createWidget<ThemedScrew>(Vec(RACK_GRID_WIDTH, 0)));
+			addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+			addChild(createWidget<ThemedScrew>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+			addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 			addParam(createParamCentered<CKSSThreeHorizontal>(mm2px(Vec(7.8, 20.942)), module, TSequentialSwitch::STEPS_PARAM));
 
