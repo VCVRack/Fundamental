@@ -41,4 +41,5 @@ void init(Plugin* p) {
 	p->addModel(modelGates);
 	p->addModel(modelProcess);
 	p->addModel(modelMult);
+	p->addModel(modelRescale);
 }

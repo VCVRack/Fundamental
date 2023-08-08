@@ -41,6 +41,7 @@ extern Model* modelCompare;
 extern Model* modelGates;
 extern Model* modelProcess;
 extern Model* modelMult;
+extern Model* modelRescale;
 
 
 struct DigitalDisplay : Widget {

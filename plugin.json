@@ -362,6 +362,15 @@
         "Utility",
         "Polyphonic"
       ]
+    },
+    {
+      "slug": "Rescale",
+      "name": "Rescale",
+      "description": "Rescales voltages with gain and offset",
+      "tags": [
+        "Utility",
+        "Polyphonic"
+      ]
     }
   ]
 }
