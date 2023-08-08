@@ -241,7 +241,7 @@ struct QuantizerDisplay : LedDisplay {
 struct QuantizerWidget : ModuleWidget {
 	QuantizerWidget(Quantizer* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Quantizer.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Quantizer.svg"), asset::plugin(pluginInstance, "res/Quantizer-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -250,9 +250,9 @@ struct QuantizerWidget : ModuleWidget {
 
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.62, 80.551)), module, Quantizer::OFFSET_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 96.859)), module, Quantizer::PITCH_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 96.859)), module, Quantizer::PITCH_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Quantizer::PITCH_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Quantizer::PITCH_OUTPUT));
 
 		QuantizerDisplay* quantizerDisplay = createWidget<QuantizerDisplay>(mm2px(Vec(0.0, 13.039)));
 		quantizerDisplay->box.size = mm2px(Vec(15.24, 55.88));

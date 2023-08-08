@@ -179,20 +179,20 @@ struct Noise : Module {
 struct NoiseWidget : ModuleWidget {
 	NoiseWidget(Noise* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Noise.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Noise.svg"), asset::plugin(pluginInstance, "res/Noise-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 21.897)), module, Noise::WHITE_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 37.102)), module, Noise::PINK_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 52.31)), module, Noise::RED_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 67.53)), module, Noise::VIOLET_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 82.732)), module, Noise::BLUE_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 97.923)), module, Noise::GRAY_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Noise::BLACK_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 21.897)), module, Noise::WHITE_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 37.102)), module, Noise::PINK_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 52.31)), module, Noise::RED_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 67.53)), module, Noise::VIOLET_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 82.732)), module, Noise::BLUE_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 97.923)), module, Noise::GRAY_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Noise::BLACK_OUTPUT));
 	}
 };
 

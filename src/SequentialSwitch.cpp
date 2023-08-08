@@ -190,7 +190,7 @@ struct SequentialSwitchWidget : ModuleWidget {
 		setModule(module);
 
 		if (INPUTS == 1 && OUTPUTS == 4) {
-			setPanel(createPanel(asset::plugin(pluginInstance, "res/SequentialSwitch1.svg")));
+			setPanel(createPanel(asset::plugin(pluginInstance, "res/SequentialSwitch1.svg"), asset::plugin(pluginInstance, "res/SequentialSwitch1-dark.svg")));
 
 			addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 			addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -199,14 +199,14 @@ struct SequentialSwitchWidget : ModuleWidget {
 
 			addParam(createParamCentered<CKSSThreeHorizontal>(mm2px(Vec(7.555, 20.942)), module, TSequentialSwitch::STEPS_PARAM));
 
-			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.555, 33.831)), module, TSequentialSwitch::CLOCK_INPUT));
-			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.555, 50.126)), module, TSequentialSwitch::RESET_INPUT));
-			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.555, 66.379)), module, TSequentialSwitch::IN_INPUTS + 0));
+			addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.555, 33.831)), module, TSequentialSwitch::CLOCK_INPUT));
+			addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.555, 50.126)), module, TSequentialSwitch::RESET_INPUT));
+			addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.555, 66.379)), module, TSequentialSwitch::IN_INPUTS + 0));
 
-			addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.555, 82.607)), module, TSequentialSwitch::OUT_OUTPUTS + 0));
-			addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.555, 92.767)), module, TSequentialSwitch::OUT_OUTPUTS + 1));
-			addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.555, 102.927)), module, TSequentialSwitch::OUT_OUTPUTS + 2));
-			addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.555, 113.087)), module, TSequentialSwitch::OUT_OUTPUTS + 3));
+			addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.555, 82.607)), module, TSequentialSwitch::OUT_OUTPUTS + 0));
+			addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.555, 92.767)), module, TSequentialSwitch::OUT_OUTPUTS + 1));
+			addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.555, 102.927)), module, TSequentialSwitch::OUT_OUTPUTS + 2));
+			addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.555, 113.087)), module, TSequentialSwitch::OUT_OUTPUTS + 3));
 
 			addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(11.28, 78.863)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2 * 0));
 			addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(11.28, 89.023)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2 * 1));
@@ -215,7 +215,7 @@ struct SequentialSwitchWidget : ModuleWidget {
 		}
 
 		if (INPUTS == 4 && OUTPUTS == 1) {
-			setPanel(createPanel(asset::plugin(pluginInstance, "res/SequentialSwitch2.svg")));
+			setPanel(createPanel(asset::plugin(pluginInstance, "res/SequentialSwitch2.svg"), asset::plugin(pluginInstance, "res/SequentialSwitch2-dark.svg")));
 
 			addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 			addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -224,14 +224,14 @@ struct SequentialSwitchWidget : ModuleWidget {
 
 			addParam(createParamCentered<CKSSThreeHorizontal>(mm2px(Vec(7.8, 20.942)), module, TSequentialSwitch::STEPS_PARAM));
 
-			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.8, 33.831)), module, TSequentialSwitch::CLOCK_INPUT));
-			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.8, 50.126)), module, TSequentialSwitch::RESET_INPUT));
-			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.8, 66.379)), module, TSequentialSwitch::IN_INPUTS + 0));
-			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.8, 76.539)), module, TSequentialSwitch::IN_INPUTS + 1));
-			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.8, 86.699)), module, TSequentialSwitch::IN_INPUTS + 2));
-			addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.8, 96.859)), module, TSequentialSwitch::IN_INPUTS + 3));
+			addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.8, 33.831)), module, TSequentialSwitch::CLOCK_INPUT));
+			addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.8, 50.126)), module, TSequentialSwitch::RESET_INPUT));
+			addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.8, 66.379)), module, TSequentialSwitch::IN_INPUTS + 0));
+			addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.8, 76.539)), module, TSequentialSwitch::IN_INPUTS + 1));
+			addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.8, 86.699)), module, TSequentialSwitch::IN_INPUTS + 2));
+			addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.8, 96.859)), module, TSequentialSwitch::IN_INPUTS + 3));
 
-			addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.8, 113.115)), module, TSequentialSwitch::OUT_OUTPUTS + 0));
+			addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.8, 113.115)), module, TSequentialSwitch::OUT_OUTPUTS + 0));
 
 			addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(11.526, 63.259)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2 * 0));
 			addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(11.526, 72.795)), module, TSequentialSwitch::CHANNEL_LIGHTS + 2 * 1));

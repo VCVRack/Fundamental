@@ -95,14 +95,14 @@ struct VizDisplay : LedDisplay {
 struct VizWidget : ModuleWidget {
 	VizWidget(Viz* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Viz.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Viz.svg"), asset::plugin(pluginInstance, "res/Viz-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Viz::POLY_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Viz::POLY_INPUT));
 
 		VizDisplay* display = createWidget<VizDisplay>(mm2px(Vec(0.0, 13.039)));
 		display->box.size = mm2px(Vec(15.237, 89.344));

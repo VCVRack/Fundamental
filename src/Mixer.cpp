@@ -95,7 +95,7 @@ struct Mixer : Module {
 struct MixerWidget : ModuleWidget {
 	MixerWidget(Mixer* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Mixer.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Mixer.svg"), asset::plugin(pluginInstance, "res/Mixer-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -104,14 +104,14 @@ struct MixerWidget : ModuleWidget {
 
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.62, 24.723)), module, Mixer::LEVEL_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 46.059)), module, Mixer::IN_INPUTS + 0));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 56.219)), module, Mixer::IN_INPUTS + 1));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 66.379)), module, Mixer::IN_INPUTS + 2));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 76.539)), module, Mixer::IN_INPUTS + 3));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 86.699)), module, Mixer::IN_INPUTS + 4));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 96.859)), module, Mixer::IN_INPUTS + 5));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 46.059)), module, Mixer::IN_INPUTS + 0));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 56.219)), module, Mixer::IN_INPUTS + 1));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 66.379)), module, Mixer::IN_INPUTS + 2));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 76.539)), module, Mixer::IN_INPUTS + 3));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 86.699)), module, Mixer::IN_INPUTS + 4));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 96.859)), module, Mixer::IN_INPUTS + 5));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Mixer::OUT_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Mixer::OUT_OUTPUT));
 	}
 
 	void appendContextMenu(Menu* menu) override {

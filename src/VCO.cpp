@@ -380,7 +380,7 @@ struct VCO : Module {
 struct VCOWidget : ModuleWidget {
 	VCOWidget(VCO* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/VCO.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/VCO.svg"), asset::plugin(pluginInstance, "res/VCO-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -394,15 +394,15 @@ struct VCOWidget : ModuleWidget {
 		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(28.282, 80.603)), module, VCO::SYNC_PARAM, VCO::SOFT_LIGHT));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(39.118, 80.603)), module, VCO::PW_CV_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.607, 96.859)), module, VCO::FM_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.444, 96.859)), module, VCO::PITCH_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.282, 96.859)), module, VCO::SYNC_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(39.15, 96.859)), module, VCO::PW_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.607, 96.859)), module, VCO::FM_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.444, 96.859)), module, VCO::PITCH_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(28.282, 96.859)), module, VCO::SYNC_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(39.15, 96.859)), module, VCO::PW_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.607, 113.115)), module, VCO::SIN_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(17.444, 113.115)), module, VCO::TRI_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.282, 113.115)), module, VCO::SAW_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.119, 113.115)), module, VCO::SQR_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(6.607, 113.115)), module, VCO::SIN_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(17.444, 113.115)), module, VCO::TRI_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.282, 113.115)), module, VCO::SAW_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(39.119, 113.115)), module, VCO::SQR_OUTPUT));
 
 		addChild(createLightCentered<SmallLight<RedGreenBlueLight>>(mm2px(Vec(31.089, 16.428)), module, VCO::PHASE_LIGHT));
 	}

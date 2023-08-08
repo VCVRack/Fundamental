@@ -91,7 +91,7 @@ struct MidSide : Module {
 struct MidSideWidget : ModuleWidget {
 	MidSideWidget(MidSide* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/MidSide.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/MidSide.svg"), asset::plugin(pluginInstance, "res/MidSide-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -101,17 +101,17 @@ struct MidSideWidget : ModuleWidget {
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.285, 25.203)), module, MidSide::ENC_WIDTH_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.285, 80.583)), module, MidSide::DEC_WIDTH_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.122, 25.142)), module, MidSide::ENC_WIDTH_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.285, 41.373)), module, MidSide::ENC_LEFT_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.122, 41.373)), module, MidSide::ENC_RIGHT_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.122, 80.603)), module, MidSide::DEC_WIDTH_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.285, 96.859)), module, MidSide::DEC_MID_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.122, 96.859)), module, MidSide::DEC_SIDE_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.122, 25.142)), module, MidSide::ENC_WIDTH_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.285, 41.373)), module, MidSide::ENC_LEFT_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.122, 41.373)), module, MidSide::ENC_RIGHT_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.122, 80.603)), module, MidSide::DEC_WIDTH_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.285, 96.859)), module, MidSide::DEC_MID_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.122, 96.859)), module, MidSide::DEC_SIDE_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.285, 57.679)), module, MidSide::ENC_MID_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.122, 57.679)), module, MidSide::ENC_SIDE_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.285, 113.115)), module, MidSide::DEC_LEFT_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.122, 113.115)), module, MidSide::DEC_RIGHT_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.285, 57.679)), module, MidSide::ENC_MID_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.122, 57.679)), module, MidSide::ENC_SIDE_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.285, 113.115)), module, MidSide::DEC_LEFT_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.122, 113.115)), module, MidSide::DEC_RIGHT_OUTPUT));
 	}
 };
 

@@ -168,7 +168,7 @@ struct VCMixer : Module {
 struct VCMixerWidget : ModuleWidget {
 	VCMixerWidget(VCMixer* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/VCMixer.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/VCMixer.svg"), asset::plugin(pluginInstance, "res/VCMixer-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -181,21 +181,21 @@ struct VCMixerWidget : ModuleWidget {
 		addParam(createLightParamCentered<VCVLightSlider<YellowLight>>(mm2px(Vec(39.116, 33.605)), module, VCMixer::LVL_PARAMS + 3, VCMixer::LVL_LIGHTS + 3));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(22.776, 64.366)), module, VCMixer::MIX_LVL_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.604, 64.347)), module, VCMixer::MIX_CV_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.604, 80.549)), module, VCMixer::CV_INPUTS + 0));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.441, 80.549)), module, VCMixer::CV_INPUTS + 1));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.279, 80.549)), module, VCMixer::CV_INPUTS + 2));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(39.116, 80.549)), module, VCMixer::CV_INPUTS + 3));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.604, 96.859)), module, VCMixer::CH_INPUTS + 0));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.441, 96.859)), module, VCMixer::CH_INPUTS + 1));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.279, 96.859)), module, VCMixer::CH_INPUTS + 2));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(39.116, 96.821)), module, VCMixer::CH_INPUTS + 3));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.604, 64.347)), module, VCMixer::MIX_CV_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.604, 80.549)), module, VCMixer::CV_INPUTS + 0));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.441, 80.549)), module, VCMixer::CV_INPUTS + 1));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(28.279, 80.549)), module, VCMixer::CV_INPUTS + 2));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(39.116, 80.549)), module, VCMixer::CV_INPUTS + 3));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.604, 96.859)), module, VCMixer::CH_INPUTS + 0));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.441, 96.859)), module, VCMixer::CH_INPUTS + 1));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(28.279, 96.859)), module, VCMixer::CH_INPUTS + 2));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(39.116, 96.821)), module, VCMixer::CH_INPUTS + 3));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.116, 64.347)), module, VCMixer::MIX_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.604, 113.115)), module, VCMixer::CH_OUTPUTS + 0));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(17.441, 113.115)), module, VCMixer::CH_OUTPUTS + 1));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.279, 113.115)), module, VCMixer::CH_OUTPUTS + 2));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.116, 113.115)), module, VCMixer::CH_OUTPUTS + 3));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(39.116, 64.347)), module, VCMixer::MIX_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(6.604, 113.115)), module, VCMixer::CH_OUTPUTS + 0));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(17.441, 113.115)), module, VCMixer::CH_OUTPUTS + 1));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.279, 113.115)), module, VCMixer::CH_OUTPUTS + 2));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(39.116, 113.115)), module, VCMixer::CH_OUTPUTS + 3));
 	}
 
 	void appendContextMenu(Menu* menu) override {

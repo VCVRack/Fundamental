@@ -49,7 +49,7 @@ struct Pulses : Module {
 struct PulsesWidget : ModuleWidget {
 	PulsesWidget(Pulses* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Pulses.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Pulses.svg"), asset::plugin(pluginInstance, "res/Pulses-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -67,26 +67,26 @@ struct PulsesWidget : ModuleWidget {
 		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(7.28, 102.987)), module, Pulses::PUSH_PARAMS + 8, Pulses::PUSH_LIGHTS + 8));
 		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(7.28, 113.115)), module, Pulses::PUSH_PARAMS + 9, Pulses::PUSH_LIGHTS + 9));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.313, 21.968)), module, Pulses::TRIG_OUTPUTS + 0));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.313, 32.095)), module, Pulses::TRIG_OUTPUTS + 1));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.313, 42.222)), module, Pulses::TRIG_OUTPUTS + 2));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.313, 52.35)), module, Pulses::TRIG_OUTPUTS + 3));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.313, 62.477)), module, Pulses::TRIG_OUTPUTS + 4));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.313, 72.605)), module, Pulses::TRIG_OUTPUTS + 5));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.313, 82.732)), module, Pulses::TRIG_OUTPUTS + 6));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.313, 92.86)), module, Pulses::TRIG_OUTPUTS + 7));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.313, 102.987)), module, Pulses::TRIG_OUTPUTS + 8));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.313, 113.115)), module, Pulses::TRIG_OUTPUTS + 9));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.321, 21.968)), module, Pulses::GATE_OUTPUTS + 0));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.321, 32.095)), module, Pulses::GATE_OUTPUTS + 1));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.321, 42.222)), module, Pulses::GATE_OUTPUTS + 2));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.321, 52.35)), module, Pulses::GATE_OUTPUTS + 3));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.321, 62.477)), module, Pulses::GATE_OUTPUTS + 4));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.321, 72.605)), module, Pulses::GATE_OUTPUTS + 5));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.321, 82.732)), module, Pulses::GATE_OUTPUTS + 6));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.321, 92.86)), module, Pulses::GATE_OUTPUTS + 7));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.321, 102.987)), module, Pulses::GATE_OUTPUTS + 8));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.321, 113.115)), module, Pulses::GATE_OUTPUTS + 9));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(20.313, 21.968)), module, Pulses::TRIG_OUTPUTS + 0));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(20.313, 32.095)), module, Pulses::TRIG_OUTPUTS + 1));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(20.313, 42.222)), module, Pulses::TRIG_OUTPUTS + 2));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(20.313, 52.35)), module, Pulses::TRIG_OUTPUTS + 3));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(20.313, 62.477)), module, Pulses::TRIG_OUTPUTS + 4));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(20.313, 72.605)), module, Pulses::TRIG_OUTPUTS + 5));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(20.313, 82.732)), module, Pulses::TRIG_OUTPUTS + 6));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(20.313, 92.86)), module, Pulses::TRIG_OUTPUTS + 7));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(20.313, 102.987)), module, Pulses::TRIG_OUTPUTS + 8));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(20.313, 113.115)), module, Pulses::TRIG_OUTPUTS + 9));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.321, 21.968)), module, Pulses::GATE_OUTPUTS + 0));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.321, 32.095)), module, Pulses::GATE_OUTPUTS + 1));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.321, 42.222)), module, Pulses::GATE_OUTPUTS + 2));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.321, 52.35)), module, Pulses::GATE_OUTPUTS + 3));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.321, 62.477)), module, Pulses::GATE_OUTPUTS + 4));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.321, 72.605)), module, Pulses::GATE_OUTPUTS + 5));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.321, 82.732)), module, Pulses::GATE_OUTPUTS + 6));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.321, 92.86)), module, Pulses::GATE_OUTPUTS + 7));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.321, 102.987)), module, Pulses::GATE_OUTPUTS + 8));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.321, 113.115)), module, Pulses::GATE_OUTPUTS + 9));
 
 	}
 };

@@ -84,31 +84,31 @@ struct MergeChannelDisplay : ChannelDisplay {
 struct MergeWidget : ModuleWidget {
 	MergeWidget(Merge* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Merge.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Merge.svg"), asset::plugin(pluginInstance, "res/Merge-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 41.995)), module, Merge::MONO_INPUTS + 0));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 52.155)), module, Merge::MONO_INPUTS + 1));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 62.315)), module, Merge::MONO_INPUTS + 2));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 72.475)), module, Merge::MONO_INPUTS + 3));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 82.635)), module, Merge::MONO_INPUTS + 4));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 92.795)), module, Merge::MONO_INPUTS + 5));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 102.955)), module, Merge::MONO_INPUTS + 6));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 113.115)), module, Merge::MONO_INPUTS + 7));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 41.995)), module, Merge::MONO_INPUTS + 8));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 52.155)), module, Merge::MONO_INPUTS + 9));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 62.315)), module, Merge::MONO_INPUTS + 10));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 72.475)), module, Merge::MONO_INPUTS + 11));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 82.635)), module, Merge::MONO_INPUTS + 12));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 92.795)), module, Merge::MONO_INPUTS + 13));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 102.955)), module, Merge::MONO_INPUTS + 14));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.119, 113.115)), module, Merge::MONO_INPUTS + 15));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 41.995)), module, Merge::MONO_INPUTS + 0));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 52.155)), module, Merge::MONO_INPUTS + 1));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 62.315)), module, Merge::MONO_INPUTS + 2));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 72.475)), module, Merge::MONO_INPUTS + 3));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 82.635)), module, Merge::MONO_INPUTS + 4));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 92.795)), module, Merge::MONO_INPUTS + 5));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 102.955)), module, Merge::MONO_INPUTS + 6));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 113.115)), module, Merge::MONO_INPUTS + 7));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 41.995)), module, Merge::MONO_INPUTS + 8));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 52.155)), module, Merge::MONO_INPUTS + 9));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 62.315)), module, Merge::MONO_INPUTS + 10));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 72.475)), module, Merge::MONO_INPUTS + 11));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 82.635)), module, Merge::MONO_INPUTS + 12));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 92.795)), module, Merge::MONO_INPUTS + 13));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 102.955)), module, Merge::MONO_INPUTS + 14));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 113.115)), module, Merge::MONO_INPUTS + 15));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 21.967)), module, Merge::POLY_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 21.967)), module, Merge::POLY_OUTPUT));
 
 		MergeChannelDisplay* display = createWidget<MergeChannelDisplay>(mm2px(Vec(14.02, 18.611)));
 		display->box.size = mm2px(Vec(8.197, 8.197));

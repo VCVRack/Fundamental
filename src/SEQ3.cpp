@@ -295,7 +295,7 @@ struct SEQ3 : Module {
 struct SEQ3Widget : ModuleWidget {
 	SEQ3Widget(SEQ3* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/SEQ3.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/SEQ3.svg"), asset::plugin(pluginInstance, "res/SEQ3-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -345,29 +345,29 @@ struct SEQ3Widget : ModuleWidget {
 		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(88.424, 85.801)), module, SEQ3::GATE_PARAMS + 6, SEQ3::GATE_LIGHTS + 6));
 		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(101.441, 85.801)), module, SEQ3::GATE_PARAMS + 7, SEQ3::GATE_LIGHTS + 7));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(49.371, 17.307)), module, SEQ3::TEMPO_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(62.389, 17.307)), module, SEQ3::STEPS_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(75.406, 17.42)), module, SEQ3::CLOCK_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(88.424, 17.42)), module, SEQ3::RUN_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(101.441, 17.42)), module, SEQ3::RESET_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(49.371, 17.307)), module, SEQ3::TEMPO_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(62.389, 17.307)), module, SEQ3::STEPS_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(75.406, 17.42)), module, SEQ3::CLOCK_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(88.424, 17.42)), module, SEQ3::RUN_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(101.441, 17.42)), module, SEQ3::RESET_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(10.319, 96.859)), module, SEQ3::STEP_OUTPUTS + 0));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(23.336, 96.859)), module, SEQ3::STEP_OUTPUTS + 1));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(36.354, 96.859)), module, SEQ3::STEP_OUTPUTS + 2));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(49.371, 96.859)), module, SEQ3::STEP_OUTPUTS + 3));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(62.389, 96.859)), module, SEQ3::STEP_OUTPUTS + 4));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(75.406, 96.859)), module, SEQ3::STEP_OUTPUTS + 5));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(88.424, 96.859)), module, SEQ3::STEP_OUTPUTS + 6));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(101.441, 96.859)), module, SEQ3::STEP_OUTPUTS + 7));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(10.319, 96.859)), module, SEQ3::STEP_OUTPUTS + 0));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(23.336, 96.859)), module, SEQ3::STEP_OUTPUTS + 1));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(36.354, 96.859)), module, SEQ3::STEP_OUTPUTS + 2));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(49.371, 96.859)), module, SEQ3::STEP_OUTPUTS + 3));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(62.389, 96.859)), module, SEQ3::STEP_OUTPUTS + 4));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(75.406, 96.859)), module, SEQ3::STEP_OUTPUTS + 5));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(88.424, 96.859)), module, SEQ3::STEP_OUTPUTS + 6));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(101.441, 96.859)), module, SEQ3::STEP_OUTPUTS + 7));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(10.319, 113.115)), module, SEQ3::CV_OUTPUTS + 0));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(23.336, 113.115)), module, SEQ3::CV_OUTPUTS + 1));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(36.354, 113.115)), module, SEQ3::CV_OUTPUTS + 2));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(49.371, 113.115)), module, SEQ3::TRIG_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(62.389, 113.115)), module, SEQ3::STEPS_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(75.406, 113.115)), module, SEQ3::CLOCK_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(88.424, 113.115)), module, SEQ3::RUN_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(101.441, 113.115)), module, SEQ3::RESET_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(10.319, 113.115)), module, SEQ3::CV_OUTPUTS + 0));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(23.336, 113.115)), module, SEQ3::CV_OUTPUTS + 1));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(36.354, 113.115)), module, SEQ3::CV_OUTPUTS + 2));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(49.371, 113.115)), module, SEQ3::TRIG_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(62.389, 113.115)), module, SEQ3::STEPS_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(75.406, 113.115)), module, SEQ3::CLOCK_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(88.424, 113.115)), module, SEQ3::RUN_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(101.441, 113.115)), module, SEQ3::RESET_OUTPUT));
 
 		addChild(createLightCentered<SmallLight<YellowLight>>(mm2px(Vec(75.406, 33.497)), module, SEQ3::CLOCK_LIGHT));
 

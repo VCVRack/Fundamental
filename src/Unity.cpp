@@ -110,7 +110,7 @@ struct Unity : Module {
 struct UnityWidget : ModuleWidget {
 	UnityWidget(Unity* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Unity.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Unity.svg"), asset::plugin(pluginInstance, "res/Unity-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(15, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 30, 0)));
@@ -120,23 +120,23 @@ struct UnityWidget : ModuleWidget {
 		addParam(createParam<CKSS>(mm2px(Vec(12.867, 52.961)), module, Unity::AVG1_PARAM));
 		addParam(createParam<CKSS>(mm2px(Vec(12.867, 107.006)), module, Unity::AVG2_PARAM));
 
-		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 17.144)), module, Unity::IN_INPUTS + 0 * 6 + 0));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 17.144)), module, Unity::IN_INPUTS + 0 * 6 + 1));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 28.145)), module, Unity::IN_INPUTS + 0 * 6 + 2));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 28.145)), module, Unity::IN_INPUTS + 0 * 6 + 3));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 39.145)), module, Unity::IN_INPUTS + 0 * 6 + 4));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 39.145)), module, Unity::IN_INPUTS + 0 * 6 + 5));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 71.145)), module, Unity::IN_INPUTS + 1 * 6 + 0));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 71.145)), module, Unity::IN_INPUTS + 1 * 6 + 1));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 82.145)), module, Unity::IN_INPUTS + 1 * 6 + 2));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 82.145)), module, Unity::IN_INPUTS + 1 * 6 + 3));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(2.361, 93.144)), module, Unity::IN_INPUTS + 1 * 6 + 4));
-		addInput(createInput<PJ301MPort>(mm2px(Vec(19.907, 93.144)), module, Unity::IN_INPUTS + 1 * 6 + 5));
+		addInput(createInput<ThemedPJ301MPort>(mm2px(Vec(2.361, 17.144)), module, Unity::IN_INPUTS + 0 * 6 + 0));
+		addInput(createInput<ThemedPJ301MPort>(mm2px(Vec(19.907, 17.144)), module, Unity::IN_INPUTS + 0 * 6 + 1));
+		addInput(createInput<ThemedPJ301MPort>(mm2px(Vec(2.361, 28.145)), module, Unity::IN_INPUTS + 0 * 6 + 2));
+		addInput(createInput<ThemedPJ301MPort>(mm2px(Vec(19.907, 28.145)), module, Unity::IN_INPUTS + 0 * 6 + 3));
+		addInput(createInput<ThemedPJ301MPort>(mm2px(Vec(2.361, 39.145)), module, Unity::IN_INPUTS + 0 * 6 + 4));
+		addInput(createInput<ThemedPJ301MPort>(mm2px(Vec(19.907, 39.145)), module, Unity::IN_INPUTS + 0 * 6 + 5));
+		addInput(createInput<ThemedPJ301MPort>(mm2px(Vec(2.361, 71.145)), module, Unity::IN_INPUTS + 1 * 6 + 0));
+		addInput(createInput<ThemedPJ301MPort>(mm2px(Vec(19.907, 71.145)), module, Unity::IN_INPUTS + 1 * 6 + 1));
+		addInput(createInput<ThemedPJ301MPort>(mm2px(Vec(2.361, 82.145)), module, Unity::IN_INPUTS + 1 * 6 + 2));
+		addInput(createInput<ThemedPJ301MPort>(mm2px(Vec(19.907, 82.145)), module, Unity::IN_INPUTS + 1 * 6 + 3));
+		addInput(createInput<ThemedPJ301MPort>(mm2px(Vec(2.361, 93.144)), module, Unity::IN_INPUTS + 1 * 6 + 4));
+		addInput(createInput<ThemedPJ301MPort>(mm2px(Vec(19.907, 93.144)), module, Unity::IN_INPUTS + 1 * 6 + 5));
 
-		addOutput(createOutput<PJ301MPort>(mm2px(Vec(2.361, 54.15)), module, Unity::MIX1_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(mm2px(Vec(19.907, 54.15)), module, Unity::INV1_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(mm2px(Vec(2.361, 108.144)), module, Unity::MIX2_OUTPUT));
-		addOutput(createOutput<PJ301MPort>(mm2px(Vec(19.907, 108.144)), module, Unity::INV2_OUTPUT));
+		addOutput(createOutput<ThemedPJ301MPort>(mm2px(Vec(2.361, 54.15)), module, Unity::MIX1_OUTPUT));
+		addOutput(createOutput<ThemedPJ301MPort>(mm2px(Vec(19.907, 54.15)), module, Unity::INV1_OUTPUT));
+		addOutput(createOutput<ThemedPJ301MPort>(mm2px(Vec(2.361, 108.144)), module, Unity::MIX2_OUTPUT));
+		addOutput(createOutput<ThemedPJ301MPort>(mm2px(Vec(19.907, 108.144)), module, Unity::INV2_OUTPUT));
 
 		addChild(createLight<MediumLight<RedLight>>(mm2px(Vec(13.652, 19.663)), module, Unity::VU_LIGHTS + 0 * 5 + 0));
 		addChild(createLight<MediumLight<YellowLight>>(mm2px(Vec(13.652, 25.163)), module, Unity::VU_LIGHTS + 0 * 5 + 1));

@@ -224,7 +224,7 @@ struct VCF : Module {
 struct VCFWidget : ModuleWidget {
 	VCFWidget(VCF* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/VCF.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/VCF.svg"), asset::plugin(pluginInstance, "res/VCF-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -238,13 +238,13 @@ struct VCFWidget : ModuleWidget {
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(17.833, 80.603)), module, VCF::RES_CV_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(28.67, 80.603)), module, VCF::DRIVE_CV_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.996, 96.813)), module, VCF::FREQ_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.833, 96.813)), module, VCF::RES_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.67, 96.813)), module, VCF::DRIVE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.996, 113.115)), module, VCF::IN_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.996, 96.813)), module, VCF::FREQ_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.833, 96.813)), module, VCF::RES_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(28.67, 96.813)), module, VCF::DRIVE_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.996, 113.115)), module, VCF::IN_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(17.833, 113.115)), module, VCF::LPF_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.67, 113.115)), module, VCF::HPF_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(17.833, 113.115)), module, VCF::LPF_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.67, 113.115)), module, VCF::HPF_OUTPUT));
 	}
 };
 

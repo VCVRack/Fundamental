@@ -499,7 +499,7 @@ struct ScopeDisplay : LedDisplay {
 struct ScopeWidget : ModuleWidget {
 	ScopeWidget(Scope* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Scope.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Scope.svg"), asset::plugin(pluginInstance, "res/Scope-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -515,12 +515,12 @@ struct ScopeWidget : ModuleWidget {
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(41.147, 96.815)), module, Scope::Y_POS_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(57.397, 96.815)), module, Scope::THRESH_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(8.643, 113.115)), module, Scope::X_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(33.023, 113.115)), module, Scope::Y_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(57.397, 113.115)), module, Scope::TRIG_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(8.643, 113.115)), module, Scope::X_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(33.023, 113.115)), module, Scope::Y_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(57.397, 113.115)), module, Scope::TRIG_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(20.833, 113.115)), module, Scope::X_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(45.212, 113.115)), module, Scope::Y_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(20.833, 113.115)), module, Scope::X_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(45.212, 113.115)), module, Scope::Y_OUTPUT));
 
 		ScopeDisplay* display = createWidget<ScopeDisplay>(mm2px(Vec(0.0, 13.039)));
 		display->box.size = mm2px(Vec(66.04, 55.88));

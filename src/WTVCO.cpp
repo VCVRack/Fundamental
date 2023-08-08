@@ -283,7 +283,7 @@ struct WTVCO : Module {
 struct WTVCOWidget : ModuleWidget {
 	WTVCOWidget(WTVCO* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/WTVCO.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/WTVCO.svg"), asset::plugin(pluginInstance, "res/WTVCO-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -297,12 +297,12 @@ struct WTVCOWidget : ModuleWidget {
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(28.571, 80.603)), module, WTVCO::POS_CV_PARAM));
 		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(17.734, 96.859)), module, WTVCO::SOFT_PARAM, WTVCO::SOFT_LIGHT));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.897, 96.813)), module, WTVCO::FM_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.571, 96.859)), module, WTVCO::POS_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.897, 113.115)), module, WTVCO::PITCH_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.734, 113.115)), module, WTVCO::SYNC_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.897, 96.813)), module, WTVCO::FM_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(28.571, 96.859)), module, WTVCO::POS_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.897, 113.115)), module, WTVCO::PITCH_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.734, 113.115)), module, WTVCO::SYNC_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.571, 113.115)), module, WTVCO::WAVE_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.571, 113.115)), module, WTVCO::WAVE_OUTPUT));
 
 		addChild(createLightCentered<SmallLight<RedGreenBlueLight>>(mm2px(Vec(17.733, 49.409)), module, WTVCO::PHASE_LIGHT));
 

@@ -212,7 +212,7 @@ struct Delay : Module {
 struct DelayWidget : ModuleWidget {
 	DelayWidget(Delay* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Delay.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Delay.svg"), asset::plugin(pluginInstance, "res/Delay-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -228,15 +228,15 @@ struct DelayWidget : ModuleWidget {
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(28.278, 80.561)), module, Delay::TONE_CV_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(39.115, 80.561)), module, Delay::MIX_CV_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.605, 96.859)), module, Delay::TIME_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.442, 96.859)), module, Delay::FEEDBACK_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.278, 96.819)), module, Delay::TONE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(39.115, 96.819)), module, Delay::MIX_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.605, 113.115)), module, Delay::IN_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.442, 113.115)), module, Delay::CLOCK_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.605, 96.859)), module, Delay::TIME_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.442, 96.859)), module, Delay::FEEDBACK_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(28.278, 96.819)), module, Delay::TONE_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(39.115, 96.819)), module, Delay::MIX_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.605, 113.115)), module, Delay::IN_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.442, 113.115)), module, Delay::CLOCK_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.278, 113.115)), module, Delay::WET_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.115, 113.115)), module, Delay::MIX_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.278, 113.115)), module, Delay::WET_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(39.115, 113.115)), module, Delay::MIX_OUTPUT));
 
 		addChild(createLightCentered<SmallLight<YellowLight>>(mm2px(Vec(22.738, 16.428)), module, Delay::CLOCK_LIGHT));
 	}

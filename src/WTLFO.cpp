@@ -251,7 +251,7 @@ struct WTLFO : Module {
 struct WTLFOWidget : ModuleWidget {
 	WTLFOWidget(WTLFO* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/WTLFO.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/WTLFO.svg"), asset::plugin(pluginInstance, "res/WTLFO-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -265,12 +265,12 @@ struct WTLFOWidget : ModuleWidget {
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(28.662, 80.536)), module, WTLFO::POS_CV_PARAM));
 		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(17.824, 96.859)), module, WTLFO::OFFSET_PARAM, WTLFO::OFFSET_LIGHT));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.987, 96.859)), module, WTLFO::FM_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.662, 96.859)), module, WTLFO::POS_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.987, 113.115)), module, WTLFO::CLOCK_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.824, 113.115)), module, WTLFO::RESET_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.987, 96.859)), module, WTLFO::FM_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(28.662, 96.859)), module, WTLFO::POS_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.987, 113.115)), module, WTLFO::CLOCK_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.824, 113.115)), module, WTLFO::RESET_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.662, 113.115)), module, WTLFO::WAVE_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.662, 113.115)), module, WTLFO::WAVE_OUTPUT));
 
 		addChild(createLightCentered<SmallLight<RedGreenBlueLight>>(mm2px(Vec(17.731, 49.409)), module, WTLFO::PHASE_LIGHT));
 

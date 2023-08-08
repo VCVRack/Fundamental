@@ -358,7 +358,7 @@ struct ADSRDisplay : LedDisplay {
 struct ADSRWidget : ModuleWidget {
 	ADSRWidget(ADSR* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/ADSR.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/ADSR.svg"), asset::plugin(pluginInstance, "res/ADSR-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -375,14 +375,14 @@ struct ADSRWidget : ModuleWidget {
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(39.119, 80.603)), module, ADSR::RELEASE_CV_PARAM));
 		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(6.604, 113.115)), module, ADSR::PUSH_PARAM, ADSR::PUSH_LIGHT));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.604, 96.882)), module, ADSR::ATTACK_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.441, 96.859)), module, ADSR::DECAY_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.279, 96.886)), module, ADSR::SUSTAIN_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(39.119, 96.89)), module, ADSR::RELEASE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.441, 113.115)), module, ADSR::GATE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.279, 113.115)), module, ADSR::RETRIG_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.604, 96.882)), module, ADSR::ATTACK_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.441, 96.859)), module, ADSR::DECAY_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(28.279, 96.886)), module, ADSR::SUSTAIN_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(39.119, 96.89)), module, ADSR::RELEASE_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.441, 113.115)), module, ADSR::GATE_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(28.279, 113.115)), module, ADSR::RETRIG_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.119, 113.115)), module, ADSR::ENVELOPE_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(39.119, 113.115)), module, ADSR::ENVELOPE_OUTPUT));
 
 		ADSRDisplay* display = createWidget<ADSRDisplay>(mm2px(Vec(0.0, 13.039)));
 		display->box.size = mm2px(Vec(45.72, 21.219));

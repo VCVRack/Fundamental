@@ -223,7 +223,7 @@ struct LFO : Module {
 struct LFOWidget : ModuleWidget {
 	LFOWidget(LFO* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/LFO.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/LFO.svg"), asset::plugin(pluginInstance, "res/LFO-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -237,15 +237,15 @@ struct LFOWidget : ModuleWidget {
 		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(28.279, 80.603)), module, LFO::OFFSET_PARAM, LFO::OFFSET_LIGHT));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(39.116, 80.603)), module, LFO::PWM_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.604, 96.859)), module, LFO::FM_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.441, 96.859)), module, LFO::CLOCK_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.279, 96.819)), module, LFO::RESET_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(39.116, 96.819)), module, LFO::PW_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.604, 96.859)), module, LFO::FM_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.441, 96.859)), module, LFO::CLOCK_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(28.279, 96.819)), module, LFO::RESET_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(39.116, 96.819)), module, LFO::PW_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.604, 113.115)), module, LFO::SIN_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(17.441, 113.115)), module, LFO::TRI_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.279, 113.115)), module, LFO::SAW_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(39.116, 113.115)), module, LFO::SQR_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(6.604, 113.115)), module, LFO::SIN_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(17.441, 113.115)), module, LFO::TRI_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.279, 113.115)), module, LFO::SAW_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(39.116, 113.115)), module, LFO::SQR_OUTPUT));
 
 		addChild(createLightCentered<SmallLight<RedGreenBlueLight>>(mm2px(Vec(31.085, 16.428)), module, LFO::PHASE_LIGHT));
 	}

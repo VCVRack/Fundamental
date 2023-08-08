@@ -88,7 +88,7 @@ struct _8vert : Module {
 struct _8vertWidget : ModuleWidget {
 	_8vertWidget(_8vert* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/8vert.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/8vert.svg"), asset::plugin(pluginInstance, "res/8vert-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -104,23 +104,23 @@ struct _8vertWidget : ModuleWidget {
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(20.351, 100.093)), module, _8vert::GAIN_PARAMS + 6));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(20.351, 113.115)), module, _8vert::GAIN_PARAMS + 7));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 21.968)), module, _8vert::IN_INPUTS + 0));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 34.982)), module, _8vert::IN_INPUTS + 1));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 48.004)), module, _8vert::IN_INPUTS + 2));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 61.026)), module, _8vert::IN_INPUTS + 3));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 74.048)), module, _8vert::IN_INPUTS + 4));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 87.07)), module, _8vert::IN_INPUTS + 5));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 100.093)), module, _8vert::IN_INPUTS + 6));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.331, 113.115)), module, _8vert::IN_INPUTS + 7));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.331, 21.968)), module, _8vert::IN_INPUTS + 0));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.331, 34.982)), module, _8vert::IN_INPUTS + 1));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.331, 48.004)), module, _8vert::IN_INPUTS + 2));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.331, 61.026)), module, _8vert::IN_INPUTS + 3));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.331, 74.048)), module, _8vert::IN_INPUTS + 4));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.331, 87.07)), module, _8vert::IN_INPUTS + 5));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.331, 100.093)), module, _8vert::IN_INPUTS + 6));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.331, 113.115)), module, _8vert::IN_INPUTS + 7));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 21.968)), module, _8vert::OUT_OUTPUTS + 0));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 34.982)), module, _8vert::OUT_OUTPUTS + 1));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 48.004)), module, _8vert::OUT_OUTPUTS + 2));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 61.026)), module, _8vert::OUT_OUTPUTS + 3));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 74.048)), module, _8vert::OUT_OUTPUTS + 4));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 87.07)), module, _8vert::OUT_OUTPUTS + 5));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 100.093)), module, _8vert::OUT_OUTPUTS + 6));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.371, 113.115)), module, _8vert::OUT_OUTPUTS + 7));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.371, 21.968)), module, _8vert::OUT_OUTPUTS + 0));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.371, 34.982)), module, _8vert::OUT_OUTPUTS + 1));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.371, 48.004)), module, _8vert::OUT_OUTPUTS + 2));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.371, 61.026)), module, _8vert::OUT_OUTPUTS + 3));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.371, 74.048)), module, _8vert::OUT_OUTPUTS + 4));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.371, 87.07)), module, _8vert::OUT_OUTPUTS + 5));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.371, 100.093)), module, _8vert::OUT_OUTPUTS + 6));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.371, 113.115)), module, _8vert::OUT_OUTPUTS + 7));
 	}
 };
 

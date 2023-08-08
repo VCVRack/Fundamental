@@ -113,7 +113,7 @@ struct SumChannelDisplay : ChannelDisplay {
 struct SumWidget : ModuleWidget {
 	SumWidget(Sum* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Sum.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Sum.svg"), asset::plugin(pluginInstance, "res/Sum-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -122,9 +122,9 @@ struct SumWidget : ModuleWidget {
 
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.62, 64.284)), module, Sum::LEVEL_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 96.798)), module, Sum::POLY_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 96.798)), module, Sum::POLY_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.066)), module, Sum::MONO_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 113.066)), module, Sum::MONO_OUTPUT));
 
 		SumDisplay* display = createWidget<SumDisplay>(mm2px(Vec(0.0, 13.039)));
 		display->box.size = mm2px(Vec(15.241, 36.981));

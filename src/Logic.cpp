@@ -140,7 +140,7 @@ using VCVBezelLightBigWhite = LightButton<VCVBezelBig, VCVBezelLightBig<WhiteLig
 struct LogicWidget : ModuleWidget {
 	LogicWidget(Logic* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Logic.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Logic.svg"), asset::plugin(pluginInstance, "res/Logic-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -149,17 +149,17 @@ struct LogicWidget : ModuleWidget {
 
 		addParam(createLightParamCentered<VCVBezelLightBigWhite>(mm2px(Vec(12.7, 26.755)), module, Logic::B_PARAM, Logic::B_BUTTON_LIGHT));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.299, 52.31)), module, Logic::A_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.136, 52.31)), module, Logic::B_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.299, 52.31)), module, Logic::A_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.136, 52.31)), module, Logic::B_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.297, 67.53)), module, Logic::NOTA_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.134, 67.53)), module, Logic::NOTB_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.297, 82.732)), module, Logic::OR_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.134, 82.732)), module, Logic::NOR_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.297, 97.958)), module, Logic::AND_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.134, 97.958)), module, Logic::NAND_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.297, 113.115)), module, Logic::XOR_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.134, 113.115)), module, Logic::XNOR_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.297, 67.53)), module, Logic::NOTA_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.134, 67.53)), module, Logic::NOTB_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.297, 82.732)), module, Logic::OR_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.134, 82.732)), module, Logic::NOR_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.297, 97.958)), module, Logic::AND_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.134, 97.958)), module, Logic::NAND_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.297, 113.115)), module, Logic::XOR_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.134, 113.115)), module, Logic::XNOR_OUTPUT));
 
 		addChild(createLightCentered<TinyLight<YellowBlueLight<>>>(mm2px(Vec(11.027, 63.805)), module, Logic::NOTA_LIGHT));
 		addChild(createLightCentered<TinyLight<YellowBlueLight<>>>(mm2px(Vec(21.864, 63.805)), module, Logic::NOTB_LIGHT));

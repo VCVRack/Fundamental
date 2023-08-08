@@ -172,17 +172,17 @@ struct OctaveDisplay : LedDisplay {
 struct OctaveWidget : ModuleWidget {
 	OctaveWidget(Octave* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Octave.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Octave.svg"), asset::plugin(pluginInstance, "res/Octave-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 80.573)), module, Octave::OCTAVE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 96.859)), module, Octave::PITCH_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 80.573)), module, Octave::OCTAVE_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 96.859)), module, Octave::PITCH_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Octave::PITCH_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Octave::PITCH_OUTPUT));
 
 		OctaveDisplay* display = createWidget<OctaveDisplay>(mm2px(Vec(0.0, 13.039)));
 		display->box.size = mm2px(Vec(15.263, 55.88));

@@ -252,7 +252,7 @@ struct Random : Module {
 struct RandomWidget : ModuleWidget {
 	RandomWidget(Random* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Random.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Random.svg"), asset::plugin(pluginInstance, "res/Random-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -269,18 +269,18 @@ struct RandomWidget : ModuleWidget {
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(38.991, 64.347)), module, Random::SHAPE_CV_PARAM));
 		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(28.154, 96.859)), module, Random::OFFSET_PARAM, Random::OFFSET_LIGHT));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.479, 80.549)), module, Random::RATE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.317, 80.549)), module, Random::PROB_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(28.154, 80.553)), module, Random::RAND_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(38.991, 80.557)), module, Random::SHAPE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.479, 96.859)), module, Random::TRIG_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.317, 96.859)), module, Random::EXTERNAL_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.479, 80.549)), module, Random::RATE_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.317, 80.549)), module, Random::PROB_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(28.154, 80.553)), module, Random::RAND_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(38.991, 80.557)), module, Random::SHAPE_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.479, 96.859)), module, Random::TRIG_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.317, 96.859)), module, Random::EXTERNAL_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(38.991, 96.859)), module, Random::TRIG_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(6.479, 113.115)), module, Random::STEPPED_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(17.317, 113.115)), module, Random::LINEAR_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.154, 113.115)), module, Random::EXPONENTIAL_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(38.991, 113.115)), module, Random::SMOOTH_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(38.991, 96.859)), module, Random::TRIG_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(6.479, 113.115)), module, Random::STEPPED_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(17.317, 113.115)), module, Random::LINEAR_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.154, 113.115)), module, Random::EXPONENTIAL_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(38.991, 113.115)), module, Random::SMOOTH_OUTPUT));
 	}
 };
 

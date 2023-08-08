@@ -64,7 +64,7 @@ struct CVMix : Module {
 struct CVMixWidget : ModuleWidget {
 	CVMixWidget(CVMix* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/CVMix.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/CVMix.svg"), asset::plugin(pluginInstance, "res/CVMix-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -75,11 +75,11 @@ struct CVMixWidget : ModuleWidget {
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.62, 41.327)), module, CVMix::LEVEL_PARAMS + 1));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.62, 57.922)), module, CVMix::LEVEL_PARAMS + 2));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 76.539)), module, CVMix::CV_INPUTS + 0));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 86.699)), module, CVMix::CV_INPUTS + 1));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 96.859)), module, CVMix::CV_INPUTS + 2));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 76.539)), module, CVMix::CV_INPUTS + 0));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 86.699)), module, CVMix::CV_INPUTS + 1));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 96.859)), module, CVMix::CV_INPUTS + 2));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, CVMix::MIX_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 113.115)), module, CVMix::MIX_OUTPUT));
 	}
 };
 

@@ -54,31 +54,31 @@ struct SplitChannelDisplay : ChannelDisplay {
 struct SplitWidget : ModuleWidget {
 	SplitWidget(Split* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Split.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Split.svg"), asset::plugin(pluginInstance, "res/Split-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.281, 21.967)), module, Split::POLY_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 21.967)), module, Split::POLY_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 41.995)), module, Split::MONO_OUTPUTS + 0));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 52.155)), module, Split::MONO_OUTPUTS + 1));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 62.315)), module, Split::MONO_OUTPUTS + 2));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 72.475)), module, Split::MONO_OUTPUTS + 3));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 82.635)), module, Split::MONO_OUTPUTS + 4));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 92.795)), module, Split::MONO_OUTPUTS + 5));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 102.955)), module, Split::MONO_OUTPUTS + 6));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.281, 113.115)), module, Split::MONO_OUTPUTS + 7));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 41.995)), module, Split::MONO_OUTPUTS + 8));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 52.155)), module, Split::MONO_OUTPUTS + 9));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 62.315)), module, Split::MONO_OUTPUTS + 10));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 72.475)), module, Split::MONO_OUTPUTS + 11));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 82.635)), module, Split::MONO_OUTPUTS + 12));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 92.795)), module, Split::MONO_OUTPUTS + 13));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 102.955)), module, Split::MONO_OUTPUTS + 14));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.119, 113.115)), module, Split::MONO_OUTPUTS + 15));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 41.995)), module, Split::MONO_OUTPUTS + 0));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 52.155)), module, Split::MONO_OUTPUTS + 1));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 62.315)), module, Split::MONO_OUTPUTS + 2));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 72.475)), module, Split::MONO_OUTPUTS + 3));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 82.635)), module, Split::MONO_OUTPUTS + 4));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 92.795)), module, Split::MONO_OUTPUTS + 5));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 102.955)), module, Split::MONO_OUTPUTS + 6));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.281, 113.115)), module, Split::MONO_OUTPUTS + 7));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 41.995)), module, Split::MONO_OUTPUTS + 8));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 52.155)), module, Split::MONO_OUTPUTS + 9));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 62.315)), module, Split::MONO_OUTPUTS + 10));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 72.475)), module, Split::MONO_OUTPUTS + 11));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 82.635)), module, Split::MONO_OUTPUTS + 12));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 92.795)), module, Split::MONO_OUTPUTS + 13));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 102.955)), module, Split::MONO_OUTPUTS + 14));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.119, 113.115)), module, Split::MONO_OUTPUTS + 15));
 
 		SplitChannelDisplay* display = createWidget<SplitChannelDisplay>(mm2px(Vec(14.02, 18.611)));
 		display->box.size = mm2px(Vec(8.197, 8.197));

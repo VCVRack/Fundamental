@@ -207,7 +207,7 @@ struct Gates : Module {
 struct GatesWidget : ModuleWidget {
 	GatesWidget(Gates* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Gates.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Gates.svg"), asset::plugin(pluginInstance, "res/Gates-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -217,16 +217,16 @@ struct GatesWidget : ModuleWidget {
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(12.646, 26.755)), module, Gates::LENGTH_PARAM));
 		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(18.146, 52.31)), module, Gates::RESET_PARAM, Gates::RESET_LIGHT));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.299, 52.31)), module, Gates::LENGTH_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.297, 67.53)), module, Gates::IN_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.132, 67.53)), module, Gates::RESET_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.299, 52.31)), module, Gates::LENGTH_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.297, 67.53)), module, Gates::IN_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.132, 67.53)), module, Gates::RESET_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.297, 82.732)), module, Gates::RISE_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.134, 82.732)), module, Gates::FALL_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.297, 97.958)), module, Gates::FLIP_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.134, 97.958)), module, Gates::FLOP_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.297, 113.115)), module, Gates::GATE_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.134, 113.115)), module, Gates::DELAY_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.297, 82.732)), module, Gates::RISE_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.134, 82.732)), module, Gates::FALL_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.297, 97.958)), module, Gates::FLIP_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.134, 97.958)), module, Gates::FLOP_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.297, 113.115)), module, Gates::GATE_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.134, 113.115)), module, Gates::DELAY_OUTPUT));
 
 		addChild(createLightCentered<TinyLight<YellowBlueLight<>>>(mm2px(Vec(11.027, 79.007)), module, Gates::RISE_LIGHT));
 		addChild(createLightCentered<TinyLight<YellowBlueLight<>>>(mm2px(Vec(21.864, 79.007)), module, Gates::FALL_LIGHT));

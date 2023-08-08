@@ -79,7 +79,7 @@ struct Mutes : Module {
 struct MutesWidget : ModuleWidget {
 	MutesWidget(Mutes* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Mutes.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Mutes.svg"), asset::plugin(pluginInstance, "res/Mutes-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -97,27 +97,27 @@ struct MutesWidget : ModuleWidget {
 		addParam(createLightParamCentered<VCVLightBezelLatch<>>(mm2px(Vec(20.312, 102.987)), module, Mutes::MUTE_PARAMS + 8, Mutes::MUTE_LIGHTS + 8));
 		addParam(createLightParamCentered<VCVLightBezelLatch<>>(mm2px(Vec(20.312, 113.115)), module, Mutes::MUTE_PARAMS + 9, Mutes::MUTE_LIGHTS + 9));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.291, 21.968)), module, Mutes::IN_INPUTS + 0));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.291, 32.095)), module, Mutes::IN_INPUTS + 1));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.291, 42.222)), module, Mutes::IN_INPUTS + 2));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.291, 52.35)), module, Mutes::IN_INPUTS + 3));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.291, 62.477)), module, Mutes::IN_INPUTS + 4));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.291, 72.605)), module, Mutes::IN_INPUTS + 5));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.291, 82.732)), module, Mutes::IN_INPUTS + 6));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.291, 92.86)), module, Mutes::IN_INPUTS + 7));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.291, 102.987)), module, Mutes::IN_INPUTS + 8));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.291, 113.115)), module, Mutes::IN_INPUTS + 9));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.291, 21.968)), module, Mutes::IN_INPUTS + 0));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.291, 32.095)), module, Mutes::IN_INPUTS + 1));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.291, 42.222)), module, Mutes::IN_INPUTS + 2));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.291, 52.35)), module, Mutes::IN_INPUTS + 3));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.291, 62.477)), module, Mutes::IN_INPUTS + 4));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.291, 72.605)), module, Mutes::IN_INPUTS + 5));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.291, 82.732)), module, Mutes::IN_INPUTS + 6));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.291, 92.86)), module, Mutes::IN_INPUTS + 7));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.291, 102.987)), module, Mutes::IN_INPUTS + 8));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.291, 113.115)), module, Mutes::IN_INPUTS + 9));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.332, 21.968)), module, Mutes::OUT_OUTPUTS + 0));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.332, 32.095)), module, Mutes::OUT_OUTPUTS + 1));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.332, 42.222)), module, Mutes::OUT_OUTPUTS + 2));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.332, 52.35)), module, Mutes::OUT_OUTPUTS + 3));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.332, 62.477)), module, Mutes::OUT_OUTPUTS + 4));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.332, 72.605)), module, Mutes::OUT_OUTPUTS + 5));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.332, 82.732)), module, Mutes::OUT_OUTPUTS + 6));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.332, 92.86)), module, Mutes::OUT_OUTPUTS + 7));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.332, 102.987)), module, Mutes::OUT_OUTPUTS + 8));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(33.332, 113.115)), module, Mutes::OUT_OUTPUTS + 9));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.332, 21.968)), module, Mutes::OUT_OUTPUTS + 0));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.332, 32.095)), module, Mutes::OUT_OUTPUTS + 1));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.332, 42.222)), module, Mutes::OUT_OUTPUTS + 2));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.332, 52.35)), module, Mutes::OUT_OUTPUTS + 3));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.332, 62.477)), module, Mutes::OUT_OUTPUTS + 4));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.332, 72.605)), module, Mutes::OUT_OUTPUTS + 5));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.332, 82.732)), module, Mutes::OUT_OUTPUTS + 6));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.332, 92.86)), module, Mutes::OUT_OUTPUTS + 7));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.332, 102.987)), module, Mutes::OUT_OUTPUTS + 8));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(33.332, 113.115)), module, Mutes::OUT_OUTPUTS + 9));
 	}
 
 	void appendContextMenu(Menu* menu) override {

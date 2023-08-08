@@ -101,7 +101,7 @@ struct Fade : Module {
 struct FadeWidget : ModuleWidget {
 	FadeWidget(Fade* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Fade.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Fade.svg"), asset::plugin(pluginInstance, "res/Fade-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -111,12 +111,12 @@ struct FadeWidget : ModuleWidget {
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.62, 24.723)), module, Fade::CROSSFADE_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(7.62, 37.064)), module, Fade::CROSSFADE_CV_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 52.987)), module, Fade::CROSSFADE_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 67.53)), module, Fade::IN1_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 82.732)), module, Fade::IN2_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 52.987)), module, Fade::CROSSFADE_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 67.53)), module, Fade::IN1_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 82.732)), module, Fade::IN2_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 97.923)), module, Fade::OUT1_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Fade::OUT2_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 97.923)), module, Fade::OUT1_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Fade::OUT2_OUTPUT));
 	}
 
 	void appendContextMenu(Menu* menu) override {

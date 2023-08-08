@@ -170,7 +170,7 @@ struct Process : Module {
 struct ProcessWidget : ModuleWidget {
 	ProcessWidget(Process* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Process.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Process.svg"), asset::plugin(pluginInstance, "res/Process-dark.svg")));
 
 		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
@@ -180,16 +180,16 @@ struct ProcessWidget : ModuleWidget {
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(12.646, 26.755)), module, Process::SLEW_PARAM));
 		addParam(createLightParamCentered<VCVLightBezel<>>(mm2px(Vec(18.136, 52.31)), module, Process::GATE_PARAM, Process::GATE_LIGHT));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.299, 52.31)), module, Process::SLEW_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.297, 67.53)), module, Process::IN_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(18.122, 67.53)), module, Process::GATE_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.299, 52.31)), module, Process::SLEW_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.297, 67.53)), module, Process::IN_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.122, 67.53)), module, Process::GATE_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.297, 82.732)), module, Process::SH1_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.134, 82.732)), module, Process::SH2_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.297, 97.958)), module, Process::TH_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.134, 97.923)), module, Process::HT_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.297, 113.115)), module, Process::SLEW_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(18.134, 113.115)), module, Process::GLIDE_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.297, 82.732)), module, Process::SH1_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.134, 82.732)), module, Process::SH2_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.297, 97.958)), module, Process::TH_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.134, 97.923)), module, Process::HT_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.297, 113.115)), module, Process::SLEW_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(18.134, 113.115)), module, Process::GLIDE_OUTPUT));
 	}
 };
 
