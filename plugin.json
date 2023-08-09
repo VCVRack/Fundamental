@@ -359,6 +359,7 @@
       "name": "Mult",
       "description": "Copies a signal to 8 outputs",
       "tags": [
+        "Multiple",
         "Utility",
         "Polyphonic"
       ]
@@ -368,6 +369,17 @@
       "name": "Rescale",
       "description": "Rescales voltages with gain and offset",
       "tags": [
+        "Attenuator",
+        "Utility",
+        "Polyphonic"
+      ]
+    },
+    {
+      "slug": "RandomValues",
+      "name": "Random Values",
+      "description": "Generates random fixed voltages",
+      "tags": [
+        "Random",
         "Utility",
         "Polyphonic"
       ]

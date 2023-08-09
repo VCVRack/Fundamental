@@ -42,6 +42,7 @@ extern Model* modelGates;
 extern Model* modelProcess;
 extern Model* modelMult;
 extern Model* modelRescale;
+extern Model* modelRandomValues;
 
 
 struct DigitalDisplay : Widget {

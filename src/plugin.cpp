@@ -42,4 +42,5 @@ void init(Plugin* p) {
 	p->addModel(modelProcess);
 	p->addModel(modelMult);
 	p->addModel(modelRescale);
+	p->addModel(modelRandomValues);
 }
