@@ -51,6 +51,13 @@ struct Rescale : Module {
 		configBypass(IN_INPUT, OUT_OUTPUT);
 	}
 
+	void onReset(const ResetEvent& e) override {
+		Module::onReset(e);
+		multiplier = 1.f;
+		reflectMin = false;
+		reflectMax = false;
+	}
+
 	void process(const ProcessArgs& args) override {
 		using simd::float_4;
 
@@ -65,8 +72,16 @@ struct Rescale : Module {
 			float_4 x = inputs[IN_INPUT].getPolyVoltageSimd<float_4>(c);
 			x = x * gain + offset;
 
-			if (reflectMin && reflectMax) {
-				// TODO find a pen to work this out
+			if (max <= min) {
+				x = min;
+			}
+			else if (reflectMin && reflectMax) {
+				// Cyclically reflect value between min and max
+				float range = max - min;
+				x = (x - min) / range;
+				x = simd::fmod(x + 1.f, 2.f) - 1.f;
+				x = simd::fabs(x);
+				x = x * range + min;
 			}
 			else if (reflectMin) {
 				x = simd::fabs(x - min) + min;
@@ -77,7 +92,8 @@ struct Rescale : Module {
 				x = simd::fmax(x, min);
 			}
 			else {
-				x = simd::clamp(x, min, max);
+				x = simd::fmin(x, max);
+				x = simd::fmax(x, min);
 			}
 
 			outputs[OUT_OUTPUT].setVoltageSimd(x, c);
@@ -101,11 +117,11 @@ struct Rescale : Module {
 
 		json_t* reflectMinJ = json_object_get(rootJ, "reflectMin");
 		if (reflectMinJ)
-			reflectMin = json_number_value(reflectMinJ);
+			reflectMin = json_boolean_value(reflectMinJ);
 
 		json_t* reflectMaxJ = json_object_get(rootJ, "reflectMax");
 		if (reflectMaxJ)
-			reflectMax = json_number_value(reflectMaxJ);
+			reflectMax = json_boolean_value(reflectMaxJ);
 	}
 };
 
@@ -144,8 +160,8 @@ struct RescaleWidget : ModuleWidget {
 			}
 		));
 
-		menu->addChild(createBoolPtrMenuItem("Reflect at minimum", "", &module->reflectMin));
 		menu->addChild(createBoolPtrMenuItem("Reflect at maximum", "", &module->reflectMax));
+		menu->addChild(createBoolPtrMenuItem("Reflect at minimum", "", &module->reflectMin));
 	}
 };
 
