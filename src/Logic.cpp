@@ -99,44 +99,6 @@ struct Logic : Module {
 };
 
 
-struct VCVBezelBig : app::SvgSwitch {
-	VCVBezelBig() {
-		momentary = true;
-		addFrame(Svg::load(asset::plugin(pluginInstance, "res/VCVBezelBig.svg")));
-	}
-};
-
-
-template <typename TBase>
-struct VCVBezelLightBig : TBase {
-	VCVBezelLightBig() {
-		this->borderColor = color::BLACK_TRANSPARENT;
-		this->bgColor = color::BLACK_TRANSPARENT;
-		this->box.size = mm2px(math::Vec(11.1936, 11.1936));
-	}
-};
-
-
-template <typename TBase, typename TLight = WhiteLight>
-struct LightButton : TBase {
-	app::ModuleLightWidget* light;
-
-	LightButton() {
-		light = new TLight;
-		// Move center of light to center of box
-		light->box.pos = this->box.size.div(2).minus(light->box.size.div(2));
-		this->addChild(light);
-	}
-
-	app::ModuleLightWidget* getLight() {
-		return light;
-	}
-};
-
-
-using VCVBezelLightBigWhite = LightButton<VCVBezelBig, VCVBezelLightBig<WhiteLight>>;
-
-
 struct LogicWidget : ModuleWidget {
 	LogicWidget(Logic* module) {
 		setModule(module);
@@ -147,7 +109,7 @@ struct LogicWidget : ModuleWidget {
 		addChild(createWidget<ThemedScrew>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createLightParamCentered<VCVBezelLightBigWhite>(mm2px(Vec(12.7, 26.755)), module, Logic::B_PARAM, Logic::B_BUTTON_LIGHT));
+		addParam(createLightParamCentered<LightButton<VCVBezelBig, VCVBezelLightBig<WhiteLight>>>(mm2px(Vec(12.7, 26.755)), module, Logic::B_PARAM, Logic::B_BUTTON_LIGHT));
 
 		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.299, 52.31)), module, Logic::A_INPUT));
 		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(18.136, 52.31)), module, Logic::B_INPUT));
