@@ -383,6 +383,14 @@
         "Utility",
         "Polyphonic"
       ]
+    },
+    {
+      "slug": "Push",
+      "name": "Push",
+      "description": "Button with gate/trigger outputs and hold switch",
+      "tags": [
+        "Utility"
+      ]
     }
   ]
 }

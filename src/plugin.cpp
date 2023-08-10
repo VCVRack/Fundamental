@@ -43,4 +43,5 @@ void init(Plugin* p) {
 	p->addModel(modelMult);
 	p->addModel(modelRescale);
 	p->addModel(modelRandomValues);
+	p->addModel(modelPush);
 }
