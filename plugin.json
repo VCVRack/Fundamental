@@ -391,6 +391,12 @@
       "tags": [
         "Utility"
       ]
+    },
+    {
+      "slug": "SHADR",
+      "name": "Sample & Hold Analog Shift Register",
+      "description": "",
+      "tags": []
     }
   ]
 }

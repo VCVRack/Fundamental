@@ -44,6 +44,7 @@ extern Model* modelMult;
 extern Model* modelRescale;
 extern Model* modelRandomValues;
 extern Model* modelPush;
+extern Model* modelSHADR;
 
 
 struct DigitalDisplay : Widget {
