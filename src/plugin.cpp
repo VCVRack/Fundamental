@@ -44,5 +44,5 @@ void init(Plugin* p) {
 	p->addModel(modelRescale);
 	p->addModel(modelRandomValues);
 	p->addModel(modelPush);
-	p->addModel(modelSHADR);
+	p->addModel(modelSHASR);
 }
