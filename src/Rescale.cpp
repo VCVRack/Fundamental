@@ -129,21 +129,21 @@ struct Rescale : Module {
 struct RescaleWidget : ModuleWidget {
 	RescaleWidget(Rescale* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Rescale.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Rescale.svg"), asset::plugin(pluginInstance, "res/Rescale-dark.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ThemedScrew>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ThemedScrew>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.62, 24.723)), module, Rescale::GAIN_PARAM));
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(7.617, 43.031)), module, Rescale::OFFSET_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(7.612, 64.344)), module, Rescale::MAX_PARAM));
 		addParam(createParamCentered<RoundSmallBlackKnob>(mm2px(Vec(7.612, 80.597)), module, Rescale::MIN_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.62, 96.859)), module, Rescale::IN_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 96.859)), module, Rescale::IN_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Rescale::OUT_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Rescale::OUT_OUTPUT));
 	}
 
 	void appendContextMenu(Menu* menu) override {

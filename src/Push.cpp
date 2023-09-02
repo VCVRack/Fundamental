@@ -91,21 +91,21 @@ struct Push : Module {
 struct PushWidget : ModuleWidget {
 	PushWidget(Push* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/Push.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/Push.svg"), asset::plugin(pluginInstance, "res/Push-dark.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ThemedScrew>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ThemedScrew>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 		addParam(createLightParamCentered<LightButton<VCVBezelBig, VCVBezelLightBig<WhiteLight>>>(mm2px(Vec(7.62, 24.723)), module, Push::PUSH_PARAM, Push::PUSH_LIGHT));
 		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(7.617, 48.074)), module, Push::HOLD_PARAM, Push::HOLD_LIGHT));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.612, 64.344)), module, Push::HOLD_INPUT));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.612, 80.597)), module, Push::PUSH_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.612, 64.344)), module, Push::HOLD_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.612, 80.597)), module, Push::PUSH_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 96.864)), module, Push::TRIG_OUTPUT));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Push::GATE_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 96.864)), module, Push::TRIG_OUTPUT));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.62, 113.115)), module, Push::GATE_OUTPUT));
 	}
 };
 

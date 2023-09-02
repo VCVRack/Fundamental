@@ -79,42 +79,42 @@ struct SHASR : Module {
 struct SHASRWidget : ModuleWidget {
 	SHASRWidget(SHASR* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/SHASR.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/SHASR.svg"), asset::plugin(pluginInstance, "res/SHASR-dark.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ThemedScrew>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ThemedScrew>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 		addParam(createParamCentered<VCVButton>(mm2px(Vec(6.96, 21.852)), module, SHASR::RND_PARAM));
 		addParam(createParamCentered<VCVButton>(mm2px(Vec(17.788, 21.852)), module, SHASR::PUSH_PARAM));
 		addParam(createParamCentered<VCVButton>(mm2px(Vec(28.6, 21.852)), module, SHASR::CLEAR_PARAM));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.96, 42.113)), module, SHASR::IN_INPUTS + 0));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.788, 42.055)), module, SHASR::TRIG_INPUTS + 0));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.96, 52.241)), module, SHASR::IN_INPUTS + 1));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.788, 52.241)), module, SHASR::TRIG_INPUTS + 1));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.96, 62.368)), module, SHASR::IN_INPUTS + 2));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.788, 62.368)), module, SHASR::TRIG_INPUTS + 2));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.96, 72.496)), module, SHASR::IN_INPUTS + 3));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.788, 72.496)), module, SHASR::TRIG_INPUTS + 3));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.96, 82.623)), module, SHASR::IN_INPUTS + 4));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.788, 82.623)), module, SHASR::TRIG_INPUTS + 4));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.96, 92.75)), module, SHASR::IN_INPUTS + 5));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.788, 92.75)), module, SHASR::TRIG_INPUTS + 5));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.96, 102.878)), module, SHASR::IN_INPUTS + 6));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.788, 102.878)), module, SHASR::TRIG_INPUTS + 6));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.96, 113.005)), module, SHASR::IN_INPUTS + 7));
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(17.788, 113.005)), module, SHASR::TRIG_INPUTS + 7));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.96, 42.113)), module, SHASR::IN_INPUTS + 0));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.788, 42.055)), module, SHASR::TRIG_INPUTS + 0));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.96, 52.241)), module, SHASR::IN_INPUTS + 1));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.788, 52.241)), module, SHASR::TRIG_INPUTS + 1));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.96, 62.368)), module, SHASR::IN_INPUTS + 2));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.788, 62.368)), module, SHASR::TRIG_INPUTS + 2));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.96, 72.496)), module, SHASR::IN_INPUTS + 3));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.788, 72.496)), module, SHASR::TRIG_INPUTS + 3));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.96, 82.623)), module, SHASR::IN_INPUTS + 4));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.788, 82.623)), module, SHASR::TRIG_INPUTS + 4));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.96, 92.75)), module, SHASR::IN_INPUTS + 5));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.788, 92.75)), module, SHASR::TRIG_INPUTS + 5));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.96, 102.878)), module, SHASR::IN_INPUTS + 6));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.788, 102.878)), module, SHASR::TRIG_INPUTS + 6));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.96, 113.005)), module, SHASR::IN_INPUTS + 7));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.788, 113.005)), module, SHASR::TRIG_INPUTS + 7));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.6, 42.113)), module, SHASR::SH_OUTPUTS + 0));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.6, 52.241)), module, SHASR::SH_OUTPUTS + 1));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.6, 62.368)), module, SHASR::SH_OUTPUTS + 2));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.6, 72.496)), module, SHASR::SH_OUTPUTS + 3));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.6, 82.623)), module, SHASR::SH_OUTPUTS + 4));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.6, 92.75)), module, SHASR::SH_OUTPUTS + 5));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.6, 102.878)), module, SHASR::SH_OUTPUTS + 6));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(28.6, 113.005)), module, SHASR::SH_OUTPUTS + 7));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.6, 42.113)), module, SHASR::SH_OUTPUTS + 0));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.6, 52.241)), module, SHASR::SH_OUTPUTS + 1));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.6, 62.368)), module, SHASR::SH_OUTPUTS + 2));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.6, 72.496)), module, SHASR::SH_OUTPUTS + 3));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.6, 82.623)), module, SHASR::SH_OUTPUTS + 4));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.6, 92.75)), module, SHASR::SH_OUTPUTS + 5));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.6, 102.878)), module, SHASR::SH_OUTPUTS + 6));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.6, 113.005)), module, SHASR::SH_OUTPUTS + 7));
 	}
 };
 

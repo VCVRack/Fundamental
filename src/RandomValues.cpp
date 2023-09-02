@@ -102,24 +102,24 @@ struct RandomValues : Module {
 struct RandomValuesWidget : ModuleWidget {
 	RandomValuesWidget(RandomValues* module) {
 		setModule(module);
-		setPanel(createPanel(asset::plugin(pluginInstance, "res/RandomValues.svg")));
+		setPanel(createPanel(asset::plugin(pluginInstance, "res/RandomValues.svg"), asset::plugin(pluginInstance, "res/RandomValues-dark.svg")));
 
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
-		addChild(createWidget<ScrewSilver>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
-		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ThemedScrew>(Vec(RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, 0)));
+		addChild(createWidget<ThemedScrew>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
+		addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(7.62, 21.968)), module, RandomValues::PUSH_PARAM, RandomValues::PUSH_LIGHT));
 
-		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(7.622, 38.225)), module, RandomValues::TRIG_INPUT));
+		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.622, 38.225)), module, RandomValues::TRIG_INPUT));
 
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.622, 52.35)), module, RandomValues::RND_OUTPUTS + 0));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.622, 62.477)), module, RandomValues::RND_OUTPUTS + 1));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.622, 72.605)), module, RandomValues::RND_OUTPUTS + 2));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.622, 82.732)), module, RandomValues::RND_OUTPUTS + 3));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.622, 92.86)), module, RandomValues::RND_OUTPUTS + 4));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.622, 102.987)), module, RandomValues::RND_OUTPUTS + 5));
-		addOutput(createOutputCentered<PJ301MPort>(mm2px(Vec(7.622, 113.013)), module, RandomValues::RND_OUTPUTS + 6));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.622, 52.35)), module, RandomValues::RND_OUTPUTS + 0));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.622, 62.477)), module, RandomValues::RND_OUTPUTS + 1));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.622, 72.605)), module, RandomValues::RND_OUTPUTS + 2));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.622, 82.732)), module, RandomValues::RND_OUTPUTS + 3));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.622, 92.86)), module, RandomValues::RND_OUTPUTS + 4));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.622, 102.987)), module, RandomValues::RND_OUTPUTS + 5));
+		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(7.622, 113.013)), module, RandomValues::RND_OUTPUTS + 6));
 	}
 
 	void appendContextMenu(Menu* menu) override {
