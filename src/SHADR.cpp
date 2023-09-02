@@ -21,11 +21,17 @@ struct SHADR : Module {
 		LIGHTS_LEN
 	};
 
+	dsp::BooleanTrigger randomizeTrigger;
+	dsp::BooleanTrigger pushTrigger;
+	dsp::BooleanTrigger clearTrigger;
+	dsp::SchmittTrigger triggers[8];
+	float values[8] = {};
+
 	SHADR() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configParam(RND_PARAM, 0.f, 1.f, 0.f, "");
-		configParam(PUSH_PARAM, 0.f, 1.f, 0.f, "");
-		configParam(CLEAR_PARAM, 0.f, 1.f, 0.f, "");
+		configButton(RND_PARAM, "Randomize");
+		configButton(PUSH_PARAM, "Push");
+		configButton(CLEAR_PARAM, "Clear");
 		for (int i = 0; i < 8; i++) {
 			configInput(IN_INPUTS + i, string::f("Sample %d", i + 1));
 			configInput(TRIG_INPUTS + i, string::f("Trigger %d", i + 1));
@@ -33,7 +39,39 @@ struct SHADR : Module {
 		}
 	}
 
+	void onReset(const ResetEvent& e) override {
+		for (int i = 0; i < 8; i++) {
+			values[i] = 0.f;
+		}
+		Module::onReset(e);
+	}
+
 	void process(const ProcessArgs& args) override {
+		bool randomize = randomizeTrigger.process(params[RND_PARAM].getValue());
+		bool push = pushTrigger.process(params[PUSH_PARAM].getValue());
+		bool clear = clearTrigger.process(params[CLEAR_PARAM].getValue());
+		bool lastTrig = push;
+
+		for (int i = 0; i < 8; i++) {
+			if (inputs[TRIG_INPUTS + i].isConnected()) {
+				lastTrig = triggers[i].process(inputs[TRIG_INPUTS + i].getVoltage(), 0.1f, 1.f);
+			}
+			if (lastTrig) {
+				float lastValue = (i >= 1) ? outputs[SH_OUTPUTS + i - 1].getVoltage() : 0.f;
+				values[i] = inputs[IN_INPUTS + i].getNormalVoltage(lastValue);
+			}
+			if (randomize) {
+				values[i] = random::uniform() * 10.f;
+			}
+			if (clear) {
+				values[i] = 0.f;
+			}
+		}
+
+		// Set outputs
+		for (int i = 0; i < 8; i++) {
+			outputs[SH_OUTPUTS + i].setVoltage(values[i]);
+		}
 	}
 };
 
@@ -49,7 +87,7 @@ struct SHADRWidget : ModuleWidget {
 		addChild(createWidget<ScrewSilver>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 		addParam(createParamCentered<VCVButton>(mm2px(Vec(6.96, 21.852)), module, SHADR::RND_PARAM));
-		addParam(createParamCentered<VCVLightBezel<>>(mm2px(Vec(17.788, 21.852)), module, SHADR::PUSH_PARAM));
+		addParam(createParamCentered<VCVButton>(mm2px(Vec(17.788, 21.852)), module, SHADR::PUSH_PARAM));
 		addParam(createParamCentered<VCVButton>(mm2px(Vec(28.6, 21.852)), module, SHADR::CLEAR_PARAM));
 
 		addInput(createInputCentered<PJ301MPort>(mm2px(Vec(6.96, 42.113)), module, SHADR::IN_INPUTS + 0));
