@@ -99,7 +99,7 @@ struct PushWidget : ModuleWidget {
 		addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
 		addParam(createLightParamCentered<LightButton<VCVBezelBig, VCVBezelLightBig<WhiteLight>>>(mm2px(Vec(7.62, 24.723)), module, Push::PUSH_PARAM, Push::PUSH_LIGHT));
-		addParam(createLightParamCentered<LEDLightBezel<>>(mm2px(Vec(7.617, 48.074)), module, Push::HOLD_PARAM, Push::HOLD_LIGHT));
+		addParam(createLightParamCentered<VCVLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(7.617, 48.074)), module, Push::HOLD_PARAM, Push::HOLD_LIGHT));
 
 		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.612, 64.344)), module, Push::HOLD_INPUT));
 		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(7.612, 80.597)), module, Push::PUSH_INPUT));
