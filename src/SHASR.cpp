@@ -32,6 +32,7 @@ struct SHASR : Module {
 	SHASR() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configSwitch(RND_PARAM, 0.f, 1.f, 0.f, "Randomize");
+		getParamQuantity(RND_PARAM)->randomizeEnabled = false;
 		getParamQuantity(RND_PARAM)->description = "Normalize \"Sample 1 input\" to a random 0-10 V signal";
 		configButton(PUSH_PARAM, "Push");
 		configButton(CLEAR_PARAM, "Clear");
@@ -40,10 +41,6 @@ struct SHASR : Module {
 			configInput(TRIG_INPUTS + i, string::f("Trigger %d", i + 1));
 			configOutput(SH_OUTPUTS + i, string::f("Sample %d", i + 1));
 		}
-	}
-
-	void onRandomize(const RandomizeEvent& e) override {
-		// Don't call super method
 	}
 
 	void onReset(const ResetEvent& e) override {
