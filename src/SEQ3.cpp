@@ -9,9 +9,11 @@ struct SEQ3 : Module {
 		TRIG_PARAM,
 		ENUMS(CV_PARAMS, 3 * 8),
 		ENUMS(GATE_PARAMS, 8),
-		// added in 2.0
+		// added in 2.0.0
 		TEMPO_CV_PARAM,
 		STEPS_CV_PARAM,
+		// added in 2.6.0
+		CLOCK_PARAM,
 		NUM_PARAMS
 	};
 	enum InputIds {
@@ -19,7 +21,7 @@ struct SEQ3 : Module {
 		CLOCK_INPUT,
 		RESET_INPUT,
 		STEPS_INPUT,
-		// added in 2.0
+		// added in 2.0.0
 		RUN_INPUT,
 		NUM_INPUTS
 	};
@@ -27,7 +29,7 @@ struct SEQ3 : Module {
 		TRIG_OUTPUT,
 		ENUMS(CV_OUTPUTS, 3),
 		ENUMS(STEP_OUTPUTS, 8),
-		// added in 2.0
+		// added in 2.0.0
 		STEPS_OUTPUT,
 		CLOCK_OUTPUT,
 		RUN_OUTPUT,
@@ -46,12 +48,13 @@ struct SEQ3 : Module {
 	bool running = true;
 	bool clockPassthrough = false;
 
+	dsp::BooleanTrigger clockButtonTrigger;
 	dsp::BooleanTrigger runButtonTrigger;
 	dsp::BooleanTrigger resetButtonTrigger;
 	dsp::BooleanTrigger gateTriggers[8];
 
-	dsp::SchmittTrigger runTrigger;
 	dsp::SchmittTrigger clockTrigger;
+	dsp::SchmittTrigger runTrigger;
 	dsp::SchmittTrigger resetTrigger;
 
 	dsp::PulseGenerator runPulse;
@@ -70,6 +73,7 @@ struct SEQ3 : Module {
 		getParamQuantity(TEMPO_PARAM)->randomizeEnabled = false;
 		configParam(TEMPO_CV_PARAM, 0.f, 1.f, 1.f, "Tempo CV", "%", 0, 100);
 		getParamQuantity(TEMPO_CV_PARAM)->randomizeEnabled = false;
+		configButton(CLOCK_PARAM, "Clock");
 		configButton(RUN_PARAM, "Run");
 		configButton(RESET_PARAM, "Reset");
 		configParam(TRIG_PARAM, 1.f, 8.f, 8.f, "Steps");
@@ -103,8 +107,6 @@ struct SEQ3 : Module {
 		configOutput(CLOCK_OUTPUT, "Clock");
 		configOutput(RUN_OUTPUT, "Run");
 		configOutput(RESET_OUTPUT, "Reset");
-
-		configLight(CLOCK_LIGHT, "Clock trigger");
 
 		onReset();
 	}
@@ -174,6 +176,7 @@ struct SEQ3 : Module {
 		bool clock = false;
 		bool clockGate = false;
 		if (running) {
+			bool clockButton = clockButtonTrigger.process(params[CLOCK_PARAM].getValue());
 			if (inputs[CLOCK_INPUT].isConnected()) {
 				// External clock
 				bool clockTriggered = clockTrigger.process(inputs[CLOCK_INPUT].getVoltage(), 0.1f, 2.f);
@@ -181,7 +184,10 @@ struct SEQ3 : Module {
 				if (clockTriggered && !resetGate) {
 					clock = true;
 				}
-				clockGate = clockTrigger.isHigh();
+				if (clockButton) {
+					clock = true;
+				}
+				clockGate = clockTrigger.isHigh() || clockButtonTrigger.isHigh();
 			}
 			else {
 				// Internal clock
@@ -190,8 +196,12 @@ struct SEQ3 : Module {
 				phase += clockFreq * args.sampleTime;
 				if (phase >= 1.f && !resetGate) {
 					clock = true;
+					phase -= std::trunc(phase);
 				}
-				phase -= std::trunc(phase);
+				if (clockButton) {
+					clock = true;
+					phase = 0.f;
+				}
 				clockGate = (phase < 0.5f);
 			}
 		}
@@ -305,8 +315,10 @@ struct SEQ3Widget : ModuleWidget {
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(11.753, 26.755)), module, SEQ3::TEMPO_PARAM));
 		addParam(createParamCentered<RoundLargeBlackKnob>(mm2px(Vec(32.077, 26.782)), module, SEQ3::TRIG_PARAM));
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(49.372, 34.066)), module, SEQ3::TEMPO_CV_PARAM));
-		addParam(createLightParamCentered<VCVLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(88.424, 33.679)), module, SEQ3::RUN_PARAM, SEQ3::RUN_LIGHT));
+
 		addParam(createParamCentered<Trimpot>(mm2px(Vec(62.39, 34.066)), module, SEQ3::STEPS_CV_PARAM));
+		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(75.406, 33.497)), module, SEQ3::CLOCK_PARAM, SEQ3::CLOCK_LIGHT));
+		addParam(createLightParamCentered<VCVLightButton<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(88.424, 33.679)), module, SEQ3::RUN_PARAM, SEQ3::RUN_LIGHT));
 		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(101.441, 33.679)), module, SEQ3::RESET_PARAM, SEQ3::RESET_LIGHT));
 
 		addParam(createParamCentered<RoundBlackKnob>(mm2px(Vec(10.319, 46.563)), module, SEQ3::CV_PARAMS + 8 * 0 + 0));
@@ -368,8 +380,6 @@ struct SEQ3Widget : ModuleWidget {
 		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(75.406, 113.115)), module, SEQ3::CLOCK_OUTPUT));
 		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(88.424, 113.115)), module, SEQ3::RUN_OUTPUT));
 		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(101.441, 113.115)), module, SEQ3::RESET_OUTPUT));
-
-		addChild(createLightCentered<SmallLight<YellowLight>>(mm2px(Vec(75.406, 33.497)), module, SEQ3::CLOCK_LIGHT));
 
 		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(14.064, 93.103)), module, SEQ3::STEP_LIGHTS + 2 * 0));
 		addChild(createLightCentered<TinyLight<YellowRedLight<>>>(mm2px(Vec(27.084, 93.103)), module, SEQ3::STEP_LIGHTS + 2 * 1));
