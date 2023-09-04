@@ -18,10 +18,12 @@ struct SHASR : Module {
 		OUTPUTS_LEN
 	};
 	enum LightId {
+		RND_LIGHT,
+		PUSH_LIGHT,
+		CLEAR_LIGHT,
 		LIGHTS_LEN
 	};
 
-	dsp::BooleanTrigger randomizeTrigger;
 	dsp::BooleanTrigger pushTrigger;
 	dsp::BooleanTrigger clearTrigger;
 	dsp::SchmittTrigger triggers[8];
@@ -29,7 +31,7 @@ struct SHASR : Module {
 
 	SHASR() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
-		configButton(RND_PARAM, "Randomize");
+		configSwitch(RND_PARAM, 0.f, 1.f, 0.f, "Randomize");
 		configButton(PUSH_PARAM, "Push");
 		configButton(CLEAR_PARAM, "Clear");
 		for (int i = 0; i < 8; i++) {
@@ -47,7 +49,7 @@ struct SHASR : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		bool randomize = randomizeTrigger.process(params[RND_PARAM].getValue());
+		bool randomize = params[RND_PARAM].getValue();
 		bool push = pushTrigger.process(params[PUSH_PARAM].getValue());
 		bool clear = clearTrigger.process(params[CLEAR_PARAM].getValue());
 		bool lastTrig = push;
@@ -57,11 +59,14 @@ struct SHASR : Module {
 				lastTrig = triggers[i].process(inputs[TRIG_INPUTS + i].getVoltage(), 0.1f, 1.f);
 			}
 			if (lastTrig) {
-				float lastValue = (i >= 1) ? outputs[SH_OUTPUTS + i - 1].getVoltage() : 0.f;
-				values[i] = inputs[IN_INPUTS + i].getNormalVoltage(lastValue);
-			}
-			if (randomize) {
-				values[i] = random::uniform() * 10.f;
+				float sample;
+				if (i == 0) {
+					sample = randomize ? random::uniform() * 10.f : 0.f;
+				}
+				else {
+					sample = outputs[SH_OUTPUTS + i - 1].getVoltage();
+				}
+				values[i] = inputs[IN_INPUTS + i].getNormalVoltage(sample);
 			}
 			if (clear) {
 				values[i] = 0.f;
@@ -72,6 +77,10 @@ struct SHASR : Module {
 		for (int i = 0; i < 8; i++) {
 			outputs[SH_OUTPUTS + i].setVoltage(values[i]);
 		}
+
+		lights[RND_LIGHT].setBrightness(randomize);
+		lights[PUSH_LIGHT].setBrightnessSmooth(push * 2.f, args.sampleTime);
+		lights[CLEAR_LIGHT].setBrightnessSmooth(clear * 2.f, args.sampleTime);
 	}
 };
 
@@ -86,9 +95,9 @@ struct SHASRWidget : ModuleWidget {
 		addChild(createWidget<ThemedScrew>(Vec(RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 		addChild(createWidget<ThemedScrew>(Vec(box.size.x - 2 * RACK_GRID_WIDTH, RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
-		addParam(createParamCentered<VCVButton>(mm2px(Vec(6.96, 21.852)), module, SHASR::RND_PARAM));
-		addParam(createParamCentered<VCVButton>(mm2px(Vec(17.788, 21.852)), module, SHASR::PUSH_PARAM));
-		addParam(createParamCentered<VCVButton>(mm2px(Vec(28.6, 21.852)), module, SHASR::CLEAR_PARAM));
+		addParam(createLightParamCentered<VCVLightLatch<MediumSimpleLight<WhiteLight>>>(mm2px(Vec(6.96, 21.852)), module, SHASR::RND_PARAM, SHASR::RND_LIGHT));
+		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(17.788, 21.852)), module, SHASR::PUSH_PARAM, SHASR::PUSH_LIGHT));
+		addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(mm2px(Vec(28.6, 21.852)), module, SHASR::CLEAR_PARAM, SHASR::CLEAR_LIGHT));
 
 		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(6.96, 42.113)), module, SHASR::IN_INPUTS + 0));
 		addInput(createInputCentered<ThemedPJ301MPort>(mm2px(Vec(17.788, 42.055)), module, SHASR::TRIG_INPUTS + 0));
