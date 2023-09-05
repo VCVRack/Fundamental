@@ -66,14 +66,12 @@ MenuItem* createRangeItem(std::string label, float* gain, float* offset) {
 		{10.f, -5.f},
 		{2.f, -1.f},
 	};
-	static const std::vector<std::string> labels = {
-		"0V to 10V",
-		"0V to 5V",
-		"0V to 1V",
-		"-10V to 10V",
-		"-5V to 5V",
-		"-1V to 1V",
-	};
+	static std::vector<std::string> labels;
+	if (labels.empty()) {
+		for (const Range& range : ranges) {
+			labels.push_back(string::f("%gV to %gV", range.offset, range.offset + range.gain));
+		}
+	}
 
 	return createIndexSubmenuItem(label, labels,
 		[=]() {
