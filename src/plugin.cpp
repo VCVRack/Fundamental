@@ -46,3 +46,43 @@ void init(Plugin* p) {
 	p->addModel(modelPush);
 	p->addModel(modelSHASR);
 }
+
+
+MenuItem* createRangeItem(std::string label, float* gain, float* offset) {
+	struct Range {
+		float gain;
+		float offset;
+
+		bool operator==(const Range& other) const {
+			return gain == other.gain && offset == other.offset;
+		}
+	};
+
+	static const std::vector<Range> ranges = {
+		{10.f, 0.f},
+		{5.f, 0.f},
+		{1.f, 0.f},
+		{20.f, -10.f},
+		{10.f, -5.f},
+		{2.f, -1.f},
+	};
+	static const std::vector<std::string> labels = {
+		"0V to 10V",
+		"0V to 5V",
+		"0V to 1V",
+		"-10V to 10V",
+		"-5V to 5V",
+		"-1V to 1V",
+	};
+
+	return createIndexSubmenuItem(label, labels,
+		[=]() {
+			auto it = std::find(ranges.begin(), ranges.end(), Range{*gain, *offset});
+			return std::distance(ranges.begin(), it);
+		},
+		[=](int i) {
+			*gain = ranges[i].gain;
+			*offset = ranges[i].offset;
+		}
+	);
+}

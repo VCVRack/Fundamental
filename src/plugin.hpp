@@ -138,3 +138,6 @@ struct VCVBezelLightBig : TBase {
 		this->box.size = mm2px(math::Vec(11.1936, 11.1936));
 	}
 };
+
+
+MenuItem* createRangeItem(std::string label, float* gain, float* offset);

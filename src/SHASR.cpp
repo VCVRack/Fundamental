@@ -28,6 +28,8 @@ struct SHASR : Module {
 	dsp::BooleanTrigger clearTrigger;
 	dsp::SchmittTrigger triggers[8];
 	float values[8] = {};
+	float randomGain = 10.f;
+	float randomOffset = 0.f;
 
 	SHASR() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -47,6 +49,8 @@ struct SHASR : Module {
 		for (int i = 0; i < 8; i++) {
 			values[i] = 0.f;
 		}
+		randomGain = 10.f;
+		randomOffset = 0.f;
 		Module::onReset(e);
 	}
 
@@ -61,9 +65,11 @@ struct SHASR : Module {
 				lastTrig = triggers[i].process(inputs[TRIG_INPUTS + i].getVoltage(), 0.1f, 1.f);
 			}
 			if (lastTrig) {
-				float sample;
+				float sample = 0.f;
 				if (i == 0) {
-					sample = randomize ? random::uniform() * 10.f : 0.f;
+					if (randomize) {
+						sample = random::get<float>() * randomGain + randomOffset;
+					}
 				}
 				else {
 					sample = outputs[SH_OUTPUTS + i - 1].getVoltage();
@@ -83,6 +89,40 @@ struct SHASR : Module {
 		lights[RND_LIGHT].setBrightness(randomize);
 		lights[PUSH_LIGHT].setBrightnessSmooth(push * 2.f, args.sampleTime);
 		lights[CLEAR_LIGHT].setBrightnessSmooth(clear * 2.f, args.sampleTime);
+	}
+
+	json_t* dataToJson() override {
+		json_t* rootJ = json_object();
+
+		json_t* valuesJ = json_array();
+		for (int i = 0; i < 8; i++) {
+			json_array_insert_new(valuesJ, i, json_real(values[i]));
+		}
+		json_object_set_new(rootJ, "values", valuesJ);
+
+		json_object_set_new(rootJ, "randomGain", json_real(randomGain));
+		json_object_set_new(rootJ, "randomOffset", json_real(randomOffset));
+
+		return rootJ;
+	}
+
+	void dataFromJson(json_t* rootJ) override {
+		json_t* valuesJ = json_object_get(rootJ, "values");
+		if (valuesJ) {
+			for (int i = 0; i < 8; i++) {
+				json_t* valueJ = json_array_get(valuesJ, i);
+				if (valueJ)
+					values[i] = json_number_value(valueJ);
+			}
+		}
+
+		json_t* randomGainJ = json_object_get(rootJ, "randomGain");
+		if (randomGainJ)
+			randomGain = json_number_value(randomGainJ);
+
+		json_t* randomOffsetJ = json_object_get(rootJ, "randomOffset");
+		if (randomOffsetJ)
+			randomOffset = json_number_value(randomOffsetJ);
 	}
 };
 
@@ -126,6 +166,14 @@ struct SHASRWidget : ModuleWidget {
 		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.6, 92.75)), module, SHASR::SH_OUTPUTS + 5));
 		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.6, 102.878)), module, SHASR::SH_OUTPUTS + 6));
 		addOutput(createOutputCentered<ThemedPJ301MPort>(mm2px(Vec(28.6, 113.005)), module, SHASR::SH_OUTPUTS + 7));
+	}
+
+	void appendContextMenu(Menu* menu) override {
+		SHASR* module = getModule<SHASR>();
+
+		menu->addChild(new MenuSeparator);
+
+		menu->addChild(createRangeItem("Random range", &module->randomGain, &module->randomOffset));
 	}
 };
 

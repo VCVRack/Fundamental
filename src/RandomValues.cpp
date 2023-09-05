@@ -24,16 +24,8 @@ struct RandomValues : Module {
 
 	dsp::BooleanTrigger pushTrigger;
 	dsp::TSchmittTrigger<float_4> trigTriggers[4];
-
-	struct Range {
-		float gain;
-		float offset;
-
-		bool operator==(const Range& other) const {
-			return gain == other.gain && offset == other.offset;
-		}
-	};
-	Range range = {10.f, 0.f};
+	float randomGain = 10.f;
+	float randomOffset = 0.f;
 
 	RandomValues() {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
@@ -45,7 +37,8 @@ struct RandomValues : Module {
 
 	void onReset(const ResetEvent& e) override {
 		Module::onReset(e);
-		range = {10.f, 0.f};
+		randomGain = 10.f;
+		randomOffset = 0.f;
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -65,8 +58,7 @@ struct RandomValues : Module {
 				for (int c2 = 0; c2 < std::min(4, channels - c); c2++) {
 					if (pushed || (triggeredMask & (1 << c2))) {
 						for (int i = 0; i < 7; i++) {
-							float r = random::get<float>();
-							r = r * range.gain + range.offset;
+							float r = random::get<float>() * randomGain + randomOffset;
 							outputs[RND_OUTPUTS + i].setVoltage(r, c + c2);
 						}
 					}
@@ -82,19 +74,19 @@ struct RandomValues : Module {
 
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
-		json_object_set_new(rootJ, "gain", json_real(range.gain));
-		json_object_set_new(rootJ, "offset", json_real(range.offset));
+		json_object_set_new(rootJ, "randomGain", json_real(randomGain));
+		json_object_set_new(rootJ, "randomOffset", json_real(randomOffset));
 		return rootJ;
 	}
 
 	void dataFromJson(json_t* rootJ) override {
-		json_t* gainJ = json_object_get(rootJ, "gain");
-		if (gainJ)
-			range.gain = json_number_value(gainJ);
+		json_t* randomGainJ = json_object_get(rootJ, "randomGain");
+		if (randomGainJ)
+			randomGain = json_number_value(randomGainJ);
 
-		json_t* offsetJ = json_object_get(rootJ, "offset");
-		if (offsetJ)
-			range.offset = json_number_value(offsetJ);
+		json_t* randomOffsetJ = json_object_get(rootJ, "randomOffset");
+		if (randomOffsetJ)
+			randomOffset = json_number_value(randomOffsetJ);
 	}
 };
 
@@ -127,31 +119,7 @@ struct RandomValuesWidget : ModuleWidget {
 
 		menu->addChild(new MenuSeparator);
 
-		static const std::vector<RandomValues::Range> ranges = {
-			{10.f, 0.f},
-			{5.f, 0.f},
-			{1.f, 0.f},
-			{20.f, -10.f},
-			{10.f, -5.f},
-			{2.f, -1.f},
-		};
-		static const std::vector<std::string> labels = {
-			"0V to 10V",
-			"0V to 5V",
-			"0V to 1V",
-			"-10V to 10V",
-			"-5V to 5V",
-			"-1V to 1V",
-		};
-		menu->addChild(createIndexSubmenuItem("Voltage range", labels,
-			[=]() {
-				auto it = std::find(ranges.begin(), ranges.end(), module->range);
-				return std::distance(ranges.begin(), it);
-			},
-			[=](int i) {
-				module->range = ranges[i];
-			}
-		));
+		menu->addChild(createRangeItem("Random range", &module->randomGain, &module->randomOffset));
 	}
 };
 
