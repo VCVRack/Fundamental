@@ -33,6 +33,11 @@ struct RandomValues : Module {
 		configInput(TRIG_INPUT, "Trigger");
 		for (int i = 0; i < 7; i++)
 			configOutput(RND_OUTPUTS + i, string::f("Random %d", i + 1));
+
+		// Initialize values of all channels
+		for (int c = 0; c < 16; c++) {
+			randomizeValues(c);
+		}
 	}
 
 	void onReset(const ResetEvent& e) override {
@@ -57,29 +62,60 @@ struct RandomValues : Module {
 
 				for (int c2 = 0; c2 < std::min(4, channels - c); c2++) {
 					if (pushed || (triggeredMask & (1 << c2))) {
-						for (int i = 0; i < 7; i++) {
-							float r = random::get<float>() * randomGain + randomOffset;
-							outputs[RND_OUTPUTS + i].setVoltage(r, c + c2);
-						}
+						randomizeValues(c + c2);
 					}
 				}
 			}
 		}
 
 		for (int i = 0; i < 7; i++) {
-			outputs[RND_OUTPUTS + i].setChannels(channels);
+			// Don't call setChannels because we need to preserve all channel values
+			outputs[RND_OUTPUTS + i].channels = channels;
 		}
 		lights[PUSH_LIGHT].setBrightnessSmooth(light, args.sampleTime);
 	}
 
+	void randomizeValues(int channel) {
+		for (int i = 0; i < 7; i++) {
+			float r = random::get<float>() * randomGain + randomOffset;
+			outputs[RND_OUTPUTS + i].setVoltage(r, channel);
+		}
+	}
+
 	json_t* dataToJson() override {
 		json_t* rootJ = json_object();
+
+		json_t* valuesJ = json_array();
+		for (int i = 0; i < 7; i++) {
+			json_t* channelsJ = json_array();
+			for (int c = 0; c < 16; c++) {
+				float value = outputs[RND_OUTPUTS + i].getVoltage(c);
+				json_array_insert_new(channelsJ, c, json_real(value));
+			}
+			json_array_insert_new(valuesJ, i, channelsJ);
+		}
+		json_object_set_new(rootJ, "values", valuesJ);
+
 		json_object_set_new(rootJ, "randomGain", json_real(randomGain));
 		json_object_set_new(rootJ, "randomOffset", json_real(randomOffset));
 		return rootJ;
 	}
 
 	void dataFromJson(json_t* rootJ) override {
+		json_t* valuesJ = json_object_get(rootJ, "values");
+		if (valuesJ)
+		for (int i = 0; i < 7; i++) {
+			json_t* channelsJ = json_array_get(valuesJ, i);
+			if (channelsJ)
+			for (int c = 0; c < 16; c++) {
+				json_t* valueJ = json_array_get(channelsJ, c);
+				if (valueJ) {
+					float value = json_number_value(valueJ);
+					outputs[RND_OUTPUTS + i].setVoltage(value, c);
+				}
+			}
+		}
+
 		json_t* randomGainJ = json_object_get(rootJ, "randomGain");
 		if (randomGainJ)
 			randomGain = json_number_value(randomGainJ);
