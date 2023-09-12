@@ -56,13 +56,13 @@ struct Push : Module {
 
 		// Push button
 		bool push = params[PUSH_PARAM].getValue() > 0.f;
-		push ^= hold;
 
 		// Push input
 		pushSchmitt.process(inputs[PUSH_INPUT].getVoltage(), 0.1f, 1.f);
 
 		// Gate and trigger outputs
 		bool gate = push || pushSchmitt.isHigh();
+		gate ^= hold;
 		if (pushBoolean.process(gate)) {
 			trigPulse.trigger(1e-3f);
 		}
