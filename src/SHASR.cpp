@@ -58,13 +58,13 @@ struct SHASR : Module {
 		bool randomize = params[RND_PARAM].getValue();
 		bool push = pushTrigger.process(params[PUSH_PARAM].getValue());
 		bool clear = clearTrigger.process(params[CLEAR_PARAM].getValue());
-		bool lastTrig = push;
+		bool lastTrig = false;
 
 		for (int i = 0; i < 8; i++) {
 			if (inputs[TRIG_INPUTS + i].isConnected()) {
 				lastTrig = triggers[i].process(inputs[TRIG_INPUTS + i].getVoltage(), 0.1f, 1.f);
 			}
-			if (lastTrig) {
+			if (lastTrig || push) {
 				float sample = 0.f;
 				if (i == 0) {
 					if (randomize) {
