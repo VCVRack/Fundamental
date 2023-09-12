@@ -35,7 +35,7 @@ struct SHASR : Module {
 		config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 		configSwitch(RND_PARAM, 0.f, 1.f, 0.f, "Randomize");
 		getParamQuantity(RND_PARAM)->randomizeEnabled = false;
-		getParamQuantity(RND_PARAM)->description = "Normalizes \"Sample 1 input\" to a random 0-10 V signal";
+		getParamQuantity(RND_PARAM)->description = "Normalizes \"Sample 1 input\" to a random signal";
 		configButton(PUSH_PARAM, "Push");
 		configButton(CLEAR_PARAM, "Clear");
 		for (int i = 0; i < 8; i++) {
