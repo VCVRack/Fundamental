@@ -376,7 +376,7 @@
     {
       "slug": "Rescale",
       "name": "Rescale",
-      "description": "Rescales voltages with gain and offset",
+      "description": "Rescales voltages with gain, offset, and range limiting",
       "keywords": "RSCL",
       "manualUrl": "https://vcvrack.com/Free#Rescale",
       "tags": [
@@ -388,7 +388,7 @@
     {
       "slug": "RandomValues",
       "name": "Random Values",
-      "description": "Generates random fixed voltages",
+      "description": "Generates 7 random fixed voltages",
       "keywords": "RND",
       "manualUrl": "https://vcvrack.com/Free#RandomValues",
       "tags": [
@@ -409,10 +409,12 @@
     {
       "slug": "SHASR",
       "name": "Sample & Hold Analog Shift Register",
-      "description": "",
+      "description": "8 channel sample & hold combined with a shift register",
       "keywords": "S&H ASR",
       "manualUrl": "https://vcvrack.com/Free#SHASR",
-      "tags": []
+      "tags": [
+        "Sample and hold"
+      ]
     }
   ]
 }
