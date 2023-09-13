@@ -64,7 +64,10 @@ struct SHASR : Module {
 			if (inputs[TRIG_INPUTS + i].isConnected()) {
 				lastTrig = triggers[i].process(inputs[TRIG_INPUTS + i].getVoltage(), 0.1f, 1.f);
 			}
-			if (lastTrig || push) {
+			if (i == 0 && push) {
+				lastTrig = true;
+			}
+			if (lastTrig) {
 				float sample = 0.f;
 				if (i == 0) {
 					if (randomize) {
