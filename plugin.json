@@ -366,6 +366,7 @@
       "slug": "Mult",
       "name": "Mult",
       "description": "Copies a signal to 8 outputs",
+      "manualUrl": "https://vcvrack.com/Free#Mult",
       "tags": [
         "Multiple",
         "Utility",
@@ -377,6 +378,7 @@
       "name": "Rescale",
       "description": "Rescales voltages with gain and offset",
       "keywords": "RSCL",
+      "manualUrl": "https://vcvrack.com/Free#Rescale",
       "tags": [
         "Attenuator",
         "Utility",
@@ -388,6 +390,7 @@
       "name": "Random Values",
       "description": "Generates random fixed voltages",
       "keywords": "RND",
+      "manualUrl": "https://vcvrack.com/Free#RandomValues",
       "tags": [
         "Random",
         "Utility",
@@ -398,6 +401,7 @@
       "slug": "Push",
       "name": "Push",
       "description": "Button with gate/trigger outputs and hold switch",
+      "manualUrl": "https://vcvrack.com/Free#Push",
       "tags": [
         "Utility"
       ]
@@ -407,6 +411,7 @@
       "name": "Sample & Hold Analog Shift Register",
       "description": "",
       "keywords": "S&H ASR",
+      "manualUrl": "https://vcvrack.com/Free#SHASR",
       "tags": []
     }
   ]
