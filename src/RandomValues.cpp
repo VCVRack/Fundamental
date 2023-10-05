@@ -24,6 +24,7 @@ struct RandomValues : Module {
 
 	dsp::BooleanTrigger pushTrigger;
 	dsp::TSchmittTrigger<float_4> trigTriggers[4];
+	float values[7][16] = {};
 	float randomGain = 10.f;
 	float randomOffset = 0.f;
 
@@ -69,16 +70,15 @@ struct RandomValues : Module {
 		}
 
 		for (int i = 0; i < 7; i++) {
-			// Don't call setChannels because we need to preserve all channel values
-			outputs[RND_OUTPUTS + i].channels = channels;
+			outputs[RND_OUTPUTS + i].setChannels(channels);
+			outputs[RND_OUTPUTS + i].writeVoltages(values[i]);
 		}
 		lights[PUSH_LIGHT].setBrightnessSmooth(light, args.sampleTime);
 	}
 
 	void randomizeValues(int channel) {
 		for (int i = 0; i < 7; i++) {
-			float r = random::get<float>() * randomGain + randomOffset;
-			outputs[RND_OUTPUTS + i].setVoltage(r, channel);
+			values[i][channel] = random::get<float>() * randomGain + randomOffset;
 		}
 	}
 
@@ -89,8 +89,7 @@ struct RandomValues : Module {
 		for (int i = 0; i < 7; i++) {
 			json_t* channelsJ = json_array();
 			for (int c = 0; c < 16; c++) {
-				float value = outputs[RND_OUTPUTS + i].getVoltage(c);
-				json_array_insert_new(channelsJ, c, json_real(value));
+				json_array_insert_new(channelsJ, c, json_real(values[i][c]));
 			}
 			json_array_insert_new(valuesJ, i, channelsJ);
 		}
@@ -109,10 +108,8 @@ struct RandomValues : Module {
 			if (channelsJ)
 			for (int c = 0; c < 16; c++) {
 				json_t* valueJ = json_array_get(channelsJ, c);
-				if (valueJ) {
-					float value = json_number_value(valueJ);
-					outputs[RND_OUTPUTS + i].setVoltage(value, c);
-				}
+				if (valueJ)
+					values[i][c] = json_number_value(valueJ);
 			}
 		}
 
