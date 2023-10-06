@@ -59,33 +59,40 @@ struct SHASR : Module {
 		bool push = pushTrigger.process(params[PUSH_PARAM].getValue());
 		bool clear = clearTrigger.process(params[CLEAR_PARAM].getValue());
 		bool lastTrig = false;
+		float lastValue = 0.f;
 
 		for (int i = 0; i < 8; i++) {
+			// Check trigger if connected
 			if (inputs[TRIG_INPUTS + i].isConnected()) {
 				lastTrig = triggers[i].process(inputs[TRIG_INPUTS + i].getVoltage(), 0.1f, 1.f);
 			}
+			// Override first trigger if pushed
 			if (i == 0 && push) {
 				lastTrig = true;
 			}
+
+			// Get sample value if triggered
+			float sample = 0.f;
 			if (lastTrig) {
-				float sample = 0.f;
 				if (i == 0) {
 					if (randomize) {
 						sample = random::get<float>() * randomGain + randomOffset;
 					}
 				}
 				else {
-					sample = outputs[SH_OUTPUTS + i - 1].getVoltage();
+					sample = lastValue;
 				}
+			}
+
+			lastValue = values[i];
+
+			if (lastTrig) {
 				values[i] = inputs[IN_INPUTS + i].getNormalVoltage(sample);
 			}
 			if (clear) {
 				values[i] = 0.f;
 			}
-		}
 
-		// Set outputs
-		for (int i = 0; i < 8; i++) {
 			outputs[SH_OUTPUTS + i].setVoltage(values[i]);
 		}
 
