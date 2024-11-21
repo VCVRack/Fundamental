@@ -5,7 +5,8 @@
 #include <thread>
 
 
-static const char WAVETABLE_FILTERS[] = "WAV (.wav):wav,WAV;Raw:f32,i8,i16,i24,i32,*";
+static const char WAVETABLE_LOAD_FILTERS[] = "WAV:wav,WAV,aif,AIF,aiff,AIFF,f32,s8,i8,s16,i16,s24,i24,s32,i32";
+static const char WAVETABLE_SAVE_FILTERS[] = "WAV:wav,WAV";
 static std::string wavetableDir;
 
 
@@ -222,10 +223,13 @@ struct Wavetable {
 				samples.resize(len);
 				dsp::convert((const dsp::Int24*) data.data(), samples.data(), len);
 			}
-			else if (ext == ".s32" || ext == ".i32" || true) {
+			else if (ext == ".s32" || ext == ".i32") {
 				size_t len = data.size() / sizeof(int32_t);
 				samples.resize(len);
 				dsp::convert((const int32_t*) data.data(), samples.data(), len);
+			}
+			else {
+				return;
 			}
 		}
 
@@ -233,7 +237,7 @@ struct Wavetable {
 	}
 
 	void loadDialog() {
-		osdialog_filters* filters = osdialog_filters_parse(WAVETABLE_FILTERS);
+		osdialog_filters* filters = osdialog_filters_parse(WAVETABLE_LOAD_FILTERS);
 		DEFER({osdialog_filters_free(filters);});
 
 		char* pathC = osdialog_file(OSDIALOG_OPEN, wavetableDir.empty() ? NULL : wavetableDir.c_str(), NULL, filters);
@@ -273,7 +277,7 @@ struct Wavetable {
 	}
 
 	void saveDialog() const {
-		osdialog_filters* filters = osdialog_filters_parse(WAVETABLE_FILTERS);
+		osdialog_filters* filters = osdialog_filters_parse(WAVETABLE_SAVE_FILTERS);
 		DEFER({osdialog_filters_free(filters);});
 
 		char* pathC = osdialog_file(OSDIALOG_SAVE, wavetableDir.empty() ? NULL : wavetableDir.c_str(), filename.c_str(), filters);
