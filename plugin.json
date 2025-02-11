@@ -359,6 +359,8 @@
       "description": "CV processor",
       "manualUrl": "https://vcvrack.com/Free#Process",
       "tags": [
+        "Sample and hold",
+        "Slew limiter",
         "Polyphonic"
       ]
     },
