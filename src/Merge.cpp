@@ -18,7 +18,6 @@ struct Merge : Module {
 		NUM_LIGHTS
 	};
 
-	dsp::ClockDivider lightDivider;
 	int channels = -1;
 	int automaticChannels = 0;
 
@@ -28,7 +27,6 @@ struct Merge : Module {
 			configInput(MONO_INPUTS + i, string::f("Channel %d", i + 1));
 		configOutput(POLY_OUTPUT, "Polyphonic");
 
-		lightDivider.setDivision(512);
 		onReset();
 	}
 
