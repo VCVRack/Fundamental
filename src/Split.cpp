@@ -19,15 +19,12 @@ struct Split : Module {
 	};
 
 	int lastChannels = 0;
-	dsp::ClockDivider lightDivider;
 
 	Split() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configInput(POLY_INPUT, "Polyphonic");
 		for (int i = 0; i < 16; i++)
 			configOutput(MONO_OUTPUTS + i, string::f("Channel %d", i + 1));
-
-		lightDivider.setDivision(512);
 	}
 
 	void process(const ProcessArgs& args) override {
