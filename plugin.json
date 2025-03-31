@@ -1,7 +1,11 @@
 {
   "slug": "Fundamental",
   "name": "VCV Free",
+<<<<<<< HEAD
   "version": "2.6.1-SR",
+=======
+  "version": "2.6.1",
+>>>>>>> e80c373575b337720703a41691536272b21b554c
   "license": "GPL-3.0-or-later",
   "brand": "VCV",
   "author": "VCV",
@@ -359,6 +363,8 @@
       "description": "CV processor",
       "manualUrl": "https://vcvrack.com/Free#Process",
       "tags": [
+        "Sample and hold",
+        "Slew limiter",
         "Polyphonic"
       ]
     },

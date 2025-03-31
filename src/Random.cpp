@@ -7,7 +7,7 @@ struct Random : Module {
 		SHAPE_PARAM,
 		OFFSET_PARAM,
 		MODE_PARAM, // removed in 2.0
-		// new in 2.0
+		// added in 2.0
 		PROB_PARAM,
 		RAND_PARAM,
 		RATE_CV_PARAM,
@@ -21,7 +21,7 @@ struct Random : Module {
 		SHAPE_INPUT,
 		TRIG_INPUT,
 		EXTERNAL_INPUT,
-		// new in 2.0
+		// added in 2.0
 		PROB_INPUT,
 		RAND_INPUT,
 		NUM_INPUTS
@@ -31,7 +31,7 @@ struct Random : Module {
 		LINEAR_OUTPUT,
 		SMOOTH_OUTPUT,
 		EXPONENTIAL_OUTPUT,
-		// new in 2.0
+		// added in 2.0
 		TRIG_OUTPUT,
 		NUM_OUTPUTS
 	};
@@ -73,6 +73,8 @@ struct Random : Module {
 		getParamQuantity(RAND_CV_PARAM)->randomizeEnabled = false;
 
 		configSwitch(OFFSET_PARAM, 0.f, 1.f, 0.f, "Offset", {"Bipolar", "Unipolar"});
+
+		getParamQuantity(MODE_PARAM)->randomizeEnabled = false;
 
 		configInput(RATE_INPUT, "Clock rate");
 		configInput(SHAPE_INPUT, "Shape");
@@ -230,20 +232,26 @@ struct Random : Module {
 		lights[OFFSET_LIGHT].setBrightness(uni);
 	}
 
-	void paramsFromJson(json_t* rootJ) override {
-		// In <2.0, there were no attenuverters, so set them to 1.0 in case they are not overwritten.
-		params[RATE_CV_PARAM].setValue(1.f);
-		params[SHAPE_CV_PARAM].setValue(1.f);
-		params[PROB_CV_PARAM].setValue(1.f);
-		params[RAND_CV_PARAM].setValue(1.f);
-		// In <2.0, mode=0 implied relative mode, corresponding to about 20% RND.
-		params[RAND_PARAM].setValue(0.2f);
-		Module::paramsFromJson(rootJ);
+	void fromJson(json_t* rootJ) override {
+		Module::fromJson(rootJ);
 
-		// In <2.0, mode was used for absolute/relative mode. RND is a generalization so set it if mode is enabled.
-		if (params[MODE_PARAM].getValue() > 0.f) {
+		// Migrate from version <2.0
+		string::Version version;
+		json_t* versionJ = json_object_get(rootJ, "version");
+		if (versionJ)
+			version = json_string_value(versionJ);
+		if (version < string::Version("2")) {
+			// In <2.0, there were no attenuverters, so set them to 1.0 which achieves the old behavior.
+			params[RATE_CV_PARAM].setValue(1.f);
+			params[SHAPE_CV_PARAM].setValue(1.f);
+			params[PROB_CV_PARAM].setValue(1.f);
+			params[RAND_CV_PARAM].setValue(1.f);
+
+			int mode = params[MODE_PARAM].getValue();
+			// In <2.0, mode=0 implied relative mode, corresponding to about 20% RND.
+			// Absolute mode is 100% RND
+			params[RAND_PARAM].setValue(mode == 0 ? 0.2f : 1.f);
 			params[MODE_PARAM].setValue(0.f);
-			params[RAND_PARAM].setValue(1.f);
 		}
 	}
 };
