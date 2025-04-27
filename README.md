@@ -1,10 +1,12 @@
 # VCV Free modules
 
-Since this plugin is packaged with *VCV Rack Pro*, we cannot accept pull requests.
-See [Contributing to Rack](https://github.com/VCVRack/Rack/blob/v2/.github/CONTRIBUTING.md).
+*Essential synthesizer modules included with VCV Rack*
 
-Contact [VCV Support](https://vcvrack.com/support) or open a GitHub issue to request a feature or report a bug.
+Contact [VCV Support](https://vcvrack.com/support) to request a feature or report a bug.
+
+We cannot accept code contributions for this plugin.
+See [Contributing to Rack](https://github.com/VCVRack/Rack/blob/v2/.github/CONTRIBUTING.md).
 
 ## Building
 
-Follow the [build instructions for VCV Rack plugins](https://vcvrack.com/manual/Building#Building-Rack-plugins).
+Follow [Building Rack plugins](https://vcvrack.com/manual/Building#Building-Rack-plugins) in the VCV Rack manual.
