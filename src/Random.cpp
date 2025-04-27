@@ -58,36 +58,36 @@ struct Random : Module {
 
 	Random() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
-		configParam(RATE_PARAM, std::log2(0.002f), std::log2(2000.f), std::log2(2.f), "Clock rate", " Hz", 2);
-		configParam(SHAPE_PARAM, 0.f, 1.f, 1.f, "Shape", "%", 0, 100);
+		configParam(RATE_PARAM, std::log2(0.002f), std::log2(2000.f), std::log2(2.f), "Internal trigger rate", " Hz", 2);
 		configParam(PROB_PARAM, 0.f, 1.f, 1.f, "Trigger probability", "%", 0, 100);
 		configParam(RAND_PARAM, 0.f, 1.f, 1.f, "Random spread", "%", 0, 100);
+		configParam(SHAPE_PARAM, 0.f, 1.f, 1.f, "Shape", "%", 0, 100);
 
-		configParam(RATE_CV_PARAM, -1.f, 1.f, 0.f, "Clock rate CV", "%", 0, 100);
+		configParam(RATE_CV_PARAM, -1.f, 1.f, 0.f, "Internal trigger rate CV", "%", 0, 100);
 		getParamQuantity(RATE_CV_PARAM)->randomizeEnabled = false;
-		configParam(SHAPE_CV_PARAM, -1.f, 1.f, 0.f, "Shape CV", "%", 0, 100);
-		getParamQuantity(SHAPE_CV_PARAM)->randomizeEnabled = false;
 		configParam(PROB_CV_PARAM, -1.f, 1.f, 0.f, "Trigger probability CV", "%", 0, 100);
 		getParamQuantity(PROB_CV_PARAM)->randomizeEnabled = false;
 		configParam(RAND_CV_PARAM, -1.f, 1.f, 0.f, "Random spread CV", "%", 0, 100);
 		getParamQuantity(RAND_CV_PARAM)->randomizeEnabled = false;
+		configParam(SHAPE_CV_PARAM, -1.f, 1.f, 0.f, "Shape CV", "%", 0, 100);
+		getParamQuantity(SHAPE_CV_PARAM)->randomizeEnabled = false;
 
 		configSwitch(OFFSET_PARAM, 0.f, 1.f, 0.f, "Offset", {"Bipolar", "Unipolar"});
 
 		getParamQuantity(MODE_PARAM)->randomizeEnabled = false;
 
-		configInput(RATE_INPUT, "Clock rate");
-		configInput(SHAPE_INPUT, "Shape");
+		configInput(RATE_INPUT, "Internal trigger rate");
 		configInput(PROB_INPUT, "Trigger probability");
 		configInput(RAND_INPUT, "Random spread");
+		configInput(SHAPE_INPUT, "Shape");
 		configInput(TRIG_INPUT, "Trigger");
 		configInput(EXTERNAL_INPUT, "External");
 
+		configOutput(TRIG_OUTPUT, "Trigger");
 		configOutput(STEPPED_OUTPUT, "Stepped");
 		configOutput(LINEAR_OUTPUT, "Linear");
-		configOutput(SMOOTH_OUTPUT, "Smooth");
 		configOutput(EXPONENTIAL_OUTPUT, "Exponential");
-		configOutput(TRIG_OUTPUT, "Trigger");
+		configOutput(SMOOTH_OUTPUT, "Smooth");
 	}
 
 	void process(const ProcessArgs& args) override {
