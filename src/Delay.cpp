@@ -51,7 +51,7 @@ struct Delay : Module {
 	Delay() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 
-		// This was made before the pitch voltage standard existed, so it uses TIME_PARAM = 0 as 0.001s and TIME_PARAM = 1 as 10s with a formula of:
+		// VCV Delay was written before the pitch voltage standard existed, so it uses TIME_PARAM = 0 as 0.001s and TIME_PARAM = 1 as 10s with a formula of:
 		// time = 0.001 * 10000^TIME_PARAM
 		// or
 		// TIME_PARAM = log10(time * 1000) / 4
@@ -86,11 +86,11 @@ struct Delay : Module {
 		configBypass(IN_INPUT, MIX_OUTPUT);
 
 		src = src_new(SRC_SINC_FASTEST, 1, NULL);
-		assert(src);
 	}
 
 	~Delay() {
-		src_delete(src);
+		if (src)
+			src_delete(src);
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -142,14 +142,15 @@ struct Delay : Module {
 			// DEBUG("index %f historyBuffer %lu consume %f ratio %lf", index, historyBuffer.size(), consume, ratio);
 
 			// Convert samples from the historyBuffer to catch up or slow down so `index` and `historyBuffer.size()` eventually match approximately
-			SRC_DATA srcData;
+			SRC_DATA srcData = {};
 			srcData.data_in = (const float*) historyBuffer.startData();
 			srcData.data_out = (float*) outBuffer.endData();
 			srcData.input_frames = std::min((int) historyBuffer.size(), 16);
 			srcData.output_frames = outBuffer.capacity();
 			srcData.end_of_input = false;
 			srcData.src_ratio = ratio;
-			src_process(src, &srcData);
+			if (src)
+				src_process(src, &srcData);
 			historyBuffer.startIncr(srcData.input_frames_used);
 			outBuffer.endIncr(srcData.output_frames_gen);
 			// DEBUG("used %ld gen %ld", srcData.input_frames_used, srcData.output_frames_gen);
@@ -159,6 +160,7 @@ struct Delay : Module {
 		if (!outBuffer.empty()) {
 			wet = outBuffer.shift();
 		}
+		wet = clamp(wet, -100.f, 100.f);
 
 		// Apply color to delay wet output
 		float color = params[TONE_PARAM].getValue() + inputs[TONE_INPUT].getVoltage() / 10.f * params[TONE_CV_PARAM].getValue();
