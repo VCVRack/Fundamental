@@ -38,6 +38,7 @@ struct VoltageControlledOscillator {
 	T freq = 0.f;
 	T pulseWidth = 0.5f;
 	T syncDirection = 1.f;
+	T sqrState = 1.f;
 
 	dsp::TRCFilter<T> sqrFilter;
 
@@ -68,37 +69,44 @@ struct VoltageControlledOscillator {
 			syncDirection = 1.f;
 		}
 		phase += deltaPhase;
-		// Wrap phase
-		phase -= simd::floor(phase);
 
-		// Jump sqr when crossing 0, or 1 if backwards
-		T wrapPhase = (syncDirection == -1.f) & 1.f;
-		T wrapCrossing = (wrapPhase - (phase - deltaPhase)) / deltaPhase;
-		int wrapMask = simd::movemask((0 < wrapCrossing) & (wrapCrossing <= 1.f));
-		if (wrapMask) {
+		// Wrap phase
+		T phaseFloor = simd::floor(phase);
+		phase -= phaseFloor;
+
+		// Jump sqr when phase crosses 1, or crosses 0 if running backwards
+		T wrapMask = (phaseFloor != 0.f);
+		int wrapM = simd::movemask(wrapMask);
+		if (wrapM) {
+			T wrapPhase = (syncDirection == -1.f) & 1.f;
+			T wrapCrossing = (wrapPhase - (phase - deltaPhase)) / deltaPhase;
 			for (int i = 0; i < channels; i++) {
-				if (wrapMask & (1 << i)) {
+				if (wrapM & (1 << i)) {
 					T mask = simd::movemaskInverse<T>(1 << i);
-					float p = wrapCrossing[i] - 1.f;
+					// TODO: MinBlepGenerator::insertDiscontinuity() should handle subframes outside the range -1 < p <= 0 instead of failing silently.
+					float p = clamp(wrapCrossing[i] - 1.f, -1.f, 0.f);
 					T x = mask & (2.f * syncDirection);
 					sqrMinBlep.insertDiscontinuity(p, x);
 				}
 			}
 		}
+		sqrState = simd::ifelse(wrapMask, syncDirection, sqrState);
 
 		// Jump sqr when crossing `pulseWidth`
-		T pulseCrossing = (pulseWidth - (phase - deltaPhase)) / deltaPhase;
-		int pulseMask = simd::movemask((0 < pulseCrossing) & (pulseCrossing <= 1.f));
-		if (pulseMask) {
+		T pwMask = (syncDirection == sqrState) & ((syncDirection == 1.f) ^ (phase < pulseWidth));
+		int pw = simd::movemask(pwMask);
+		if (pw) {
+			T pulseCrossing = (pulseWidth - (phase - deltaPhase)) / deltaPhase;
 			for (int i = 0; i < channels; i++) {
-				if (pulseMask & (1 << i)) {
+				if (pw & (1 << i)) {
 					T mask = simd::movemaskInverse<T>(1 << i);
-					float p = pulseCrossing[i] - 1.f;
+					float p = clamp(pulseCrossing[i] - 1.f, -1.f, 0.f);
 					T x = mask & (-2.f * syncDirection);
 					sqrMinBlep.insertDiscontinuity(p, x);
 				}
 			}
 		}
+		sqrState = simd::ifelse(pwMask, -syncDirection, sqrState);
 
 		// Jump saw when crossing 0.5
 		T halfCrossing = (0.5f - (phase - deltaPhase)) / deltaPhase;
@@ -134,7 +142,9 @@ struct VoltageControlledOscillator {
 							T mask = simd::movemaskInverse<T>(1 << i);
 							float p = syncCrossing[i] - 1.f;
 							T x;
-							x = mask & (sqr(newPhase) - sqr(phase));
+							// Assume that hard-syncing a square always resets it to HIGH
+							x = mask & (1.f - sqrState);
+							sqrState = simd::ifelse(mask, 1.f, sqrState);
 							sqrMinBlep.insertDiscontinuity(p, x);
 							x = mask & (saw(newPhase) - saw(phase));
 							sawMinBlep.insertDiscontinuity(p, x);
@@ -150,7 +160,7 @@ struct VoltageControlledOscillator {
 		}
 
 		// Square
-		sqrValue = sqr(phase);
+		sqrValue = sqrState;
 		sqrValue += sqrMinBlep.process();
 
 		if (analog) {
@@ -227,10 +237,6 @@ struct VoltageControlledOscillator {
 		return sawValue;
 	}
 
-	T sqr(T phase) {
-		T v = simd::ifelse(phase < pulseWidth, 1.f, -1.f);
-		return v;
-	}
 	T sqr() {
 		return sqrValue;
 	}
