@@ -207,9 +207,10 @@ struct Random : Module {
 			if (p < 1e6f) {
 				v = std::fmin(phase * p, 1.f);
 				v = std::cos(M_PI * v);
+				v = (1.f - v) / 2.f;
 			}
 			else {
-				v = -1.f;
+				v = 1.f;
 			}
 			interpolateOutput(outputs[SMOOTH_OUTPUT], v);
 		}
