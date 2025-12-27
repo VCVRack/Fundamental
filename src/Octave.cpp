@@ -72,7 +72,7 @@ struct OctaveButton : Widget {
 		engine::ParamQuantity* pq = paramWidget->getParamQuantity();
 		if (pq) {
 			activeOctave = std::round(pq->getValue());
-			Octave* module = dynamic_cast<Octave*>(pq->module);
+			Octave* module = dynamic_cast<Octave*>(static_cast<Module*>(pq->module));
 			if (module)
 				lastOctave = module->lastOctave;
 		}
@@ -148,7 +148,7 @@ struct OctaveParam : ParamWidget {
 
 inline void OctaveButton::onDragEnter(const event::DragEnter& e) {
 	if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
-		OctaveParam* origin = dynamic_cast<OctaveParam*>(e.origin);
+		OctaveParam* origin = dynamic_cast<OctaveParam*>(static_cast<Widget*>(e.origin));
 		if (origin) {
 			ParamWidget* paramWidget = getAncestorOfType<ParamWidget>();
 			assert(paramWidget);

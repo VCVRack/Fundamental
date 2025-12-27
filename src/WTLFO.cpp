@@ -55,7 +55,7 @@ struct WTLFO : Module {
 
 		struct FrequencyQuantity : ParamQuantity {
 			float getDisplayValue() override {
-				WTLFO* module = reinterpret_cast<WTLFO*>(this->module);
+				WTLFO* module = reinterpret_cast<WTLFO*>(static_cast<Module*>(this->module));
 				if (module->clockFreq == 2.f) {
 					unit = " Hz";
 					displayMultiplier = 1.f;

@@ -172,7 +172,7 @@ struct QuantizerButton : OpaqueWidget {
 
 	void onDragEnter(const event::DragEnter& e) override {
 		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
-			QuantizerButton* origin = dynamic_cast<QuantizerButton*>(e.origin);
+			QuantizerButton* origin = dynamic_cast<QuantizerButton*>(static_cast<Widget*>(e.origin));
 			if (origin) {
 				module->enabledNotes[note] = module->enabledNotes[origin->note];;
 				module->updateRanges();

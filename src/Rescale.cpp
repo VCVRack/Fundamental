@@ -33,7 +33,7 @@ struct Rescale : Module {
 
 		struct GainQuantity : ParamQuantity {
 			float getDisplayValue() override {
-				Rescale* module = reinterpret_cast<Rescale*>(this->module);
+				Rescale* module = reinterpret_cast<Rescale*>(static_cast<Module*>(this->module));
 				if (module->multiplier == 1.f) {
 					unit = "%";
 					displayMultiplier = 100.f;
