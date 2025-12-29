@@ -175,6 +175,7 @@ struct VCOProcessor {
 	T lastSyncValue = 0.f;
 	T syncDirection = 1.f;
 	T sqrState = 1.f;
+	T triFilterState = 0.f;
 
 	OnePoleHighpass dcFilter;
 	OnePoleHighpass::State<T> dcFilterStateSqr;
@@ -184,7 +185,6 @@ struct VCOProcessor {
 
 	MinBlepGenerator<16, 16, T> sqrMinBlep;
 	MinBlepGenerator<16, 16, T> sawMinBlep;
-	MinBlepGenerator<16, 16, T> triMinBlep;
 	MinBlepGenerator<16, 16, T> sinMinBlep;
 
 	void setSampleTime(float sampleTime) {
@@ -230,54 +230,58 @@ struct VCOProcessor {
 		T phaseFloor = simd::floor(phase);
 		phase -= phaseFloor;
 
-		// Jump sqr when phase crosses 1, or crosses 0 if running backwards
-		T wrapMask = (phaseFloor != 0.f);
-		int wrapM = simd::movemask(wrapMask);
-		if (wrapM) {
-			T wrapPhase = (syncDirection == -1.f) & 1.f;
-			T wrapCrossing = (wrapPhase - (phase - deltaPhase)) / deltaPhase;
-			for (int i = 0; i < frame.channels; i++) {
-				if (wrapM & (1 << i)) {
-					T mask = simd::movemaskInverse<T>(1 << i);
-					// TODO: MinBlepGenerator::insertDiscontinuity() should handle subframes outside the range -1 < p <= 0 instead of failing silently.
-					float p = clamp(wrapCrossing[i] - 1.f, -1.f, 0.f);
-					T x = mask & (2.f * syncDirection);
-					sqrMinBlep.insertDiscontinuity(p, x);
+		if (frame.sqrEnabled || frame.triEnabled) {
+			// Jump sqr when phase crosses 1, or crosses 0 if running backwards
+			T wrapMask = (phaseFloor != 0.f);
+			int wrapM = simd::movemask(wrapMask);
+			if (wrapM) {
+				T wrapPhase = (syncDirection == -1.f) & 1.f;
+				T wrapCrossing = (wrapPhase - (phase - deltaPhase)) / deltaPhase;
+				for (int i = 0; i < frame.channels; i++) {
+					if (wrapM & (1 << i)) {
+						T mask = simd::movemaskInverse<T>(1 << i);
+						// TODO: MinBlepGenerator::insertDiscontinuity() should handle subframes outside the range -1 < p <= 0 instead of failing silently.
+						float p = clamp(wrapCrossing[i] - 1.f, -1.f, 0.f);
+						T x = mask & (2.f * syncDirection);
+						sqrMinBlep.insertDiscontinuity(p, x);
+					}
 				}
 			}
-		}
-		sqrState = simd::ifelse(wrapMask, syncDirection, sqrState);
+			sqrState = simd::ifelse(wrapMask, syncDirection, sqrState);
 
-		// Pulse width
-		const float pwMin = 0.01f;
-		T pulseWidth = simd::clamp(frame.pulseWidth, pwMin, 1.f - pwMin);
+			// Pulse width
+			const float pwMin = 0.01f;
+			T pulseWidth = simd::clamp(frame.pulseWidth, pwMin, 1.f - pwMin);
 
-		// Jump sqr when crossing `pulseWidth`
-		T pwMask = (syncDirection == sqrState) & ((syncDirection == 1.f) ^ (phase < pulseWidth));
-		int pw = simd::movemask(pwMask);
-		if (pw) {
-			T pulseCrossing = (pulseWidth - (phase - deltaPhase)) / deltaPhase;
-			for (int i = 0; i < frame.channels; i++) {
-				if (pw & (1 << i)) {
-					T mask = simd::movemaskInverse<T>(1 << i);
-					float p = clamp(pulseCrossing[i] - 1.f, -1.f, 0.f);
-					T x = mask & (-2.f * syncDirection);
-					sqrMinBlep.insertDiscontinuity(p, x);
+			// Jump sqr when crossing `pulseWidth`
+			T pwMask = (syncDirection == sqrState) & ((syncDirection == 1.f) ^ (phase < pulseWidth));
+			int pw = simd::movemask(pwMask);
+			if (pw) {
+				T pulseCrossing = (pulseWidth - (phase - deltaPhase)) / deltaPhase;
+				for (int i = 0; i < frame.channels; i++) {
+					if (pw & (1 << i)) {
+						T mask = simd::movemaskInverse<T>(1 << i);
+						float p = clamp(pulseCrossing[i] - 1.f, -1.f, 0.f);
+						T x = mask & (-2.f * syncDirection);
+						sqrMinBlep.insertDiscontinuity(p, x);
+					}
 				}
 			}
+			sqrState = simd::ifelse(pwMask, -syncDirection, sqrState);
 		}
-		sqrState = simd::ifelse(pwMask, -syncDirection, sqrState);
 
-		// Jump saw when crossing 0.5
-		T halfCrossing = (0.5f - (phase - deltaPhase)) / deltaPhase;
-		int halfMask = simd::movemask((0 < halfCrossing) & (halfCrossing <= 1.f));
-		if (halfMask) {
-			for (int i = 0; i < frame.channels; i++) {
-				if (halfMask & (1 << i)) {
-					T mask = simd::movemaskInverse<T>(1 << i);
-					float p = halfCrossing[i] - 1.f;
-					T x = mask & (-2.f * syncDirection);
-					sawMinBlep.insertDiscontinuity(p, x);
+		if (frame.sawEnabled) {
+			// Jump saw when crossing 0.5
+			T halfCrossing = (0.5f - (phase - deltaPhase)) / deltaPhase;
+			int halfMask = simd::movemask((0 < halfCrossing) & (halfCrossing <= 1.f));
+			if (halfMask) {
+				for (int i = 0; i < frame.channels; i++) {
+					if (halfMask & (1 << i)) {
+						T mask = simd::movemaskInverse<T>(1 << i);
+						float p = halfCrossing[i] - 1.f;
+						T x = mask & (-2.f * syncDirection);
+						sawMinBlep.insertDiscontinuity(p, x);
+					}
 				}
 			}
 		}
@@ -303,27 +307,24 @@ struct VCOProcessor {
 							float p = syncCrossing[i] - 1.f;
 							T x;
 							// Assume that hard-syncing a square always resets it to HIGH
-							x = mask & (1.f - sqrState);
-							sqrState = simd::ifelse(mask, 1.f, sqrState);
-							sqrMinBlep.insertDiscontinuity(p, x);
-							x = mask & (saw(newPhase) - saw(phase));
-							sawMinBlep.insertDiscontinuity(p, x);
-							x = mask & (tri(newPhase) - tri(phase));
-							triMinBlep.insertDiscontinuity(p, x);
-							x = mask & (sin(newPhase) - sin(phase));
-							sinMinBlep.insertDiscontinuity(p, x);
+							if (frame.sqrEnabled || frame.triEnabled) {
+								x = mask & (1.f - sqrState);
+								sqrState = simd::ifelse(mask, 1.f, sqrState);
+								sqrMinBlep.insertDiscontinuity(p, x);
+							}
+							if (frame.sawEnabled) {
+								x = mask & (saw(newPhase) - saw(phase));
+								sawMinBlep.insertDiscontinuity(p, x);
+							}
+							if (frame.sinEnabled) {
+								x = mask & (sin(newPhase) - sin(phase));
+								sinMinBlep.insertDiscontinuity(p, x);
+							}
 						}
 					}
 					phase = newPhase;
 				}
 			}
-		}
-
-		// Square
-		if (frame.sqrEnabled) {
-			frame.sqr = sqrState;
-			frame.sqr += sqrMinBlep.process();
-			frame.sqr = dcFilter.process(dcFilterStateSqr, frame.sqr);
 		}
 
 		// Saw
@@ -333,11 +334,26 @@ struct VCOProcessor {
 			frame.saw = dcFilter.process(dcFilterStateSaw, frame.saw);
 		}
 
-		// Tri
-		if (frame.triEnabled) {
-			frame.tri = tri(phase);
-			frame.tri += triMinBlep.process();
-			frame.tri = dcFilter.process(dcFilterStateTri, frame.tri);
+		// Square
+		if (frame.sqrEnabled || frame.triEnabled) {
+			frame.sqr = sqrState;
+			frame.sqr += sqrMinBlep.process();
+			T triSqr = frame.sqr;
+			frame.sqr = dcFilter.process(dcFilterStateSqr, frame.sqr);
+
+			// Tri
+			if (frame.triEnabled) {
+				// Integrate square wave
+				const float triShape = 0.2f;
+				T triFreq = deltaTime * triShape * frame.freq;
+				// T alpha = 1.f - simd::exp(-2.f * M_PI * triFreq);
+				// Use bilinear transform to derive alpha
+				T alpha = 1 / (1 + 1 / (M_PI * triFreq));
+				triFilterState += alpha * (triSqr - triFilterState);
+				// Apply gain to roughly have unit amplitude at 0.5 pulseWidth. Depends on triShape.
+				frame.tri = triFilterState * 6.6f;
+				frame.tri = dcFilter.process(dcFilterStateTri, frame.tri);
+			}
 		}
 
 		// Sin
