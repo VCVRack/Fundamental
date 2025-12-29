@@ -1,66 +1,222 @@
 #include "plugin.hpp"
 
 
-using simd::float_4;
+// TODO: Remove these DSP classes after released in Rack SDK
 
-
-// Accurate only on [0, 1]
-template <typename T>
-T sin2pi_pade_05_7_6(T x) {
-	x -= 0.5f;
-	return (T(-6.28319) * x + T(35.353) * simd::pow(x, 3) - T(44.9043) * simd::pow(x, 5) + T(16.0951) * simd::pow(x, 7))
-	       / (1 + T(0.953136) * simd::pow(x, 2) + T(0.430238) * simd::pow(x, 4) + T(0.0981408) * simd::pow(x, 6));
+inline simd::float_4 ifelse(simd::float_4 mask, simd::float_4 a, simd::float_4 b) {
+	return simd::float_4(_mm_blendv_ps(b.v, a.v, mask.v));
 }
 
+/** Approximates sin(2pi x) in the domain [0, 1].
+Evaluates a 7th order odd polynomial on the range [0, 0.25] after folding the argument.
+Optimized for THD and max error.
+THD -84 dB, max error 1e-04
+*/
 template <typename T>
-T sin2pi_pade_05_5_4(T x) {
-	x -= 0.5f;
-	return (T(-6.283185307) * x + T(33.19863968) * simd::pow(x, 3) - T(32.44191367) * simd::pow(x, 5))
-	       / (1 + T(1.296008659) * simd::pow(x, 2) + T(0.7028072946) * simd::pow(x, 4));
+T sin2pi_fast(T x) {
+	// Get sign of result
+	T sign = ::ifelse(x >= T(0.5), -1, 1);
+	// Shift if negative
+	x = ::ifelse(x >= T(0.5), x - T(0.5), x);
+	// Flip if >0.25
+	x = ::ifelse(x >= T(0.25), T(0.5) - x, x);
+	T x2 = x * x;
+	const T c1 = 6.281422578399;
+	const T c3 = -41.122058514502;
+	const T c5 = 74.010711837743;
+	return sign * x * (c1 + x2 * (c3 + x2 * c5));
 }
 
+
+/** One-pole low-pass filter, exponential moving average.
+-6 dB/octave slope.
+Useful for leaky integrators and smoothing control signals.
+Has a pole at (1 - alpha) and a zero at 0.
+*/
+struct OnePoleLowpass {
+	float alpha = 0.f;
+
+	/** Sets the cutoff frequency where gain is -3 dB.
+	f = f_c / f_s, the normalized frequency in the range [0, 0.5].
+	*/
+	void setCutoff(float f) {
+		alpha = 1.f - std::exp(-2.f * M_PI * f);
+	}
+
+	template <typename T = float>
+	struct State {
+		T y = 0.f;
+	};
+
+	/** Advances the state with input x. Returns the output. */
+	template <typename T>
+	T process(State<T>& s, T x) {
+		s.y += alpha * (x - s.y);
+		return s.y;
+	}
+
+	/** Computes the frequency response at normalized frequency f. */
+	std::complex<float> getResponse(float f) const {
+		float omega = 2.f * M_PI * f;
+		std::complex<float> z = std::exp(std::complex<float>(0.f, omega));
+		return alpha * z / (z - (1.f - alpha));
+	}
+	float getMagnitude(float f) const {
+		return std::abs(getResponse(f));
+	}
+	float getPhase(float f) const {
+		return std::arg(getResponse(f));
+	}
+};
+
+
+/** One-pole high-pass filter.
+6 dB/octave slope.
+Useful for DC-blocking.
+Has a pole at (1 - alpha) and a zero at 1.
+*/
+struct OnePoleHighpass : OnePoleLowpass {
+	template <typename T>
+	T process(State<T>& s, T x) {
+		return x - OnePoleLowpass::process(s, x);
+	}
+
+	std::complex<float> getResponse(float f) const {
+		return 1.f - OnePoleLowpass::getResponse(f);
+	}
+	float getMagnitude(float f) const {
+		return std::abs(getResponse(f));
+	}
+	float getPhase(float f) const {
+		return std::arg(getResponse(f));
+	}
+};
+
+
+/** Computes the minimum-phase bandlimited step (MinBLEP)
+Z: number of zero-crossings on each side of the original symmetric sync signal
+O: oversample factor
+output: must be length `(2 * Z) * O`.
+First sample is >0. Last sample is 1.
+
+Algorithm from "Hard Sync Without Aliasing" by Eli Brandt (2001).
+https://www.cs.cmu.edu/~eli/papers/icmc01-hardsync.pdf
+*/
+void minBlepImpulse(int Z, int O, float* output);
+
+
+template <int Z, int O, typename T = float>
+struct MinBlepGenerator {
+	T buffer[2 * Z] = {};
+	int bufferIndex = 0;
+
+	/** Reordered impulse response for adjacent access, minus 1.0.
+	Padded at end with zeros so impulseReordered[o][2 * Z] can be loaded into a simd::float_4.
+	*/
+	alignas(16) float impulseReordered[O][2 * Z + 4] = {};
+
+	MinBlepGenerator() {
+		float impulse[2 * Z][O];
+		dsp::minBlepImpulse(Z, O, &impulse[0][0]);
+
+		// Transpose array and pre-subtract 1.
+		for (int o = 0; o < O; o++) {
+			for (int z = 0; z < 2 * Z; z++) {
+				impulseReordered[o][z] = impulse[z][o] - 1.f;
+			}
+		}
+	}
+
+	/** Places a discontinuity with magnitude `x` at -1 < p <= 0 relative to the current frame.
+	For example if a square wave jumps from 1 to -1 at the subsample time 0.1 frames ago, use insertDiscontinuity(-0.1, -2.0)
+	*/
+	void insertDiscontinuity(float p, T x) {
+		if (!(-1 < p && p <= 0))
+			return;
+
+		// Calculate oversampling index and fractional part
+		float subsample = -p * O;
+		int o = (int) subsample;
+		float frac = subsample - o;
+
+		// For each zero crossing, interpolate impulse response between oversample indices
+		// Compute 4 at a time with SIMD
+		for (int z = 0; z < 2 * Z; z += 4) {
+			simd::float_4 ir0 = simd::float_4::load(&impulseReordered[o][z]);
+			// If oversample index reaches next zero crossing, wrap to next z
+			simd::float_4 ir1 = simd::float_4::load((o + 1 < O) ? &impulseReordered[o + 1][z] : &impulseReordered[0][z + 1]);
+			simd::float_4 ir = (ir0 + (ir1 - ir0) * frac);
+
+			for (int zz = 0; zz < 4; zz++) {
+				buffer[(bufferIndex + z + zz) % (2 * Z)] += ir[zz] * x;
+			}
+		}
+		// for (int z = 0; z < 2 * Z; z++) {
+		// 	float ir0 = impulseReordered[o][z];
+		// 	float ir1 = (o + 1 < O) ? impulseReordered[o + 1][z] : impulseReordered[0][z + 1];
+		// 	float ir = (ir0 + (ir1 - ir0) * frac);
+		// 	buffer[(bufferIndex + z) % (2 * Z)] += ir * x;
+		// }
+	}
+
+	/** Should be called every frame after inserting any discontinuities. */
+	T process() {
+		T v = buffer[bufferIndex];
+		buffer[bufferIndex] = T(0);
+		bufferIndex = (bufferIndex + 1) % (2 * Z);
+		return v;
+	}
+};
+
+
 template <typename T>
-T expCurve(T x) {
-	return (3 + x * (-13 + 5 * x)) / (3 + 2 * x);
-}
-
-
-template <int OVERSAMPLE, int QUALITY, typename T>
-struct VoltageControlledOscillator {
-	bool analog = false;
-	bool soft = false;
-	bool syncEnabled = false;
-	// For optimizing in serial code
-	int channels = 0;
-
-	T lastSyncValue = 0.f;
+struct VCOProcessor {
 	T phase = 0.f;
-	T freq = 0.f;
-	T pulseWidth = 0.5f;
+	T lastSyncValue = 0.f;
 	T syncDirection = 1.f;
 	T sqrState = 1.f;
 
-	dsp::TRCFilter<T> sqrFilter;
+	OnePoleHighpass dcFilter;
+	OnePoleHighpass::State<T> dcFilterStateSqr;
+	OnePoleHighpass::State<T> dcFilterStateSaw;
+	OnePoleHighpass::State<T> dcFilterStateTri;
+	OnePoleHighpass::State<T> dcFilterStateSin;
 
-	dsp::MinBlepGenerator<QUALITY, OVERSAMPLE, T> sqrMinBlep;
-	dsp::MinBlepGenerator<QUALITY, OVERSAMPLE, T> sawMinBlep;
-	dsp::MinBlepGenerator<QUALITY, OVERSAMPLE, T> triMinBlep;
-	dsp::MinBlepGenerator<QUALITY, OVERSAMPLE, T> sinMinBlep;
+	MinBlepGenerator<16, 16, T> sqrMinBlep;
+	MinBlepGenerator<16, 16, T> sawMinBlep;
+	MinBlepGenerator<16, 16, T> triMinBlep;
+	MinBlepGenerator<16, 16, T> sinMinBlep;
 
-	T sqrValue = 0.f;
-	T sawValue = 0.f;
-	T triValue = 0.f;
-	T sinValue = 0.f;
-
-	void setPulseWidth(T pulseWidth) {
-		const float pwMin = 0.01f;
-		this->pulseWidth = simd::clamp(pulseWidth, pwMin, 1.f - pwMin);
+	void setSampleTime(float sampleTime) {
+		dcFilter.setCutoff(std::min(0.4f, 40.f * sampleTime));
 	}
 
-	void process(float deltaTime, T syncValue) {
+	struct Frame {
+		/** Number of channels valid in SIMD type
+		For optimizing serial operations.
+		*/
+		uint8_t channels = 0;
+		bool soft = false;
+		bool syncEnabled = false;
+		bool sqrEnabled = false;
+		bool sawEnabled = false;
+		bool triEnabled = false;
+		bool sinEnabled = false;
+		T pulseWidth = 0.5f;
+		T sync = 0.f;
+		T freq = 0.f;
+
+		// Outputs
+		T sqr = 0.f;
+		T saw = 0.f;
+		T tri = 0.f;
+		T sin = 0.f;
+	};
+
+	void process(Frame& frame, float deltaTime) {
 		// Advance phase
-		T deltaPhase = simd::clamp(freq * deltaTime, 0.f, 0.35f);
-		if (soft) {
+		T deltaPhase = simd::clamp(frame.freq * deltaTime, 0.f, 0.49f);
+		if (frame.soft) {
 			// Reverse direction
 			deltaPhase *= syncDirection;
 		}
@@ -80,7 +236,7 @@ struct VoltageControlledOscillator {
 		if (wrapM) {
 			T wrapPhase = (syncDirection == -1.f) & 1.f;
 			T wrapCrossing = (wrapPhase - (phase - deltaPhase)) / deltaPhase;
-			for (int i = 0; i < channels; i++) {
+			for (int i = 0; i < frame.channels; i++) {
 				if (wrapM & (1 << i)) {
 					T mask = simd::movemaskInverse<T>(1 << i);
 					// TODO: MinBlepGenerator::insertDiscontinuity() should handle subframes outside the range -1 < p <= 0 instead of failing silently.
@@ -92,12 +248,16 @@ struct VoltageControlledOscillator {
 		}
 		sqrState = simd::ifelse(wrapMask, syncDirection, sqrState);
 
+		// Pulse width
+		const float pwMin = 0.01f;
+		T pulseWidth = simd::clamp(frame.pulseWidth, pwMin, 1.f - pwMin);
+
 		// Jump sqr when crossing `pulseWidth`
 		T pwMask = (syncDirection == sqrState) & ((syncDirection == 1.f) ^ (phase < pulseWidth));
 		int pw = simd::movemask(pwMask);
 		if (pw) {
 			T pulseCrossing = (pulseWidth - (phase - deltaPhase)) / deltaPhase;
-			for (int i = 0; i < channels; i++) {
+			for (int i = 0; i < frame.channels; i++) {
 				if (pw & (1 << i)) {
 					T mask = simd::movemaskInverse<T>(1 << i);
 					float p = clamp(pulseCrossing[i] - 1.f, -1.f, 0.f);
@@ -112,7 +272,7 @@ struct VoltageControlledOscillator {
 		T halfCrossing = (0.5f - (phase - deltaPhase)) / deltaPhase;
 		int halfMask = simd::movemask((0 < halfCrossing) & (halfCrossing <= 1.f));
 		if (halfMask) {
-			for (int i = 0; i < channels; i++) {
+			for (int i = 0; i < frame.channels; i++) {
 				if (halfMask & (1 << i)) {
 					T mask = simd::movemaskInverse<T>(1 << i);
 					float p = halfCrossing[i] - 1.f;
@@ -124,20 +284,20 @@ struct VoltageControlledOscillator {
 
 		// Detect sync
 		// Might be NAN or outside of [0, 1) range
-		if (syncEnabled) {
-			T deltaSync = syncValue - lastSyncValue;
+		if (frame.syncEnabled) {
+			T deltaSync = frame.sync - lastSyncValue;
 			T syncCrossing = -lastSyncValue / deltaSync;
-			lastSyncValue = syncValue;
-			T sync = (0.f < syncCrossing) & (syncCrossing <= 1.f) & (syncValue >= 0.f);
+			lastSyncValue = frame.sync;
+			T sync = (0.f < syncCrossing) & (syncCrossing <= 1.f) & (frame.sync >= 0.f);
 			int syncMask = simd::movemask(sync);
 			if (syncMask) {
-				if (soft) {
+				if (frame.soft) {
 					syncDirection = simd::ifelse(sync, -syncDirection, syncDirection);
 				}
 				else {
 					T newPhase = simd::ifelse(sync, (1.f - syncCrossing) * deltaPhase, phase);
 					// Insert minBLEP for sync
-					for (int i = 0; i < channels; i++) {
+					for (int i = 0; i < frame.channels; i++) {
 						if (syncMask & (1 << i)) {
 							T mask = simd::movemaskInverse<T>(1 << i);
 							float p = syncCrossing[i] - 1.f;
@@ -160,91 +320,54 @@ struct VoltageControlledOscillator {
 		}
 
 		// Square
-		sqrValue = sqrState;
-		sqrValue += sqrMinBlep.process();
-
-		if (analog) {
-			sqrFilter.setCutoffFreq(20.f * deltaTime);
-			sqrFilter.process(sqrValue);
-			sqrValue = sqrFilter.highpass() * 0.95f;
+		if (frame.sqrEnabled) {
+			frame.sqr = sqrState;
+			frame.sqr += sqrMinBlep.process();
+			frame.sqr = dcFilter.process(dcFilterStateSqr, frame.sqr);
 		}
 
 		// Saw
-		sawValue = saw(phase);
-		sawValue += sawMinBlep.process();
+		if (frame.sawEnabled) {
+			frame.saw = saw(phase);
+			frame.saw += sawMinBlep.process();
+			frame.saw = dcFilter.process(dcFilterStateSaw, frame.saw);
+		}
 
 		// Tri
-		triValue = tri(phase);
-		triValue += triMinBlep.process();
+		if (frame.triEnabled) {
+			frame.tri = tri(phase);
+			frame.tri += triMinBlep.process();
+			frame.tri = dcFilter.process(dcFilterStateTri, frame.tri);
+		}
 
 		// Sin
-		sinValue = sin(phase);
-		sinValue += sinMinBlep.process();
+		if (frame.sinEnabled) {
+			frame.sin = sin(phase);
+			frame.sin += sinMinBlep.process();
+			frame.sin = dcFilter.process(dcFilterStateSin, frame.sin);
+		}
 	}
 
-	T sin(T phase) {
-		T v;
-		if (analog) {
-			// Quadratic approximation of sine, slightly richer harmonics
-			T halfPhase = (phase < 0.5f);
-			T x = phase - simd::ifelse(halfPhase, 0.25f, 0.75f);
-			v = 1.f - 16.f * simd::pow(x, 2);
-			v *= simd::ifelse(halfPhase, 1.f, -1.f);
-		}
-		else {
-			v = sin2pi_pade_05_5_4(phase);
-			// v = sin2pi_pade_05_7_6(phase);
-			// v = simd::sin(2 * T(M_PI) * phase);
-		}
-		return v;
-	}
-	T sin() {
-		return sinValue;
+	T light() const {
+		return sin(phase);
 	}
 
-	T tri(T phase) {
-		T v;
-		if (analog) {
-			T x = phase + 0.25f;
-			x -= simd::trunc(x);
-			T halfX = (x >= 0.5f);
-			x *= 2;
-			x -= simd::trunc(x);
-			v = expCurve(x) * simd::ifelse(halfX, 1.f, -1.f);
-		}
-		else {
-			v = 1 - 4 * simd::fmin(simd::fabs(phase - 0.25f), simd::fabs(phase - 1.25f));
-		}
-		return v;
-	}
-	T tri() {
-		return triValue;
-	}
-
-	T saw(T phase) {
-		T v;
+	static T saw(T phase) {
 		T x = phase + 0.5f;
 		x -= simd::trunc(x);
-		if (analog) {
-			v = -expCurve(x);
-		}
-		else {
-			v = 2 * x - 1;
-		}
-		return v;
+		return 2 * x - 1;
 	}
-	T saw() {
-		return sawValue;
+	static T tri(T phase) {
+		return 1 - 4 * simd::fmin(simd::fabs(phase - 0.25f), simd::fabs(phase - 1.25f));
 	}
-
-	T sqr() {
-		return sqrValue;
-	}
-
-	T light() {
-		return simd::sin(2 * T(M_PI) * phase);
+	static T sin(T phase) {
+		return sin2pi_fast(phase);
+		// return simd::sin(2.f * M_PI * phase);
 	}
 };
+
+
+using simd::float_4;
 
 
 struct VCO : Module {
@@ -281,14 +404,14 @@ struct VCO : Module {
 		NUM_LIGHTS
 	};
 
-	VoltageControlledOscillator<16, 16, float_4> oscillators[4];
+	VCOProcessor<float_4> processors[4];
 	dsp::ClockDivider lightDivider;
 
 	VCO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configSwitch(LINEAR_PARAM, 0.f, 1.f, 0.f, "FM mode", {"1V/octave", "Linear"});
 		configSwitch(SYNC_PARAM, 0.f, 1.f, 1.f, "Sync mode", {"Soft", "Hard"});
-		configParam(FREQ_PARAM, -54.f, 54.f, 0.f, "Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
+		configParam(FREQ_PARAM, -75.f, 75.f, 0.f, "Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
 		configParam(FM_PARAM, -1.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
 		getParamQuantity(FM_PARAM)->randomizeEnabled = false;
 		configParam(PW_PARAM, 0.01f, 0.99f, 0.5f, "Pulse width", "%", 0.f, 100.f);
@@ -308,22 +431,29 @@ struct VCO : Module {
 		lightDivider.setDivision(16);
 	}
 
+	void onSampleRateChange(const SampleRateChangeEvent& e) override {
+		for (int c = 0; c < 16; c += 4) {
+			processors[c / 4].setSampleTime(e.sampleTime);
+		}
+	}
+
 	void process(const ProcessArgs& args) override {
+		VCOProcessor<float_4>::Frame frame;
 		float freqParam = params[FREQ_PARAM].getValue() / 12.f;
 		float fmParam = params[FM_PARAM].getValue();
 		float pwParam = params[PW_PARAM].getValue();
 		float pwCvParam = params[PW_CV_PARAM].getValue();
 		bool linear = params[LINEAR_PARAM].getValue() > 0.f;
-		bool soft = params[SYNC_PARAM].getValue() <= 0.f;
-
+		frame.soft = params[SYNC_PARAM].getValue() <= 0.f;
+		frame.syncEnabled = inputs[SYNC_INPUT].isConnected();
+		frame.sqrEnabled = outputs[SQR_OUTPUT].isConnected();
+		frame.sawEnabled = outputs[SAW_OUTPUT].isConnected();
+		frame.triEnabled = outputs[TRI_OUTPUT].isConnected();
+		frame.sinEnabled = outputs[SIN_OUTPUT].isConnected();
 		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
 
 		for (int c = 0; c < channels; c += 4) {
-			auto& oscillator = oscillators[c / 4];
-			oscillator.channels = std::min(channels - c, 4);
-			// removed
-			oscillator.analog = true;
-			oscillator.soft = soft;
+			frame.channels = std::min(channels - c, 4);
 
 			// Get frequency
 			float_4 pitch = freqParam + inputs[PITCH_INPUT].getPolyVoltageSimd<float_4>(c);
@@ -336,26 +466,19 @@ struct VCO : Module {
 				freq = dsp::FREQ_C4 * dsp::exp2_taylor5(pitch);
 				freq += dsp::FREQ_C4 * inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;
 			}
-			freq = clamp(freq, 0.f, args.sampleRate / 2.f);
-			oscillator.freq = freq;
+			frame.freq = clamp(freq, 0.f, args.sampleRate / 2.f);
 
 			// Get pulse width
-			float_4 pw = pwParam + inputs[PW_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * pwCvParam;
-			oscillator.setPulseWidth(pw);
+			frame.pulseWidth = pwParam + inputs[PW_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * pwCvParam;
 
-			oscillator.syncEnabled = inputs[SYNC_INPUT].isConnected();
-			float_4 sync = inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c);
-			oscillator.process(args.sampleTime, sync);
+			frame.sync = inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c);
+			processors[c / 4].process(frame, args.sampleTime);
 
 			// Set output
-			if (outputs[SIN_OUTPUT].isConnected())
-				outputs[SIN_OUTPUT].setVoltageSimd(5.f * oscillator.sin(), c);
-			if (outputs[TRI_OUTPUT].isConnected())
-				outputs[TRI_OUTPUT].setVoltageSimd(5.f * oscillator.tri(), c);
-			if (outputs[SAW_OUTPUT].isConnected())
-				outputs[SAW_OUTPUT].setVoltageSimd(5.f * oscillator.saw(), c);
-			if (outputs[SQR_OUTPUT].isConnected())
-				outputs[SQR_OUTPUT].setVoltageSimd(5.f * oscillator.sqr(), c);
+			outputs[SQR_OUTPUT].setVoltageSimd(5.f * frame.sqr, c);
+			outputs[SAW_OUTPUT].setVoltageSimd(5.f * frame.saw, c);
+			outputs[TRI_OUTPUT].setVoltageSimd(5.f * frame.tri, c);
+			outputs[SIN_OUTPUT].setVoltageSimd(5.f * frame.sin, c);
 		}
 
 		outputs[SIN_OUTPUT].setChannels(channels);
@@ -366,7 +489,7 @@ struct VCO : Module {
 		// Light
 		if (lightDivider.process()) {
 			if (channels == 1) {
-				float lightValue = oscillators[0].light()[0];
+				float lightValue = processors[0].light()[0];
 				lights[PHASE_LIGHT + 0].setSmoothBrightness(-lightValue, args.sampleTime * lightDivider.getDivision());
 				lights[PHASE_LIGHT + 1].setSmoothBrightness(lightValue, args.sampleTime * lightDivider.getDivision());
 				lights[PHASE_LIGHT + 2].setBrightness(0.f);
@@ -377,7 +500,7 @@ struct VCO : Module {
 				lights[PHASE_LIGHT + 2].setBrightness(1.f);
 			}
 			lights[LINEAR_LIGHT].setBrightness(linear);
-			lights[SOFT_LIGHT].setBrightness(soft);
+			lights[SOFT_LIGHT].setBrightness(frame.soft);
 		}
 	}
 };
