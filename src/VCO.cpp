@@ -3,30 +3,27 @@
 
 // TODO: Remove these DSP classes after released in Rack SDK
 
-inline simd::float_4 ifelse(simd::float_4 mask, simd::float_4 a, simd::float_4 b) {
-	return simd::float_4(_mm_blendv_ps(b.v, a.v, mask.v));
-}
-
-/** Approximates sin(2pi x) in the domain [0, 1].
-Evaluates a 7th order odd polynomial on the range [0, 0.25] after folding the argument.
-Optimized for THD and max error.
-THD -84 dB, max error 1e-04
+/** Evaluates sin(pi x) for x in [-1, 1].
+9th order polynomial with roots at 0, -1, and 1.
+Optimized coefficients for best THD (-103.7 dB) and max absolute error (6.68e-06).
 */
 template <typename T>
-T sin2pi_fast(T x) {
-	// Get sign of result
-	T sign = ::ifelse(x >= T(0.5), -1, 1);
-	// Shift if negative
-	x = ::ifelse(x >= T(0.5), x - T(0.5), x);
-	// Flip if >0.25
-	x = ::ifelse(x >= T(0.25), T(0.5) - x, x);
+inline T sin_pi_9(T x) {
 	T x2 = x * x;
-	const T c1 = 6.281422578399;
-	const T c3 = -41.122058514502;
-	const T c5 = 74.010711837743;
-	return sign * x * (c1 + x2 * (c3 + x2 * c5));
+	return x * (T(1) - x2) * (T(3.141521108990) + x2 * (T(-2.024773594411) + x2 * (T(0.517493161073) + x2 * T(-0.063691343423))));
 }
 
+/** Catmull-Rom cubic interpolation
+t is the fractional position between y1 and y2.
+*/
+template <typename T>
+T cubicInterp(T y0, T y1, T y2, T y3, T t) {
+	T t2 = t * t;
+	T t3 = t2 * t;
+	return y1 + T(0.5) * t * (y2 - y0)
+		+ t2 * (y0 - T(2.5)*y1 + T(2)*y2 - T(0.5)*y3)
+		+ t3 * (T(-0.5)*y0 + T(1.5)*y1 - T(1.5)*y2 + T(0.5)*y3);
+}
 
 /** One-pole low-pass filter, exponential moving average.
 -6 dB/octave slope.
@@ -50,7 +47,7 @@ struct OnePoleLowpass {
 
 	/** Advances the state with input x. Returns the output. */
 	template <typename T>
-	T process(State<T>& s, T x) {
+	T process(State<T>& s, T x) const {
 		s.y += alpha * (x - s.y);
 		return s.y;
 	}
@@ -77,7 +74,7 @@ Has a pole at (1 - alpha) and a zero at 1.
 */
 struct OnePoleHighpass : OnePoleLowpass {
 	template <typename T>
-	T process(State<T>& s, T x) {
+	T process(State<T>& s, T x) const {
 		return x - OnePoleLowpass::process(s, x);
 	}
 
@@ -93,80 +90,101 @@ struct OnePoleHighpass : OnePoleLowpass {
 };
 
 
-/** Computes the minimum-phase bandlimited step (MinBLEP)
-Z: number of zero-crossings on each side of the original symmetric sync signal
-O: oversample factor
-output: must be length `(2 * Z) * O`.
-First sample is >0. Last sample is 1.
-
-Algorithm from "Hard Sync Without Aliasing" by Eli Brandt (2001).
-https://www.cs.cmu.edu/~eli/papers/icmc01-hardsync.pdf
-*/
-void minBlepImpulse(int Z, int O, float* output);
-
-
-template <int Z, int O, typename T = float>
-struct MinBlepGenerator {
-	T buffer[2 * Z] = {};
-	int bufferIndex = 0;
-
-	/** Reordered impulse response for adjacent access, minus 1.0.
-	Padded at end with zeros so impulseReordered[o][2 * Z] can be loaded into a simd::float_4.
+template <int Z, int O>
+struct MinBlep {
+	/** Reordered impulse response for cubic interpolation, minus 1.0.
+	Z dimension has +1 padding at start (for z-1 wrap) and +4 at end (for SIMD + z+1 wrap).
+	Access via getImpulse() which handles o wrapping and z offset.
 	*/
-	alignas(16) float impulseReordered[O][2 * Z + 4] = {};
+	float impulseReordered[O][1 + 2 * Z + 4] = {};
 
-	MinBlepGenerator() {
+	MinBlep() {
 		float impulse[2 * Z][O];
 		dsp::minBlepImpulse(Z, O, &impulse[0][0]);
 
-		// Transpose array and pre-subtract 1.
+		// Fill impulseReordered with transposed data, minus 1.
+		// Storage index = z + 1 (to allow z = -1 access at index 0)
 		for (int o = 0; o < O; o++) {
+			// z = -1: before impulse starts
+			impulseReordered[o][0] = -1.f;
+			// z = 0 to 2*Z-1: actual impulse data
 			for (int z = 0; z < 2 * Z; z++) {
-				impulseReordered[o][z] = impulse[z][o] - 1.f;
+				impulseReordered[o][1 + z] = impulse[z][o] - 1.f;
+			}
+			// z = 2*Z to 2*Z+3: after impulse ends (for SIMD padding)
+			for (int z = 2 * Z; z < 2 * Z + 4; z++) {
+				impulseReordered[o][1 + z] = 0.f;
 			}
 		}
 	}
 
-	/** Places a discontinuity with magnitude `x` at -1 < p <= 0 relative to the current frame.
-	For example if a square wave jumps from 1 to -1 at the subsample time 0.1 frames ago, use insertDiscontinuity(-0.1, -2.0)
+	/** Get pointer to impulse data, handling o wrapping and z offset. */
+	const float* getImpulse(int o, int z) const {
+		int index = z * O + o;
+		z = index / O;
+		o = index % O;
+		if (o < 0) {
+			z -= 1;
+			o += O;
+		}
+		return &impulseReordered[o][z + 1];
+	}
+
+	template <typename T = float>
+	struct State {
+		// Double buffer of length 2 * Z
+		T buffer[4 * Z] = {};
+		int32_t bufferIndex = 0;
+	};
+
+	/** Places a discontinuity with magnitude `x` at 0 < p <= 1 relative to the current frame.
+	For example if a square wave will jump from 1 to -1 in 0.1 frames, use insertDiscontinuity(0.1, -2.0).
+
+	Note: In the deprecated MinBlepGenerator, `p` was in the range (-1, 0], so add 1 to p if updating to MinBlep.
 	*/
-	void insertDiscontinuity(float p, T x) {
-		if (!(-1 < p && p <= 0))
+	template <typename T>
+	void insertDiscontinuity(State<T>& s, float p, T x) const {
+		if (!(0 < p && p <= 1))
 			return;
 
-		// Calculate oversampling index and fractional part
-		float subsample = -p * O;
+		// Calculate impulse array index and fractional part
+		float subsample = (1 - p) * O;
 		int o = (int) subsample;
-		float frac = subsample - o;
+		float t = subsample - o;
 
-		// For each zero crossing, interpolate impulse response between oversample indices
-		// Compute 4 at a time with SIMD
+		// For each zero crossing, cubic interpolate impulse response
 		for (int z = 0; z < 2 * Z; z += 4) {
-			simd::float_4 ir0 = simd::float_4::load(&impulseReordered[o][z]);
-			// If oversample index reaches next zero crossing, wrap to next z
-			simd::float_4 ir1 = simd::float_4::load((o + 1 < O) ? &impulseReordered[o + 1][z] : &impulseReordered[0][z + 1]);
-			simd::float_4 ir = (ir0 + (ir1 - ir0) * frac);
+			simd::float_4 y0 = simd::float_4::load(getImpulse(o - 1, z));
+			simd::float_4 y1 = simd::float_4::load(getImpulse(o, z));
+			simd::float_4 y2 = simd::float_4::load(getImpulse(o + 1, z));
+			simd::float_4 y3 = simd::float_4::load(getImpulse(o + 2, z));
+			simd::float_4 ir = cubicInterp(y0, y1, y2, y3, T(t));
 
+			// Write to double buffer
 			for (int zz = 0; zz < 4; zz++) {
-				buffer[(bufferIndex + z + zz) % (2 * Z)] += ir[zz] * x;
+				s.buffer[s.bufferIndex + z + zz] += ir[zz] * x;
 			}
 		}
-		// for (int z = 0; z < 2 * Z; z++) {
-		// 	float ir0 = impulseReordered[o][z];
-		// 	float ir1 = (o + 1 < O) ? impulseReordered[o + 1][z] : impulseReordered[0][z + 1];
-		// 	float ir = (ir0 + (ir1 - ir0) * frac);
-		// 	buffer[(bufferIndex + z) % (2 * Z)] += ir * x;
-		// }
 	}
 
 	/** Should be called every frame after inserting any discontinuities. */
-	T process() {
-		T v = buffer[bufferIndex];
-		buffer[bufferIndex] = T(0);
-		bufferIndex = (bufferIndex + 1) % (2 * Z);
+	template <typename T>
+	T process(State<T>& s) const {
+		T v = s.buffer[s.bufferIndex];
+		s.buffer[s.bufferIndex] = T(0);
+		s.bufferIndex++;
+		if (s.bufferIndex >= 2 * Z) {
+			// Move second half of buffer to beginning
+			std::memcpy(s.buffer, s.buffer + 2 * Z, 2 * Z * sizeof(T));
+			std::memset(s.buffer + 2 * Z, 0, 2 * Z * sizeof(T));
+			s.bufferIndex = 0;
+		}
 		return v;
 	}
 };
+
+
+static MinBlep<16, 16> minBlep;
 
 
 template <typename T>
@@ -183,12 +201,12 @@ struct VCOProcessor {
 	OnePoleHighpass::State<T> dcFilterStateTri;
 	OnePoleHighpass::State<T> dcFilterStateSin;
 
-	MinBlepGenerator<16, 16, T> sqrMinBlep;
-	MinBlepGenerator<16, 16, T> sawMinBlep;
-	MinBlepGenerator<16, 16, T> sinMinBlep;
+	MinBlep<16, 16>::State<T> sqrMinBlep;
+	MinBlep<16, 16>::State<T> sawMinBlep;
+	MinBlep<16, 16>::State<T> sinMinBlep;
 
 	void setSampleTime(float sampleTime) {
-		dcFilter.setCutoff(std::min(0.4f, 40.f * sampleTime));
+		dcFilter.setCutoff(std::min(0.4f, 20.f * sampleTime));
 	}
 
 	struct Frame {
@@ -241,9 +259,9 @@ struct VCOProcessor {
 					if (wrapM & (1 << i)) {
 						T mask = simd::movemaskInverse<T>(1 << i);
 						// TODO: MinBlepGenerator::insertDiscontinuity() should handle subframes outside the range -1 < p <= 0 instead of failing silently.
-						float p = clamp(wrapCrossing[i] - 1.f, -1.f, 0.f);
+						float p = clamp(wrapCrossing[i], 0.f, 1.f);
 						T x = mask & (2.f * syncDirection);
-						sqrMinBlep.insertDiscontinuity(p, x);
+						minBlep.insertDiscontinuity(sqrMinBlep, p, x);
 					}
 				}
 			}
@@ -261,9 +279,9 @@ struct VCOProcessor {
 				for (int i = 0; i < frame.channels; i++) {
 					if (pw & (1 << i)) {
 						T mask = simd::movemaskInverse<T>(1 << i);
-						float p = clamp(pulseCrossing[i] - 1.f, -1.f, 0.f);
+						float p = clamp(pulseCrossing[i], 0.f, 1.f);
 						T x = mask & (-2.f * syncDirection);
-						sqrMinBlep.insertDiscontinuity(p, x);
+						minBlep.insertDiscontinuity(sqrMinBlep, p, x);
 					}
 				}
 			}
@@ -278,18 +296,19 @@ struct VCOProcessor {
 				for (int i = 0; i < frame.channels; i++) {
 					if (halfMask & (1 << i)) {
 						T mask = simd::movemaskInverse<T>(1 << i);
-						float p = halfCrossing[i] - 1.f;
+						float p = halfCrossing[i];
 						T x = mask & (-2.f * syncDirection);
-						sawMinBlep.insertDiscontinuity(p, x);
+						minBlep.insertDiscontinuity(sawMinBlep, p, x);
 					}
 				}
 			}
 		}
 
 		// Detect sync
-		// Might be NAN or outside of [0, 1) range
 		if (frame.syncEnabled) {
 			T deltaSync = frame.sync - lastSyncValue;
+			// Sample position where sync crosses 0.
+			// Might be NAN or outside of (0, 1] range
 			T syncCrossing = -lastSyncValue / deltaSync;
 			lastSyncValue = frame.sync;
 			T sync = (0.f < syncCrossing) & (syncCrossing <= 1.f) & (frame.sync >= 0.f);
@@ -304,21 +323,21 @@ struct VCOProcessor {
 					for (int i = 0; i < frame.channels; i++) {
 						if (syncMask & (1 << i)) {
 							T mask = simd::movemaskInverse<T>(1 << i);
-							float p = syncCrossing[i] - 1.f;
-							T x;
-							// Assume that hard-syncing a square always resets it to HIGH
+							float p = syncCrossing[i];
 							if (frame.sqrEnabled || frame.triEnabled) {
-								x = mask & (1.f - sqrState);
+								// Assume that hard-syncing a square always resets it to HIGH
+								T x = mask & (1.f - sqrState);
 								sqrState = simd::ifelse(mask, 1.f, sqrState);
-								sqrMinBlep.insertDiscontinuity(p, x);
+								minBlep.insertDiscontinuity(sqrMinBlep, p, x);
+								DEBUG("%f %f %f", p, x[i], sqrState[i]);
 							}
 							if (frame.sawEnabled) {
-								x = mask & (saw(newPhase) - saw(phase));
-								sawMinBlep.insertDiscontinuity(p, x);
+								T x = mask & (saw(newPhase) - saw(phase));
+								minBlep.insertDiscontinuity(sawMinBlep, p, x);
 							}
 							if (frame.sinEnabled) {
-								x = mask & (sin(newPhase) - sin(phase));
-								sinMinBlep.insertDiscontinuity(p, x);
+								T x = mask & (sin(newPhase) - sin(phase));
+								minBlep.insertDiscontinuity(sinMinBlep, p, x);
 							}
 						}
 					}
@@ -330,14 +349,14 @@ struct VCOProcessor {
 		// Saw
 		if (frame.sawEnabled) {
 			frame.saw = saw(phase);
-			frame.saw += sawMinBlep.process();
+			frame.saw += minBlep.process(sawMinBlep);
 			frame.saw = dcFilter.process(dcFilterStateSaw, frame.saw);
 		}
 
 		// Square
 		if (frame.sqrEnabled || frame.triEnabled) {
 			frame.sqr = sqrState;
-			frame.sqr += sqrMinBlep.process();
+			frame.sqr += minBlep.process(sqrMinBlep);
 			T triSqr = frame.sqr;
 			frame.sqr = dcFilter.process(dcFilterStateSqr, frame.sqr);
 
@@ -359,7 +378,7 @@ struct VCOProcessor {
 		// Sin
 		if (frame.sinEnabled) {
 			frame.sin = sin(phase);
-			frame.sin += sinMinBlep.process();
+			frame.sin += minBlep.process(sinMinBlep);
 			frame.sin = dcFilter.process(dcFilterStateSin, frame.sin);
 		}
 	}
@@ -377,8 +396,7 @@ struct VCOProcessor {
 		return 1 - 4 * simd::fmin(simd::fabs(phase - 0.25f), simd::fabs(phase - 1.25f));
 	}
 	static T sin(T phase) {
-		return sin2pi_fast(phase);
-		// return simd::sin(2.f * M_PI * phase);
+		return sin_pi_9(2 * phase - 1);
 	}
 };
 
