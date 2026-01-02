@@ -286,12 +286,13 @@ struct VCOProcessor {
 		};
 
 		// Computes subsample time where phase crosses threshold.
-		auto getCrossing = [](T threshold, T startPhase, T endPhase, T startSubsample, T endSubsample) -> T {
-			// Wrap threshold mod 1 to be in (startPhase, startPhase + 1]
-			threshold -= simd::floor(threshold - startPhase);
-			// Map to (0, 1]
-			T p = (threshold - startPhase) / (endPhase - startPhase);
-			// Map to (startSubsample, endSubsample]
+		auto getCrossing = [](T thresholdPhase, T startPhase, T endPhase, T startSubsample, T endSubsample) -> T {
+			T delta = endPhase - startPhase;
+			T diff = thresholdPhase - startPhase;
+			// Forward: wrap thresholdPhase to (startPhase, startPhase+1]
+			// Backward: wrap thresholdPhase to [startPhase-1, startPhase)
+			thresholdPhase -= simd::ifelse(delta >= 0.f, simd::floor(diff), simd::ceil(diff));
+			T p = (thresholdPhase - startPhase) / delta;
 			return startSubsample + p * (endSubsample - startSubsample);
 		};
 
@@ -300,19 +301,19 @@ struct VCOProcessor {
 		// channelMask limits processing to specific channels.
 		auto processCrossings = [&](T startPhase, T endPhase, T startSubsample, T endSubsample, T channelMask) {
 			if (frame.sqrEnabled || frame.triEnabled) {
-				// Wrap crossing (phase crosses 0 mod 1)
+				// Insert minBLEP to square when phase crosses 0 (mod 1)
 				T wrapSubsample = getCrossing(1.f, startPhase, endPhase, startSubsample, endSubsample);
 				T wrapMask = channelMask & (startSubsample < wrapSubsample) & (wrapSubsample <= endSubsample);
 				insertMinBlep(wrapMask, wrapSubsample, 2.f * syncDirection, sqrMinBlep);
 
-				// Pulse width crossing
+				// Insert minBLEP to square when phase crosses pulse width
 				T pulseSubsample = getCrossing(pulseWidth, startPhase, endPhase, startSubsample, endSubsample);
 				T pulseMask = channelMask & (startSubsample < pulseSubsample) & (pulseSubsample <= endSubsample);
 				insertMinBlep(pulseMask, pulseSubsample, -2.f * syncDirection, sqrMinBlep);
 			}
 
 			if (frame.sawEnabled) {
-				// Saw crossing at 0.5
+				// Insert minBLEP to saw when crossing 0.5
 				T sawSubsample = getCrossing(0.5f, startPhase, endPhase, startSubsample, endSubsample);
 				T sawMask = channelMask & (startSubsample < sawSubsample) & (sawSubsample <= endSubsample);
 				insertMinBlep(sawMask, sawSubsample, -2.f * syncDirection, sawMinBlep);
