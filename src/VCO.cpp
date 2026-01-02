@@ -340,7 +340,7 @@ struct VCOProcessor {
 			T syncSubsample = -lastSync / deltaSync;
 			lastSync = frame.sync;
 			// Check if sync rises through 0
-			T syncOccurred = (0.f < syncSubsample) & (syncSubsample <= 1.f) & (frame.sync >= lastSync);
+			T syncOccurred = (0.f < syncSubsample) & (syncSubsample <= 1.f) & (deltaSync >= 0.f);
 			T noSync = ~syncOccurred;
 
 			if (simd::movemask(noSync)) {
