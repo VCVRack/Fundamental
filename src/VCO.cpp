@@ -213,8 +213,12 @@ static MinBlep<16, 16> minBlep;
 template <typename T>
 struct VCOProcessor {
 	T phase = 0.f;
-	T lastSync = 0.f;
+	/** 1 for forward, -1 for backward. */
 	T syncDirection = 1.f;
+	T lastSync = 0.f;
+	/** 1 or -1 */
+	T lastSqrState = 1.f;
+	/** Leaky integrator result. */
 	T triFilterState = 0.f;
 
 	OnePoleHighpass dcFilter;
@@ -315,7 +319,14 @@ struct VCOProcessor {
 			}
 		};
 
-		// Main logic
+		// Check if square value changed due to pulseWidth changing since last frame
+		if (frame.sqrEnabled || frame.triEnabled) {
+			T sqrState = simd::ifelse(prevPhase < pulseWidth, 1.f, -1.f);
+			T changed = (sqrState != lastSqrState);
+			T magnitude = (sqrState - lastSqrState) * syncDirection;
+			insertMinBlep(changed, 1e-6f, magnitude, sqrMinBlep);
+		}
+
 		if (!frame.syncEnabled) {
 			// No sync. Process full frame
 			T endPhase = prevPhase + deltaPhase;
@@ -387,8 +398,8 @@ struct VCOProcessor {
 		}
 
 		if (frame.sqrEnabled || frame.triEnabled) {
-			T sqrHigh = (phase < pulseWidth) ^ syncDirection;
-			frame.sqr = simd::ifelse(sqrHigh, 1.f, -1.f);
+			frame.sqr = simd::ifelse(phase < pulseWidth, 1.f, -1.f);
+			lastSqrState = frame.sqr;
 			frame.sqr += sqrMinBlep.shift();
 			T triSqr = frame.sqr;
 			frame.sqr = dcFilter.process(dcFilterStateSqr, frame.sqr);
