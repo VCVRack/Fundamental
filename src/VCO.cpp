@@ -324,7 +324,7 @@ struct VCOProcessor {
 		if (frame.sqrEnabled || frame.triEnabled) {
 			T sqrState = simd::ifelse(prevPhase < pulseWidth, 1.f, -1.f);
 			T changed = (sqrState != lastSqrState);
-			T magnitude = (sqrState - lastSqrState) * syncDirection;
+			T magnitude = sqrState - lastSqrState;
 			insertMinBlep(changed, 1e-6f, magnitude, sqrMinBlep);
 		}
 
@@ -339,7 +339,8 @@ struct VCOProcessor {
 			T deltaSync = frame.sync - lastSync;
 			T syncSubsample = -lastSync / deltaSync;
 			lastSync = frame.sync;
-			T syncOccurred = (0.f < syncSubsample) & (syncSubsample <= 1.f) & (frame.sync >= 0.f);
+			// Check if sync rises through 0
+			T syncOccurred = (0.f < syncSubsample) & (syncSubsample <= 1.f) & (frame.sync >= lastSync);
 			T noSync = ~syncOccurred;
 
 			if (simd::movemask(noSync)) {
@@ -353,6 +354,8 @@ struct VCOProcessor {
 				// Process crossings before sync
 				T syncPhase = prevPhase + deltaPhase * syncSubsample;
 				processCrossings(prevPhase, syncPhase, 0.f, syncSubsample, syncOccurred);
+				// Wrap sync phase
+				syncPhase -= simd::floor(syncPhase);
 
 				if (frame.soft) {
 					// Soft sync: Reverse direction, continue from syncPhase
@@ -362,10 +365,10 @@ struct VCOProcessor {
 					phase = simd::ifelse(syncOccurred, endPhase, phase);
 				}
 				else {
-					// Hard sync: reset to 0, insert discontinuities
+					// Hard sync: Reset phase from syncPhase to 0 at syncSubsample, insert discontinuities
 					if (frame.sqrEnabled || frame.triEnabled) {
-						// Sqr jumps from current state to +1
-						T sqrJump = (syncPhase - simd::floor(syncPhase) < pulseWidth);
+						// Check if square jumps from -1 to +1
+						T sqrJump = (syncPhase >= pulseWidth);
 						insertMinBlep(syncOccurred & sqrJump, syncSubsample, 2.f, sqrMinBlep);
 					}
 					if (frame.triEnabled) {
@@ -439,7 +442,7 @@ struct VCOProcessor {
 		return 1 - 4 * simd::fmin(simd::fabs(phase - 0.25f), simd::fabs(phase - 1.25f));
 	}
 	static T sin(T phase) {
-		return sin_pi_9(2 * phase - 1);
+		return sin_pi_9(1 - 2 * phase);
 	}
 };
 
