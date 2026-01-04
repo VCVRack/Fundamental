@@ -13,18 +13,6 @@ inline T sin_pi_9(T x) {
 	return x * (T(1) - x2) * (T(3.141521108990) + x2 * (T(-2.024773594411) + x2 * (T(0.517493161073) + x2 * T(-0.063691343423))));
 }
 
-/** Catmull-Rom cubic interpolation
-t is the fractional position between y1 and y2.
-*/
-template <typename T>
-T catmullRomInterpolate(T y0, T y1, T y2, T y3, T t) {
-	T t2 = t * t;
-	T t3 = t2 * t;
-	return y1 + T(0.5) * t * (y2 - y0)
-		+ t2 * (y0 - T(2.5)*y1 + T(2)*y2 - T(0.5)*y3)
-		+ t3 * (T(-0.5)*y0 + T(1.5)*y1 - T(1.5)*y2 + T(0.5)*y3);
-}
-
 /** One-pole low-pass filter, exponential moving average.
 -6 dB/octave slope.
 Useful for leaky integrators and smoothing control signals.
@@ -90,37 +78,157 @@ struct OnePoleHighpass : OnePoleLowpass {
 };
 
 
-/** Holds a precomputed minBLEP impulse response, reordered to efficiently insert into an audio buffer.
-*/
-template <int Z, int O>
-struct MinBlep {
-	/** Reordered impulse response for cubic interpolation, minus 1.0.
-	Z dimension has +1 padding at start (for z-1 wrap) and +4 at end (for SIMD + z+1 wrap).
-	Access via getImpulse() which handles O wrapping and Z offset.
-	*/
-	float impulseReordered[O][1 + 2 * Z + 4] = {};
+/** Simple radix-2 Cooley-Tukey FFT. n must be a power of 2. */
+template <typename T>
+void fft(std::complex<T>* x, int n, bool inverse = false) {
+	// Bit reversal permutation
+	for (int i = 1, j = 0; i < n; i++) {
+		int bit = n >> 1;
+		for (; j & bit; bit >>= 1)
+			j ^= bit;
+		j ^= bit;
+		if (i < j)
+			std::swap(x[i], x[j]);
+	}
 
-	MinBlep() {
-		float impulse[2 * Z][O];
-		dsp::minBlepImpulse(Z, O, &impulse[0][0]);
-
-		// Fill impulseReordered with transposed and pre-subtracted data
-		// Storage index = z + 1 (to allow z = -1 access at index 0)
-		for (int o = 0; o < O; o++) {
-			// z = -1: before impulse starts
-			impulseReordered[o][0] = -1.f;
-			// z = 0 to 2*Z-1: actual impulse data
-			for (int z = 0; z < 2 * Z; z++) {
-				impulseReordered[o][1 + z] = impulse[z][o] - 1.f;
-			}
-			// z = 2*Z to 2*Z+3: after impulse ends (for SIMD padding)
-			for (int z = 2 * Z; z < 2 * Z + 4; z++) {
-				impulseReordered[o][1 + z] = 0.f;
+	// Cooley-Tukey butterflies
+	for (int len = 2; len <= n; len <<= 1) {
+		T ang = (inverse ? 1 : -1) * 2 * M_PI / len;
+		std::complex<T> wn(std::cos(ang), std::sin(ang));
+		for (int i = 0; i < n; i += len) {
+			std::complex<T> w(1);
+			for (int j = 0; j < len / 2; j++) {
+				std::complex<T> u = x[i + j];
+				std::complex<T> v = x[i + j + len / 2] * w;
+				x[i + j] = u + v;
+				x[i + j + len / 2] = u - v;
+				w *= wn;
 			}
 		}
 	}
 
-	/** Get pointer to impulse data, handling o wrapping and z offset. */
+	if (inverse) {
+		for (int i = 0; i < n; i++)
+			x[i] /= T(n);
+	}
+}
+
+
+template <typename T>
+inline T blackmanHarris(T p) {
+	return
+	  + T(0.35875)
+	  - T(0.48829) * simd::cos(T(2 * M_PI) * p)
+	  + T(0.14128) * simd::cos(T(4 * M_PI) * p)
+	  - T(0.01168) * simd::cos(T(6 * M_PI) * p);
+}
+
+
+/** Computes the minimum-phase bandlimited step (minBLEP), an impulse step response that rises from 0 to 1.
+Z: number of zero-crossings on each side of the original symmetric sync signal
+O: oversample factor
+output: must be length `(2 * Z) * O`.
+
+Algorithm from "Hard Sync Without Aliasing" by Eli Brandt (2001).
+https://www.cs.cmu.edu/~eli/papers/icmc01-hardsync.pdf
+*/
+inline void minBlepImpulse(int z, int o, float* output) {
+	// Symmetric sinc impulse with `z` zero-crossings on each side
+	int n = 2 * z * o;
+	std::complex<double>* x = new std::complex<double>[n];
+	for (int i = 0; i < n; i++) {
+		double p = (double) i / o - z;
+		x[i] = (p == 0.0) ? 1.0 : std::sin(M_PI * p) / (M_PI * p);
+	}
+
+	// Apply window
+	for (int i = 0; i < n; i++) {
+		x[i] *= blackmanHarris(i / (double) (n - 1));
+	}
+
+	// Reconstruct impulse response with minimum phase
+	fft(x, n);
+
+	// Take log of magnitude and set phase to zero.
+	// Limit frequency bin to e^-10
+	for (int i = 0; i < n; i++) {
+		x[i] = std::log(std::abs(x[i]));
+	}
+
+
+	// Transform to cepstral domain.
+	fft(x, n, true);
+
+	// Apply minimum-phase window in cepstral domain
+	// Double positive quefrencies, zero negative quefrencies
+	for (int i = 1; i < n / 2; i++) {
+		x[i] *= 2.0;
+	}
+	for (int i = n / 2; i < n; i++) {
+		x[i] = 0.0;
+	}
+
+	// Transform back to frequency domain
+	fft(x, n);
+
+	// Take complex exponential of each bin
+	for (int i = 0; i < n; i++) {
+		x[i] = std::exp(x[i]);
+	}
+
+	// Transform to time domain
+	fft(x, n, true);
+
+	// Integrate
+	double total = 0.0;
+	for (int i = 0; i < n; i++) {
+		total += x[i].real();
+		x[i] = total;
+	}
+
+	// Renormalize so last sample is 1
+	for (int i = 0; i < n; i++) {
+		output[i] = x[i].real() / total;
+	}
+
+	FILE* f = fopen("plugins/Fundamental/minblep.txt", "w");
+	DEFER({fclose(f);});
+	for (int i = 0; i < n; i++) {
+		fprintf(f, "%.12f\n", output[i]);
+	}
+
+	delete[] x;
+}
+
+
+/** Holds a precomputed minBLEP impulse response, reordered to efficiently insert into an audio buffer.
+*/
+template <int Z, int O>
+struct MinBlep {
+	/** Reordered impulse response for linear interpolation, minus 1.0.
+	Z dimension has +4 padding at end for SIMD and o+1 wrap.
+	Access via getImpulse() which handles O wrapping.
+	*/
+	float impulseReordered[O][2 * Z + 4] = {};
+
+	MinBlep() {
+		float impulse[2 * Z][O];
+		minBlepImpulse(Z, O, &impulse[0][0]);
+
+		// Fill impulseReordered with transposed and pre-subtracted data
+		for (int o = 0; o < O; o++) {
+			// z = 0 to 2*Z-1: actual impulse data
+			for (int z = 0; z < 2 * Z; z++) {
+				impulseReordered[o][z] = impulse[z][o] - 1.f;
+			}
+			// z = 2*Z to 2*Z+3: after impulse ends (for SIMD padding)
+			for (int z = 2 * Z; z < 2 * Z + 4; z++) {
+				impulseReordered[o][z] = 0.f;
+			}
+		}
+	}
+
+	/** Get pointer to impulse data, handling o wrapping. */
 	const float* getImpulse(int o, int z) const {
 		z += o / O;
 		o = o % O;
@@ -129,8 +237,8 @@ struct MinBlep {
 			o += O;
 		}
 		// assert(0 <= o && o < O);
-		// assert(-1 <= z && z < 2 * Z + 4);
-		return &impulseReordered[o][z + 1];
+		// assert(0 <= z && z < 2 * Z + 4);
+		return &impulseReordered[o][z];
 	}
 
 	/** Places a discontinuity at 0 < p <= 1 relative to the current frame.
@@ -149,14 +257,12 @@ struct MinBlep {
 		int o = (int) subsample;
 		float t = subsample - o;
 
-		// For each zero crossing, interpolate impulse response from oversample points
-		using simd::float_4;
+		// For each zero crossing, linearly interpolate impulse response from oversample points
 		for (int z = 0; z < 2 * Z; z += 4) {
-			float_4 y0 = float_4::load(getImpulse(o - 1, z));
+			using simd::float_4;
 			float_4 y1 = float_4::load(getImpulse(o, z));
 			float_4 y2 = float_4::load(getImpulse(o + 1, z));
-			float_4 y3 = float_4::load(getImpulse(o + 2, z));
-			float_4 y = catmullRomInterpolate(y0, y1, y2, y3, float_4(t));
+			float_4 y = y1 + t * (y2 - y1);
 			y *= magnitude;
 
 			// Write all 4 samples to buffer
