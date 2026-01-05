@@ -179,22 +179,16 @@ inline void minBlepImpulse(int z, int o, float* output) {
 	// Transform to time domain
 	fft(x, n, true);
 
-	// Integrate
+	// Integrate. First sample x[0] should be 0.
 	double total = 0.0;
 	for (int i = 0; i < n; i++) {
-		total += x[i].real();
-		x[i] = total;
+		output[i] = total;
+		total += x[i].real() / o;
 	}
 
-	// Renormalize so last sample is 1
+	// Renormalize so last virtual sample x[n] should be exactly 1
 	for (int i = 0; i < n; i++) {
-		output[i] = x[i].real() / total;
-	}
-
-	FILE* f = fopen("plugins/Fundamental/minblep.txt", "w");
-	DEFER({fclose(f);});
-	for (int i = 0; i < n; i++) {
-		fprintf(f, "%.12f\n", output[i]);
+		output[i] /= total;
 	}
 
 	delete[] x;
@@ -207,61 +201,76 @@ template <int Z, int O>
 struct MinBlep {
 	/** Reordered impulse response for linear interpolation, minus 1.0.
 	Z dimension has +4 padding at end for SIMD and o+1 wrap.
-	Access via getImpulse() which handles O wrapping.
 	*/
 	float impulseReordered[O][2 * Z + 4] = {};
+	float rampReordered[O][2 * Z + 4] = {};
 
 	MinBlep() {
-		float impulse[2 * Z][O];
-		minBlepImpulse(Z, O, &impulse[0][0]);
+		float impulse[2 * Z * O];
+		minBlepImpulse(Z, O, impulse);
 
-		// Fill impulseReordered with transposed and pre-subtracted data
+		// Subtract 1 so our step impulse goes from -1 to 0.
+		for (int i = 0; i < 2*Z*O; i++) {
+			impulse[i] -= 1.f;
+		}
+
+		// Integrate minBLEP to obtain minBLAMP
+		float ramp[2 * Z * O];
+		double total = 0.0;
+		for (int i = 0; i < 2*Z*O; i++) {
+			ramp[i] = total;
+			total += impulse[i] / O;
+		}
+		// Subtract ideal ramp so ramp[0] and the virtual ramp[n] are 0
+		for (int i = 0; i < 2*Z*O; i++) {
+			ramp[i] -= (float) i / (2*Z*O) * total;
+		}
+
+		// Transpose samples by making z values contiguous for each o
 		for (int o = 0; o < O; o++) {
-			// z = 0 to 2*Z-1: actual impulse data
 			for (int z = 0; z < 2 * Z; z++) {
-				impulseReordered[o][z] = impulse[z][o] - 1.f;
+				impulseReordered[o][z] = impulse[z * O + o];
 			}
-			// z = 2*Z to 2*Z+3: after impulse ends (for SIMD padding)
-			for (int z = 2 * Z; z < 2 * Z + 4; z++) {
-				impulseReordered[o][z] = 0.f;
+		}
+		for (int o = 0; o < O; o++) {
+			for (int z = 0; z < 2 * Z; z++) {
+				rampReordered[o][z] = ramp[z * O + o];
 			}
 		}
 	}
 
-	/** Get pointer to impulse data, handling o wrapping. */
-	const float* getImpulse(int o, int z) const {
-		z += o / O;
-		o = o % O;
-		if (o < 0) {
-			z -= 1;
-			o += O;
-		}
-		// assert(0 <= o && o < O);
-		// assert(0 <= z && z < 2 * Z + 4);
-		return &impulseReordered[o][z];
-	}
-
-	/** Places a discontinuity at 0 < p <= 1 relative to the current frame.
+	/** Places a discontinuity at 0 < subsample <= 1 relative to the current frame.
 	`out` must have enough space to write 2*Z floats, spaced by `stride` floats.
-	`p` is the subsample position to insert a discontinuity of `magnitude`.
+	`subsample` is the subsample position to insert a discontinuity of `magnitude`.
 	For example if a square wave will jump from 1 to -1 in 0.1 frames, use insertDiscontinuity(out, 1, 0.1f, -2.f).
 
-	Note: In the deprecated MinBlepGenerator, `p` was in the range (-1, 0], so add 1 to p if updating to MinBlep.
+	Note: In the deprecated MinBlepGenerator, `subsample` was in the range (-1, 0], so add 1 to subsample if updating to MinBlep.
 	*/
-	void insertDiscontinuity(float* out, int stride, float p, float magnitude) const {
-		if (!(0 < p && p <= 1))
+	void insertDiscontinuity(float subsample, float magnitude, float* out, int stride = 1) const {
+		insert(impulseReordered, subsample, magnitude, out, stride);
+	}
+
+	void insertRampDiscontinuity(float subsample, float magnitude, float* out, int stride = 1) const {
+		insert(rampReordered, subsample, magnitude, out, stride);
+	}
+
+private:
+	void insert(const float table[O][2 * Z + 4], float subsample, float magnitude, float* out, int stride = 1) const {
+		if (!(0.f < subsample && subsample <= 1.f))
 			return;
 
 		// Calculate impulse array index and fractional part
-		float subsample = (1 - p) * O;
-		int o = (int) subsample;
-		float t = subsample - o;
+		float t = (1.f - subsample) * O;
+		int o = (int) t;
+		t -= o;
 
 		// For each zero crossing, linearly interpolate impulse response from oversample points
 		for (int z = 0; z < 2 * Z; z += 4) {
 			using simd::float_4;
-			float_4 y1 = float_4::load(getImpulse(o, z));
-			float_4 y2 = float_4::load(getImpulse(o + 1, z));
+			float_4 y1 = float_4::load(&table[o][z]);
+			int o2 = (o + 1) % O;
+			int z2 = z + (o + 1) / O;
+			float_4 y2 = float_4::load(&table[o2][z2]);
 			float_4 y = y1 + t * (y2 - y1);
 			y *= magnitude;
 
@@ -313,7 +322,10 @@ struct MinBlepBuffer {
 };
 
 
-static MinBlep<16, 16> minBlep;
+static const MinBlep<16, 16>& getMinBlep() {
+	static MinBlep<16, 16> minBlep;
+	return minBlep;
+}
 
 
 template <typename T>
@@ -324,8 +336,6 @@ struct VCOProcessor {
 	T lastSync = 0.f;
 	/** 1 or -1 */
 	T lastSqrState = 1.f;
-	/** Leaky integrator result. */
-	T triFilterState = 0.f;
 
 	OnePoleHighpass dcFilter;
 	OnePoleHighpass::State<T> dcFilterStateSqr;
@@ -335,6 +345,7 @@ struct VCOProcessor {
 
 	MinBlepBuffer<16*2, T> sqrMinBlep;
 	MinBlepBuffer<16*2, T> sawMinBlep;
+	MinBlepBuffer<16*2, T> triMinBlep;
 	MinBlepBuffer<16*2, T> sinMinBlep;
 
 	void setSampleTime(float sampleTime) {
@@ -379,14 +390,26 @@ struct VCOProcessor {
 
 		// Inserts minBLEP for each channel where mask is true.
 		// Serial but does nothing if mask is all zero.
-		auto insertMinBlep = [&](T mask, T p, T magnitude, MinBlepBuffer<16*2, T>& minBlepBuffer) {
+		auto insertDiscontinuity = [&](T mask, T subsample, T magnitude, MinBlepBuffer<16*2, T>& buffer) {
 			int m = simd::movemask(mask);
 			if (!m)
 				return;
-			float* buffer = (float*) minBlepBuffer.startData();
 			for (int i = 0; i < frame.channels; i++) {
 				if (m & (1 << i)) {
-					minBlep.insertDiscontinuity(&buffer[i], 4, p[i], magnitude[i]);
+					float* x = (float*) buffer.startData();
+					getMinBlep().insertDiscontinuity(subsample[i], magnitude[i], &x[i], 4);
+				}
+			}
+		};
+
+		auto insertRampDiscontinuity = [&](T mask, T subsample, T magnitude, MinBlepBuffer<16*2, T>& buffer) {
+			int m = simd::movemask(mask);
+			if (!m)
+				return;
+			for (int i = 0; i < frame.channels; i++) {
+				if (m & (1 << i)) {
+					float* x = (float*) buffer.startData();
+					getMinBlep().insertRampDiscontinuity(subsample[i], magnitude[i], &x[i], 4);
 				}
 			}
 		};
@@ -406,32 +429,43 @@ struct VCOProcessor {
 		// startSubsample and endSubsample define the time range within the frame.
 		// channelMask limits processing to specific channels.
 		auto processCrossings = [&](T startPhase, T endPhase, T startSubsample, T endSubsample, T channelMask) {
-			if (frame.sqrEnabled || frame.triEnabled) {
+			if (frame.sqrEnabled) {
 				// Insert minBLEP to square when phase crosses 0 (mod 1)
 				T wrapSubsample = getCrossing(1.f, startPhase, endPhase, startSubsample, endSubsample);
-				T wrapMask = channelMask & (startSubsample < wrapSubsample) & (wrapSubsample <= endSubsample);
-				insertMinBlep(wrapMask, wrapSubsample, 2.f * syncDirection, sqrMinBlep);
+				T mask = channelMask & (startSubsample < wrapSubsample) & (wrapSubsample <= endSubsample);
+				insertDiscontinuity(mask, wrapSubsample, 2.f * syncDirection, sqrMinBlep);
 
 				// Insert minBLEP to square when phase crosses pulse width
 				T pulseSubsample = getCrossing(pulseWidth, startPhase, endPhase, startSubsample, endSubsample);
-				T pulseMask = channelMask & (startSubsample < pulseSubsample) & (pulseSubsample <= endSubsample);
-				insertMinBlep(pulseMask, pulseSubsample, -2.f * syncDirection, sqrMinBlep);
+				mask = channelMask & (startSubsample < pulseSubsample) & (pulseSubsample <= endSubsample);
+				insertDiscontinuity(mask, pulseSubsample, -2.f * syncDirection, sqrMinBlep);
 			}
 
 			if (frame.sawEnabled) {
 				// Insert minBLEP to saw when crossing 0.5
 				T sawSubsample = getCrossing(0.5f, startPhase, endPhase, startSubsample, endSubsample);
-				T sawMask = channelMask & (startSubsample < sawSubsample) & (sawSubsample <= endSubsample);
-				insertMinBlep(sawMask, sawSubsample, -2.f * syncDirection, sawMinBlep);
+				T mask = channelMask & (startSubsample < sawSubsample) & (sawSubsample <= endSubsample);
+				insertDiscontinuity(mask, sawSubsample, -2.f * syncDirection, sawMinBlep);
+			}
+
+			if (frame.triEnabled) {
+				// Insert minBLAMP to tri when crossing 0.25, slope from +4 to -4
+				T triSubsample = getCrossing(0.25f, startPhase, endPhase, startSubsample, endSubsample);
+				T mask = channelMask & (startSubsample < triSubsample) & (triSubsample <= endSubsample);
+				insertRampDiscontinuity(mask, triSubsample, -8.f * deltaPhase, triMinBlep);
+				// Insert minBLAMP to tri when crossing 0.75, slope from -4 to +4
+				triSubsample = getCrossing(0.75f, startPhase, endPhase, startSubsample, endSubsample);
+				mask = channelMask & (startSubsample < triSubsample) & (triSubsample <= endSubsample);
+				insertRampDiscontinuity(mask, triSubsample, 8.f * deltaPhase, triMinBlep);
 			}
 		};
 
 		// Check if square value changed due to pulseWidth changing since last frame
-		if (frame.sqrEnabled || frame.triEnabled) {
+		if (frame.sqrEnabled) {
 			T sqrState = simd::ifelse(prevPhase < pulseWidth, 1.f, -1.f);
-			T changed = (sqrState != lastSqrState);
 			T magnitude = sqrState - lastSqrState;
-			insertMinBlep(changed, 1e-6f, magnitude, sqrMinBlep);
+			T changed = (magnitude != 0.f);
+			insertDiscontinuity(changed, 1e-6f, magnitude, sqrMinBlep);
 		}
 
 		if (!frame.syncEnabled) {
@@ -472,21 +506,21 @@ struct VCOProcessor {
 				}
 				else {
 					// Hard sync: Reset phase from syncPhase to 0 at syncSubsample, insert discontinuities
-					if (frame.sqrEnabled || frame.triEnabled) {
+					if (frame.sqrEnabled) {
 						// Check if square jumps from -1 to +1
 						T sqrJump = (syncPhase >= pulseWidth);
-						insertMinBlep(syncOccurred & sqrJump, syncSubsample, 2.f, sqrMinBlep);
-					}
-					if (frame.triEnabled) {
-						// TODO Insert minBLEP to Tri
+						insertDiscontinuity(syncOccurred & sqrJump, syncSubsample, 2.f, sqrMinBlep);
 					}
 					if (frame.sawEnabled) {
 						// Saw jumps from saw(syncPhase) to saw(0) = 0
-						insertMinBlep(syncOccurred, syncSubsample, -saw(syncPhase), sawMinBlep);
+						insertDiscontinuity(syncOccurred, syncSubsample, -saw(syncPhase), sawMinBlep);
+					}
+					if (frame.triEnabled) {
+						insertDiscontinuity(syncOccurred, syncSubsample, -tri(syncPhase), triMinBlep);
 					}
 					if (frame.sinEnabled) {
 						// sin jumps from sin(syncPhase) to sin(0) = 0
-						insertMinBlep(syncOccurred, syncSubsample, -sin(syncPhase), sinMinBlep);
+						insertDiscontinuity(syncOccurred, syncSubsample, -sin(syncPhase), sinMinBlep);
 					}
 
 					// Process crossings after sync (starting from phase 0)
@@ -507,25 +541,17 @@ struct VCOProcessor {
 			frame.saw = dcFilter.process(dcFilterStateSaw, frame.saw);
 		}
 
-		if (frame.sqrEnabled || frame.triEnabled) {
+		if (frame.sqrEnabled) {
 			frame.sqr = simd::ifelse(phase < pulseWidth, 1.f, -1.f);
 			lastSqrState = frame.sqr;
 			frame.sqr += sqrMinBlep.shift();
-			T triSqr = frame.sqr;
 			frame.sqr = dcFilter.process(dcFilterStateSqr, frame.sqr);
+		}
 
-			if (frame.triEnabled) {
-				// Integrate square wave
-				const float triShape = 0.2f;
-				T triFreq = sampleTime * triShape * frame.freq;
-				// Use bilinear transform to derive alpha
-				T alpha = 1 / (1 + 1 / (M_PI * triFreq));
-				// T alpha = 1.f - simd::exp(-2.f * M_PI * triFreq);
-				triFilterState += alpha * (triSqr - triFilterState);
-				// Apply gain to roughly have unit amplitude at 0.5 pulseWidth. Depends on triShape.
-				frame.tri = triFilterState * 6.6f;
-				frame.tri = dcFilter.process(dcFilterStateTri, frame.tri);
-			}
+		if (frame.triEnabled) {
+			frame.tri = tri(phase);
+			frame.tri += triMinBlep.shift();
+			frame.tri = dcFilter.process(dcFilterStateTri, frame.tri);
 		}
 
 		if (frame.sinEnabled) {
