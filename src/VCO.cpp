@@ -146,6 +146,7 @@ inline void minBlepImpulse(int z, int o, float* output) {
 		x[i] *= blackmanHarris(i / (double) (n - 1));
 	}
 
+#if 1
 	// Reconstruct impulse response with minimum phase
 	fft(x, n);
 
@@ -178,6 +179,7 @@ inline void minBlepImpulse(int z, int o, float* output) {
 
 	// Transform to time domain
 	fft(x, n, true);
+#endif
 
 	// Integrate. First sample x[0] should be 0.
 	double total = 0.0;
@@ -226,6 +228,12 @@ struct MinBlep {
 			ramp[i] -= (float) i / (2*Z*O) * total;
 		}
 
+		// FILE* f = fopen("plugins/Fundamental/minblep.txt", "w");
+		// for (int i = 0; i < 2*Z*O; i++) {
+		// 	fprintf(f, "%.12f\n", ramp[i]);
+		// }
+		// fclose(f);
+
 		// Transpose samples by making z values contiguous for each o
 		for (int o = 0; o < O; o++) {
 			for (int z = 0; z < 2 * Z; z++) {
@@ -250,7 +258,7 @@ struct MinBlep {
 		insert(impulseReordered, subsample, magnitude, out, stride);
 	}
 
-	void insertRampDiscontinuity(float subsample, float magnitude, float* out, int stride = 1) const {
+	void insertSlopeDiscontinuity(float subsample, float magnitude, float* out, int stride = 1) const {
 		insert(rampReordered, subsample, magnitude, out, stride);
 	}
 
@@ -402,14 +410,14 @@ struct VCOProcessor {
 			}
 		};
 
-		auto insertRampDiscontinuity = [&](T mask, T subsample, T magnitude, MinBlepBuffer<16*2, T>& buffer) {
+		auto insertSlopeDiscontinuity = [&](T mask, T subsample, T magnitude, MinBlepBuffer<16*2, T>& buffer) {
 			int m = simd::movemask(mask);
 			if (!m)
 				return;
 			for (int i = 0; i < frame.channels; i++) {
 				if (m & (1 << i)) {
 					float* x = (float*) buffer.startData();
-					getMinBlep().insertRampDiscontinuity(subsample[i], magnitude[i], &x[i], 4);
+					getMinBlep().insertSlopeDiscontinuity(subsample[i], magnitude[i], &x[i], 4);
 				}
 			}
 		};
@@ -449,20 +457,23 @@ struct VCOProcessor {
 			}
 
 			if (frame.triEnabled) {
-				// Insert minBLAMP to tri when crossing 0.25, slope from +4 to -4
+				// Insert minBLAMP to tri when crossing 0.25
 				T triSubsample = getCrossing(0.25f, startPhase, endPhase, startSubsample, endSubsample);
 				T mask = channelMask & (startSubsample < triSubsample) & (triSubsample <= endSubsample);
-				insertRampDiscontinuity(mask, triSubsample, -8.f * deltaPhase, triMinBlep);
+				// Slope goes from +4 to -4, so slope jump is -8 * abs(deltaPhase)
+				insertSlopeDiscontinuity(mask, triSubsample, -8.f * deltaPhase * syncDirection, triMinBlep);
+
 				// Insert minBLAMP to tri when crossing 0.75, slope from -4 to +4
 				triSubsample = getCrossing(0.75f, startPhase, endPhase, startSubsample, endSubsample);
 				mask = channelMask & (startSubsample < triSubsample) & (triSubsample <= endSubsample);
-				insertRampDiscontinuity(mask, triSubsample, 8.f * deltaPhase, triMinBlep);
+				// Slope goes from -4 to +4, so slope jump is 8 * abs(deltaPhase)
+				insertSlopeDiscontinuity(mask, triSubsample, 8.f * deltaPhase * syncDirection, triMinBlep);
 			}
 		};
 
 		// Check if square value changed due to pulseWidth changing since last frame
 		if (frame.sqrEnabled) {
-			T sqrState = simd::ifelse(prevPhase < pulseWidth, 1.f, -1.f);
+			T sqrState = sqr(prevPhase, pulseWidth);
 			T magnitude = sqrState - lastSqrState;
 			T changed = (magnitude != 0.f);
 			insertDiscontinuity(changed, 1e-6f, magnitude, sqrMinBlep);
@@ -499,13 +510,31 @@ struct VCOProcessor {
 
 				if (frame.soft) {
 					// Soft sync: Reverse direction, continue from syncPhase
+
+					if (frame.sawEnabled) {
+						// Saw slope reverses
+						// +2 slope becomes -2 if deltaPhase > 0
+						// -2 slope becomes +2 if deltaPhase < 0
+						insertSlopeDiscontinuity(syncOccurred, syncSubsample, -4.f * deltaPhase, sawMinBlep);
+					}
+					if (frame.triEnabled) {
+						// Tri slope reverses
+						// -4 slope becomes +4 if 0.25 < phase < 0.75
+						// -4 slope becomes +4 otherwise
+						T descending = (0.25f < syncPhase) & (syncPhase < 0.75f);
+						T slopeJump = simd::ifelse(descending, 8.f, -8.f);
+						insertSlopeDiscontinuity(syncOccurred, syncSubsample, slopeJump * deltaPhase, triMinBlep);
+					}
+
 					syncDirection = simd::ifelse(syncOccurred, -syncDirection, syncDirection);
-					T endPhase = syncPhase + (-deltaPhase) * (1.f - syncSubsample);
+					deltaPhase = simd::ifelse(syncOccurred, -deltaPhase, deltaPhase);
+					T endPhase = syncPhase + deltaPhase * (1.f - syncSubsample);
 					processCrossings(syncPhase, endPhase, syncSubsample, 1.f, syncOccurred);
 					phase = simd::ifelse(syncOccurred, endPhase, phase);
 				}
 				else {
 					// Hard sync: Reset phase from syncPhase to 0 at syncSubsample, insert discontinuities
+
 					if (frame.sqrEnabled) {
 						// Check if square jumps from -1 to +1
 						T sqrJump = (syncPhase >= pulseWidth);
@@ -516,11 +545,18 @@ struct VCOProcessor {
 						insertDiscontinuity(syncOccurred, syncSubsample, -saw(syncPhase), sawMinBlep);
 					}
 					if (frame.triEnabled) {
+						// Tri jumps from tri(syncPhase) to tri(0) = 0
 						insertDiscontinuity(syncOccurred, syncSubsample, -tri(syncPhase), triMinBlep);
+						// If descending slope (-4), reset to ascending slope (+4)
+						T wasDescending = (0.25f < syncPhase) & (syncPhase < 0.75f);
+						insertSlopeDiscontinuity(syncOccurred & wasDescending, syncSubsample, 8.f * deltaPhase, triMinBlep);
 					}
 					if (frame.sinEnabled) {
 						// sin jumps from sin(syncPhase) to sin(0) = 0
 						insertDiscontinuity(syncOccurred, syncSubsample, -sin(syncPhase), sinMinBlep);
+						// Slope changes from sinDerivative(syncPhase) to sinDerivative(0) = 2pi
+						// T slopeJump = T(2 * M_PI) - sinDerivative(syncPhase);
+						// insertSlopeDiscontinuity(syncOccurred, syncSubsample, slopeJump * deltaPhase, sinMinBlep);
 					}
 
 					// Process crossings after sync (starting from phase 0)
@@ -542,7 +578,7 @@ struct VCOProcessor {
 		}
 
 		if (frame.sqrEnabled) {
-			frame.sqr = simd::ifelse(phase < pulseWidth, 1.f, -1.f);
+			frame.sqr = sqr(phase, pulseWidth);
 			lastSqrState = frame.sqr;
 			frame.sqr += sqrMinBlep.shift();
 			frame.sqr = dcFilter.process(dcFilterStateSqr, frame.sqr);
@@ -565,16 +601,24 @@ struct VCOProcessor {
 		return sin(phase);
 	}
 
+	static T sqr(T phase, T pulseWidth) {
+		return simd::ifelse(phase < pulseWidth, 1.f, -1.f);
+	}
 	static T saw(T phase) {
 		T x = phase + 0.5f;
 		x -= simd::trunc(x);
 		return 2 * x - 1;
 	}
 	static T tri(T phase) {
-		return 1 - 4 * simd::fmin(simd::fabs(phase - 0.25f), simd::fabs(phase - 1.25f));
+		return 1 - 4 * simd::fmin(simd::fabs(phase - 0.25f), 1.25f - phase);
 	}
 	static T sin(T phase) {
 		return sin_pi_9(1 - 2 * phase);
+	}
+	static T sinDerivative(T phase) {
+		phase += 0.25f;
+		phase -= simd::floor(phase);
+		return T(2 * M_PI) * sin(phase);
 	}
 };
 
