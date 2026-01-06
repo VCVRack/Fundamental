@@ -4,65 +4,163 @@
 using simd::float_4;
 
 
+/** Approximates tan(x) for x in [0, π*0.49].
+Max error: 1.8e-7
+*/
 template <typename T>
-static T clip(T x) {
-	// return std::tanh(x);
-	// Pade approximant of tanh
-	x = simd::clamp(x, -3.f, 3.f);
-	return x * (27 + x * x) / (27 + 9 * x * x);
+inline T tan_5_4(T x) {
+	T x2 = x * x;
+	return x * (T(1) + x2 * (T(-0.1122835153) + T(0.00114264086) * x2))
+		/ (T(1) + x2 * (T(-0.4456155807) + T(0.01634547741) * x2));
 }
 
 
+/** Approximates tanh(x) for x in [-4, 4].
+Max error: 1.1e-5
+*/
 template <typename T>
-struct LadderFilter {
-	T omega0;
-	T resonance = 1;
-	T state[4];
-	T input;
+inline T tanh_5_6(T x) {
+	x = simd::clamp(x, T(-4), T(4));
+	T x2 = x * x;
+	return x * (T(1450.73) + x2 * (T(152.494) + T(1.12357) * x2))
+		/ (T(1450.80) + x2 * (T(635.839) + x2 * (T(19.8913) + T(0.00188) * x2)));
+}
 
-	LadderFilter() {
-		reset();
-		setCutoff(0);
-	}
+
+/** Approximates ln(cosh(x)) for x >= 0.
+Max error: 6.2e-5 over [0, 10].
+*/
+template <typename T>
+inline T lncosh_5_3(T x) {
+	T x2 = x * x;
+	return x2 * T(0.5) * (T(1) + x * (T(0.5825995649809) + x * (T(0.29698351914621) + x * T(-0.0001879624507617))))
+		/ (T(1) + x * (T(0.5938203513329) + x * (T(0.4266725633273) + x * T(0.1456088792904))));
+}
+
+
+/** First antiderivative of tanh: F(x) = ln(cosh(x)).
+For numerical stability, uses asymptotic form for |x| > 10.
+*/
+template <typename T>
+inline T tanh_F1(T x) {
+	x = simd::abs(x);
+	// For |x| > 10, ln(cosh(x)) ≈ |x| - ln(2)
+	T asymptotic = x - T(0.6931471805599453);
+	T exact = lncosh_5_3(x);
+	return simd::ifelse(x < T(10), exact, asymptotic);
+}
+
+
+/** First-order ADAA (Antiderivative Anti-Aliasing) processor for tanh.
+Computes (F(x[n]) - F(x[n-1])) / (x[n] - x[n-1]) where F is the antiderivative.
+Falls back to tanh(midpoint) when x[n] ≈ x[n-1] (L'Hôpital's rule).
+*/
+template <typename T>
+struct TanhADAA1 {
+	T xPrev = T(0);
 
 	void reset() {
-		for (int i = 0; i < 4; i++) {
-			state[i] = 0;
-		}
+		xPrev = T(0);
 	}
 
-	void setCutoff(T cutoff) {
-		omega0 = 2 * T(M_PI) * cutoff;
-	}
+	T process(T x) {
+		const T eps = T(1e-5);
+		T diff = x - xPrev;
 
-	void process(T input, T dt) {
-		dsp::stepRK4(T(0), dt, state, 4, [&](T t, const T x[], T dxdt[]) {
-			T inputt = crossfade(this->input, input, t / dt);
-			T inputc = clip(inputt - resonance * x[3]);
-			T yc0 = clip(x[0]);
-			T yc1 = clip(x[1]);
-			T yc2 = clip(x[2]);
-			T yc3 = clip(x[3]);
+		// Normal case: finite difference of antiderivative
+		T Fx = tanh_F1(x);
+		T FxPrev = tanh_F1(xPrev);
+		T adaaResult = (Fx - FxPrev) / diff;
 
-			dxdt[0] = omega0 * (inputc - yc0);
-			dxdt[1] = omega0 * (yc0 - yc1);
-			dxdt[2] = omega0 * (yc1 - yc2);
-			dxdt[3] = omega0 * (yc2 - yc3);
-		});
+		// Fallback: use tanh at midpoint when diff is small
+		T midpoint = (x + xPrev) * T(0.5);
+		T fallbackResult = tanh_5_6(midpoint);
 
-		this->input = input;
-	}
+		T y = simd::ifelse(simd::abs(diff) > eps, adaaResult, fallbackResult);
 
-	T lowpass() {
-		return state[3];
-	}
-	T highpass() {
-		return clip((input - resonance * state[3]) - 4 * state[0] + 6 * state[1] - 4 * state[2] + state[3]);
+		xPrev = x;
+		return y;
 	}
 };
 
 
-static const int UPSAMPLE = 2;
+/** 4-pole (24dB/oct) transistor ladder filter using TPT/ZDF (Zero-Delay Feedback).
+Uses first-order ADAA on tanh saturation.
+*/
+template <typename T>
+struct LadderFilter {
+	T state[4];
+	TanhADAA1<T> adaa[5];
+
+	struct Frame {
+		T input;
+		/** Normalized cutoff frequency: 0 <= fc/fs < 0.5. */
+		T cutoff;
+		/** Resonance: 0-1, self-oscillation begins around 0.7. */
+		T resonance;
+
+		/** 4-pole (24dB/oct) lowpass output. */
+		T lowpass4;
+		/** 4-pole (24dB/oct) highpass output. */
+		T highpass4;
+	};
+
+	LadderFilter() {
+		reset();
+	}
+
+	void reset() {
+		for (int i = 0; i < 4; i++) {
+			state[i] = T(0);
+		}
+		for (int i = 0; i < 5; i++) {
+			adaa[i].reset();
+		}
+	}
+
+	void process(Frame& frame) {
+		// Pre-warp cutoff frequency using bilinear transform
+		T g = tan_5_4(T(M_PI) * frame.cutoff);
+		// Compute the one-pole lowpass gain coefficient G = g/(1+g)
+		T G = g / (T(1) + g);
+
+		// Global feedback path
+		// Apply resonance scaling and soft-clip with tanh (with ADAA)
+		T feedback = adaa[4].process(frame.resonance * state[3]);
+		T u = frame.input - feedback;
+
+		// Stage 0
+		T sat0 = adaa[0].process(u);
+		T v0 = G * (sat0 - state[0]);
+		T y0 = v0 + state[0];
+		state[0] = y0 + v0;
+
+		// Stage 1
+		T sat1 = adaa[1].process(y0);
+		T v1 = G * (sat1 - state[1]);
+		T y1 = v1 + state[1];
+		state[1] = y1 + v1;
+
+		// Stage 2
+		T sat2 = adaa[2].process(y1);
+		T v2 = G * (sat2 - state[2]);
+		T y2 = v2 + state[2];
+		state[2] = y2 + v2;
+
+		// Stage 3
+		T sat3 = adaa[3].process(y2);
+		T v3 = G * (sat3 - state[3]);
+		T y3 = v3 + state[3];
+		state[3] = y3 + v3;
+
+		frame.lowpass4 = y3;
+
+		// Binomial expansion (1-H)^4 = 1 - 4H + 6H^2 - 4H^3 + H^4
+		// Using saturated input and stage outputs
+		frame.highpass4 = sat0 - T(4) * y0 + T(6) * y1 - T(4) * y2 + y3;
+	}
+};
+
 
 struct VCF : Module {
 	enum ParamIds {
@@ -90,9 +188,6 @@ struct VCF : Module {
 	};
 
 	LadderFilter<float_4> filters[4];
-	// Upsampler<UPSAMPLE, 8> inputUpsampler;
-	// Decimator<UPSAMPLE, 8> lowpassDecimator;
-	// Decimator<UPSAMPLE, 8> highpassDecimator;
 
 	VCF() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS);
@@ -100,9 +195,9 @@ struct VCF : Module {
 		// freq = C4 * 2^(10 * param - 5)
 		// or
 		// param = (log2(freq / C4) + 5) / 10
-		const float minFreq = (std::log2(dsp::FREQ_C4 / 8000.f) + 5) / 10;
-		const float maxFreq = (std::log2(8000.f / dsp::FREQ_C4) + 5) / 10;
-		const float defaultFreq = (0.f + 5) / 10;
+		const float minFreq = (std::log2(8.f / dsp::FREQ_C4) + 5) / 10;
+		const float maxFreq = (std::log2(20000.f / dsp::FREQ_C4) + 5) / 10;
+		const float defaultFreq = (minFreq + maxFreq) / 2.f;
 		configParam(FREQ_PARAM, minFreq, maxFreq, defaultFreq, "Cutoff frequency", " Hz", std::pow(2, 10.f), dsp::FREQ_C4 / std::pow(2, 5.f));
 		configParam(RES_PARAM, 0.f, 1.f, 0.f, "Resonance", "%", 0.f, 100.f);
 		configParam(RES_CV_PARAM, -1.f, 1.f, 0.f, "Resonance CV", "%", 0.f, 100.f);
@@ -127,8 +222,9 @@ struct VCF : Module {
 	}
 
 	void onReset() override {
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < 4; i++) {
 			filters[i].reset();
+		}
 	}
 
 	void process(const ProcessArgs& args) override {
@@ -148,63 +244,37 @@ struct VCF : Module {
 		int channels = std::max(1, inputs[IN_INPUT].getChannels());
 
 		for (int c = 0; c < channels; c += 4) {
-			auto& filter = filters[c / 4];
+			LadderFilter<float_4>::Frame frame;
 
+			// Input
 			float_4 input = inputs[IN_INPUT].getVoltageSimd<float_4>(c) / 5.f;
 
-			// Drive gain
+			// Drive
 			float_4 drive = driveParam + inputs[DRIVE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * driveCvParam;
-			drive = clamp(drive, -1.f, 1.f);
+			drive = simd::clamp(drive, -1.f, 1.f);
 			float_4 gain = simd::pow(1.f + drive, 5);
 			input *= gain;
 
 			// Add -120dB noise to bootstrap self-oscillation
 			input += 1e-6f * (2.f * random::uniform() - 1.f);
+			frame.input = input;
 
-			// Set resonance
+			// Resonance
 			float_4 resonance = resParam + inputs[RES_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * resCvParam;
-			resonance = clamp(resonance, 0.f, 1.f);
-			filter.resonance = simd::pow(resonance, 2) * 10.f;
+			resonance = simd::clamp(resonance, 0.f, 1.f);
+			frame.resonance = resonance * resonance * 10.f;
 
-			// Get pitch
+			// Cutoff frequency
 			float_4 pitch = freqParam + inputs[FREQ_INPUT].getPolyVoltageSimd<float_4>(c) * freqCvParam;
-			// Set cutoff
 			float_4 cutoff = dsp::FREQ_C4 * dsp::exp2_taylor5(pitch);
-			// Without oversampling, we must limit to 8000 Hz or so @ 44100 Hz
-			cutoff = clamp(cutoff, 1.f, args.sampleRate * 0.18f);
-			filter.setCutoff(cutoff);
+			frame.cutoff = simd::clamp(cutoff * args.sampleTime, 0.f, 0.49f);
 
-			// Upsample input
-			// float dt = args.sampleTime / UPSAMPLE;
-			// float inputBuf[UPSAMPLE];
-			// float lowpassBuf[UPSAMPLE];
-			// float highpassBuf[UPSAMPLE];
-			// inputUpsampler.process(input, inputBuf);
-			// for (int i = 0; i < UPSAMPLE; i++) {
-			// 	// Step the filter
-			// 	filter.process(inputBuf[i], dt);
-			// 	if (outputs[LPF_OUTPUT].isConnected())
-			// 		lowpassBuf[i] = filter.lowpass();
-			// 	if (outputs[HPF_OUTPUT].isConnected())
-			// 		highpassBuf[i] = filter.highpass();
-			// }
+			// Process
+			filters[c / 4].process(frame);
 
-			// // Set outputs
-			// if (outputs[LPF_OUTPUT].isConnected()) {
-			// 	outputs[LPF_OUTPUT].setVoltage(5.f * lowpassDecimator.process(lowpassBuf));
-			// }
-			// if (outputs[HPF_OUTPUT].isConnected()) {
-			// 	outputs[HPF_OUTPUT].setVoltage(5.f * highpassDecimator.process(highpassBuf));
-			// }
-
-			// Set outputs
-			filter.process(input, args.sampleTime);
-			if (outputs[LPF_OUTPUT].isConnected()) {
-				outputs[LPF_OUTPUT].setVoltageSimd(5.f * filter.lowpass(), c);
-			}
-			if (outputs[HPF_OUTPUT].isConnected()) {
-				outputs[HPF_OUTPUT].setVoltageSimd(5.f * filter.highpass(), c);
-			}
+			// Outputs
+			outputs[LPF_OUTPUT].setVoltageSimd(frame.lowpass4 * 5.f, c);
+			outputs[HPF_OUTPUT].setVoltageSimd(frame.highpass4 * 5.f, c);
 		}
 
 		outputs[LPF_OUTPUT].setChannels(channels);
@@ -212,7 +282,7 @@ struct VCF : Module {
 	}
 
 	void paramsFromJson(json_t* rootJ) override {
-		// These attenuators didn't exist in version <2.0, so set to 1 in case they are not overwritten.
+		// These attenuators didn't exist in version <2, so set to 1 in case they are not overwritten.
 		params[RES_CV_PARAM].setValue(1.f);
 		params[DRIVE_CV_PARAM].setValue(1.f);
 
