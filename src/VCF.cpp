@@ -1,53 +1,56 @@
 #include "plugin.hpp"
 
 
-using simd::float_4;
-
-
-/** Approximates tan(x) for x in [0, π*0.49].
-Max error: 1.8e-7
+/** Approximates tan(pi*x) for x in [0, 0.5).
+Optimized coefficients for max rel error: 1.18e-05.
 */
 template <typename T>
-inline T tan_5_4(T x) {
+inline T tan_pi_1_2(T x) {
 	T x2 = x * x;
-	return x * (T(1) + x2 * (T(-0.1122835153) + T(0.00114264086) * x2))
-		/ (T(1) + x2 * (T(-0.4456155807) + T(0.01634547741) * x2));
+	T num = T(1) + T(-0.9622845476351338) * x2;
+	T den = T(1) + x2 * (T(-4.252711329946427) + T(1.0108965067534537) * x2);
+	return T(M_PI) * x * num / den;
 }
 
 
 /** Approximates tanh(x) for x in [-4, 4].
-Max error: 1.1e-5
+Optimized coefficients for max rel error: 5.56e-07.
 */
 template <typename T>
-inline T tanh_5_6(T x) {
+inline T tanh_2_3(T x) {
 	x = simd::clamp(x, T(-4), T(4));
 	T x2 = x * x;
-	return x * (T(1450.73) + x2 * (T(152.494) + T(1.12357) * x2))
-		/ (T(1450.80) + x2 * (T(635.839) + x2 * (T(19.8913) + T(0.00188) * x2)));
+	T num = T(1) + x2 * (T(0.11823399425250458) + x2 * T(0.0017593473306865004));
+	T den = T(1) + x2 * (T(0.4515649138214517) + x2 * (T(0.01895237471013944) + x2 * T(7.340776670083926e-05)));
+	return x * num / den;
 }
 
 
-/** Approximates ln(cosh(x)) for x >= 0.
-Max error: 6.2e-5 over [0, 10].
+/** Approximates ln(cosh(x)) for all x.
+Optimized coefficients for max deriv rel error: 2.18e-04.
+Max func abs error: 2.33e-04.
 */
 template <typename T>
-inline T lncosh_5_3(T x) {
-	T x2 = x * x;
-	return x2 * T(0.5) * (T(1) + x * (T(0.5825995649809) + x * (T(0.29698351914621) + x * T(-0.0001879624507617))))
-		/ (T(1) + x * (T(0.5938203513329) + x * (T(0.4266725633273) + x * T(0.1456088792904))));
-}
-
-
-/** First antiderivative of tanh: F(x) = ln(cosh(x)).
-For numerical stability, uses asymptotic form for |x| > 10.
-*/
-template <typename T>
-inline T tanh_F1(T x) {
+inline T ln_cosh_3_3(T x) {
 	x = simd::abs(x);
-	// For |x| > 10, ln(cosh(x)) ≈ |x| - ln(2)
-	T asymptotic = x - T(0.6931471805599453);
-	T exact = lncosh_5_3(x);
-	return simd::ifelse(x < T(10), exact, asymptotic);
+	T x2 = x * x;
+	T num = T(1) + x * (T(0.5536821172234367) + x * (T(0.25181887093756017) + x * T(-0.00022483065845568806)));
+	T den = T(1) + x * (T(0.5571167780242312) + x * (T(0.4011383699340152) + x * T(0.12250932588907415)));
+	return x2 * T(0.5) * num / den;
+}
+
+
+/** Approximates ln(cosh(x)) for all x.
+Optimized coefficients for max deriv rel error: 1.73e-05.
+Max func abs error: 1.59e-05.
+*/
+template <typename T>
+inline T ln_cosh_3_4(T x) {
+	x = simd::abs(x);
+	T x2 = x * x;
+	T num = T(1) + x * (T(0.6818733052030992) + x * (T(0.3310714761981197) + x * T(0.07328250587472884)));
+	T den = T(1) + x * (T(0.6818667996836973) + x * (T(0.4970931090131887) + x * (T(0.18905704720922234) + x * T(0.0366985697841935))));
+	return x2 * T(0.5) * num / den;
 }
 
 
@@ -68,13 +71,13 @@ struct TanhADAA1 {
 		T diff = x - xPrev;
 
 		// Normal case: finite difference of antiderivative
-		T Fx = tanh_F1(x);
-		T FxPrev = tanh_F1(xPrev);
+		T Fx = ln_cosh_3_4(x);
+		T FxPrev = ln_cosh_3_4(xPrev);
 		T adaaResult = (Fx - FxPrev) / diff;
 
 		// Fallback: use tanh at midpoint when diff is small
 		T midpoint = (x + xPrev) * T(0.5);
-		T fallbackResult = tanh_5_6(midpoint);
+		T fallbackResult = tanh_2_3(midpoint);
 
 		T y = simd::ifelse(simd::abs(diff) > eps, adaaResult, fallbackResult);
 
@@ -120,7 +123,7 @@ struct LadderFilter {
 
 	void process(Frame& frame) {
 		// Pre-warp cutoff frequency using bilinear transform
-		T g = tan_5_4(T(M_PI) * frame.cutoff);
+		T g = tan_pi_1_2(frame.cutoff);
 		// Compute the one-pole lowpass gain coefficient G = g/(1+g)
 		T G = g / (T(1) + g);
 
@@ -156,10 +159,12 @@ struct LadderFilter {
 		frame.lowpass4 = y3;
 
 		// Binomial expansion (1-H)^4 = 1 - 4H + 6H^2 - 4H^3 + H^4
-		// Using saturated input and stage outputs
 		frame.highpass4 = sat0 - T(4) * y0 + T(6) * y1 - T(4) * y2 + y3;
 	}
 };
+
+
+using simd::float_4;
 
 
 struct VCF : Module {
@@ -196,7 +201,7 @@ struct VCF : Module {
 		// or
 		// param = (log2(freq / C4) + 5) / 10
 		const float minFreq = (std::log2(8.f / dsp::FREQ_C4) + 5) / 10;
-		const float maxFreq = (std::log2(20000.f / dsp::FREQ_C4) + 5) / 10;
+		const float maxFreq = (std::log2(22000.f / dsp::FREQ_C4) + 5) / 10;
 		const float defaultFreq = (minFreq + maxFreq) / 2.f;
 		configParam(FREQ_PARAM, minFreq, maxFreq, defaultFreq, "Cutoff frequency", " Hz", std::pow(2, 10.f), dsp::FREQ_C4 / std::pow(2, 5.f));
 		configParam(RES_PARAM, 0.f, 1.f, 0.f, "Resonance", "%", 0.f, 100.f);
@@ -267,7 +272,7 @@ struct VCF : Module {
 			// Cutoff frequency
 			float_4 pitch = freqParam + inputs[FREQ_INPUT].getPolyVoltageSimd<float_4>(c) * freqCvParam;
 			float_4 cutoff = dsp::FREQ_C4 * dsp::exp2_taylor5(pitch);
-			frame.cutoff = simd::clamp(cutoff * args.sampleTime, 0.f, 0.49f);
+			frame.cutoff = simd::clamp(cutoff * args.sampleTime, 0.f, 0.499f);
 
 			// Process
 			filters[c / 4].process(frame);
