@@ -9,15 +9,15 @@ inline T rcp_newton1(T x) {
 }
 
 
-/** Approximates tan(pi*x) for x in [0, 0.5).
-Optimized coefficients for max relative error: 1.18e-05.
+/** Approximates tan(x) for x in [0, pi*0.5).
+Optimized coefficients for max relative error: 2.78e-05.
 */
 template <typename T>
-inline T tan_pi_1_2(T x) {
+inline T tan_1_2(T x) {
 	T x2 = x * x;
-	T num = T(1) + T(-0.9622845476351338) * x2;
-	T den = T(1) + x2 * (T(-4.252711329946427) + T(1.0108965067534537) * x2);
-	return T(M_PI) * x * num / den;
+	T num = T(1) + x2 * T(-0.09776575533683811);
+	T den = T(1) + x2 * (T(-0.43119539396382) + x2 * T(0.0105011966117302));
+	return x * num / den;
 }
 
 
@@ -62,7 +62,7 @@ inline T ln_cosh_3_4(T x) {
 }
 
 
-/** 1st-order antiderivative anti-aliasing (ADAA) for tanh. */
+/** 1st-order ADAA for tanh. */
 template <typename T>
 struct TanhADAA1 {
 	T xPrev = T(0);
@@ -92,7 +92,19 @@ struct TanhADAA1 {
 };
 
 
-/** 4-pole transistor ladder filter using TPT/ZDF (Zero-Delay Feedback).
+/** 4-pole transistor ladder filter using TPT (Topology-Preserving Transform).
+Feedback uses previous sample (i.e. 1 sample delayed) to avoid iterative solving.
+
+For the equivalent state / trapezoidal integrator approach:
+Zavalishin, V. "The Art of VA Filter Design". 2018
+https://www.native-instruments.com/fileadmin/ni_media/downloads/pdf/VAFilterDesign_2.1.2.pdf
+
+For Cytomic's formulation:
+https://cytomic.com/files/dsp/SvfLinearTrapOptimised2.pdf
+
+For antiderivative anti-aliasing (ADAA):
+Parker, J., Zavalishin, V., Le Bihan, E. "Reducing the Aliasing of Nonlinear Waveshaping Using Continuous-Time Convolution". DAFx 2016
+https://dafx.de/paper-archive/2016/dafxpapers/20-DAFx-16_paper_41-PN.pdf
 */
 template <typename T>
 struct LadderFilter {
@@ -126,13 +138,14 @@ struct LadderFilter {
 
 	void process(Frame& frame) {
 		// Pre-warped frequency
-		T g = tan_pi_1_2(frame.cutoff);
+		T g = tan_1_2(T(M_PI) * frame.cutoff);
 		// Integrator gain
 		T G = g / (T(1) + g);
 
 		// Feedback path
 		// Apply resonance scaling and soft-clip with tanh
 		T feedback = adaa[4].process(frame.resonance * state[3]);
+		// T feedback = tanh_2_3(frame.resonance * state[3]);
 		T u = frame.input - feedback;
 
 		// Stage 0
