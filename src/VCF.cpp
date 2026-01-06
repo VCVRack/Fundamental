@@ -9,6 +9,14 @@ inline T rcp_newton1(T x) {
 }
 
 
+/** Approximates 1/sqrt(x), using the rsqrt() instruction and 1 Newton-Raphson refinement */
+template <typename T>
+inline T rsqrt_newton1(T x) {
+	T y = simd::rsqrt(x);
+	return y * (T(3) - x * y * y) * T(0.5);
+}
+
+
 /** Approximates tan(x) for x in [0, pi*0.5).
 Optimized coefficients for max relative error: 2.78e-05.
 */
@@ -21,72 +29,37 @@ inline T tan_1_2(T x) {
 }
 
 
-/** Approximates tanh(x) for x in [-4, 4].
-Optimized coefficients for max relative error: 5.56e-07.
-*/
+/** 1st-order ADAA for softclip: f(x) = x/sqrt(x²+1), F(x) = sqrt(x²+1). */
 template <typename T>
-inline T tanh_2_3(T x) {
-	x = simd::clamp(x, T(-4), T(4));
-	T x2 = x * x;
-	T num = T(1) + x2 * (T(0.11823399425250458) + x2 * T(0.0017593473306865004));
-	T den = T(1) + x2 * (T(0.4515649138214517) + x2 * (T(0.01895237471013944) + x2 * T(7.340776670083926e-05)));
-	return x * num / den;
-}
-
-
-/** Approximates ln(cosh(x)) for all x.
-Optimized coefficients for max derivative relative error: 2.18e-04.
-Max absolute error: 2.33e-04.
-*/
-template <typename T>
-inline T ln_cosh_3_3(T x) {
-	x = simd::abs(x);
-	T x2 = x * x;
-	T num = T(1) + x * (T(0.5536821172234367) + x * (T(0.25181887093756017) + x * T(-0.00022483065845568806)));
-	T den = T(1) + x * (T(0.5571167780242312) + x * (T(0.4011383699340152) + x * T(0.12250932588907415)));
-	return x2 * T(0.5) * num / den;
-}
-
-
-/** Approximates ln(cosh(x)) for all x.
-Optimized coefficients for max derivative relative error: 1.73e-05.
-Max absolute error: 1.59e-05.
-*/
-template <typename T>
-inline T ln_cosh_3_4(T x) {
-	x = simd::abs(x);
-	T x2 = x * x;
-	T num = T(1) + x * (T(0.6818733052030992) + x * (T(0.3310714761981197) + x * T(0.07328250587472884)));
-	T den = T(1) + x * (T(0.6818667996836973) + x * (T(0.4970931090131887) + x * (T(0.18905704720922234) + x * T(0.0366985697841935))));
-	return x2 * T(0.5) * num / den;
-}
-
-
-/** 1st-order ADAA for tanh. */
-template <typename T>
-struct TanhADAA1 {
+struct SoftclipADAA1 {
 	T xPrev = T(0);
-	T FxPrev = T(0);
+	T fPrev = T(0); // f(0) = 0
+	T FPrev = T(1); // F(0) = sqrt(0+1) = 1
 
 	void reset() {
 		xPrev = T(0);
-		FxPrev = T(0);
+		fPrev = T(0);
+		FPrev = T(1);
 	}
 
 	T process(T x) {
 		const T eps = T(1e-5);
 		T diff = x - xPrev;
 
-		T Fx = ln_cosh_3_3(x);
-		T adaaResult = (Fx - FxPrev) / diff;
+		// f = x/sqrt(x^2+1), F = sqrt(x^2+1)
+		T x2p1 = x * x + T(1);
+		T r = rsqrt_newton1(x2p1);
+		T f = x * r;
+		T F = x2p1 * r;
 
-		T midpoint = (x + xPrev) * T(0.5);
-		T fallbackResult = tanh_2_3(midpoint);
+		T adaaResult = (F - FPrev) * rcp_newton1(diff);
+		T fallbackResult = (f + fPrev) * T(0.5);
 
 		T y = simd::ifelse(simd::abs(diff) > eps, adaaResult, fallbackResult);
 
 		xPrev = x;
-		FxPrev = Fx;
+		fPrev = f;
+		FPrev = F;
 		return y;
 	}
 };
@@ -109,7 +82,7 @@ https://dafx.de/paper-archive/2016/dafxpapers/20-DAFx-16_paper_41-PN.pdf
 template <typename T>
 struct LadderFilter {
 	T state[4];
-	TanhADAA1<T> adaa[5];
+	SoftclipADAA1<T> adaa[5];
 
 	struct Frame {
 		T input;
@@ -143,35 +116,29 @@ struct LadderFilter {
 		T G = g / (T(1) + g);
 
 		// Feedback path
-		// Apply resonance scaling and soft-clip with tanh
 		T feedback = adaa[4].process(frame.resonance * state[3]);
-		// T feedback = tanh_2_3(frame.resonance * state[3]);
 		T u = frame.input - feedback;
 
 		// Stage 0
 		T sat0 = adaa[0].process(u);
-		// T sat0 = tanh_2_3(u);
 		T v0 = G * (sat0 - state[0]);
 		T y0 = v0 + state[0];
 		state[0] = y0 + v0;
 
 		// Stage 1
 		T sat1 = adaa[1].process(y0);
-		// T sat1 = tanh_2_3(y0);
 		T v1 = G * (sat1 - state[1]);
 		T y1 = v1 + state[1];
 		state[1] = y1 + v1;
 
 		// Stage 2
 		T sat2 = adaa[2].process(y1);
-		// T sat2 = tanh_2_3(y1);
 		T v2 = G * (sat2 - state[2]);
 		T y2 = v2 + state[2];
 		state[2] = y2 + v2;
 
 		// Stage 3
 		T sat3 = adaa[3].process(y2);
-		// T sat3 = tanh_2_3(y2);
 		T v3 = G * (sat3 - state[3]);
 		T y3 = v3 + state[3];
 		state[3] = y3 + v3;
