@@ -62,7 +62,7 @@ inline T ln_cosh_3_4(T x) {
 }
 
 
-/** First-order ADAA for tanh, caching F(x) between samples. */
+/** 1st-order antiderivative anti-aliasing (ADAA) for tanh. */
 template <typename T>
 struct TanhADAA1 {
 	T xPrev = T(0);
@@ -92,8 +92,7 @@ struct TanhADAA1 {
 };
 
 
-/** 4-pole (24dB/oct) transistor ladder filter using TPT/ZDF (Zero-Delay Feedback).
-Uses first-order ADAA on tanh saturation.
+/** 4-pole transistor ladder filter using TPT/ZDF (Zero-Delay Feedback).
 */
 template <typename T>
 struct LadderFilter {
@@ -102,14 +101,13 @@ struct LadderFilter {
 
 	struct Frame {
 		T input;
-		/** Normalized cutoff frequency: 0 <= fc/fs < 0.5. */
+		/** Normalized cutoff frequency fc/fs in [0, 0.5) */
 		T cutoff;
-		/** Resonance: 0-1, self-oscillation begins around 0.7. */
 		T resonance;
 
-		/** 4-pole (24dB/oct) lowpass output. */
+		/** 4-pole lowpass output. */
 		T lowpass4;
-		/** 4-pole (24dB/oct) highpass output. */
+		/** 4-pole highpass output. */
 		T highpass4;
 	};
 
@@ -127,13 +125,13 @@ struct LadderFilter {
 	}
 
 	void process(Frame& frame) {
-		// Pre-warp cutoff frequency using bilinear transform
+		// Pre-warped frequency
 		T g = tan_pi_1_2(frame.cutoff);
-		// Compute the one-pole lowpass gain coefficient G = g/(1+g)
+		// Integrator gain
 		T G = g / (T(1) + g);
 
-		// Global feedback path
-		// Apply resonance scaling and soft-clip with tanh (with ADAA)
+		// Feedback path
+		// Apply resonance scaling and soft-clip with tanh
 		T feedback = adaa[4].process(frame.resonance * state[3]);
 		T u = frame.input - feedback;
 
@@ -166,8 +164,6 @@ struct LadderFilter {
 		state[3] = y3 + v3;
 
 		frame.lowpass4 = y3;
-
-		// Binomial expansion (1-H)^4 = 1 - 4H + 6H^2 - 4H^3 + H^4
 		frame.highpass4 = sat0 - T(4) * y0 + T(6) * y1 - T(4) * y2 + y3;
 	}
 };
@@ -276,7 +272,7 @@ struct VCF : Module {
 			// Resonance
 			float_4 resonance = resParam + inputs[RES_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * resCvParam;
 			resonance = simd::clamp(resonance, 0.f, 1.f);
-			frame.resonance = resonance * resonance * 10.f;
+			frame.resonance = simd::pow(resonance, 2) * 10.f;
 
 			// Cutoff frequency
 			float_4 pitch = freqParam + inputs[FREQ_INPUT].getPolyVoltageSimd<float_4>(c) * freqCvParam;
