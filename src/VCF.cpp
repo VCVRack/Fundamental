@@ -1,8 +1,16 @@
 #include "plugin.hpp"
 
 
+/** Approximates 1/x, using the rcp() instruction and 1 Newton-Raphson refinement */
+template <typename T>
+inline T rcp_newton1(T x) {
+	T r = simd::rcp(x);
+	return r * (T(2) - x * r);
+}
+
+
 /** Approximates tan(pi*x) for x in [0, 0.5).
-Optimized coefficients for max rel error: 1.18e-05.
+Optimized coefficients for max relative error: 1.18e-05.
 */
 template <typename T>
 inline T tan_pi_1_2(T x) {
@@ -14,7 +22,7 @@ inline T tan_pi_1_2(T x) {
 
 
 /** Approximates tanh(x) for x in [-4, 4].
-Optimized coefficients for max rel error: 5.56e-07.
+Optimized coefficients for max relative error: 5.56e-07.
 */
 template <typename T>
 inline T tanh_2_3(T x) {
@@ -27,8 +35,8 @@ inline T tanh_2_3(T x) {
 
 
 /** Approximates ln(cosh(x)) for all x.
-Optimized coefficients for max deriv rel error: 2.18e-04.
-Max func abs error: 2.33e-04.
+Optimized coefficients for max derivative relative error: 2.18e-04.
+Max absolute error: 2.33e-04.
 */
 template <typename T>
 inline T ln_cosh_3_3(T x) {
@@ -41,8 +49,8 @@ inline T ln_cosh_3_3(T x) {
 
 
 /** Approximates ln(cosh(x)) for all x.
-Optimized coefficients for max deriv rel error: 1.73e-05.
-Max func abs error: 1.59e-05.
+Optimized coefficients for max derivative relative error: 1.73e-05.
+Max absolute error: 1.59e-05.
 */
 template <typename T>
 inline T ln_cosh_3_4(T x) {
@@ -54,34 +62,31 @@ inline T ln_cosh_3_4(T x) {
 }
 
 
-/** First-order ADAA (Antiderivative Anti-Aliasing) processor for tanh.
-Computes (F(x[n]) - F(x[n-1])) / (x[n] - x[n-1]) where F is the antiderivative.
-Falls back to tanh(midpoint) when x[n] ≈ x[n-1] (L'Hôpital's rule).
-*/
+/** First-order ADAA for tanh, caching F(x) between samples. */
 template <typename T>
 struct TanhADAA1 {
 	T xPrev = T(0);
+	T FxPrev = T(0);
 
 	void reset() {
 		xPrev = T(0);
+		FxPrev = T(0);
 	}
 
 	T process(T x) {
 		const T eps = T(1e-5);
 		T diff = x - xPrev;
 
-		// Normal case: finite difference of antiderivative
-		T Fx = ln_cosh_3_4(x);
-		T FxPrev = ln_cosh_3_4(xPrev);
+		T Fx = ln_cosh_3_3(x);
 		T adaaResult = (Fx - FxPrev) / diff;
 
-		// Fallback: use tanh at midpoint when diff is small
 		T midpoint = (x + xPrev) * T(0.5);
 		T fallbackResult = tanh_2_3(midpoint);
 
 		T y = simd::ifelse(simd::abs(diff) > eps, adaaResult, fallbackResult);
 
 		xPrev = x;
+		FxPrev = Fx;
 		return y;
 	}
 };
@@ -134,24 +139,28 @@ struct LadderFilter {
 
 		// Stage 0
 		T sat0 = adaa[0].process(u);
+		// T sat0 = tanh_2_3(u);
 		T v0 = G * (sat0 - state[0]);
 		T y0 = v0 + state[0];
 		state[0] = y0 + v0;
 
 		// Stage 1
 		T sat1 = adaa[1].process(y0);
+		// T sat1 = tanh_2_3(y0);
 		T v1 = G * (sat1 - state[1]);
 		T y1 = v1 + state[1];
 		state[1] = y1 + v1;
 
 		// Stage 2
 		T sat2 = adaa[2].process(y1);
+		// T sat2 = tanh_2_3(y1);
 		T v2 = G * (sat2 - state[2]);
 		T y2 = v2 + state[2];
 		state[2] = y2 + v2;
 
 		// Stage 3
 		T sat3 = adaa[3].process(y2);
+		// T sat3 = tanh_2_3(y2);
 		T v3 = G * (sat3 - state[3]);
 		T y3 = v3 + state[3];
 		state[3] = y3 + v3;
