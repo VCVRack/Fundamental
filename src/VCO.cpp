@@ -1,250 +1,629 @@
 #include "plugin.hpp"
 
 
-using simd::float_4;
+// TODO: Remove these DSP classes after released in Rack SDK
 
-
-// Accurate only on [0, 1]
+/** Evaluates sin(pi x) for x in [-1, 1].
+9th order polynomial with roots at 0, -1, and 1.
+Optimized coefficients for best THD (-103.7 dB) and max absolute error (6.68e-06).
+*/
 template <typename T>
-T sin2pi_pade_05_7_6(T x) {
-	x -= 0.5f;
-	return (T(-6.28319) * x + T(35.353) * simd::pow(x, 3) - T(44.9043) * simd::pow(x, 5) + T(16.0951) * simd::pow(x, 7))
-	       / (1 + T(0.953136) * simd::pow(x, 2) + T(0.430238) * simd::pow(x, 4) + T(0.0981408) * simd::pow(x, 6));
+inline T sin_pi_9(T x) {
+	T x2 = x * x;
+	return x * (T(1) - x2) * (T(3.141521108990) + x2 * (T(-2.024773594411) + x2 * (T(0.517493161073) + x2 * T(-0.063691343423))));
 }
 
-template <typename T>
-T sin2pi_pade_05_5_4(T x) {
-	x -= 0.5f;
-	return (T(-6.283185307) * x + T(33.19863968) * simd::pow(x, 3) - T(32.44191367) * simd::pow(x, 5))
-	       / (1 + T(1.296008659) * simd::pow(x, 2) + T(0.7028072946) * simd::pow(x, 4));
-}
+/** One-pole low-pass filter, exponential moving average.
+-6 dB/octave slope.
+Useful for leaky integrators and smoothing control signals.
+Has a pole at (1 - alpha) and a zero at 0.
+*/
+struct OnePoleLowpass {
+	float alpha = 0.f;
 
-template <typename T>
-T expCurve(T x) {
-	return (3 + x * (-13 + 5 * x)) / (3 + 2 * x);
-}
-
-
-template <int OVERSAMPLE, int QUALITY, typename T>
-struct VoltageControlledOscillator {
-	bool analog = false;
-	bool soft = false;
-	bool syncEnabled = false;
-	// For optimizing in serial code
-	int channels = 0;
-
-	T lastSyncValue = 0.f;
-	T phase = 0.f;
-	T freq = 0.f;
-	T pulseWidth = 0.5f;
-	T syncDirection = 1.f;
-	T sqrState = 1.f;
-
-	dsp::TRCFilter<T> sqrFilter;
-
-	dsp::MinBlepGenerator<QUALITY, OVERSAMPLE, T> sqrMinBlep;
-	dsp::MinBlepGenerator<QUALITY, OVERSAMPLE, T> sawMinBlep;
-	dsp::MinBlepGenerator<QUALITY, OVERSAMPLE, T> triMinBlep;
-	dsp::MinBlepGenerator<QUALITY, OVERSAMPLE, T> sinMinBlep;
-
-	T sqrValue = 0.f;
-	T sawValue = 0.f;
-	T triValue = 0.f;
-	T sinValue = 0.f;
-
-	void setPulseWidth(T pulseWidth) {
-		const float pwMin = 0.01f;
-		this->pulseWidth = simd::clamp(pulseWidth, pwMin, 1.f - pwMin);
+	/** Sets the cutoff frequency where gain is -3 dB.
+	f = f_c / f_s, the normalized frequency in the range [0, 0.5].
+	*/
+	void setCutoff(float f) {
+		alpha = 1.f - std::exp(-2.f * M_PI * f);
 	}
 
-	void process(float deltaTime, T syncValue) {
-		// Advance phase
-		T deltaPhase = simd::clamp(freq * deltaTime, 0.f, 0.35f);
-		if (soft) {
-			// Reverse direction
+	template <typename T = float>
+	struct State {
+		T y = 0.f;
+	};
+
+	/** Advances the state with input x. Returns the output. */
+	template <typename T>
+	T process(State<T>& s, T x) const {
+		s.y += alpha * (x - s.y);
+		return s.y;
+	}
+
+	/** Computes the frequency response at normalized frequency f. */
+	std::complex<float> getResponse(float f) const {
+		float omega = 2.f * M_PI * f;
+		std::complex<float> z = std::exp(std::complex<float>(0.f, omega));
+		return alpha * z / (z - (1.f - alpha));
+	}
+	float getMagnitude(float f) const {
+		return std::abs(getResponse(f));
+	}
+	float getPhase(float f) const {
+		return std::arg(getResponse(f));
+	}
+};
+
+
+/** One-pole high-pass filter.
+6 dB/octave slope.
+Useful for DC-blocking.
+Has a pole at (1 - alpha) and a zero at 1.
+*/
+struct OnePoleHighpass : OnePoleLowpass {
+	template <typename T>
+	T process(State<T>& s, T x) const {
+		return x - OnePoleLowpass::process(s, x);
+	}
+
+	std::complex<float> getResponse(float f) const {
+		return 1.f - OnePoleLowpass::getResponse(f);
+	}
+	float getMagnitude(float f) const {
+		return std::abs(getResponse(f));
+	}
+	float getPhase(float f) const {
+		return std::arg(getResponse(f));
+	}
+};
+
+
+/** Simple radix-2 Cooley-Tukey FFT. n must be a power of 2. */
+template <typename T>
+void fft(std::complex<T>* x, int n, bool inverse = false) {
+	// Bit reversal permutation
+	for (int i = 1, j = 0; i < n; i++) {
+		int bit = n >> 1;
+		for (; j & bit; bit >>= 1)
+			j ^= bit;
+		j ^= bit;
+		if (i < j)
+			std::swap(x[i], x[j]);
+	}
+
+	// Cooley-Tukey butterflies
+	for (int len = 2; len <= n; len <<= 1) {
+		T ang = (inverse ? 1 : -1) * 2 * M_PI / len;
+		std::complex<T> wn(std::cos(ang), std::sin(ang));
+		for (int i = 0; i < n; i += len) {
+			std::complex<T> w(1);
+			for (int j = 0; j < len / 2; j++) {
+				std::complex<T> u = x[i + j];
+				std::complex<T> v = x[i + j + len / 2] * w;
+				x[i + j] = u + v;
+				x[i + j + len / 2] = u - v;
+				w *= wn;
+			}
+		}
+	}
+
+	if (inverse) {
+		for (int i = 0; i < n; i++)
+			x[i] /= T(n);
+	}
+}
+
+
+template <typename T>
+inline T blackmanHarris(T p) {
+	return
+	  + T(0.35875)
+	  - T(0.48829) * simd::cos(T(2 * M_PI) * p)
+	  + T(0.14128) * simd::cos(T(4 * M_PI) * p)
+	  - T(0.01168) * simd::cos(T(6 * M_PI) * p);
+}
+
+
+/** Computes the minimum-phase bandlimited step (minBLEP), an impulse step response that rises from 0 to 1.
+Z: number of zero-crossings on each side of the original symmetric sync signal
+O: oversample factor
+output: must be length `(2 * Z) * O`.
+
+Algorithm from "Hard Sync Without Aliasing" by Eli Brandt (2001).
+https://www.cs.cmu.edu/~eli/papers/icmc01-hardsync.pdf
+*/
+inline void minBlepImpulse(int z, int o, float* output) {
+	// Symmetric sinc impulse with `z` zero-crossings on each side
+	int n = 2 * z * o;
+	std::complex<double>* x = new std::complex<double>[n];
+	for (int i = 0; i < n; i++) {
+		double p = (double) i / o - z;
+		x[i] = (p == 0.0) ? 1.0 : std::sin(M_PI * p) / (M_PI * p);
+	}
+
+	// Apply window
+	for (int i = 0; i < n; i++) {
+		x[i] *= blackmanHarris(i / (double) (n - 1));
+	}
+
+#if 1
+	// Reconstruct impulse response with minimum phase
+	fft(x, n);
+
+	// Take log of magnitude and set phase to zero.
+	// Limit frequency bin to e^-10
+	for (int i = 0; i < n; i++) {
+		x[i] = std::log(std::abs(x[i]));
+	}
+
+
+	// Transform to cepstral domain.
+	fft(x, n, true);
+
+	// Apply minimum-phase window in cepstral domain
+	// Double positive quefrencies, zero negative quefrencies
+	for (int i = 1; i < n / 2; i++) {
+		x[i] *= 2.0;
+	}
+	for (int i = n / 2; i < n; i++) {
+		x[i] = 0.0;
+	}
+
+	// Transform back to frequency domain
+	fft(x, n);
+
+	// Take complex exponential of each bin
+	for (int i = 0; i < n; i++) {
+		x[i] = std::exp(x[i]);
+	}
+
+	// Transform to time domain
+	fft(x, n, true);
+#endif
+
+	// Integrate. First sample x[0] should be 0.
+	double total = 0.0;
+	for (int i = 0; i < n; i++) {
+		output[i] = total;
+		total += x[i].real() / o;
+	}
+
+	// Renormalize so last virtual sample x[n] should be exactly 1
+	for (int i = 0; i < n; i++) {
+		output[i] /= total;
+	}
+
+	delete[] x;
+}
+
+
+/** Holds a precomputed minBLEP impulse response, reordered to efficiently insert into an audio buffer.
+*/
+template <int Z, int O>
+struct MinBlep {
+	/** Reordered impulse response for linear interpolation, minus 1.0.
+	Z dimension has +4 padding at end for SIMD and o+1 wrap.
+	*/
+	float impulseReordered[O][2 * Z + 4] = {};
+	float rampReordered[O][2 * Z + 4] = {};
+
+	MinBlep() {
+		float impulse[2 * Z * O];
+		minBlepImpulse(Z, O, impulse);
+
+		// Subtract 1 so our step impulse goes from -1 to 0.
+		for (int i = 0; i < 2*Z*O; i++) {
+			impulse[i] -= 1.f;
+		}
+
+		// Integrate minBLEP to obtain minBLAMP
+		float ramp[2 * Z * O];
+		double total = 0.0;
+		for (int i = 0; i < 2*Z*O; i++) {
+			ramp[i] = total;
+			total += impulse[i] / O;
+		}
+		// Subtract ideal ramp so ramp[0] and the virtual ramp[n] are 0
+		for (int i = 0; i < 2*Z*O; i++) {
+			ramp[i] -= (float) i / (2*Z*O) * total;
+		}
+
+		// FILE* f = fopen("plugins/Fundamental/minblep.txt", "w");
+		// for (int i = 0; i < 2*Z*O; i++) {
+		// 	fprintf(f, "%.12f\n", ramp[i]);
+		// }
+		// fclose(f);
+
+		// Transpose samples by making z values contiguous for each o
+		for (int o = 0; o < O; o++) {
+			for (int z = 0; z < 2 * Z; z++) {
+				impulseReordered[o][z] = impulse[z * O + o];
+			}
+		}
+		for (int o = 0; o < O; o++) {
+			for (int z = 0; z < 2 * Z; z++) {
+				rampReordered[o][z] = ramp[z * O + o];
+			}
+		}
+	}
+
+	/** Places a discontinuity at 0 < subsample <= 1 relative to the current frame.
+	`out` must have enough space to write 2*Z floats, spaced by `stride` floats.
+	`subsample` is the subsample position to insert a discontinuity of `magnitude`.
+	For example if a square wave will jump from 1 to -1 in 0.1 frames, use insertDiscontinuity(out, 1, 0.1f, -2.f).
+
+	Note: In the deprecated MinBlepGenerator, `subsample` was in the range (-1, 0], so add 1 to subsample if updating to MinBlep.
+	*/
+	void insertDiscontinuity(float subsample, float magnitude, float* out, int stride = 1) const {
+		insert(impulseReordered, subsample, magnitude, out, stride);
+	}
+
+	void insertSlopeDiscontinuity(float subsample, float magnitude, float* out, int stride = 1) const {
+		insert(rampReordered, subsample, magnitude, out, stride);
+	}
+
+private:
+	void insert(const float table[O][2 * Z + 4], float subsample, float magnitude, float* out, int stride = 1) const {
+		if (!(0.f < subsample && subsample <= 1.f))
+			return;
+
+		// Calculate impulse array index and fractional part
+		float t = (1.f - subsample) * O;
+		int o = (int) t;
+		t -= o;
+
+		// For each zero crossing, linearly interpolate impulse response from oversample points
+		for (int z = 0; z < 2 * Z; z += 4) {
+			using simd::float_4;
+			float_4 y1 = float_4::load(&table[o][z]);
+			int o2 = (o + 1) % O;
+			int z2 = z + (o + 1) / O;
+			float_4 y2 = float_4::load(&table[o2][z2]);
+			float_4 y = y1 + t * (y2 - y1);
+			y *= magnitude;
+
+			// Write all 4 samples to buffer
+			for (int zi = 0; zi < 4; zi++) {
+				out[(z + zi) * stride] += y[zi];
+			}
+		}
+	}
+};
+
+
+/** Buffer that allows reading/writing up to N future elements contiguously.
+*/
+template <int N, typename T>
+struct MinBlepBuffer {
+	T buffer[2 * N] = {};
+	int32_t bufferIndex = 0;
+
+	T* startData() {
+		return &buffer[bufferIndex];
+	}
+
+	/** Returns the current element and advances the buffer.
+	*/
+	T shift() {
+		T v = buffer[bufferIndex];
+		bufferIndex++;
+		if (bufferIndex >= N) {
+			// Move second half of buffer to beginning
+			std::memcpy(buffer, buffer + N, N * sizeof(T));
+			std::memset(buffer + N, 0, N * sizeof(T));
+			bufferIndex = 0;
+		}
+		return v;
+	}
+
+	/** Copies `n` elements to `out` and advances the buffer.
+	*/
+	void shiftBuffer(T* out, size_t n) {
+		std::memcpy(out, buffer + bufferIndex, n * sizeof(T));
+		bufferIndex += n;
+		if (bufferIndex >= N) {
+			std::memcpy(buffer, buffer + N, N * sizeof(T));
+			std::memset(buffer + N, 0, N * sizeof(T));
+			bufferIndex = 0;
+		}
+	}
+};
+
+
+static const MinBlep<16, 16>& getMinBlep() {
+	static MinBlep<16, 16> minBlep;
+	return minBlep;
+}
+
+
+template <typename T>
+struct VCOProcessor {
+	T phase = 0.f;
+	/** 1 for forward, -1 for backward. */
+	T syncDirection = 1.f;
+	T lastSync = 0.f;
+	/** 1 or -1 */
+	T lastSqrState = 1.f;
+
+	OnePoleHighpass dcFilter;
+	OnePoleHighpass::State<T> dcFilterStateSqr;
+	OnePoleHighpass::State<T> dcFilterStateSaw;
+	OnePoleHighpass::State<T> dcFilterStateTri;
+	OnePoleHighpass::State<T> dcFilterStateSin;
+
+	MinBlepBuffer<16*2, T> sqrMinBlep;
+	MinBlepBuffer<16*2, T> sawMinBlep;
+	MinBlepBuffer<16*2, T> triMinBlep;
+	MinBlepBuffer<16*2, T> sinMinBlep;
+
+	void setSampleTime(float sampleTime) {
+		dcFilter.setCutoff(std::min(0.4f, 20.f * sampleTime));
+	}
+
+	struct Frame {
+		/** Number of channels valid in SIMD type
+		For optimizing serial operations.
+		*/
+		uint8_t channels = 0;
+		bool soft = false;
+		bool syncEnabled = false;
+		bool sqrEnabled = false;
+		bool sawEnabled = false;
+		bool triEnabled = false;
+		bool sinEnabled = false;
+		T pulseWidth = 0.5f;
+		T sync = 0.f;
+		T freq = 0.f;
+
+		// Outputs
+		T sqr = 0.f;
+		T saw = 0.f;
+		T tri = 0.f;
+		T sin = 0.f;
+	};
+
+	void process(Frame& frame, float sampleTime) {
+		// Compute deltaPhase for full frame
+		T deltaPhase = simd::clamp(frame.freq * sampleTime, 0.f, 0.49f);
+		if (frame.soft) {
 			deltaPhase *= syncDirection;
 		}
 		else {
-			// Reset back to forward
 			syncDirection = 1.f;
 		}
-		phase += deltaPhase;
 
-		// Wrap phase
-		T phaseFloor = simd::floor(phase);
-		phase -= phaseFloor;
+		T prevPhase = phase;
+		const float pwMin = 0.01f;
+		T pulseWidth = simd::clamp(frame.pulseWidth, pwMin, 1.f - pwMin);
 
-		// Jump sqr when phase crosses 1, or crosses 0 if running backwards
-		T wrapMask = (phaseFloor != 0.f);
-		int wrapM = simd::movemask(wrapMask);
-		if (wrapM) {
-			T wrapPhase = (syncDirection == -1.f) & 1.f;
-			T wrapCrossing = (wrapPhase - (phase - deltaPhase)) / deltaPhase;
-			for (int i = 0; i < channels; i++) {
-				if (wrapM & (1 << i)) {
-					T mask = simd::movemaskInverse<T>(1 << i);
-					// TODO: MinBlepGenerator::insertDiscontinuity() should handle subframes outside the range -1 < p <= 0 instead of failing silently.
-					float p = clamp(wrapCrossing[i] - 1.f, -1.f, 0.f);
-					T x = mask & (2.f * syncDirection);
-					sqrMinBlep.insertDiscontinuity(p, x);
+		// Inserts minBLEP for each channel where mask is true.
+		// Serial but does nothing if mask is all zero.
+		auto insertDiscontinuity = [&](T mask, T subsample, T magnitude, MinBlepBuffer<16*2, T>& buffer) {
+			int m = simd::movemask(mask);
+			if (!m)
+				return;
+			for (int i = 0; i < frame.channels; i++) {
+				if (m & (1 << i)) {
+					float* x = (float*) buffer.startData();
+					getMinBlep().insertDiscontinuity(subsample[i], magnitude[i], &x[i], 4);
 				}
 			}
-		}
-		sqrState = simd::ifelse(wrapMask, syncDirection, sqrState);
+		};
 
-		// Jump sqr when crossing `pulseWidth`
-		T pwMask = (syncDirection == sqrState) & ((syncDirection == 1.f) ^ (phase < pulseWidth));
-		int pw = simd::movemask(pwMask);
-		if (pw) {
-			T pulseCrossing = (pulseWidth - (phase - deltaPhase)) / deltaPhase;
-			for (int i = 0; i < channels; i++) {
-				if (pw & (1 << i)) {
-					T mask = simd::movemaskInverse<T>(1 << i);
-					float p = clamp(pulseCrossing[i] - 1.f, -1.f, 0.f);
-					T x = mask & (-2.f * syncDirection);
-					sqrMinBlep.insertDiscontinuity(p, x);
+		auto insertSlopeDiscontinuity = [&](T mask, T subsample, T magnitude, MinBlepBuffer<16*2, T>& buffer) {
+			int m = simd::movemask(mask);
+			if (!m)
+				return;
+			for (int i = 0; i < frame.channels; i++) {
+				if (m & (1 << i)) {
+					float* x = (float*) buffer.startData();
+					getMinBlep().insertSlopeDiscontinuity(subsample[i], magnitude[i], &x[i], 4);
 				}
 			}
-		}
-		sqrState = simd::ifelse(pwMask, -syncDirection, sqrState);
+		};
 
-		// Jump saw when crossing 0.5
-		T halfCrossing = (0.5f - (phase - deltaPhase)) / deltaPhase;
-		int halfMask = simd::movemask((0 < halfCrossing) & (halfCrossing <= 1.f));
-		if (halfMask) {
-			for (int i = 0; i < channels; i++) {
-				if (halfMask & (1 << i)) {
-					T mask = simd::movemaskInverse<T>(1 << i);
-					float p = halfCrossing[i] - 1.f;
-					T x = mask & (-2.f * syncDirection);
-					sawMinBlep.insertDiscontinuity(p, x);
-				}
+		// Computes subsample time where phase crosses threshold.
+		auto getCrossing = [](T thresholdPhase, T startPhase, T endPhase, T startSubsample, T endSubsample) -> T {
+			T delta = endPhase - startPhase;
+			T diff = thresholdPhase - startPhase;
+			// Forward: wrap thresholdPhase to (startPhase, startPhase+1]
+			// Backward: wrap thresholdPhase to [startPhase-1, startPhase)
+			thresholdPhase -= simd::ifelse(delta >= 0.f, simd::floor(diff), simd::ceil(diff));
+			T p = (thresholdPhase - startPhase) / delta;
+			return startSubsample + p * (endSubsample - startSubsample);
+		};
+
+		// Processes wrap/pulse/saw crossings between startPhase and endPhase.
+		// startSubsample and endSubsample define the time range within the frame.
+		// channelMask limits processing to specific channels.
+		auto processCrossings = [&](T startPhase, T endPhase, T startSubsample, T endSubsample, T channelMask) {
+			if (frame.sqrEnabled) {
+				// Insert minBLEP to square when phase crosses 0 (mod 1)
+				T wrapSubsample = getCrossing(1.f, startPhase, endPhase, startSubsample, endSubsample);
+				T mask = channelMask & (startSubsample < wrapSubsample) & (wrapSubsample <= endSubsample);
+				insertDiscontinuity(mask, wrapSubsample, 2.f * syncDirection, sqrMinBlep);
+
+				// Insert minBLEP to square when phase crosses pulse width
+				T pulseSubsample = getCrossing(pulseWidth, startPhase, endPhase, startSubsample, endSubsample);
+				mask = channelMask & (startSubsample < pulseSubsample) & (pulseSubsample <= endSubsample);
+				insertDiscontinuity(mask, pulseSubsample, -2.f * syncDirection, sqrMinBlep);
 			}
+
+			if (frame.sawEnabled) {
+				// Insert minBLEP to saw when crossing 0.5
+				T sawSubsample = getCrossing(0.5f, startPhase, endPhase, startSubsample, endSubsample);
+				T mask = channelMask & (startSubsample < sawSubsample) & (sawSubsample <= endSubsample);
+				insertDiscontinuity(mask, sawSubsample, -2.f * syncDirection, sawMinBlep);
+			}
+
+			if (frame.triEnabled) {
+				// Insert minBLAMP to tri when crossing 0.25
+				T triSubsample = getCrossing(0.25f, startPhase, endPhase, startSubsample, endSubsample);
+				T mask = channelMask & (startSubsample < triSubsample) & (triSubsample <= endSubsample);
+				// Slope goes from +4 to -4, so slope jump is -8 * abs(deltaPhase)
+				insertSlopeDiscontinuity(mask, triSubsample, -8.f * deltaPhase * syncDirection, triMinBlep);
+
+				// Insert minBLAMP to tri when crossing 0.75, slope from -4 to +4
+				triSubsample = getCrossing(0.75f, startPhase, endPhase, startSubsample, endSubsample);
+				mask = channelMask & (startSubsample < triSubsample) & (triSubsample <= endSubsample);
+				// Slope goes from -4 to +4, so slope jump is 8 * abs(deltaPhase)
+				insertSlopeDiscontinuity(mask, triSubsample, 8.f * deltaPhase * syncDirection, triMinBlep);
+			}
+		};
+
+		// Check if square value changed due to pulseWidth changing since last frame
+		if (frame.sqrEnabled) {
+			T sqrState = sqr(prevPhase, pulseWidth);
+			T magnitude = sqrState - lastSqrState;
+			T changed = (magnitude != 0.f);
+			insertDiscontinuity(changed, 1e-6f, magnitude, sqrMinBlep);
 		}
 
-		// Detect sync
-		// Might be NAN or outside of [0, 1) range
-		if (syncEnabled) {
-			T deltaSync = syncValue - lastSyncValue;
-			T syncCrossing = -lastSyncValue / deltaSync;
-			lastSyncValue = syncValue;
-			T sync = (0.f < syncCrossing) & (syncCrossing <= 1.f) & (syncValue >= 0.f);
-			int syncMask = simd::movemask(sync);
-			if (syncMask) {
-				if (soft) {
-					syncDirection = simd::ifelse(sync, -syncDirection, syncDirection);
+		if (!frame.syncEnabled) {
+			// No sync. Process full frame
+			T endPhase = prevPhase + deltaPhase;
+			processCrossings(prevPhase, endPhase, 0.f, 1.f, T::mask());
+			phase = endPhase;
+		}
+		else {
+			// Compute sync subsample position
+			T deltaSync = frame.sync - lastSync;
+			T syncSubsample = -lastSync / deltaSync;
+			lastSync = frame.sync;
+			// Check if sync rises through 0
+			T syncOccurred = (0.f < syncSubsample) & (syncSubsample <= 1.f) & (deltaSync >= 0.f);
+			T noSync = ~syncOccurred;
+
+			if (simd::movemask(noSync)) {
+				// No sync for these channels. Process full frame
+				T endPhase = prevPhase + deltaPhase;
+				processCrossings(prevPhase, endPhase, 0.f, 1.f, noSync);
+				phase = simd::ifelse(noSync, endPhase, phase);
+			}
+
+			if (simd::movemask(syncOccurred)) {
+				// Process crossings before sync
+				T syncPhase = prevPhase + deltaPhase * syncSubsample;
+				processCrossings(prevPhase, syncPhase, 0.f, syncSubsample, syncOccurred);
+				// Wrap sync phase
+				syncPhase -= simd::floor(syncPhase);
+
+				if (frame.soft) {
+					// Soft sync: Reverse direction, continue from syncPhase
+
+					if (frame.sawEnabled) {
+						// Saw slope reverses
+						// +2 slope becomes -2 if deltaPhase > 0
+						// -2 slope becomes +2 if deltaPhase < 0
+						insertSlopeDiscontinuity(syncOccurred, syncSubsample, -4.f * deltaPhase, sawMinBlep);
+					}
+					if (frame.triEnabled) {
+						// Tri slope reverses
+						// -4 slope becomes +4 if 0.25 < phase < 0.75
+						// -4 slope becomes +4 otherwise
+						T descending = (0.25f < syncPhase) & (syncPhase < 0.75f);
+						T slopeJump = simd::ifelse(descending, 8.f, -8.f);
+						insertSlopeDiscontinuity(syncOccurred, syncSubsample, slopeJump * deltaPhase, triMinBlep);
+					}
+
+					syncDirection = simd::ifelse(syncOccurred, -syncDirection, syncDirection);
+					deltaPhase = simd::ifelse(syncOccurred, -deltaPhase, deltaPhase);
+					T endPhase = syncPhase + deltaPhase * (1.f - syncSubsample);
+					processCrossings(syncPhase, endPhase, syncSubsample, 1.f, syncOccurred);
+					phase = simd::ifelse(syncOccurred, endPhase, phase);
 				}
 				else {
-					T newPhase = simd::ifelse(sync, (1.f - syncCrossing) * deltaPhase, phase);
-					// Insert minBLEP for sync
-					for (int i = 0; i < channels; i++) {
-						if (syncMask & (1 << i)) {
-							T mask = simd::movemaskInverse<T>(1 << i);
-							float p = syncCrossing[i] - 1.f;
-							T x;
-							// Assume that hard-syncing a square always resets it to HIGH
-							x = mask & (1.f - sqrState);
-							sqrState = simd::ifelse(mask, 1.f, sqrState);
-							sqrMinBlep.insertDiscontinuity(p, x);
-							x = mask & (saw(newPhase) - saw(phase));
-							sawMinBlep.insertDiscontinuity(p, x);
-							x = mask & (tri(newPhase) - tri(phase));
-							triMinBlep.insertDiscontinuity(p, x);
-							x = mask & (sin(newPhase) - sin(phase));
-							sinMinBlep.insertDiscontinuity(p, x);
-						}
+					// Hard sync: Reset phase from syncPhase to 0 at syncSubsample, insert discontinuities
+
+					if (frame.sqrEnabled) {
+						// Check if square jumps from -1 to +1
+						T sqrJump = (syncPhase >= pulseWidth);
+						insertDiscontinuity(syncOccurred & sqrJump, syncSubsample, 2.f, sqrMinBlep);
 					}
-					phase = newPhase;
+					if (frame.sawEnabled) {
+						// Saw jumps from saw(syncPhase) to saw(0) = 0
+						insertDiscontinuity(syncOccurred, syncSubsample, -saw(syncPhase), sawMinBlep);
+					}
+					if (frame.triEnabled) {
+						// Tri jumps from tri(syncPhase) to tri(0) = 0
+						insertDiscontinuity(syncOccurred, syncSubsample, -tri(syncPhase), triMinBlep);
+						// If descending slope (-4), reset to ascending slope (+4)
+						T wasDescending = (0.25f < syncPhase) & (syncPhase < 0.75f);
+						insertSlopeDiscontinuity(syncOccurred & wasDescending, syncSubsample, 8.f * deltaPhase, triMinBlep);
+					}
+					if (frame.sinEnabled) {
+						// sin jumps from sin(syncPhase) to sin(0) = 0
+						insertDiscontinuity(syncOccurred, syncSubsample, -sin(syncPhase), sinMinBlep);
+						// Slope changes from sinDerivative(syncPhase) to sinDerivative(0) = 2pi
+						// T slopeJump = T(2 * M_PI) - sinDerivative(syncPhase);
+						// insertSlopeDiscontinuity(syncOccurred, syncSubsample, slopeJump * deltaPhase, sinMinBlep);
+					}
+
+					// Process crossings after sync (starting from phase 0)
+					T endPhase = deltaPhase * (1.f - syncSubsample);
+					processCrossings(0.f, endPhase, syncSubsample, 1.f, syncOccurred);
+					phase = simd::ifelse(syncOccurred, endPhase, phase);
 				}
 			}
 		}
 
-		// Square
-		sqrValue = sqrState;
-		sqrValue += sqrMinBlep.process();
+		// Wrap phase to [0, 1)
+		phase -= simd::floor(phase);
 
-		if (analog) {
-			sqrFilter.setCutoffFreq(20.f * deltaTime);
-			sqrFilter.process(sqrValue);
-			sqrValue = sqrFilter.highpass() * 0.95f;
+		// Generate outputs
+		if (frame.sawEnabled) {
+			frame.saw = saw(phase);
+			frame.saw += sawMinBlep.shift();
+			frame.saw = dcFilter.process(dcFilterStateSaw, frame.saw);
 		}
 
-		// Saw
-		sawValue = saw(phase);
-		sawValue += sawMinBlep.process();
-
-		// Tri
-		triValue = tri(phase);
-		triValue += triMinBlep.process();
-
-		// Sin
-		sinValue = sin(phase);
-		sinValue += sinMinBlep.process();
-	}
-
-	T sin(T phase) {
-		T v;
-		if (analog) {
-			// Quadratic approximation of sine, slightly richer harmonics
-			T halfPhase = (phase < 0.5f);
-			T x = phase - simd::ifelse(halfPhase, 0.25f, 0.75f);
-			v = 1.f - 16.f * simd::pow(x, 2);
-			v *= simd::ifelse(halfPhase, 1.f, -1.f);
+		if (frame.sqrEnabled) {
+			frame.sqr = sqr(phase, pulseWidth);
+			lastSqrState = frame.sqr;
+			frame.sqr += sqrMinBlep.shift();
+			frame.sqr = dcFilter.process(dcFilterStateSqr, frame.sqr);
 		}
-		else {
-			v = sin2pi_pade_05_5_4(phase);
-			// v = sin2pi_pade_05_7_6(phase);
-			// v = simd::sin(2 * T(M_PI) * phase);
+
+		if (frame.triEnabled) {
+			frame.tri = tri(phase);
+			frame.tri += triMinBlep.shift();
+			frame.tri = dcFilter.process(dcFilterStateTri, frame.tri);
 		}
-		return v;
-	}
-	T sin() {
-		return sinValue;
+
+		if (frame.sinEnabled) {
+			frame.sin = sin(phase);
+			frame.sin += sinMinBlep.shift();
+			frame.sin = dcFilter.process(dcFilterStateSin, frame.sin);
+		}
 	}
 
-	T tri(T phase) {
-		T v;
-		if (analog) {
-			T x = phase + 0.25f;
-			x -= simd::trunc(x);
-			T halfX = (x >= 0.5f);
-			x *= 2;
-			x -= simd::trunc(x);
-			v = expCurve(x) * simd::ifelse(halfX, 1.f, -1.f);
-		}
-		else {
-			v = 1 - 4 * simd::fmin(simd::fabs(phase - 0.25f), simd::fabs(phase - 1.25f));
-		}
-		return v;
-	}
-	T tri() {
-		return triValue;
+	T light() const {
+		return sin(phase);
 	}
 
-	T saw(T phase) {
-		T v;
+	static T sqr(T phase, T pulseWidth) {
+		return simd::ifelse(phase < pulseWidth, 1.f, -1.f);
+	}
+	static T saw(T phase) {
 		T x = phase + 0.5f;
 		x -= simd::trunc(x);
-		if (analog) {
-			v = -expCurve(x);
-		}
-		else {
-			v = 2 * x - 1;
-		}
-		return v;
+		return 2 * x - 1;
 	}
-	T saw() {
-		return sawValue;
+	static T tri(T phase) {
+		return 1 - 4 * simd::fmin(simd::fabs(phase - 0.25f), 1.25f - phase);
 	}
-
-	T sqr() {
-		return sqrValue;
+	static T sin(T phase) {
+		return sin_pi_9(1 - 2 * phase);
 	}
-
-	T light() {
-		return simd::sin(2 * T(M_PI) * phase);
+	static T sinDerivative(T phase) {
+		phase += 0.25f;
+		phase -= simd::floor(phase);
+		return T(2 * M_PI) * sin(phase);
 	}
 };
+
+
+using simd::float_4;
 
 
 struct VCO : Module {
@@ -281,14 +660,14 @@ struct VCO : Module {
 		NUM_LIGHTS
 	};
 
-	VoltageControlledOscillator<16, 16, float_4> oscillators[4];
+	VCOProcessor<float_4> processors[4];
 	dsp::ClockDivider lightDivider;
 
 	VCO() {
 		config(NUM_PARAMS, NUM_INPUTS, NUM_OUTPUTS, NUM_LIGHTS);
 		configSwitch(LINEAR_PARAM, 0.f, 1.f, 0.f, "FM mode", {"1V/octave", "Linear"});
 		configSwitch(SYNC_PARAM, 0.f, 1.f, 1.f, "Sync mode", {"Soft", "Hard"});
-		configParam(FREQ_PARAM, -54.f, 54.f, 0.f, "Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
+		configParam(FREQ_PARAM, -76.f, 76.f, 0.f, "Frequency", " Hz", dsp::FREQ_SEMITONE, dsp::FREQ_C4);
 		configParam(FM_PARAM, -1.f, 1.f, 0.f, "Frequency modulation", "%", 0.f, 100.f);
 		getParamQuantity(FM_PARAM)->randomizeEnabled = false;
 		configParam(PW_PARAM, 0.01f, 0.99f, 0.5f, "Pulse width", "%", 0.f, 100.f);
@@ -308,22 +687,29 @@ struct VCO : Module {
 		lightDivider.setDivision(16);
 	}
 
+	void onSampleRateChange(const SampleRateChangeEvent& e) override {
+		for (int c = 0; c < 16; c += 4) {
+			processors[c / 4].setSampleTime(e.sampleTime);
+		}
+	}
+
 	void process(const ProcessArgs& args) override {
+		VCOProcessor<float_4>::Frame frame;
 		float freqParam = params[FREQ_PARAM].getValue() / 12.f;
 		float fmParam = params[FM_PARAM].getValue();
 		float pwParam = params[PW_PARAM].getValue();
 		float pwCvParam = params[PW_CV_PARAM].getValue();
 		bool linear = params[LINEAR_PARAM].getValue() > 0.f;
-		bool soft = params[SYNC_PARAM].getValue() <= 0.f;
-
+		frame.soft = params[SYNC_PARAM].getValue() <= 0.f;
+		frame.syncEnabled = inputs[SYNC_INPUT].isConnected();
+		frame.sqrEnabled = outputs[SQR_OUTPUT].isConnected();
+		frame.sawEnabled = outputs[SAW_OUTPUT].isConnected();
+		frame.triEnabled = outputs[TRI_OUTPUT].isConnected();
+		frame.sinEnabled = outputs[SIN_OUTPUT].isConnected();
 		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
 
 		for (int c = 0; c < channels; c += 4) {
-			auto& oscillator = oscillators[c / 4];
-			oscillator.channels = std::min(channels - c, 4);
-			// removed
-			oscillator.analog = true;
-			oscillator.soft = soft;
+			frame.channels = std::min(channels - c, 4);
 
 			// Get frequency
 			float_4 pitch = freqParam + inputs[PITCH_INPUT].getPolyVoltageSimd<float_4>(c);
@@ -336,26 +722,19 @@ struct VCO : Module {
 				freq = dsp::FREQ_C4 * dsp::exp2_taylor5(pitch);
 				freq += dsp::FREQ_C4 * inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;
 			}
-			freq = clamp(freq, 0.f, args.sampleRate / 2.f);
-			oscillator.freq = freq;
+			frame.freq = clamp(freq, 0.f, args.sampleRate / 2.f);
 
 			// Get pulse width
-			float_4 pw = pwParam + inputs[PW_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * pwCvParam;
-			oscillator.setPulseWidth(pw);
+			frame.pulseWidth = pwParam + inputs[PW_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * pwCvParam;
 
-			oscillator.syncEnabled = inputs[SYNC_INPUT].isConnected();
-			float_4 sync = inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c);
-			oscillator.process(args.sampleTime, sync);
+			frame.sync = inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c);
+			processors[c / 4].process(frame, args.sampleTime);
 
 			// Set output
-			if (outputs[SIN_OUTPUT].isConnected())
-				outputs[SIN_OUTPUT].setVoltageSimd(5.f * oscillator.sin(), c);
-			if (outputs[TRI_OUTPUT].isConnected())
-				outputs[TRI_OUTPUT].setVoltageSimd(5.f * oscillator.tri(), c);
-			if (outputs[SAW_OUTPUT].isConnected())
-				outputs[SAW_OUTPUT].setVoltageSimd(5.f * oscillator.saw(), c);
-			if (outputs[SQR_OUTPUT].isConnected())
-				outputs[SQR_OUTPUT].setVoltageSimd(5.f * oscillator.sqr(), c);
+			outputs[SQR_OUTPUT].setVoltageSimd(5.f * frame.sqr, c);
+			outputs[SAW_OUTPUT].setVoltageSimd(5.f * frame.saw, c);
+			outputs[TRI_OUTPUT].setVoltageSimd(5.f * frame.tri, c);
+			outputs[SIN_OUTPUT].setVoltageSimd(5.f * frame.sin, c);
 		}
 
 		outputs[SIN_OUTPUT].setChannels(channels);
@@ -366,7 +745,7 @@ struct VCO : Module {
 		// Light
 		if (lightDivider.process()) {
 			if (channels == 1) {
-				float lightValue = oscillators[0].light()[0];
+				float lightValue = processors[0].light()[0];
 				lights[PHASE_LIGHT + 0].setSmoothBrightness(-lightValue, args.sampleTime * lightDivider.getDivision());
 				lights[PHASE_LIGHT + 1].setSmoothBrightness(lightValue, args.sampleTime * lightDivider.getDivision());
 				lights[PHASE_LIGHT + 2].setBrightness(0.f);
@@ -377,7 +756,7 @@ struct VCO : Module {
 				lights[PHASE_LIGHT + 2].setBrightness(1.f);
 			}
 			lights[LINEAR_LIGHT].setBrightness(linear);
-			lights[SOFT_LIGHT].setBrightness(soft);
+			lights[SOFT_LIGHT].setBrightness(frame.soft);
 		}
 	}
 };
