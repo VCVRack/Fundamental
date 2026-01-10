@@ -3,15 +3,18 @@
 
 // TODO: Remove these DSP classes after released in Rack SDK
 
-/** Evaluates sin(pi x) for x in [-1, 1].
-9th order polynomial with roots at 0, -1, and 1.
-Optimized coefficients for best THD (-103.7 dB) and max absolute error (6.68e-06).
+/** Approximates sin(2pi x) over [0, 1] with the form
+$ t (t^2 - 1) (c_0 + t^2 (c_1 + t^2 (c_2 + t^2 c_3))) $ where $ t = 2x - 1 $
+Optimized coefficients for lowest max absolute error 6.5e-06, THD -103.7 dB.
 */
 template <typename T>
-inline T sin_pi_9(T x) {
+inline T sin_2pi_9(T x) {
+	// Shift argument to [-1, 1]
+	x = T(2) * x - T(1);
 	T x2 = x * x;
-	return x * (T(1) - x2) * (T(3.141521108990) + x2 * (T(-2.024773594411) + x2 * (T(0.517493161073) + x2 * T(-0.063691343423))));
+	return x * (x2 - T(1)) * (T(3.1415211942925003) + x2 * (T(-2.0247734792732333) + x2 * (T(0.51749274223813413) + x2 * T(-0.063691093590695858))));
 }
+
 
 /** One-pole low-pass filter, exponential moving average.
 -6 dB/octave slope.
@@ -21,11 +24,44 @@ Has a pole at (1 - alpha) and a zero at 0.
 struct OnePoleLowpass {
 	float alpha = 0.f;
 
-	/** Sets the cutoff frequency where gain is -3 dB.
+	/** Sets alpha using the matched-z / impulse invariance transform.
+	Preserves the analog time constant, so step response reaches ~63.2% after t = 1/(2pi f) seconds.
+	The -3 dB point is approximately f for low frequencies.
 	f = f_c / f_s, the normalized frequency in the range [0, 0.5].
 	*/
-	void setCutoff(float f) {
-		alpha = 1.f - std::exp(-2.f * M_PI * f);
+	void setCutoffMatchedZ(float f) {
+		alpha = 1.f - std::exp(float(-2 * M_PI) * f);
+	}
+
+	/** Sets alpha using the bilinear transform.
+	Guarantees exact -3 dB gain at frequency f, but warps other frequencies.
+	f = f_c / f_s, the normalized frequency in the range [0, 0.5].
+	*/
+	void setCutoffBilinear(float f) {
+		float w = std::tan(float(M_PI) * f);
+		alpha = w / (1.f + w);
+	}
+
+	/** Sets alpha using a rational approximation.
+	Approximates the bilinear transform for low frequencies (f << 0.1).
+	f = f_c / f_s, the normalized frequency in the range [0, 0.5].
+	*/
+	void setCutoffApprox(float f) {
+		float w = float(2 * M_PI) * f;
+		alpha = w / (1.f + w);
+	}
+
+	/** Computes the frequency response at normalized frequency f. */
+	std::complex<float> getResponse(float f) const {
+		float omega = float(2 * M_PI) * f;
+		std::complex<float> z = std::exp(std::complex<float>(0.f, omega));
+		return alpha * z / (z - (1.f - alpha));
+	}
+	float getMagnitude(float f) const {
+		return std::abs(getResponse(f));
+	}
+	float getPhase(float f) const {
+		return std::arg(getResponse(f));
 	}
 
 	template <typename T = float>
@@ -39,19 +75,6 @@ struct OnePoleLowpass {
 		s.y += alpha * (x - s.y);
 		return s.y;
 	}
-
-	/** Computes the frequency response at normalized frequency f. */
-	std::complex<float> getResponse(float f) const {
-		float omega = 2.f * M_PI * f;
-		std::complex<float> z = std::exp(std::complex<float>(0.f, omega));
-		return alpha * z / (z - (1.f - alpha));
-	}
-	float getMagnitude(float f) const {
-		return std::abs(getResponse(f));
-	}
-	float getPhase(float f) const {
-		return std::arg(getResponse(f));
-	}
 };
 
 
@@ -61,11 +84,6 @@ Useful for DC-blocking.
 Has a pole at (1 - alpha) and a zero at 1.
 */
 struct OnePoleHighpass : OnePoleLowpass {
-	template <typename T>
-	T process(State<T>& s, T x) const {
-		return x - OnePoleLowpass::process(s, x);
-	}
-
 	std::complex<float> getResponse(float f) const {
 		return 1.f - OnePoleLowpass::getResponse(f);
 	}
@@ -74,6 +92,11 @@ struct OnePoleHighpass : OnePoleLowpass {
 	}
 	float getPhase(float f) const {
 		return std::arg(getResponse(f));
+	}
+
+	template <typename T>
+	T process(State<T>& s, T x) const {
+		return x - OnePoleLowpass::process(s, x);
 	}
 };
 
@@ -357,7 +380,7 @@ struct VCOProcessor {
 	MinBlepBuffer<16*2, T> sinMinBlep;
 
 	void setSampleTime(float sampleTime) {
-		dcFilter.setCutoff(std::min(0.4f, 20.f * sampleTime));
+		dcFilter.setCutoffApprox(std::min(0.4f, 20.f * sampleTime));
 	}
 
 	struct Frame {
@@ -613,12 +636,13 @@ struct VCOProcessor {
 		return 1 - 4 * simd::fmin(simd::fabs(phase - 0.25f), 1.25f - phase);
 	}
 	static T sin(T phase) {
-		return sin_pi_9(1 - 2 * phase);
+		return sin_2pi_9(phase);
 	}
 	static T sinDerivative(T phase) {
+		// Shift and wrap cosine
 		phase += 0.25f;
 		phase -= simd::floor(phase);
-		return T(2 * M_PI) * sin(phase);
+		return T(2 * M_PI) * sin_2pi_9(phase);
 	}
 };
 
