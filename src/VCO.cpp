@@ -1,6 +1,9 @@
 #include "plugin.hpp"
 
 
+using simd::float_n;
+
+
 // TODO: Remove these DSP classes after released in Rack SDK
 
 /** Evaluates sin(pi x) for x in [-1, 1].
@@ -202,10 +205,10 @@ inline void minBlepImpulse(int z, int o, float* output) {
 template <int Z, int O>
 struct MinBlep {
 	/** Reordered impulse response for linear interpolation, minus 1.0.
-	Z dimension has +4 padding at end for SIMD and o+1 wrap.
+	Z dimension has padding at end for SIMD and o+1 wrap.
 	*/
-	float impulseReordered[O][2 * Z + 4] = {};
-	float rampReordered[O][2 * Z + 4] = {};
+	float impulseReordered[O][2 * Z + float_n::size] = {};
+	float rampReordered[O][2 * Z + float_n::size] = {};
 
 	MinBlep() {
 		float impulse[2 * Z * O];
@@ -263,7 +266,7 @@ struct MinBlep {
 	}
 
 private:
-	void insert(const float table[O][2 * Z + 4], float subsample, float magnitude, float* out, int stride = 1) const {
+	void insert(const float table[O][2 * Z + float_n::size], float subsample, float magnitude, float* out, int stride = 1) const {
 		if (!(0.f < subsample && subsample <= 1.f))
 			return;
 
@@ -273,17 +276,16 @@ private:
 		t -= o;
 
 		// For each zero crossing, linearly interpolate impulse response from oversample points
-		for (int z = 0; z < 2 * Z; z += 4) {
-			using simd::float_4;
-			float_4 y1 = float_4::load(&table[o][z]);
+		for (int z = 0; z < 2 * Z; z += float_n::size) {
+			float_n y1 = float_n::load(&table[o][z]);
 			int o2 = (o + 1) % O;
 			int z2 = z + (o + 1) / O;
-			float_4 y2 = float_4::load(&table[o2][z2]);
-			float_4 y = y1 + t * (y2 - y1);
+			float_n y2 = float_n::load(&table[o2][z2]);
+			float_n y = y1 + t * (y2 - y1);
 			y *= magnitude;
 
-			// Write all 4 samples to buffer
-			for (int zi = 0; zi < 4; zi++) {
+			// Write all n samples to buffer
+			for (int zi = 0; zi < float_n::size; zi++) {
 				out[(z + zi) * stride] += y[zi];
 			}
 		}
@@ -405,7 +407,7 @@ struct VCOProcessor {
 			for (int i = 0; i < frame.channels; i++) {
 				if (m & (1 << i)) {
 					float* x = (float*) buffer.startData();
-					getMinBlep().insertDiscontinuity(subsample[i], magnitude[i], &x[i], 4);
+					getMinBlep().insertDiscontinuity(subsample[i], magnitude[i], &x[i], float_n::size);
 				}
 			}
 		};
@@ -417,7 +419,7 @@ struct VCOProcessor {
 			for (int i = 0; i < frame.channels; i++) {
 				if (m & (1 << i)) {
 					float* x = (float*) buffer.startData();
-					getMinBlep().insertSlopeDiscontinuity(subsample[i], magnitude[i], &x[i], 4);
+					getMinBlep().insertSlopeDiscontinuity(subsample[i], magnitude[i], &x[i], float_n::size);
 				}
 			}
 		};
@@ -623,9 +625,6 @@ struct VCOProcessor {
 };
 
 
-using simd::float_4;
-
-
 struct VCO : Module {
 	enum ParamIds {
 		MODE_PARAM, // removed
@@ -660,7 +659,7 @@ struct VCO : Module {
 		NUM_LIGHTS
 	};
 
-	VCOProcessor<float_4> processors[4];
+	VCOProcessor<float_n> processors[16 / float_n::size];
 	dsp::ClockDivider lightDivider;
 
 	VCO() {
@@ -694,7 +693,7 @@ struct VCO : Module {
 	}
 
 	void process(const ProcessArgs& args) override {
-		VCOProcessor<float_4>::Frame frame;
+		VCOProcessor<float_n>::Frame frame;
 		float freqParam = params[FREQ_PARAM].getValue() / 12.f;
 		float fmParam = params[FM_PARAM].getValue();
 		float pwParam = params[PW_PARAM].getValue();
@@ -708,27 +707,27 @@ struct VCO : Module {
 		frame.sinEnabled = outputs[SIN_OUTPUT].isConnected();
 		int channels = std::max(inputs[PITCH_INPUT].getChannels(), 1);
 
-		for (int c = 0; c < channels; c += 4) {
-			frame.channels = std::min(channels - c, 4);
+		for (int c = 0; c < channels; c += float_n::size) {
+			frame.channels = std::min(channels - c, float_n::size);
 
 			// Get frequency
-			float_4 pitch = freqParam + inputs[PITCH_INPUT].getPolyVoltageSimd<float_4>(c);
-			float_4 freq;
+			float_n pitch = freqParam + inputs[PITCH_INPUT].getPolyVoltageSimd<float_n>(c);
+			float_n freq;
 			if (!linear) {
-				pitch += inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;
+				pitch += inputs[FM_INPUT].getPolyVoltageSimd<float_n>(c) * fmParam;
 				freq = dsp::FREQ_C4 * dsp::exp2_taylor5(pitch);
 			}
 			else {
 				freq = dsp::FREQ_C4 * dsp::exp2_taylor5(pitch);
-				freq += dsp::FREQ_C4 * inputs[FM_INPUT].getPolyVoltageSimd<float_4>(c) * fmParam;
+				freq += dsp::FREQ_C4 * inputs[FM_INPUT].getPolyVoltageSimd<float_n>(c) * fmParam;
 			}
 			frame.freq = clamp(freq, 0.f, args.sampleRate / 2.f);
 
 			// Get pulse width
-			frame.pulseWidth = pwParam + inputs[PW_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * pwCvParam;
+			frame.pulseWidth = pwParam + inputs[PW_INPUT].getPolyVoltageSimd<float_n>(c) / 10.f * pwCvParam;
 
-			frame.sync = inputs[SYNC_INPUT].getPolyVoltageSimd<float_4>(c);
-			processors[c / 4].process(frame, args.sampleTime);
+			frame.sync = inputs[SYNC_INPUT].getPolyVoltageSimd<float_n>(c);
+			processors[c / float_n::size].process(frame, args.sampleTime);
 
 			// Set output
 			outputs[SQR_OUTPUT].setVoltageSimd(5.f * frame.sqr, c);
