@@ -313,7 +313,7 @@ struct WTVCOWidget : ModuleWidget {
 	}
 
 	void appendContextMenu(Menu* menu) override {
-		WTVCO* module = dynamic_cast<WTVCO*>(this->module);
+		WTVCO* module = getModule<WTVCO>();
 		assert(module);
 
 		menu->addChild(new MenuSeparator);

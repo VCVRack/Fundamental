@@ -115,7 +115,7 @@ struct MergeWidget : ModuleWidget {
 	}
 
 	void appendContextMenu(Menu* menu) override {
-		Merge* module = dynamic_cast<Merge*>(this->module);
+		Merge* module = getModule<Merge>();
 
 		menu->addChild(new MenuSeparator);
 

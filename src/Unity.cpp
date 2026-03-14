@@ -151,7 +151,7 @@ struct UnityWidget : ModuleWidget {
 	}
 
 	void appendContextMenu(Menu* menu) override {
-		Unity* module = dynamic_cast<Unity*>(this->module);
+		Unity* module = getModule<Unity>();
 		assert(module);
 
 		menu->addChild(new MenuSeparator);

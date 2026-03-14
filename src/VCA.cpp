@@ -41,7 +41,7 @@ struct VCA : Module {
 		configBypass(IN2_INPUT, OUT2_OUTPUT);
 	}
 
-	void processChannel(Input& in, Param& level, Input& lin, Input& exp, Output& out) {
+	void processChannel(Input in, Param level, Input lin, Input exp, Output out) {
 		// Get input
 		int channels = std::max(in.getChannels(), 1);
 		simd::float_4 v[4];

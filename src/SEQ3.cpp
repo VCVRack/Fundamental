@@ -392,7 +392,7 @@ struct SEQ3Widget : ModuleWidget {
 	}
 
 	void appendContextMenu(Menu* menu) override {
-		SEQ3* module = dynamic_cast<SEQ3*>(this->module);
+		SEQ3* module = getModule<SEQ3>();
 		assert(module);
 
 		menu->addChild(new MenuSeparator);

@@ -100,7 +100,7 @@ struct Scope : Module {
 			else {
 				// Reset if triggered
 				float trigThreshold = params[THRESH_PARAM].getValue();
-				Input& trigInput = inputs[TRIG_INPUT].isConnected() ? inputs[TRIG_INPUT] : inputs[X_INPUT];
+				Input trigInput = inputs[TRIG_INPUT].isConnected() ? inputs[TRIG_INPUT] : inputs[X_INPUT];
 
 				// This may be 0
 				int trigChannels = trigInput.getChannels();

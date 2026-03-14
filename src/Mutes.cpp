@@ -121,7 +121,7 @@ struct MutesWidget : ModuleWidget {
 	}
 
 	void appendContextMenu(Menu* menu) override {
-		Mutes* module = dynamic_cast<Mutes*>(this->module);
+		Mutes* module = getModule<Mutes>();
 		assert(module);
 
 		menu->addChild(new MenuSeparator);

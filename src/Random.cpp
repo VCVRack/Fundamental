@@ -172,7 +172,7 @@ struct Random : Module {
 		shape += inputs[SHAPE_INPUT].getVoltage() / 10.f * params[SHAPE_CV_PARAM].getValue();
 		shape = clamp(shape, 0.f, 1.f);
 
-		auto interpolateOutput = [&](Output& output, float v) {
+		auto interpolateOutput = [&](Output output, float v) {
 			for (int c = 0; c < channels; c++) {
 				float vc = rescale(v, 0.f, 1.f, lastVoltage[c], nextVoltage[c]);
 				output.setVoltage(vc, c);

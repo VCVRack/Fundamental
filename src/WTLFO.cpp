@@ -281,7 +281,7 @@ struct WTLFOWidget : ModuleWidget {
 	}
 
 	void appendContextMenu(Menu* menu) override {
-		WTLFO* module = dynamic_cast<WTLFO*>(this->module);
+		WTLFO* module = getModule<WTLFO>();
 		assert(module);
 
 		menu->addChild(new MenuSeparator);

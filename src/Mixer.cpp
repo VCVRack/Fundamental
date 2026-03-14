@@ -115,7 +115,7 @@ struct MixerWidget : ModuleWidget {
 	}
 
 	void appendContextMenu(Menu* menu) override {
-		Mixer* module = dynamic_cast<Mixer*>(this->module);
+		Mixer* module = getModule<Mixer>();
 		assert(module);
 
 		menu->addChild(new MenuSeparator);

@@ -69,7 +69,7 @@ struct VCA_1VUKnob : SliderKnob {
 		if (layer != 1)
 			return;
 
-		VCA_1* module = dynamic_cast<VCA_1*>(this->module);
+		VCA_1* module = dynamic_cast<VCA_1*>((engine::Module*) this->module);
 
 		Rect r = box.zeroPos();
 		NVGcolor bgColor = nvgRGB(0x12, 0x12, 0x12);
@@ -155,7 +155,7 @@ struct VCA_1Widget : ModuleWidget {
 	}
 
 	void appendContextMenu(Menu* menu) override {
-		VCA_1* module = dynamic_cast<VCA_1*>(this->module);
+		VCA_1* module = getModule<VCA_1>();
 		assert(module);
 
 		menu->addChild(new MenuSeparator);
