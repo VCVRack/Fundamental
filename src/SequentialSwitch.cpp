@@ -107,10 +107,14 @@ struct SequentialSwitch : Module {
 				}
 				else {
 					// Set output
-					if (i == index)
-						outputs[OUT_OUTPUTS + i].writeVoltages(inputs[IN_INPUTS + 0].getVoltages());
-					else
+					if (i == index) {
+						float voltages[PORT_MAX_CHANNELS];
+						inputs[IN_INPUTS + 0].readVoltages(voltages);
+						outputs[OUT_OUTPUTS + i].writeVoltages(voltages);
+					}
+					else {
 						outputs[OUT_OUTPUTS + i].clearVoltages();
+					}
 				}
 			}
 		}
@@ -139,7 +143,9 @@ struct SequentialSwitch : Module {
 			}
 			else {
 				// Get and set output
-				outputs[OUT_OUTPUTS + 0].writeVoltages(inputs[IN_INPUTS + index].getVoltages());
+				float voltages[PORT_MAX_CHANNELS];
+				inputs[IN_INPUTS + index].readVoltages(voltages);
+				outputs[OUT_OUTPUTS + 0].writeVoltages(voltages);
 			}
 		}
 

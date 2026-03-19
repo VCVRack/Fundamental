@@ -137,10 +137,13 @@ struct Scope : Module {
 		}
 
 		// Copy inputs to outputs
+		float voltages[PORT_MAX_CHANNELS];
 		outputs[X_OUTPUT].setChannels(channelsX);
-		outputs[X_OUTPUT].writeVoltages(inputs[X_INPUT].getVoltages());
+		inputs[X_INPUT].readVoltages(voltages);
+		outputs[X_OUTPUT].writeVoltages(voltages);
 		outputs[Y_OUTPUT].setChannels(channelsY);
-		outputs[Y_OUTPUT].writeVoltages(inputs[Y_INPUT].getVoltages());
+		inputs[Y_INPUT].readVoltages(voltages);
+		outputs[Y_OUTPUT].writeVoltages(voltages);
 
 		// Add point to buffer if recording
 		if (bufferIndex < BUFFER_SIZE) {

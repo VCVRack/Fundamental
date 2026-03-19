@@ -28,9 +28,11 @@ struct Mult : Module {
 		int channels = std::max(1, inputs[MULT_INPUT].getChannels());
 
 		// Copy input to outputs
+		float voltages[PORT_MAX_CHANNELS];
+		inputs[MULT_INPUT].readVoltages(voltages);
 		for (int i = 0; i < 8; i++) {
 			outputs[MULT_OUTPUTS + i].setChannels(channels);
-			outputs[MULT_OUTPUTS + i].writeVoltages(inputs[MULT_INPUT].getVoltages());
+			outputs[MULT_OUTPUTS + i].writeVoltages(voltages);
 		}
 	}
 };

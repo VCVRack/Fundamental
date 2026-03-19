@@ -46,7 +46,7 @@ struct VCA : Module {
 		int channels = std::max(in.getChannels(), 1);
 		simd::float_4 v[4];
 		for (int c = 0; c < channels; c += 4) {
-			v[c / 4] = simd::float_4::load(in.getVoltages(c));
+			v[c / 4] = in.getVoltageSimd<simd::float_4>(c);
 		}
 
 		// Apply knob gain
@@ -59,7 +59,7 @@ struct VCA : Module {
 		if (lin.isConnected()) {
 			if (lin.isPolyphonic()) {
 				for (int c = 0; c < channels; c += 4) {
-					simd::float_4 cv = simd::float_4::load(lin.getVoltages(c)) / 10.f;
+					simd::float_4 cv = lin.getVoltageSimd<simd::float_4>(c) / 10.f;
 					cv = clamp(cv, 0.f, 1.f);
 					v[c / 4] *= cv;
 				}
@@ -78,7 +78,7 @@ struct VCA : Module {
 		if (exp.isConnected()) {
 			if (exp.isPolyphonic()) {
 				for (int c = 0; c < channels; c += 4) {
-					simd::float_4 cv = simd::float_4::load(exp.getVoltages(c)) / 10.f;
+					simd::float_4 cv = exp.getVoltageSimd<simd::float_4>(c) / 10.f;
 					cv = clamp(cv, 0.f, 1.f);
 					cv = rescale(pow(expBase, cv), 1.f, expBase, 0.f, 1.f);
 					v[c / 4] *= cv;
@@ -97,7 +97,7 @@ struct VCA : Module {
 		// Set output
 		out.setChannels(channels);
 		for (int c = 0; c < channels; c += 4) {
-			v[c / 4].store(out.getVoltages(c));
+			out.setVoltageSimd(v[c / 4], c);
 		}
 	}
 

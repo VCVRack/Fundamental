@@ -687,8 +687,8 @@ struct VCO : Module {
 	}
 
 	void onSampleRateChange(const SampleRateChangeEvent& e) override {
-		for (int c = 0; c < 16; c += 4) {
-			processors[c / 4].setSampleTime(e.sampleTime);
+		for (int c = 0; c < 16; c += float_n::size) {
+			processors[c / float_n::size].setSampleTime(e.sampleTime);
 		}
 	}
 
