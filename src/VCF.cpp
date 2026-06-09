@@ -221,12 +221,15 @@ struct LadderFilter {
 			previousY[2] = y2;
 			previousY[3] = y3;
 
-			// Soft-clip each output to +-2 with `2*tanh(v/2) = v*tanhXdX(v/2)`.
-			lowpassOversampled[n] = y3 * tanhXdX_4_6(y3 * T(0.5));
-			// The highpass is the binomial combination of the clamped input and the four poles.
-			// The poles settle to the clamped input at DC, so the combination cancels there.
-			T highpass = u0Clamped - T(4) * y0 + T(6) * y1 - T(4) * y2 + y3;
-			highpassOversampled[n] = highpass * tanhXdX_4_6(highpass * T(0.5));
+			// Soft-clip each connected output to +-2 with `2*tanh(v/2) = v*tanhXdX(v/2)`.
+			if (frame.computeLowpass)
+				lowpassOversampled[n] = y3 * tanhXdX_4_6(y3 * T(0.5));
+			if (frame.computeHighpass) {
+				// The highpass is the binomial combination of the clamped input and the four poles.
+				// The poles settle to the clamped input at DC, so the combination cancels there.
+				T highpass = u0Clamped - T(4) * y0 + T(6) * y1 - T(4) * y2 + y3;
+				highpassOversampled[n] = highpass * tanhXdX_4_6(highpass * T(0.5));
+			}
 		}
 
 		if (frame.computeLowpass)
