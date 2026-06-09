@@ -1,7 +1,7 @@
 #include "plugin.hpp"
 
 
-/** Approximates 1/x using the rcp() instruction with one Newton-Raphson refinement.
+/** Approximates 1/x using the RCP instruction with one Newton-Raphson refinement.
 Max relative error 1.7e-7.
 */
 template <typename T>
@@ -11,7 +11,7 @@ inline T rcp_newton1(T x) {
 }
 
 
-/** Approximates 1/sqrt(x) using the rsqrt() instruction with one Newton-Raphson refinement.
+/** Approximates 1/sqrt(x) using the RSQRT instruction with one Newton-Raphson refinement.
 Max relative error 2.9e-7.
 */
 template <typename T>
@@ -21,7 +21,7 @@ inline T rsqrt_newton1(T x) {
 }
 
 
-/** Approximates tan(x) using (3,4) rational function.
+/** Approximates tan(x) using a degree (3,4) rational function.
 For x in (-pi/2, pi/2), max relative error 2.8e-5.
 */
 template <typename T>
@@ -33,7 +33,7 @@ inline T tan_3_4(T x) {
 }
 
 
-/** Approximates tanh(x)/x using (4,4) rational function.
+/** Approximates tanh(x)/x using a degree (4,4) rational function.
 For x in [-4, 4], max relative error 2.3e-3.
 Approaches 1/15 as |x| -> infinity.
 */
@@ -46,7 +46,7 @@ inline T tanhXdX_4_4(T x) {
 }
 
 
-/** Approximates tanh(x)/x using (4,6) rational function.
+/** Approximates tanh(x)/x using a degree (4,6) rational function.
 For x in [-4, 4], max relative error 4.2e-6.
 Approaches 0 as |x| -> infinity.
 */
@@ -59,11 +59,11 @@ inline T tanhXdX_4_6(T x) {
 }
 
 
-/** Processes one input sample through a cascade of first-order allpass sections in transposed direct-form II.
+/** Processes one input sample through a cascade of first-order allpass sections.
 
-Each section implements H(z) = (a + z^-1) / (1 + a * z^-1).
-state[] and coefficients[] must both have at least `sections` elements.
-state[] is updated in place.
+Each section implements `H(z) = (a + z^-1) / (1 + a * z^-1)`.
+`state[]` and `coefficients[]` must be `sections` length.
+`state[]` is updated in place.
 */
 template <typename T>
 static inline T firstOrderAllpassCascade(T x, T* state, const float* coefficients, int sections) {
@@ -77,14 +77,11 @@ static inline T firstOrderAllpassCascade(T x, T* state, const float* coefficient
 }
 
 
-/** Coefficients for a polyphase IIR halfband for 2x audio resampling.
+/** Allpass coefficients of a polyphase IIR halfband filter for 2x resampling.
 
-The filter has two parallel branches, A and B.
-Each branch is a chain of three first-order allpass sections of the form (a + z^-2) / (1 + a * z^-2).
-In branch A, the input first passes through a section with a=_A[0], then a section with a=_A[1], then a section with a=_A[2].
-Branch B does the same with _B.
-The branches combine as H(z) = (1/2) * (A_a(z^2) + z^-1 * A_b(z^2)).
-The z^-1 on A_b delays branch B by one sample at the oversampled (2x) rate.
+The two sets are allpass branches A and B, each a three-section cascade run by `firstOrderAllpassCascade` at the input rate.
+They form the halfband `H(z) = (1/2)(A(z^2) + z^-1 B(z^2))`, where the `z^2` is one branch step and the `z^-1` is the half-sample offset between branches.
+The passband below the base-rate Nyquist is flat within 1e-7 dB, and the stopband above it is 78 dB down.
 */
 static constexpr float HALFBAND_2X_COEFFICIENTS_A[3] = {
 	0.062822416060049985f, 0.4243808557204406f, 0.7818614603969013f,
@@ -94,11 +91,7 @@ static constexpr float HALFBAND_2X_COEFFICIENTS_B[3] = {
 };
 
 
-/** 2x upsampler using a polyphase halfband filter.
-
-Each call writes two oversampled-rate samples to out from one input sample.
-The first array element is the even-indexed sample and the second is the odd-indexed sample.
-*/
+/** 2x upsampler using a polyphase halfband filter. */
 template <typename T>
 struct HalfbandUpsampler2x {
 	T stateA[3] = {};
@@ -108,6 +101,7 @@ struct HalfbandUpsampler2x {
 		*this = HalfbandUpsampler2x{};
 	}
 
+	/** Writes two oversampled-rate samples to `out` from one input sample. */
 	void process(T input, T* out) {
 		out[0] = firstOrderAllpassCascade(input, stateA, HALFBAND_2X_COEFFICIENTS_A, 3);
 		out[1] = firstOrderAllpassCascade(input, stateB, HALFBAND_2X_COEFFICIENTS_B, 3);
@@ -115,11 +109,7 @@ struct HalfbandUpsampler2x {
 };
 
 
-/** 2x downsampler using a polyphase halfband filter.
-
-Each call returns one output sample from two oversampled-rate samples.
-The first array element is the even-indexed sample and the second is the odd-indexed sample.
-*/
+/** 2x downsampler using a polyphase halfband filter. */
 template <typename T>
 struct HalfbandDownsampler2x {
 	T stateA[3] = {};
@@ -129,9 +119,10 @@ struct HalfbandDownsampler2x {
 		*this = HalfbandDownsampler2x{};
 	}
 
+	/** Reads two oversampled-rate samples from `in` and returns one output sample. */
 	T process(const T* in) {
-		// Cascade A processes the odd-indexed input and cascade B the even-indexed.
-		// The swap relative to the upsampler is what makes the chain unity gain in the passband without an extra delay buffer.
+		// The branches are swapped from the upsampler: A takes `in[1]`, B takes `in[0]`.
+		// This gives a round trip through both filters unity gain in the passband.
 		T outputA = firstOrderAllpassCascade(in[1], stateA, HALFBAND_2X_COEFFICIENTS_A, 3);
 		T outputB = firstOrderAllpassCascade(in[0], stateB, HALFBAND_2X_COEFFICIENTS_B, 3);
 		return T(0.5) * (outputA + outputB);
@@ -139,24 +130,16 @@ struct HalfbandDownsampler2x {
 };
 
 
-/** Resonant 4-pole ladder filter with internal 2x oversampling, producing lowpass and highpass outputs.
+/** Resonant 4-pole transistor ladder filter with internal 2x oversampling, producing lowpass and highpass outputs.
+Each stage integrates `tanh(input) - tanh(output)`, giving unity passband gain.
 
-Four cascaded 1-pole TPT integrators with per-stage tanh saturation and an explicit softclip resonance feedback path.
-The 2x oversampling (polyphase halfband resamplers) lets the per-pole cutoff reach nyquist without aliasing the resonance peak.
-The cutoff is each per-stage 1-pole's -3 dB frequency, also the self-oscillation pitch at full resonance.
-The four-pole cumulative -3 dB lands at sqrt(2^(1/4) - 1) ~= 0.435 times the cutoff.
-Self-oscillation occurs near a resonance value of 4.
+Ladder model from "Non-linear digital implementation of the Moog ladder filter" by Antti Huovilainen (2004).
+https://dafx.de/paper-archive/2004/P_061.PDF
 
-The input is softclipped before the first stage.
-Per-stage saturator gains use Mystran's single-sample linearization of tanh at each stage's previous sample output.
-The linearization gains are floored to a minimum so the integrators stay self-damping when state grows large.
-The global feedback applies an explicit r * y / sqrt(1 + y*y) softclip on the previous lowpass output rather than a Mystran-coupled feedback, sidestepping the limit cycle that recursive coupling would otherwise produce near the input rate's nyquist.
-
-Topology-preserving transform integrator framework:
-Zavalishin, V. "The Art of VA Filter Design", 2018.
+Trapezoidal integrators from "The Art of VA Filter Design" by Vadim Zavalishin (2018).
 https://www.native-instruments.com/fileadmin/ni_media/downloads/pdf/VAFilterDesign_2.1.2.pdf
 
-Mystran (Teemu Voipio) per-stage linearization:
+Per-stage tanh linearization from Teemu "Mystran" Voipio.
 https://www.kvraudio.com/forum/viewtopic.php?p=4925309#p4925309
 */
 template <typename T>
@@ -169,27 +152,21 @@ struct LadderFilter {
 	HalfbandDownsampler2x<T> downsamplerHighpass;
 	/** Trapezoidal integrator state, one element per pole. */
 	T s[4] = {};
-	/** Previous sample value of u0, the signal entering stage 0's saturator.
-	Used as that saturator's Mystran linearization point.
-	*/
-	T previousU0 = 0;
-	/** Previous sample outputs of the four ladder stages, indexed 0..3.
-	previousY[i] for i in 0..2 is the Mystran linearization point for stage i+1's saturator.
-	previousY[3] is the argument to the resonance feedback softclip.
+	/** Previous output of each pole, the linearization point for its tanh.
+	`previousY[3]` is also the resonance feedback.
 	*/
 	T previousY[4] = {};
 
 	struct Frame {
 		// Inputs
-		T input;
-		/** Per-pole -3 dB frequency, normalized to the sample rate.
-		Each of the four stages uses this same cutoff, which equals the self-oscillation pitch at full resonance.
-		The four-pole cumulative -3 dB sits at sqrt(2^(1/4) - 1) ~= 0.435 times this value.
-		The caller must clamp to [0, 0.499].
+		T input = 0;
+		/** Per-pole -3 dB frequency, normalized to the sample rate, in the range [0, 0.499].
+		The four poles together reach -3 dB at `sqrt(2^(1/4) - 1) ~= 0.435` times this.
+		Also the self-oscillation pitch at full resonance.
 		*/
-		T cutoff;
+		T cutoff = 0;
 		/** The filter self-oscillates near 4. */
-		T resonance;
+		T resonance = 0;
 		bool computeLowpass = true;
 		bool computeHighpass = true;
 
@@ -206,7 +183,6 @@ struct LadderFilter {
 		// Bilinear prewarp at the oversampled rate.
 		T cutoffOversampled = frame.cutoff * T(0.5);
 		T g = tan_3_4(T(M_PI) * cutoffOversampled);
-		T onePlusG = T(1) + g;
 
 		T xOversampled[2];
 		upsampler.process(frame.input, xOversampled);
@@ -215,25 +191,24 @@ struct LadderFilter {
 		T lowpassOversampled[2];
 		T highpassOversampled[2];
 		for (int n = 0; n < 2; n++) {
-			// Softclip at the oversampled rate so the downsampler's lowpass attenuates the harmonics that would otherwise alias.
-			T xSoftclipped = xOversampled[n] * rsqrt_newton1(T(1) + xOversampled[n] * xOversampled[n]);
+			// Resonance feedback into the input, one sample delayed.
+			T u0 = xOversampled[n] - frame.resonance * previousY[3];
 
-			// Resonance feedback.
-			T feedback = frame.resonance * previousY[3] * rsqrt_newton1(T(1) + previousY[3] * previousY[3]);
-			T u0 = xSoftclipped - feedback;
-
-			// Mystran per-stage linearization gains, floored so the integrators stay self-damping at large state.
+			// Saturate the input, clamped to the tanh approximation's [-4, 4] range.
+			T u0Clamped = simd::clamp(u0, T(-4), T(4));
+			T saturatedInput = tanhXdX_4_6(u0Clamped) * u0Clamped;
+			// Per-stage tanh slope from the previous output, floored to stay self-damping.
 			const T tMinimum = T(0.01);
-			T t0 = simd::fmax(tanhXdX_4_6(previousU0), tMinimum);
-			T t1 = simd::fmax(tanhXdX_4_6(previousY[0]), tMinimum);
-			T t2 = simd::fmax(tanhXdX_4_6(previousY[1]), tMinimum);
-			T t3 = simd::fmax(tanhXdX_4_6(previousY[2]), tMinimum);
+			T t0 = simd::fmax(tanhXdX_4_6(previousY[0]), tMinimum);
+			T t1 = simd::fmax(tanhXdX_4_6(previousY[1]), tMinimum);
+			T t2 = simd::fmax(tanhXdX_4_6(previousY[2]), tMinimum);
+			T t3 = simd::fmax(tanhXdX_4_6(previousY[3]), tMinimum);
 
-			// TPT 1-pole integrators with linearized saturators in front.
-			T y0 = (g * t0 * u0 + s[0]) / onePlusG;
-			T y1 = (g * t1 * y0 + s[1]) / onePlusG;
-			T y2 = (g * t2 * y1 + s[2]) / onePlusG;
-			T y3 = (g * t3 * y2 + s[3]) / onePlusG;
+			// Trapezoidal integrators, each fed the previous stage's saturated output.
+			T y0 = (g * saturatedInput + s[0]) / (T(1) + g * t0);
+			T y1 = (g * t0 * y0 + s[1]) / (T(1) + g * t1);
+			T y2 = (g * t1 * y1 + s[2]) / (T(1) + g * t2);
+			T y3 = (g * t2 * y2 + s[3]) / (T(1) + g * t3);
 
 			// Trapezoidal state update.
 			s[0] = T(2) * y0 - s[0];
@@ -241,16 +216,17 @@ struct LadderFilter {
 			s[2] = T(2) * y2 - s[2];
 			s[3] = T(2) * y3 - s[3];
 
-			previousU0 = u0;
 			previousY[0] = y0;
 			previousY[1] = y1;
 			previousY[2] = y2;
 			previousY[3] = y3;
 
-			lowpassOversampled[n] = y3;
-			// Highpass: binomial combination of the saturated stage-0 input and the partial lowpass outputs.
-			T saturatedU0 = t0 * u0;
-			highpassOversampled[n] = saturatedU0 - T(4) * y0 + T(6) * y1 - T(4) * y2 + y3;
+			// Soft-clip each output to +-2 with `2*tanh(v/2) = v*tanhXdX(v/2)`.
+			lowpassOversampled[n] = y3 * tanhXdX_4_6(y3 * T(0.5));
+			// The highpass is the binomial combination of the clamped input and the four poles.
+			// The poles settle to the clamped input at DC, so the combination cancels there.
+			T highpass = u0Clamped - T(4) * y0 + T(6) * y1 - T(4) * y2 + y3;
+			highpassOversampled[n] = highpass * tanhXdX_4_6(highpass * T(0.5));
 		}
 
 		if (frame.computeLowpass)
@@ -349,7 +325,8 @@ struct VCF : Module {
 			LadderFilter<float_4>::Frame frame;
 
 			// Input
-			float_4 input = inputs[IN_INPUT].getVoltageSimd<float_4>(c) / 5.f;
+			const float scale = 5.f;
+			float_4 input = inputs[IN_INPUT].getVoltageSimd<float_4>(c) / scale;
 
 			// Drive
 			float_4 drive = driveParam + inputs[DRIVE_INPUT].getPolyVoltageSimd<float_4>(c) / 10.f * driveCvParam;
@@ -357,7 +334,7 @@ struct VCF : Module {
 			float_4 gain = simd::pow(1.f + drive, 5);
 			input *= gain;
 
-			// Add -120dB noise to bootstrap self-oscillation
+			// Add -120 dB noise to bootstrap self-oscillation
 			input += 1e-6f * (2.f * random::uniform() - 1.f);
 			frame.input = input;
 
@@ -377,8 +354,8 @@ struct VCF : Module {
 			filters[c / 4].process(frame);
 
 			// Outputs
-			outputs[LPF_OUTPUT].setVoltageSimd(frame.lowpass * 5.f, c);
-			outputs[HPF_OUTPUT].setVoltageSimd(frame.highpass * 5.f, c);
+			outputs[LPF_OUTPUT].setVoltageSimd(frame.lowpass * scale, c);
+			outputs[HPF_OUTPUT].setVoltageSimd(frame.highpass * scale, c);
 		}
 
 		outputs[LPF_OUTPUT].setChannels(channels);
