@@ -62,11 +62,11 @@ inline T tanhXdX_4_6(T x) {
 /** Processes one input sample through a cascade of first-order allpass sections.
 
 Each section implements `H(z) = (a + z^-1) / (1 + a * z^-1)`.
-`state[]` and `coefficients[]` must be `sections` length.
+`state[]` and `coefficients[]` must have `sections` elements.
 `state[]` is updated in place.
 */
 template <typename T>
-static inline T firstOrderAllpassCascade(T x, T* state, const float* coefficients, int sections) {
+static inline T allpassCascadeProcess(T x, T* state, const float* coefficients, int sections) {
 	for (int i = 0; i < sections; i++) {
 		T a = T(coefficients[i]);
 		T y = a * x + state[i];
@@ -79,7 +79,7 @@ static inline T firstOrderAllpassCascade(T x, T* state, const float* coefficient
 
 /** Allpass coefficients of a polyphase IIR halfband filter for 2x resampling.
 
-The two sets are allpass branches A and B, each a three-section cascade run by `firstOrderAllpassCascade` at the input rate.
+The two sets are allpass branches A and B, each a three-section cascade run by `allpassCascadeProcess` at the base rate.
 They form the halfband `H(z) = (1/2)(A(z^2) + z^-1 B(z^2))`, where the `z^2` is one branch step and the `z^-1` is the half-sample offset between branches.
 The passband below the base-rate Nyquist is flat within 1e-7 dB, and the stopband above it is 78 dB down.
 */
@@ -93,38 +93,38 @@ static constexpr float HALFBAND_2X_COEFFICIENTS_B[3] = {
 
 /** 2x upsampler using a polyphase halfband filter. */
 template <typename T>
-struct HalfbandUpsampler2x {
+struct Upsampler2x {
 	T stateA[3] = {};
 	T stateB[3] = {};
 
 	void reset() {
-		*this = HalfbandUpsampler2x{};
+		*this = Upsampler2x{};
 	}
 
-	/** Writes two oversampled-rate samples to `out` from one input sample. */
-	void process(T input, T* out) {
-		out[0] = firstOrderAllpassCascade(input, stateA, HALFBAND_2X_COEFFICIENTS_A, 3);
-		out[1] = firstOrderAllpassCascade(input, stateB, HALFBAND_2X_COEFFICIENTS_B, 3);
+	/** Writes two oversampled-rate samples to `output` from one input sample. */
+	void process(T input, T* output) {
+		output[0] = allpassCascadeProcess(input, stateA, HALFBAND_2X_COEFFICIENTS_A, 3);
+		output[1] = allpassCascadeProcess(input, stateB, HALFBAND_2X_COEFFICIENTS_B, 3);
 	}
 };
 
 
 /** 2x downsampler using a polyphase halfband filter. */
 template <typename T>
-struct HalfbandDownsampler2x {
+struct Downsampler2x {
 	T stateA[3] = {};
 	T stateB[3] = {};
 
 	void reset() {
-		*this = HalfbandDownsampler2x{};
+		*this = Downsampler2x{};
 	}
 
-	/** Reads two oversampled-rate samples from `in` and returns one output sample. */
-	T process(const T* in) {
-		// The branches are swapped from the upsampler: A takes `in[1]`, B takes `in[0]`.
-		// This gives a round trip through both filters unity gain in the passband.
-		T outputA = firstOrderAllpassCascade(in[1], stateA, HALFBAND_2X_COEFFICIENTS_A, 3);
-		T outputB = firstOrderAllpassCascade(in[0], stateB, HALFBAND_2X_COEFFICIENTS_B, 3);
+	/** Reads two oversampled-rate samples from `input` and returns one output sample. */
+	T process(const T* input) {
+		// The branches are swapped from the upsampler: A takes `input[1]`, B takes `input[0]`.
+		// A round trip through both filters then has unity gain in the passband.
+		T outputA = allpassCascadeProcess(input[1], stateA, HALFBAND_2X_COEFFICIENTS_A, 3);
+		T outputB = allpassCascadeProcess(input[0], stateB, HALFBAND_2X_COEFFICIENTS_B, 3);
 		return T(0.5) * (outputA + outputB);
 	}
 };
@@ -144,27 +144,28 @@ https://www.kvraudio.com/forum/viewtopic.php?p=4925309#p4925309
 */
 template <typename T>
 struct LadderFilter {
-	/** Polyphase halfband upsampler from the input rate to the oversampled rate. */
-	HalfbandUpsampler2x<T> upsampler;
-	/** Polyphase halfband downsampler for the lowpass output. */
-	HalfbandDownsampler2x<T> downsamplerLowpass;
-	/** Polyphase halfband downsampler for the highpass output. */
-	HalfbandDownsampler2x<T> downsamplerHighpass;
+	Upsampler2x<T> upsampler;
+	Downsampler2x<T> downsamplerLowpass;
+	Downsampler2x<T> downsamplerHighpass;
+
 	/** Trapezoidal integrator state, one element per pole. */
 	T s[4] = {};
-	/** Previous output of each pole, the linearization point for its tanh.
-	`previousY[3]` is also the resonance feedback.
+
+	/** Output of each pole at the previous sample.
+	`yPrevious[3]` is also the resonance feedback.
 	*/
-	T previousY[4] = {};
+	T yPrevious[4] = {};
 
 	struct Frame {
 		// Inputs
 		T input = 0;
+
 		/** Per-pole -3 dB frequency, normalized to the sample rate, in the range [0, 0.499].
 		The four poles together reach -3 dB at `sqrt(2^(1/4) - 1) ~= 0.435` times this.
 		Also the self-oscillation pitch at full resonance.
 		*/
 		T cutoff = 0;
+
 		/** The filter self-oscillates near 4. */
 		T resonance = 0;
 		bool computeLowpass = true;
@@ -180,48 +181,49 @@ struct LadderFilter {
 	}
 
 	void process(Frame& frame) {
-		// Bilinear prewarp at the oversampled rate.
+		// Bilinear prewarp at the oversampled sample rate
 		T cutoffOversampled = frame.cutoff * T(0.5);
 		T g = tan_3_4(T(M_PI) * cutoffOversampled);
 
 		T xOversampled[2];
 		upsampler.process(frame.input, xOversampled);
 
-		// Ladder at the oversampled rate.
+		// Ladder at the oversampled sample rate
 		T lowpassOversampled[2];
 		T highpassOversampled[2];
 		for (int n = 0; n < 2; n++) {
-			// Resonance feedback into the input, one sample delayed.
-			T u0 = xOversampled[n] - frame.resonance * previousY[3];
+			// Resonance feedback into the input, one sample delayed
+			T u0 = xOversampled[n] - frame.resonance * yPrevious[3];
 
-			// Saturate the input, clamped to the tanh approximation's [-4, 4] range.
+			// Clamp the input to the tanh approximation's valid [-4, 4] range, then saturate it
 			T u0Clamped = simd::clamp(u0, T(-4), T(4));
-			T saturatedInput = tanhXdX_4_6(u0Clamped) * u0Clamped;
-			// Per-stage tanh slope from the previous output, floored to stay self-damping.
-			const T tMinimum = T(0.01);
-			T t0 = simd::fmax(tanhXdX_4_6(previousY[0]), tMinimum);
-			T t1 = simd::fmax(tanhXdX_4_6(previousY[1]), tMinimum);
-			T t2 = simd::fmax(tanhXdX_4_6(previousY[2]), tMinimum);
-			T t3 = simd::fmax(tanhXdX_4_6(previousY[3]), tMinimum);
+			T u0Saturated = tanhXdX_4_6(u0Clamped) * u0Clamped;
 
-			// Trapezoidal integrators, each fed the previous stage's saturated output.
-			T y0 = (g * saturatedInput + s[0]) / (T(1) + g * t0);
+			// Per-stage tanh slope from the previous output, floored to stay self-damping
+			const T tMinimum = T(0.01);
+			T t0 = simd::fmax(tanhXdX_4_6(yPrevious[0]), tMinimum);
+			T t1 = simd::fmax(tanhXdX_4_6(yPrevious[1]), tMinimum);
+			T t2 = simd::fmax(tanhXdX_4_6(yPrevious[2]), tMinimum);
+			T t3 = simd::fmax(tanhXdX_4_6(yPrevious[3]), tMinimum);
+
+			// Trapezoidal integrators, each fed the previous stage's saturated output
+			T y0 = (g * u0Saturated + s[0]) / (T(1) + g * t0);
 			T y1 = (g * t0 * y0 + s[1]) / (T(1) + g * t1);
 			T y2 = (g * t1 * y1 + s[2]) / (T(1) + g * t2);
 			T y3 = (g * t2 * y2 + s[3]) / (T(1) + g * t3);
 
-			// Trapezoidal state update.
+			// Trapezoidal state update
 			s[0] = T(2) * y0 - s[0];
 			s[1] = T(2) * y1 - s[1];
 			s[2] = T(2) * y2 - s[2];
 			s[3] = T(2) * y3 - s[3];
 
-			previousY[0] = y0;
-			previousY[1] = y1;
-			previousY[2] = y2;
-			previousY[3] = y3;
+			yPrevious[0] = y0;
+			yPrevious[1] = y1;
+			yPrevious[2] = y2;
+			yPrevious[3] = y3;
 
-			// Soft-clip each connected output to +-2 with `2*tanh(v/2) = v*tanhXdX(v/2)`.
+			// Soft-clip each connected output to +-2 with `2*tanh(v/2) = v*tanhXdX(v/2)`
 			if (frame.computeLowpass)
 				lowpassOversampled[n] = y3 * tanhXdX_4_6(y3 * T(0.5));
 			if (frame.computeHighpass) {
@@ -276,10 +278,10 @@ struct VCF : Module {
 		// freq = C4 * 2^(10 * param - 5)
 		// or
 		// param = (log2(freq / C4) + 5) / 10
-		const float minFreq = (std::log2(8.f / dsp::FREQ_C4) + 5) / 10;
-		const float maxFreq = (std::log2(22000.f / dsp::FREQ_C4) + 5) / 10;
-		const float defaultFreq = 0.5f;
-		configParam(FREQ_PARAM, minFreq, maxFreq, defaultFreq, "Cutoff frequency", " Hz", std::pow(2, 10.f), dsp::FREQ_C4 / std::pow(2, 5.f));
+		const float freqMin = (std::log2(8.f / dsp::FREQ_C4) + 5) / 10;
+		const float freqMax = (std::log2(22000.f / dsp::FREQ_C4) + 5) / 10;
+		const float freqDefault = 0.5f;
+		configParam(FREQ_PARAM, freqMin, freqMax, freqDefault, "Cutoff frequency", " Hz", std::pow(2, 10.f), dsp::FREQ_C4 / std::pow(2, 5.f));
 		configParam(RES_PARAM, 0.f, 1.f, 0.f, "Resonance", "%", 0.f, 100.f);
 		configParam(RES_CV_PARAM, -1.f, 1.f, 0.f, "Resonance CV", "%", 0.f, 100.f);
 		configParam(FREQ_CV_PARAM, -1.f, 1.f, 0.f, "Cutoff frequency CV", "%", 0.f, 100.f);
